@@ -3,6 +3,10 @@ import shutil
 
 
 def path_to_pathlib(path):
+    """
+    If a string is passed to the function, it turns into Path from pathlib.
+    :param path: string of path or Path from pathlib.
+    """
     if isinstance(path, str):
         return Path(path)
     return path
@@ -20,6 +24,10 @@ def clear_directory(path):
 
 
 def open_file(filename):
+    """
+    This function clear directory with sub-directories
+    :param path: path of directory from pathlib
+    """
     filename = path_to_pathlib(filename)
     s = ""
     with open(filename, 'r', encoding='utf8') as file:
