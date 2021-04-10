@@ -1,5 +1,6 @@
 from pathlib import Path
 import shutil
+import re
 
 
 def path_to_pathlib(path):
@@ -40,3 +41,6 @@ def save_file(text, full_filename):
     with open(filename, 'w', encoding='utf8') as file:
         file.write(text)
 
+
+def remove_yaml_from_markdown(markdown_text):
+    return re.sub(r'^---(.|\n)*?---\n', '', markdown_text.lstrip()).lstrip()
