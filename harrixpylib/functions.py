@@ -37,5 +37,6 @@ def open_file(filename):
 
 def save_file(text, full_filename):
     filename = path_to_pathlib(full_filename)
-    with open(full_filename, 'w', encoding='utf8') as file:
+    with open(filename, 'w', encoding='utf8') as file:
         file.write(text)
+
