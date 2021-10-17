@@ -9,6 +9,7 @@ twine = "*"
 
 [dev-packages]
 black = "*"
+harrix-pylib = {editable = true, path = "."}
 
 [requires]
 python_version = "3.9"

@@ -42,7 +42,7 @@ def open_file(filename: Union[Path, str]) -> str:
     """
     filename = path_to_pathlib(filename)
     s = ""
-    with open(filename, 'r', encoding='utf8') as file:
+    with open(filename, "r", encoding="utf8") as file:
         s = file.read()
     return s
 
@@ -58,7 +58,7 @@ def save_file(text: str, full_filename: Union[Path, str]) -> None:
       None.
     """
     filename = path_to_pathlib(full_filename)
-    with open(filename, 'w', encoding='utf8') as file:
+    with open(filename, "w", encoding="utf8") as file:
         file.write(text)
 
 
@@ -71,4 +71,4 @@ def remove_yaml_from_markdown(markdown_text: str) -> str:
     Returns:
       Text of markdown file without YAML.
     """
-    return re.sub(r'^---(.|\n)*?---\n', '', markdown_text.lstrip()).lstrip()
+    return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
