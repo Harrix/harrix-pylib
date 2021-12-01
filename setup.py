@@ -6,7 +6,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="harrix-pylib",
-    version="0.4",
+    version="0.6",
     description="Different functions",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -15,4 +15,5 @@ setup(
     author_email="anton.b.sergienko@gmail.com",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
+    zip_safe=False
 )
