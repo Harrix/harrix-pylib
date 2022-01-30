@@ -51,14 +51,14 @@ class Logger(object):
     def __init__(self):
         self.is_log_console = True
         self.is_log_file = False
-        self._is_show_time_log_console = False
+        self._is_show_time_in_console = False
 
         self.__logger_console = logging.getLogger("dev.harrix.logger.console")
         self.__logger_console.setLevel(logging.DEBUG)
 
         self.__handler_console = logging.StreamHandler()
         self.__handler_console.setFormatter(
-            Logger.StyleFormatter("[%(levelname)s] %(asctime)s - %(message)s")
+            Logger.StyleFormatter(Logger.log_format_no_time)
         )
         self.__handler_console.setLevel(logging.DEBUG)
         self.__logger_console.addHandler(self.__handler_console)
@@ -84,13 +84,13 @@ class Logger(object):
         self.__logger_file_error.addHandler(self.__handler_file_error)
 
     @property
-    def is_show_time_log_console(self):
-        return self._is_show_time_log_console
+    def is_show_time_in_console(self):
+        return self._is_show_time_in_console
 
-    @is_show_time_log_console.setter
-    def is_show_time_log_console(self, value):
-        self._is_show_time_log_console = value
-        if self._is_show_time_log_console:
+    @is_show_time_in_console.setter
+    def is_show_time_in_console(self, value):
+        self._is_show_time_in_console = value
+        if self._is_show_time_in_console:
             self.__handler_console.setFormatter(
                 Logger.StyleFormatter(Logger.log_format_time)
             )
@@ -99,9 +99,9 @@ class Logger(object):
                 Logger.StyleFormatter(Logger.log_format_no_time)
             )
 
-    @is_show_time_log_console.deleter
-    def is_show_time_log_console(self):
-        del self._is_show_time_log_console
+    @is_show_time_in_console.deleter
+    def is_show_time_in_console(self):
+        del self._is_show_time_in_console
 
     def debug(self, msg):
         if self.is_log_console:
@@ -213,7 +213,7 @@ class Logger(object):
 log = Logger()
 
 if __name__ == "__main__":
-    # log.is_show_time_log_console = False
+    # log.is_show_time_in_console = False
     log.error("Test me 1")
     log.info("Test {} 2".format(Logger.text_normal("me")))
     log.info("Test {} 2".format(Logger.text_yellow("me")))
