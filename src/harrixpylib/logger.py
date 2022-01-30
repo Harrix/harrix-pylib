@@ -5,11 +5,22 @@ from enum import Enum
 
 class Logger(object):
     class Style(str, Enum):
-        GREY = "\x1b[38;20m"
-        YELLOW = "\x1b[33;20m"
+        NORMAL = "\x1b[0m"
         RED = "\x1b[31;20m"
         GREEN = "\x1b[32m"
-        RED_BOLD = "\x1b[31;1m"
+        YELLOW = "\x1b[33m"
+        BLUE = "\x1b[34m"
+        MAGENTA = "\x1b[35m"
+        CYAN = "\x1b[36m"
+        RED_BACKGROUND = "\x1b[41m"
+        GREEN_BACKGROUND = "\x1b[42m"
+        YELLOW_BACKGROUND = "\x1b[43m"
+        BLUE_BACKGROUND = "\x1b[44m"
+        MAGENTA_BACKGROUND = "\x1b[45m"
+        CYAN_BACKGROUND = "\x1b[46m"
+        ITALIC = "\x1b[3m"
+        UNDERLINE = "\x1b[4m"
+        CROSSED_OUT = "\x1b[9m"
         RESET = "\x1b[0m"
 
     class StyleFormatter(logging.Formatter):
@@ -18,11 +29,11 @@ class Logger(object):
             self.__format = format
 
             self.FORMATS = {
-                logging.DEBUG: Logger.text_gray(self.__format),
-                logging.INFO: Logger.text_gray(self.__format),
+                logging.DEBUG: Logger.text_cyan(self.__format),
+                logging.INFO: Logger.text_normal(self.__format),
                 logging.WARNING: Logger.text_yellow(self.__format),
                 logging.ERROR: Logger.text_red(self.__format),
-                logging.CRITICAL: Logger.text_red_bold(self.__format),
+                logging.CRITICAL: Logger.text_red_background(self.__format),
             }
 
         def format(self, record):
@@ -80,9 +91,13 @@ class Logger(object):
     def is_show_time_log_console(self, value):
         self._is_show_time_log_console = value
         if self._is_show_time_log_console:
-            self.__handler_console.setFormatter(Logger.StyleFormatter(Logger.log_format_time))
+            self.__handler_console.setFormatter(
+                Logger.StyleFormatter(Logger.log_format_time)
+            )
         else:
-            self.__handler_console.setFormatter(Logger.StyleFormatter(Logger.log_format_no_time))
+            self.__handler_console.setFormatter(
+                Logger.StyleFormatter(Logger.log_format_no_time)
+            )
 
     @is_show_time_log_console.deleter
     def is_show_time_log_console(self):
@@ -131,24 +146,68 @@ class Logger(object):
             self.__logger_file_error.exception(msg)
 
     @classmethod
+    def text_normal(self, text):
+        return Logger.Style.NORMAL + text + Logger.Style.RESET
+
+    @classmethod
     def text_red(self, text):
         return Logger.Style.RED + text + Logger.Style.RESET
 
     @classmethod
-    def text_gray(self, text):
-        return Logger.Style.GREY + text + Logger.Style.RESET
-
-    @classmethod
-    def text_red_bold(self, text):
-        return Logger.Style.RED_BOLD + text + Logger.Style.RESET
+    def text_green(self, text):
+        return Logger.Style.GREEN + text + Logger.Style.RESET
 
     @classmethod
     def text_yellow(self, text):
         return Logger.Style.YELLOW + text + Logger.Style.RESET
 
     @classmethod
-    def text_green(self, text):
-        return Logger.Style.GREEN + text + Logger.Style.RESET
+    def text_blue(self, text):
+        return Logger.Style.BLUE + text + Logger.Style.RESET
+
+    @classmethod
+    def text_magenta(self, text):
+        return Logger.Style.MAGENTA + text + Logger.Style.RESET
+
+    @classmethod
+    def text_cyan(self, text):
+        return Logger.Style.CYAN + text + Logger.Style.RESET
+
+    @classmethod
+    def text_red_background(self, text):
+        return Logger.Style.RED_BACKGROUND + text + Logger.Style.RESET
+
+    @classmethod
+    def text_green_background(self, text):
+        return Logger.Style.GREEN_BACKGROUND + text + Logger.Style.RESET
+
+    @classmethod
+    def text_yellow_background(self, text):
+        return Logger.Style.YELLOW_BACKGROUND + text + Logger.Style.RESET
+
+    @classmethod
+    def text_blue_background(self, text):
+        return Logger.Style.BLUE_BACKGROUND + text + Logger.Style.RESET
+
+    @classmethod
+    def text_magenta_background(self, text):
+        return Logger.Style.MAGENTA_BACKGROUND + text + Logger.Style.RESET
+
+    @classmethod
+    def text_cyan_background(self, text):
+        return Logger.Style.CYAN_BACKGROUND + text + Logger.Style.RESET
+
+    @classmethod
+    def text_italic(self, text):
+        return Logger.Style.ITALIC + text + Logger.Style.RESET
+
+    @classmethod
+    def text_underline(self, text):
+        return Logger.Style.UNDERLINE + text + Logger.Style.RESET
+
+    @classmethod
+    def text_crossed_out(self, text):
+        return Logger.Style.CROSSED_OUT + text + Logger.Style.RESET
 
 
 log = Logger()
@@ -156,26 +215,26 @@ log = Logger()
 if __name__ == "__main__":
     # log.is_show_time_log_console = False
     log.error("Test me 1")
-    log.info("Test {} 2".format(Logger.text_gray("me")))
+    log.info("Test {} 2".format(Logger.text_normal("me")))
     log.info("Test {} 2".format(Logger.text_yellow("me")))
     log.info("Test {} 2".format(Logger.text_green("me")))
     log.info("Test {} 2".format(Logger.text_red("me")))
-    log.info("Test {} 2".format(Logger.text_red_bold("me")))
+    log.info("Test {} 2".format(Logger.text_red_background("me")))
     log.info("Test me 3")
 
-    print('\x1b[0m Normal \x1b[0m')
-    print('\x1b[31m Red foreground\x1b[0m')
-    print('\x1b[32m Green foreground\x1b[0m')
-    print('\x1b[33m Yellow foreground\x1b[0m')
-    print('\x1b[34m Blue foreground\x1b[0m')
-    print('\x1b[35m Magenta foreground\x1b[0m')
-    print('\x1b[36m Cyan foreground\x1b[0m')
-    print('\x1b[41m Red background\x1b[0m')
-    print('\x1b[42m Green background\x1b[0m')
-    print('\x1b[43m Yellow background\x1b[0m')
-    print('\x1b[44m Blue background\x1b[0m')
-    print('\x1b[45m Magenta background\x1b[0m')
-    print('\x1b[46m Cyan background\x1b[0m')
-    print('\x1b[3m Italic \x1b[0m')
-    print('\x1b[4m Underline \x1b[0m')
-    print('\x1b[9m Crossed-out \x1b[0m')
+    print("\x1b[0m Normal \x1b[0m")
+    print("\x1b[31m Red foreground\x1b[0m")
+    print("\x1b[32m Green foreground\x1b[0m")
+    print("\x1b[33m Yellow foreground\x1b[0m")
+    print("\x1b[34m Blue foreground\x1b[0m")
+    print("\x1b[35m Magenta foreground\x1b[0m")
+    print("\x1b[36m Cyan foreground\x1b[0m")
+    print("\x1b[41m Red background\x1b[0m")
+    print("\x1b[42m Green background\x1b[0m")
+    print("\x1b[43m Yellow background\x1b[0m")
+    print("\x1b[44m Blue background\x1b[0m")
+    print("\x1b[45m Magenta background\x1b[0m")
+    print("\x1b[46m Cyan background\x1b[0m")
+    print("\x1b[3m Italic \x1b[0m")
+    print("\x1b[4m Underline \x1b[0m")
+    print("\x1b[9m Crossed-out \x1b[0m")
