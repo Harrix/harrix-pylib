@@ -1,8 +1,57 @@
 import logging
 from logging.handlers import RotatingFileHandler
+from enum import Enum
 
 
 class Logger(object):
+    class Color(str, Enum):
+        GREY = "\x1b[38;20m"
+        YELLOW = "\x1b[33;20m"
+        RED = "\x1b[31;20m"
+        GREEN = "\x1b[32m"
+        RED_BOLD = "\x1b[31;1m"
+        RESET = "\x1b[0m"
+
+    class ColorFormatter(logging.Formatter):
+        def __init__(self, format):
+            super().__init__()
+            self.__format = format
+
+            self.FORMATS = {
+                logging.DEBUG: Logger.text_gray(self.__format),
+                logging.INFO: Logger.text_gray(self.__format),
+                logging.WARNING: Logger.text_yellow(self.__format),
+                logging.ERROR: Logger.text_red(self.__format),
+                logging.CRITICAL: Logger.text_red_bold(self.__format),
+            }
+
+        def format(self, record):
+            formatter = logging.Formatter(self.FORMATS.get(record.levelno))
+            return formatter.format(record)
+
+    log_format_time = "[%(levelname)s] %(asctime)s - %(message)s"
+    log_format_no_time = "[%(levelname)s] %(message)s"
+
+    @classmethod
+    def text_red(self, text):
+        return Logger.Color.RED + text + Logger.Color.RESET
+
+    @classmethod
+    def text_gray(self, text):
+        return Logger.Color.GREY + text + Logger.Color.RESET
+
+    @classmethod
+    def text_red_bold(self, text):
+        return Logger.Color.RED_BOLD + text + Logger.Color.RESET
+
+    @classmethod
+    def text_yellow(self, text):
+        return Logger.Color.YELLOW + text + Logger.Color.RESET
+
+    @classmethod
+    def text_green(self, text):
+        return Logger.Color.GREEN + text + Logger.Color.RESET
+
     def __new__(self):
         if not hasattr(self, "instance"):
             self.instance = super(Logger, self).__new__(self)
@@ -11,34 +60,53 @@ class Logger(object):
     def __init__(self):
         self.is_log_console = True
         self.is_log_file = False
-
-        log_format = logging.Formatter("[%(levelname)s] %(asctime)s - %(message)s")
+        self._is_show_time_log_console = False
 
         self.__logger_console = logging.getLogger("dev.harrix.logger.console")
         self.__logger_console.setLevel(logging.DEBUG)
 
-        handler_console = logging.StreamHandler()
-        handler_console.setFormatter(log_format)
-        handler_console.setLevel(logging.DEBUG)
-        self.__logger_console.addHandler(handler_console)
+        self.__handler_console = logging.StreamHandler()
+        self.__handler_console.setFormatter(
+            Logger.ColorFormatter("[%(levelname)s] %(asctime)s - %(message)s")
+        )
+        self.__handler_console.setLevel(logging.DEBUG)
+        self.__logger_console.addHandler(self.__handler_console)
 
         self.__logger_file = logging.getLogger("dev.harrix.logger.file")
         self.__logger_file.setLevel(logging.DEBUG)
-        handler_file = RotatingFileHandler(
+        self.__handler_file = RotatingFileHandler(
             "harrix.log", maxBytes=104857600, backupCount=100
         )
-        handler_file.setFormatter(log_format)
-        handler_file.setLevel(logging.DEBUG)
-        self.__logger_file.addHandler(handler_file)
+        self.__handler_file.setFormatter(Logger.ColorFormatter(Logger.log_format_time))
+        self.__handler_file.setLevel(logging.DEBUG)
+        self.__logger_file.addHandler(self.__handler_file)
 
         self.__logger_file_error = logging.getLogger("dev.harrix.logger.file.error")
         self.__logger_file_error.setLevel(logging.ERROR)
-        handler_file_error = RotatingFileHandler(
+        self.__handler_file_error = RotatingFileHandler(
             "harrix_error.log", maxBytes=104857600, backupCount=100
         )
-        handler_file_error.setFormatter(log_format)
-        handler_file_error.setLevel(logging.ERROR)
-        self.__logger_file_error.addHandler(handler_file_error)
+        self.__handler_file_error.setFormatter(
+            Logger.ColorFormatter(Logger.log_format_time)
+        )
+        self.__handler_file_error.setLevel(logging.ERROR)
+        self.__logger_file_error.addHandler(self.__handler_file_error)
+
+    @property
+    def is_show_time_log_console(self):
+        return self._is_show_time_log_console
+
+    @is_show_time_log_console.setter
+    def is_show_time_log_console(self, value):
+        self._is_show_time_log_console = value
+        if self._is_show_time_log_console:
+            self.__handler_console.setFormatter(Logger.ColorFormatter(Logger.log_format_time))
+        else:
+            self.__handler_console.setFormatter(Logger.ColorFormatter(Logger.log_format_no_time))
+
+    @is_show_time_log_console.deleter
+    def is_show_time_log_console(self):
+        del self._is_show_time_log_console
 
     def debug(self, msg):
         if self.is_log_console:
@@ -86,6 +154,29 @@ class Logger(object):
 log = Logger()
 
 if __name__ == "__main__":
-    log.info("Test me 1")
-    log.info("Test me 2")
+    # log.is_show_time_log_console = False
+    log.error("Test me 1")
+    log.info("Test {} 2".format(Logger.text_gray("me")))
+    log.info("Test {} 2".format(Logger.text_yellow("me")))
+    log.info("Test {} 2".format(Logger.text_green("me")))
+    log.info("Test {} 2".format(Logger.text_red("me")))
+    log.info("Test {} 2".format(Logger.text_red_bold("me")))
     log.info("Test me 3")
+
+    print('\x1b[0m Reset / Normal \x1b[0m')
+    print('\x1b[1m Bold or increased intensity \x1b[0m')
+    print('\x1b[3m Italic \x1b[0m')
+    print('\x1b[4m Underline \x1b[0m')
+    print('\x1b[9m Crossed-out \x1b[0m')
+    print('\x1b[31m Red foreground\x1b[0m')
+    print('\x1b[32m Green foreground\x1b[0m')
+    print('\x1b[33m Yellow foreground\x1b[0m')
+    print('\x1b[34m Blue foreground\x1b[0m')
+    print('\x1b[35m Magenta foreground\x1b[0m')
+    print('\x1b[36m Cyan foreground\x1b[0m')
+    print('\x1b[41m Red background\x1b[0m')
+    print('\x1b[42m Green background\x1b[0m')
+    print('\x1b[43m Yellow background\x1b[0m')
+    print('\x1b[44m Blue background\x1b[0m')
+    print('\x1b[45m Magenta background\x1b[0m')
+    print('\x1b[46m Cyan background\x1b[0m')
