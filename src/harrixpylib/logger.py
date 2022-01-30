@@ -32,26 +32,6 @@ class Logger(object):
     log_format_time = "[%(levelname)s] %(asctime)s - %(message)s"
     log_format_no_time = "[%(levelname)s] %(message)s"
 
-    @classmethod
-    def text_red(self, text):
-        return Logger.Style.RED + text + Logger.Style.RESET
-
-    @classmethod
-    def text_gray(self, text):
-        return Logger.Style.GREY + text + Logger.Style.RESET
-
-    @classmethod
-    def text_red_bold(self, text):
-        return Logger.Style.RED_BOLD + text + Logger.Style.RESET
-
-    @classmethod
-    def text_yellow(self, text):
-        return Logger.Style.YELLOW + text + Logger.Style.RESET
-
-    @classmethod
-    def text_green(self, text):
-        return Logger.Style.GREEN + text + Logger.Style.RESET
-
     def __new__(self):
         if not hasattr(self, "instance"):
             self.instance = super(Logger, self).__new__(self)
@@ -150,6 +130,26 @@ class Logger(object):
             self.__logger_file.exception(msg)
             self.__logger_file_error.exception(msg)
 
+    @classmethod
+    def text_red(self, text):
+        return Logger.Style.RED + text + Logger.Style.RESET
+
+    @classmethod
+    def text_gray(self, text):
+        return Logger.Style.GREY + text + Logger.Style.RESET
+
+    @classmethod
+    def text_red_bold(self, text):
+        return Logger.Style.RED_BOLD + text + Logger.Style.RESET
+
+    @classmethod
+    def text_yellow(self, text):
+        return Logger.Style.YELLOW + text + Logger.Style.RESET
+
+    @classmethod
+    def text_green(self, text):
+        return Logger.Style.GREEN + text + Logger.Style.RESET
+
 
 log = Logger()
 
@@ -163,10 +163,7 @@ if __name__ == "__main__":
     log.info("Test {} 2".format(Logger.text_red_bold("me")))
     log.info("Test me 3")
 
-    print('\x1b[0m Reset / Normal \x1b[0m')
-    print('\x1b[3m Italic \x1b[0m')
-    print('\x1b[4m Underline \x1b[0m')
-    print('\x1b[9m Crossed-out \x1b[0m')
+    print('\x1b[0m Normal \x1b[0m')
     print('\x1b[31m Red foreground\x1b[0m')
     print('\x1b[32m Green foreground\x1b[0m')
     print('\x1b[33m Yellow foreground\x1b[0m')
@@ -179,3 +176,6 @@ if __name__ == "__main__":
     print('\x1b[44m Blue background\x1b[0m')
     print('\x1b[45m Magenta background\x1b[0m')
     print('\x1b[46m Cyan background\x1b[0m')
+    print('\x1b[3m Italic \x1b[0m')
+    print('\x1b[4m Underline \x1b[0m')
+    print('\x1b[9m Crossed-out \x1b[0m')
