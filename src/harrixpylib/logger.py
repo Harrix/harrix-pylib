@@ -4,7 +4,7 @@ from enum import Enum
 
 
 class Logger(object):
-    class Color(str, Enum):
+    class Style(str, Enum):
         GREY = "\x1b[38;20m"
         YELLOW = "\x1b[33;20m"
         RED = "\x1b[31;20m"
@@ -12,7 +12,7 @@ class Logger(object):
         RED_BOLD = "\x1b[31;1m"
         RESET = "\x1b[0m"
 
-    class ColorFormatter(logging.Formatter):
+    class StyleFormatter(logging.Formatter):
         def __init__(self, format):
             super().__init__()
             self.__format = format
@@ -34,23 +34,23 @@ class Logger(object):
 
     @classmethod
     def text_red(self, text):
-        return Logger.Color.RED + text + Logger.Color.RESET
+        return Logger.Style.RED + text + Logger.Style.RESET
 
     @classmethod
     def text_gray(self, text):
-        return Logger.Color.GREY + text + Logger.Color.RESET
+        return Logger.Style.GREY + text + Logger.Style.RESET
 
     @classmethod
     def text_red_bold(self, text):
-        return Logger.Color.RED_BOLD + text + Logger.Color.RESET
+        return Logger.Style.RED_BOLD + text + Logger.Style.RESET
 
     @classmethod
     def text_yellow(self, text):
-        return Logger.Color.YELLOW + text + Logger.Color.RESET
+        return Logger.Style.YELLOW + text + Logger.Style.RESET
 
     @classmethod
     def text_green(self, text):
-        return Logger.Color.GREEN + text + Logger.Color.RESET
+        return Logger.Style.GREEN + text + Logger.Style.RESET
 
     def __new__(self):
         if not hasattr(self, "instance"):
@@ -67,7 +67,7 @@ class Logger(object):
 
         self.__handler_console = logging.StreamHandler()
         self.__handler_console.setFormatter(
-            Logger.ColorFormatter("[%(levelname)s] %(asctime)s - %(message)s")
+            Logger.StyleFormatter("[%(levelname)s] %(asctime)s - %(message)s")
         )
         self.__handler_console.setLevel(logging.DEBUG)
         self.__logger_console.addHandler(self.__handler_console)
@@ -77,7 +77,7 @@ class Logger(object):
         self.__handler_file = RotatingFileHandler(
             "harrix.log", maxBytes=104857600, backupCount=100
         )
-        self.__handler_file.setFormatter(Logger.ColorFormatter(Logger.log_format_time))
+        self.__handler_file.setFormatter(Logger.StyleFormatter(Logger.log_format_time))
         self.__handler_file.setLevel(logging.DEBUG)
         self.__logger_file.addHandler(self.__handler_file)
 
@@ -87,7 +87,7 @@ class Logger(object):
             "harrix_error.log", maxBytes=104857600, backupCount=100
         )
         self.__handler_file_error.setFormatter(
-            Logger.ColorFormatter(Logger.log_format_time)
+            Logger.StyleFormatter(Logger.log_format_time)
         )
         self.__handler_file_error.setLevel(logging.ERROR)
         self.__logger_file_error.addHandler(self.__handler_file_error)
@@ -100,9 +100,9 @@ class Logger(object):
     def is_show_time_log_console(self, value):
         self._is_show_time_log_console = value
         if self._is_show_time_log_console:
-            self.__handler_console.setFormatter(Logger.ColorFormatter(Logger.log_format_time))
+            self.__handler_console.setFormatter(Logger.StyleFormatter(Logger.log_format_time))
         else:
-            self.__handler_console.setFormatter(Logger.ColorFormatter(Logger.log_format_no_time))
+            self.__handler_console.setFormatter(Logger.StyleFormatter(Logger.log_format_no_time))
 
     @is_show_time_log_console.deleter
     def is_show_time_log_console(self):
@@ -164,7 +164,6 @@ if __name__ == "__main__":
     log.info("Test me 3")
 
     print('\x1b[0m Reset / Normal \x1b[0m')
-    print('\x1b[1m Bold or increased intensity \x1b[0m')
     print('\x1b[3m Italic \x1b[0m')
     print('\x1b[4m Underline \x1b[0m')
     print('\x1b[9m Crossed-out \x1b[0m')
