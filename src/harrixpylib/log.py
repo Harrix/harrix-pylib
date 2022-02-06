@@ -124,68 +124,71 @@ class Log(object):
     def critical(self, msg):
         self.__write_log("critical", msg)
 
+    def __text_style(self, style: Style, text):
+        return style + text + Log.Style.RESET
+
     def text_debug(self, text):
-        return Log.Style.DEBUG + text + Log.Style.RESET
+        return self.__text_style(Log.Style.DEBUG, text)
 
     def text_info(self, text):
-        return Log.Style.INFO + text + Log.Style.RESET
+        return self.__text_style(Log.Style.DEBUG, text)
 
     def text_warning(self, text):
-        return Log.Style.WARNING + text + Log.Style.RESET
+        return self.__text_style(Log.Style.WARNING, text)
 
     def text_error(self, text):
-        return Log.Style.ERROR + text + Log.Style.RESET
+        return self.__text_style(Log.Style.ERROR, text)
 
     def text_critical(self, text):
-        return Log.Style.CRITICAL + text + Log.Style.RESET
+        return self.__text_style(Log.Style.CRITICAL, text)
 
     def text_normal(self, text):
-        return Log.Style.NORMAL + text + Log.Style.RESET
+        return self.__text_style(Log.Style.NORMAL, text)
 
     def text_red(self, text):
-        return Log.Style.RED + text + Log.Style.RESET
+        return self.__text_style(Log.Style.RED, text)
 
     def text_green(self, text):
-        return Log.Style.GREEN + text + Log.Style.RESET
+        return self.__text_style(Log.Style.GREEN, text)
 
     def text_yellow(self, text):
-        return Log.Style.YELLOW + text + Log.Style.RESET
+        return self.__text_style(Log.Style.YELLOW, text)
 
     def text_blue(self, text):
-        return Log.Style.BLUE + text + Log.Style.RESET
+        return self.__text_style(Log.Style.BLUE, text)
 
     def text_magenta(self, text):
-        return Log.Style.MAGENTA + text + Log.Style.RESET
+        return self.__text_style(Log.Style.MAGENTA, text)
 
     def text_cyan(self, text):
-        return Log.Style.CYAN + text + Log.Style.RESET
+        return self.__text_style(Log.Style.CYAN, text)
 
     def text_red_background(self, text):
-        return Log.Style.RED_BACKGROUND + text + Log.Style.RESET
+        return self.__text_style(Log.Style.RED_BACKGROUND, text)
 
     def text_green_background(self, text):
-        return Log.Style.GREEN_BACKGROUND + text + Log.Style.RESET
+        return self.__text_style(Log.Style.GREEN_BACKGROUND, text)
 
     def text_yellow_background(self, text):
-        return Log.Style.YELLOW_BACKGROUND + text + Log.Style.RESET
+        return self.__text_style(Log.Style.YELLOW_BACKGROUND, text)
 
     def text_blue_background(self, text):
-        return Log.Style.BLUE_BACKGROUND + text + Log.Style.RESET
+        return self.__text_style(Log.Style.BLUE_BACKGROUND, text)
 
     def text_magenta_background(self, text):
-        return Log.Style.MAGENTA_BACKGROUND + text + Log.Style.RESET
+        return self.__text_style(Log.Style.MAGENTA_BACKGROUND, text)
 
     def text_cyan_background(self, text):
-        return Log.Style.CYAN_BACKGROUND + text + Log.Style.RESET
+        return self.__text_style(Log.Style.CYAN_BACKGROUND, text)
 
     def text_italic(self, text):
-        return Log.Style.ITALIC + text + Log.Style.RESET
+        return self.__text_style(Log.Style.ITALIC, text)
 
     def text_underline(self, text):
-        return Log.Style.UNDERLINE + text + Log.Style.RESET
+        return self.__text_style(Log.Style.UNDERLINE, text)
 
     def text_crossed_out(self, text):
-        return Log.Style.CROSSED_OUT + text + Log.Style.RESET
+        return self.__text_style(Log.Style.CROSSED_OUT, text)
 
 
 log = Log()
