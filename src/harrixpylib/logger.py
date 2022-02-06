@@ -3,7 +3,7 @@ from logging.handlers import RotatingFileHandler
 from enum import Enum
 
 
-class Logger(object):
+class Log(object):
     log_format_time = "[%(levelname)s] %(asctime)s - %(message)s"  # TODO
     log_format_no_time = "[%(levelname)s] %(message)s"  # TODO
 
@@ -37,15 +37,11 @@ class Logger(object):
             self.__format = format
 
             self.FORMATS = {
-                logging.DEBUG: Logger.Style.DEBUG + self.__format + Logger.Style.RESET,
-                logging.INFO: Logger.Style.INFO + self.__format + Logger.Style.RESET,
-                logging.WARNING: Logger.Style.WARNING
-                + self.__format
-                + Logger.Style.RESET,
-                logging.ERROR: Logger.Style.ERROR + self.__format + Logger.Style.RESET,
-                logging.CRITICAL: Logger.Style.CRITICAL
-                + self.__format
-                + Logger.Style.RESET,
+                logging.DEBUG: Log.Style.DEBUG + self.__format + Log.Style.RESET,
+                logging.INFO: Log.Style.INFO + self.__format + Log.Style.RESET,
+                logging.WARNING: Log.Style.WARNING + self.__format + Log.Style.RESET,
+                logging.ERROR: Log.Style.ERROR + self.__format + Log.Style.RESET,
+                logging.CRITICAL: Log.Style.CRITICAL + self.__format + Log.Style.RESET,
             }
 
         def format(self, record):
@@ -54,7 +50,7 @@ class Logger(object):
 
     def __new__(self):
         if not hasattr(self, "instance"):
-            self.instance = super(Logger, self).__new__(self)
+            self.instance = super(Log, self).__new__(self)
         return self.instance
 
     def __init__(self):
@@ -65,33 +61,29 @@ class Logger(object):
         self.__is_console_now = True
 
         self.__handler_console = logging.StreamHandler()
-        self.__handler_console.setFormatter(
-            Logger.StyleFormatter(Logger.log_format_no_time)
-        )
+        self.__handler_console.setFormatter(Log.StyleFormatter(Log.log_format_no_time))
         self.__handler_console.setLevel(logging.DEBUG)
-        self.__logger_console = logging.getLogger("dev.harrix.logger.console")
-        self.__logger_console.setLevel(logging.DEBUG)
-        self.__logger_console.addHandler(self.__handler_console)
+        self.__log_console = logging.getlog("dev.harrix.log.console")
+        self.__log_console.setLevel(logging.DEBUG)
+        self.__log_console.addHandler(self.__handler_console)
 
         self.__handler_file = RotatingFileHandler(
             "harrix.log", maxBytes=104857600, backupCount=100
         )
-        self.__handler_file.setFormatter(logging.Formatter(Logger.log_format_time))
+        self.__handler_file.setFormatter(logging.Formatter(Log.log_format_time))
         self.__handler_file.setLevel(logging.DEBUG)
-        self.__logger_file = logging.getLogger("dev.harrix.logger.file")
-        self.__logger_file.setLevel(logging.DEBUG)
-        self.__logger_file.addHandler(self.__handler_file)
+        self.__log_file = logging.getlog("dev.harrix.log.file")
+        self.__log_file.setLevel(logging.DEBUG)
+        self.__log_file.addHandler(self.__handler_file)
 
         self.__handler_file_error = RotatingFileHandler(
             "harrix_error.log", maxBytes=104857600, backupCount=100
         )
-        self.__handler_file_error.setFormatter(
-            logging.Formatter(Logger.log_format_time)
-        )
+        self.__handler_file_error.setFormatter(logging.Formatter(Log.log_format_time))
         self.__handler_file_error.setLevel(logging.ERROR)
-        self.__logger_file_error = logging.getLogger("dev.harrix.logger.file.error")
-        self.__logger_file_error.setLevel(logging.ERROR)
-        self.__logger_file_error.addHandler(self.__handler_file_error)
+        self.__log_file_error = logging.getlog("dev.harrix.log.file.error")
+        self.__log_file_error.setLevel(logging.ERROR)
+        self.__log_file_error.addHandler(self.__handler_file_error)
 
     @property
     def is_show_time_in_console(self):
@@ -101,12 +93,10 @@ class Logger(object):
     def is_show_time_in_console(self, value):
         self._is_show_time_in_console = value
         if self._is_show_time_in_console:
-            self.__handler_console.setFormatter(
-                Logger.StyleFormatter(Logger.log_format_time)
-            )
+            self.__handler_console.setFormatter(Log.StyleFormatter(Log.log_format_time))
         else:
             self.__handler_console.setFormatter(
-                Logger.StyleFormatter(Logger.log_format_no_time)
+                Log.StyleFormatter(Log.log_format_no_time)
             )
 
     @is_show_time_in_console.deleter
@@ -115,111 +105,111 @@ class Logger(object):
 
     def debug(self, msg):
         if self.is_log_console:
-            self.__logger_console.debug(msg)
+            self.__log_console.debug(msg)
         if self.is_log_file:
-            self.__logger_file.debug(msg)
-            self.__logger_file_error.debug(msg)
+            self.__log_file.debug(msg)
+            self.__log_file_error.debug(msg)
 
     def info(self, msg):
         if self.is_log_console:
-            self.__logger_console.info(msg)
+            self.__log_console.info(msg)
         if self.is_log_file:
-            self.__logger_file.info(msg)
-            self.__logger_file_error.info(msg)
+            self.__log_file.info(msg)
+            self.__log_file_error.info(msg)
 
     def warning(self, msg):
         if self.is_log_console:
-            self.__logger_console.warning(msg)
+            self.__log_console.warning(msg)
         if self.is_log_file:
-            self.__logger_file.warning(msg)
-            self.__logger_file_error.warning(msg)
+            self.__log_file.warning(msg)
+            self.__log_file_error.warning(msg)
 
     def error(self, msg):
         if self.is_log_console:
-            self.__logger_console.error(msg)
+            self.__log_console.error(msg)
         if self.is_log_file:
-            self.__logger_file.error(msg)
-            self.__logger_file_error.error(msg)
+            self.__log_file.error(msg)
+            self.__log_file_error.error(msg)
 
     def critical(self, msg):
         if self.is_log_console:
-            self.__logger_console.critical(msg)
+            self.__log_console.critical(msg)
         if self.is_log_file:
-            self.__logger_file.critical(msg)
-            self.__logger_file_error.critical(msg)
+            self.__log_file.critical(msg)
+            self.__log_file_error.critical(msg)
 
     def exception(self, msg):  # TODO
         if self.is_log_console:
-            self.__logger_console.exception(msg)
+            self.__log_console.exception(msg)
         if self.is_log_file:
-            self.__logger_file.exception(msg)
-            self.__logger_file_error.exception(msg)
+            self.__log_file.exception(msg)
+            self.__log_file_error.exception(msg)
 
     def text_debug(self, text):
-        return Logger.Style.DEBUG + text + Logger.Style.RESET
+        return Log.Style.DEBUG + text + Log.Style.RESET
 
     def text_info(self, text):
-        return Logger.Style.INFO + text + Logger.Style.RESET
+        return Log.Style.INFO + text + Log.Style.RESET
 
     def text_warning(self, text):
-        return Logger.Style.WARNING + text + Logger.Style.RESET
+        return Log.Style.WARNING + text + Log.Style.RESET
 
     def text_error(self, text):
-        return Logger.Style.ERROR + text + Logger.Style.RESET
+        return Log.Style.ERROR + text + Log.Style.RESET
 
     def text_critical(self, text):
-        return Logger.Style.CRITICAL + text + Logger.Style.RESET
+        return Log.Style.CRITICAL + text + Log.Style.RESET
 
     def text_normal(self, text):
-        return Logger.Style.NORMAL + text + Logger.Style.RESET
+        return Log.Style.NORMAL + text + Log.Style.RESET
 
     def text_red(self, text):
-        return Logger.Style.RED + text + Logger.Style.RESET
+        return Log.Style.RED + text + Log.Style.RESET
 
     def text_green(self, text):
-        return Logger.Style.GREEN + text + Logger.Style.RESET
+        return Log.Style.GREEN + text + Log.Style.RESET
 
     def text_yellow(self, text):
-        return Logger.Style.YELLOW + text + Logger.Style.RESET
+        return Log.Style.YELLOW + text + Log.Style.RESET
 
     def text_blue(self, text):
-        return Logger.Style.BLUE + text + Logger.Style.RESET
+        return Log.Style.BLUE + text + Log.Style.RESET
 
     def text_magenta(self, text):
-        return Logger.Style.MAGENTA + text + Logger.Style.RESET
+        return Log.Style.MAGENTA + text + Log.Style.RESET
 
     def text_cyan(self, text):
-        return Logger.Style.CYAN + text + Logger.Style.RESET
+        return Log.Style.CYAN + text + Log.Style.RESET
 
     def text_red_background(self, text):
-        return Logger.Style.RED_BACKGROUND + text + Logger.Style.RESET
+        return Log.Style.RED_BACKGROUND + text + Log.Style.RESET
 
     def text_green_background(self, text):
-        return Logger.Style.GREEN_BACKGROUND + text + Logger.Style.RESET
+        return Log.Style.GREEN_BACKGROUND + text + Log.Style.RESET
 
     def text_yellow_background(self, text):
-        return Logger.Style.YELLOW_BACKGROUND + text + Logger.Style.RESET
+        return Log.Style.YELLOW_BACKGROUND + text + Log.Style.RESET
 
     def text_blue_background(self, text):
-        return Logger.Style.BLUE_BACKGROUND + text + Logger.Style.RESET
+        return Log.Style.BLUE_BACKGROUND + text + Log.Style.RESET
 
     def text_magenta_background(self, text):
-        return Logger.Style.MAGENTA_BACKGROUND + text + Logger.Style.RESET
+        return Log.Style.MAGENTA_BACKGROUND + text + Log.Style.RESET
 
     def text_cyan_background(self, text):
-        return Logger.Style.CYAN_BACKGROUND + text + Logger.Style.RESET
+        return Log.Style.CYAN_BACKGROUND + text + Log.Style.RESET
 
     def text_italic(self, text):
-        return Logger.Style.ITALIC + text + Logger.Style.RESET
+        return Log.Style.ITALIC + text + Log.Style.RESET
 
     def text_underline(self, text):
-        return Logger.Style.UNDERLINE + text + Logger.Style.RESET
+        return Log.Style.UNDERLINE + text + Log.Style.RESET
 
     def text_crossed_out(self, text):
-        return Logger.Style.CROSSED_OUT + text + Logger.Style.RESET
+        return Log.Style.CROSSED_OUT + text + Log.Style.RESET
 
 
-log = Logger()
+log = Log()
 
 if __name__ == "__main__":
     # log.is_show_time_in_console = False
