@@ -37,11 +37,11 @@ class Logger(object):
             self.__format = format
 
             self.FORMATS = {
-                logging.DEBUG: Logger.text_cyan(self.__format),
-                logging.INFO: Logger.text_normal(self.__format),
-                logging.WARNING: Logger.text_yellow(self.__format),
-                logging.ERROR: Logger.text_red(self.__format),
-                logging.CRITICAL: Logger.text_red_background(self.__format),
+                logging.DEBUG: Logger.text_debug(self.__format),
+                logging.INFO: Logger.text_info(self.__format),
+                logging.WARNING: Logger.text_warning(self.__format),
+                logging.ERROR: Logger.text_error(self.__format),
+                logging.CRITICAL: Logger.text_critical(self.__format),
             }
 
         def format(self, record):
@@ -140,7 +140,7 @@ class Logger(object):
             self.__logger_file.critical(msg)
             self.__logger_file_error.critical(msg)
 
-    def exception(self, msg):
+    def exception(self, msg): # TODO
         if self.is_log_console:
             self.__logger_console.exception(msg)
         if self.is_log_file:
@@ -233,32 +233,15 @@ class Logger(object):
         return Logger.Style.CROSSED_OUT + text + Logger.Style.RESET
 
 
+
 log = Logger()
 
 if __name__ == "__main__":
     # log.is_show_time_in_console = False
     log.is_log_file = True
-    log.error("Test me 1")
-    log.info("Test {} 2".format(Logger.text_normal("me")))
-    log.info("Test {} 2".format(Logger.text_yellow("me")))
-    log.info("Test {} 2".format(Logger.text_green("me")))
-    log.info("Test {} 2".format(Logger.text_red("me")))
+    log.info("Test me 1")
+    log.debug("Test {} 2".format(Logger.text_normal("me")))
+    log.warning("Test {} 2".format(Logger.text_yellow("me")))
+    log.debug("Test {} 2".format(Logger.text_green("me")))
+    log.critical("Test {} 2".format(Logger.text_red("me")))
     log.info("Test {} 2".format(Logger.text_red_background("me")))
-    log.info("Test me 3")
-
-    print("\x1b[0m Normal \x1b[0m")
-    print("\x1b[31m Red foreground\x1b[0m")
-    print("\x1b[32m Green foreground\x1b[0m")
-    print("\x1b[33m Yellow foreground\x1b[0m")
-    print("\x1b[34m Blue foreground\x1b[0m")
-    print("\x1b[35m Magenta foreground\x1b[0m")
-    print("\x1b[36m Cyan foreground\x1b[0m")
-    print("\x1b[41m Red background\x1b[0m")
-    print("\x1b[42m Green background\x1b[0m")
-    print("\x1b[43m Yellow background\x1b[0m")
-    print("\x1b[44m Blue background\x1b[0m")
-    print("\x1b[45m Magenta background\x1b[0m")
-    print("\x1b[46m Cyan background\x1b[0m")
-    print("\x1b[3m Italic \x1b[0m")
-    print("\x1b[4m Underline \x1b[0m")
-    print("\x1b[9m Crossed-out \x1b[0m")
