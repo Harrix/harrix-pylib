@@ -57,7 +57,7 @@ class Log(object):
         self.is_log_console = True
         self.is_log_file = False
         self._is_show_time_in_console = False
-        self.is_color_console = True
+        self._is_show_color_in_console = True
 
         self.__handler_console = logging.StreamHandler()
         self.__handler_console.setFormatter(Log.StyleFormatter(Log.log_format_no_time))
@@ -92,15 +92,57 @@ class Log(object):
     def is_show_time_in_console(self, value):
         self._is_show_time_in_console = value
         if self._is_show_time_in_console:
-            self.__handler_console.setFormatter(Log.StyleFormatter(Log.log_format_time))
+            if self._is_show_color_in_console:
+                self.__handler_console.setFormatter(
+                    Log.StyleFormatter(Log.log_format_time)
+                )
+            else:
+                self.__handler_console.setFormatter(
+                    logging.Formatter(Log.log_format_time)
+                )
         else:
-            self.__handler_console.setFormatter(
-                Log.StyleFormatter(Log.log_format_no_time)
-            )
+            if self._is_show_color_in_console:
+                self.__handler_console.setFormatter(
+                    Log.StyleFormatter(Log.log_format_no_time)
+                )
+            else:
+                self.__handler_console.setFormatter(
+                    logging.Formatter(Log.log_format_no_time)
+                )
 
     @is_show_time_in_console.deleter
     def is_show_time_in_console(self):
         del self._is_show_time_in_console
+
+    @property
+    def is_show_color_in_console(self):
+        return self._is_show_color_in_console
+
+    @is_show_color_in_console.setter
+    def is_show_color_in_console(self, value):
+        self._is_show_color_in_console = value
+        if self._is_show_color_in_console:
+            if self._is_show_time_in_console:
+                self.__handler_console.setFormatter(
+                    Log.StyleFormatter(Log.log_format_time)
+                )
+            else:
+                self.__handler_console.setFormatter(
+                    Log.StyleFormatter(Log.log_format_no_time)
+                )
+        else:
+            if self._is_show_time_in_console:
+                self.__handler_console.setFormatter(
+                    logging.Formatter(Log.log_format_time)
+                )
+            else:
+                self.__handler_console.setFormatter(
+                    logging.Formatter(Log.log_format_no_time)
+                )
+
+    @is_show_color_in_console.deleter
+    def is_show_color_in_console(self):
+        del self._is_show_color_in_console
 
     def __write_log(self, method, msg):
         if self.is_log_console:
@@ -125,7 +167,9 @@ class Log(object):
         self.__write_log("critical", msg)
 
     def __text_style(self, style: Style, text):
-        return style + text + Log.Style.RESET
+        if self._is_show_color_in_console:
+            return style + text + Log.Style.RESET
+        return text
 
     def text_debug(self, text):
         return self.__text_style(Log.Style.DEBUG, text)
@@ -194,8 +238,9 @@ class Log(object):
 log = Log()
 
 if __name__ == "__main__":
-    # log.is_show_time_in_console = False
+    log.is_show_time_in_console = False
     log.is_log_file = True
+    log.is_show_color_in_console = False
     log.info("Test me 1")
     log.debug("Test {} 2".format(log.text_normal("me")))
     log.warning("Test {} 2".format(log.text_yellow("me")))
