@@ -51,5 +51,5 @@ pipenv shell
 Generate docs:
 
 ```console
-pdoc --docformat="google" src\harrixpyssg\
+pdoc --docformat="google" src\harrixpylib\
 ```
