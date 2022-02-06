@@ -1,6 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 from enum import Enum
+import hashlib
 
 
 class Log(object):
@@ -35,6 +36,8 @@ class Log(object):
         @staticmethod
         def list():
             return list(map(lambda c: c.value, Log.Style))
+
+    __TEMPSTYLE = hashlib.md5("__TEMPSTYLE".encode()).hexdigest()
 
     class StyleFormatter(logging.Formatter):
         def __init__(self, format):
@@ -143,6 +146,8 @@ class Log(object):
 
     def __write_log(self, method, msg):
         if self.is_log_console:
+            if Log.__TEMPSTYLE in msg:
+                msg = msg.replace(Log.__TEMPSTYLE, getattr(Log.Style, method.upper()))
             getattr(self.__log_console, method)(msg)
         if self.is_log_file:
             msg = Log.__clear_color(msg)
@@ -174,7 +179,7 @@ class Log(object):
 
     def __text_style(self, style: Style, text):
         if self._is_show_color_in_console:
-            return style + text + Log.Style.RESET
+            return Log.Style.RESET + style + text + Log.Style.RESET + Log.__TEMPSTYLE
         return text
 
     def text_debug(self, text):
@@ -244,12 +249,12 @@ class Log(object):
 log = Log()
 
 if __name__ == "__main__":
-    log.is_show_time_in_console = True
+    log.is_show_time_in_console = False
     log.is_log_file = True
-    log.is_show_color_in_console = False
+    log.is_show_color_in_console = True
     log.info("Test me 1")
-    log.debug("Test {} 2".format(log.text_normal("me")))
-    log.warning("Test {} 2".format(log.text_yellow("me")))
-    log.debug("Test {} 2".format(log.text_green("me")))
-    log.critical("Test {} 2".format(log.text_red("me")))
-    log.info("Test {} 2".format(log.text_red_background("me")))
+    log.debug("Test {} 2gsdfgsdfg".format(log.text_normal("me")))
+    log.warning("Test {} 2sfdgsdf".format(log.text_blue("me")))
+    log.debug("Test {} 2sfg".format(log.text_green("me")))
+    log.critical("Test {} 2sgfsdfg".format(log.text_red("me")))
+    log.info("Test {} 2sвапывап".format(log.text_red_background("me")))
