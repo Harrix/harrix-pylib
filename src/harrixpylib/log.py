@@ -4,8 +4,9 @@ from enum import Enum
 
 
 class Log(object):
-    log_format_time = "[%(levelname)s] %(asctime)s - %(message)s"  # TODO
-    log_format_no_time = "[%(levelname)s] %(message)s"  # TODO
+    class Format(str, Enum):
+        TIME = "[%(levelname)s] %(asctime)s - %(message)s"
+        NO_TIME = "[%(levelname)s] %(message)s"
 
     class Style(str, Enum):
         DEBUG = "\x1b[36m"
@@ -60,7 +61,7 @@ class Log(object):
         self._is_show_color_in_console = True
 
         self.__handler_console = logging.StreamHandler()
-        self.__handler_console.setFormatter(Log.StyleFormatter(Log.log_format_no_time))
+        self.__handler_console.setFormatter(Log.StyleFormatter(Log.Format.NO_TIME))
         self.__handler_console.setLevel(logging.DEBUG)
         self.__log_console = logging.getLogger("dev.harrix.log.console")
         self.__log_console.setLevel(logging.DEBUG)
@@ -69,7 +70,7 @@ class Log(object):
         self.__handler_file = RotatingFileHandler(
             "harrix.log", maxBytes=104857600, backupCount=100
         )
-        self.__handler_file.setFormatter(logging.Formatter(Log.log_format_time))
+        self.__handler_file.setFormatter(logging.Formatter(Log.Format.TIME))
         self.__handler_file.setLevel(logging.DEBUG)
         self.__log_file = logging.getLogger("dev.harrix.log.file")
         self.__log_file.setLevel(logging.DEBUG)
@@ -78,7 +79,7 @@ class Log(object):
         self.__handler_file_error = RotatingFileHandler(
             "harrix_error.log", maxBytes=104857600, backupCount=100
         )
-        self.__handler_file_error.setFormatter(logging.Formatter(Log.log_format_time))
+        self.__handler_file_error.setFormatter(logging.Formatter(Log.Format.TIME))
         self.__handler_file_error.setLevel(logging.ERROR)
         self.__log_file_error = logging.getLogger("dev.harrix.log.file.error")
         self.__log_file_error.setLevel(logging.ERROR)
@@ -93,21 +94,17 @@ class Log(object):
         self._is_show_time_in_console = value
         if self._is_show_time_in_console:
             if self._is_show_color_in_console:
-                self.__handler_console.setFormatter(
-                    Log.StyleFormatter(Log.log_format_time)
-                )
+                self.__handler_console.setFormatter(Log.StyleFormatter(Log.Format.TIME))
             else:
-                self.__handler_console.setFormatter(
-                    logging.Formatter(Log.log_format_time)
-                )
+                self.__handler_console.setFormatter(logging.Formatter(Log.Format.TIME))
         else:
             if self._is_show_color_in_console:
                 self.__handler_console.setFormatter(
-                    Log.StyleFormatter(Log.log_format_no_time)
+                    Log.StyleFormatter(Log.Format.NO_TIME)
                 )
             else:
                 self.__handler_console.setFormatter(
-                    logging.Formatter(Log.log_format_no_time)
+                    logging.Formatter(Log.Format.NO_TIME)
                 )
 
     @is_show_time_in_console.deleter
@@ -123,21 +120,17 @@ class Log(object):
         self._is_show_color_in_console = value
         if self._is_show_color_in_console:
             if self._is_show_time_in_console:
-                self.__handler_console.setFormatter(
-                    Log.StyleFormatter(Log.log_format_time)
-                )
+                self.__handler_console.setFormatter(Log.StyleFormatter(Log.Format.TIME))
             else:
                 self.__handler_console.setFormatter(
-                    Log.StyleFormatter(Log.log_format_no_time)
+                    Log.StyleFormatter(Log.Format.NO_TIME)
                 )
         else:
             if self._is_show_time_in_console:
-                self.__handler_console.setFormatter(
-                    logging.Formatter(Log.log_format_time)
-                )
+                self.__handler_console.setFormatter(logging.Formatter(Log.Format.TIME))
             else:
                 self.__handler_console.setFormatter(
-                    logging.Formatter(Log.log_format_no_time)
+                    logging.Formatter(Log.Format.NO_TIME)
                 )
 
     @is_show_color_in_console.deleter
@@ -238,7 +231,7 @@ class Log(object):
 log = Log()
 
 if __name__ == "__main__":
-    log.is_show_time_in_console = False
+    log.is_show_time_in_console = True
     log.is_log_file = True
     log.is_show_color_in_console = True
     log.info("Test me 1")
