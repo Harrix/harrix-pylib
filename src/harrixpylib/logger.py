@@ -4,6 +4,9 @@ from enum import Enum
 
 
 class Logger(object):
+    log_format_time = "[%(levelname)s] %(asctime)s - %(message)s"  # TODO
+    log_format_no_time = "[%(levelname)s] %(message)s"  # TODO
+
     class Style(str, Enum):
         NORMAL = "\x1b[0m"
         RED = "\x1b[31;20m"
@@ -40,9 +43,6 @@ class Logger(object):
             formatter = logging.Formatter(self.FORMATS.get(record.levelno))
             return formatter.format(record)
 
-    log_format_time = "[%(levelname)s] %(asctime)s - %(message)s"
-    log_format_no_time = "[%(levelname)s] %(message)s"
-
     def __new__(self):
         if not hasattr(self, "instance"):
             self.instance = super(Logger, self).__new__(self)
@@ -53,27 +53,24 @@ class Logger(object):
         self.is_log_file = False
         self._is_show_time_in_console = False
 
-        self.__logger_console = logging.getLogger("dev.harrix.logger.console")
-        self.__logger_console.setLevel(logging.DEBUG)
-
         self.__handler_console = logging.StreamHandler()
         self.__handler_console.setFormatter(
             Logger.StyleFormatter(Logger.log_format_no_time)
         )
         self.__handler_console.setLevel(logging.DEBUG)
+        self.__logger_console = logging.getLogger("dev.harrix.logger.console")
+        self.__logger_console.setLevel(logging.DEBUG)
         self.__logger_console.addHandler(self.__handler_console)
 
-        self.__logger_file = logging.getLogger("dev.harrix.logger.file")
-        self.__logger_file.setLevel(logging.DEBUG)
         self.__handler_file = RotatingFileHandler(
             "harrix.log", maxBytes=104857600, backupCount=100
         )
         self.__handler_file.setFormatter(Logger.StyleFormatter(Logger.log_format_time))
         self.__handler_file.setLevel(logging.DEBUG)
+        self.__logger_file = logging.getLogger("dev.harrix.logger.file")
+        self.__logger_file.setLevel(logging.DEBUG)
         self.__logger_file.addHandler(self.__handler_file)
 
-        self.__logger_file_error = logging.getLogger("dev.harrix.logger.file.error")
-        self.__logger_file_error.setLevel(logging.ERROR)
         self.__handler_file_error = RotatingFileHandler(
             "harrix_error.log", maxBytes=104857600, backupCount=100
         )
@@ -81,6 +78,8 @@ class Logger(object):
             Logger.StyleFormatter(Logger.log_format_time)
         )
         self.__handler_file_error.setLevel(logging.ERROR)
+        self.__logger_file_error = logging.getLogger("dev.harrix.logger.file.error")
+        self.__logger_file_error.setLevel(logging.ERROR)
         self.__logger_file_error.addHandler(self.__handler_file_error)
 
     @property
