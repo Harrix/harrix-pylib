@@ -32,6 +32,10 @@ class Log(object):
         CROSSED_OUT = "\x1b[9m"
         RESET = "\x1b[0m"
 
+        @staticmethod
+        def list():
+            return list(map(lambda c: c.value, Log.Style))
+
     class StyleFormatter(logging.Formatter):
         def __init__(self, format):
             super().__init__()
@@ -141,8 +145,17 @@ class Log(object):
         if self.is_log_console:
             getattr(self.__log_console, method)(msg)
         if self.is_log_file:
+            msg = Log.__clear_color(msg)
             getattr(self.__log_file, method)(msg)
             getattr(self.__log_file_error, method)(msg)
+
+    @classmethod
+    def __clear_color(self, msg):
+        if "\x1b[" not in msg:
+            return msg
+        for symbol in Log.Style.list():
+            msg = msg.replace(symbol, "")
+        return msg
 
     def debug(self, msg):
         self.__write_log("debug", msg)
@@ -233,7 +246,7 @@ log = Log()
 if __name__ == "__main__":
     log.is_show_time_in_console = True
     log.is_log_file = True
-    log.is_show_color_in_console = True
+    log.is_show_color_in_console = False
     log.info("Test me 1")
     log.debug("Test {} 2".format(log.text_normal("me")))
     log.warning("Test {} 2".format(log.text_yellow("me")))
