@@ -240,7 +240,7 @@ log = Log()
 if __name__ == "__main__":
     log.is_show_time_in_console = False
     log.is_log_file = True
-    log.is_show_color_in_console = False
+    log.is_show_color_in_console = True
     log.info("Test me 1")
     log.debug("Test {} 2".format(log.text_normal("me")))
     log.warning("Test {} 2".format(log.text_yellow("me")))
