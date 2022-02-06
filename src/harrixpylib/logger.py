@@ -37,11 +37,15 @@ class Logger(object):
             self.__format = format
 
             self.FORMATS = {
-                logging.DEBUG: Logger.text_debug(self.__format),
-                logging.INFO: Logger.text_info(self.__format),
-                logging.WARNING: Logger.text_warning(self.__format),
-                logging.ERROR: Logger.text_error(self.__format),
-                logging.CRITICAL: Logger.text_critical(self.__format),
+                logging.DEBUG: Logger.Style.DEBUG + self.__format + Logger.Style.RESET,
+                logging.INFO: Logger.Style.INFO + self.__format + Logger.Style.RESET,
+                logging.WARNING: Logger.Style.WARNING
+                + self.__format
+                + Logger.Style.RESET,
+                logging.ERROR: Logger.Style.ERROR + self.__format + Logger.Style.RESET,
+                logging.CRITICAL: Logger.Style.CRITICAL
+                + self.__format
+                + Logger.Style.RESET,
             }
 
         def format(self, record):
@@ -57,6 +61,8 @@ class Logger(object):
         self.is_log_console = True
         self.is_log_file = False
         self._is_show_time_in_console = False
+        self.is_color_console = True
+        self.__is_console_now = True
 
         self.__handler_console = logging.StreamHandler()
         self.__handler_console.setFormatter(
@@ -79,7 +85,9 @@ class Logger(object):
         self.__handler_file_error = RotatingFileHandler(
             "harrix_error.log", maxBytes=104857600, backupCount=100
         )
-        self.__handler_file_error.setFormatter(logging.Formatter(Logger.log_format_time))
+        self.__handler_file_error.setFormatter(
+            logging.Formatter(Logger.log_format_time)
+        )
         self.__handler_file_error.setLevel(logging.ERROR)
         self.__logger_file_error = logging.getLogger("dev.harrix.logger.file.error")
         self.__logger_file_error.setLevel(logging.ERROR)
@@ -140,98 +148,75 @@ class Logger(object):
             self.__logger_file.critical(msg)
             self.__logger_file_error.critical(msg)
 
-    def exception(self, msg): # TODO
+    def exception(self, msg):  # TODO
         if self.is_log_console:
             self.__logger_console.exception(msg)
         if self.is_log_file:
             self.__logger_file.exception(msg)
             self.__logger_file_error.exception(msg)
 
-    @classmethod
     def text_debug(self, text):
         return Logger.Style.DEBUG + text + Logger.Style.RESET
 
-    @classmethod
     def text_info(self, text):
         return Logger.Style.INFO + text + Logger.Style.RESET
 
-    @classmethod
     def text_warning(self, text):
         return Logger.Style.WARNING + text + Logger.Style.RESET
 
-    @classmethod
     def text_error(self, text):
         return Logger.Style.ERROR + text + Logger.Style.RESET
 
-    @classmethod
     def text_critical(self, text):
         return Logger.Style.CRITICAL + text + Logger.Style.RESET
 
-
-    @classmethod
     def text_normal(self, text):
         return Logger.Style.NORMAL + text + Logger.Style.RESET
 
-    @classmethod
     def text_red(self, text):
         return Logger.Style.RED + text + Logger.Style.RESET
 
-    @classmethod
     def text_green(self, text):
         return Logger.Style.GREEN + text + Logger.Style.RESET
 
-    @classmethod
     def text_yellow(self, text):
         return Logger.Style.YELLOW + text + Logger.Style.RESET
 
-    @classmethod
     def text_blue(self, text):
         return Logger.Style.BLUE + text + Logger.Style.RESET
 
-    @classmethod
     def text_magenta(self, text):
         return Logger.Style.MAGENTA + text + Logger.Style.RESET
 
-    @classmethod
     def text_cyan(self, text):
         return Logger.Style.CYAN + text + Logger.Style.RESET
 
-    @classmethod
     def text_red_background(self, text):
         return Logger.Style.RED_BACKGROUND + text + Logger.Style.RESET
 
-    @classmethod
     def text_green_background(self, text):
         return Logger.Style.GREEN_BACKGROUND + text + Logger.Style.RESET
 
-    @classmethod
     def text_yellow_background(self, text):
         return Logger.Style.YELLOW_BACKGROUND + text + Logger.Style.RESET
 
-    @classmethod
     def text_blue_background(self, text):
         return Logger.Style.BLUE_BACKGROUND + text + Logger.Style.RESET
 
-    @classmethod
     def text_magenta_background(self, text):
         return Logger.Style.MAGENTA_BACKGROUND + text + Logger.Style.RESET
 
-    @classmethod
     def text_cyan_background(self, text):
         return Logger.Style.CYAN_BACKGROUND + text + Logger.Style.RESET
 
-    @classmethod
     def text_italic(self, text):
         return Logger.Style.ITALIC + text + Logger.Style.RESET
 
-    @classmethod
     def text_underline(self, text):
         return Logger.Style.UNDERLINE + text + Logger.Style.RESET
 
-    @classmethod
     def text_crossed_out(self, text):
         return Logger.Style.CROSSED_OUT + text + Logger.Style.RESET
-
 
 
 log = Logger()
@@ -240,8 +225,8 @@ if __name__ == "__main__":
     # log.is_show_time_in_console = False
     log.is_log_file = True
     log.info("Test me 1")
-    log.debug("Test {} 2".format(Logger.text_normal("me")))
-    log.warning("Test {} 2".format(Logger.text_yellow("me")))
-    log.debug("Test {} 2".format(Logger.text_green("me")))
-    log.critical("Test {} 2".format(Logger.text_red("me")))
-    log.info("Test {} 2".format(Logger.text_red_background("me")))
+    log.debug("Test {} 2".format(log.text_normal("me")))
+    log.warning("Test {} 2".format(log.text_yellow("me")))
+    log.debug("Test {} 2".format(log.text_green("me")))
+    log.critical("Test {} 2".format(log.text_red("me")))
+    log.info("Test {} 2".format(log.text_red_background("me")))
