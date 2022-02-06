@@ -37,7 +37,8 @@ class Log(object):
         def list():
             return list(map(lambda c: c.value, Log.Style))
 
-    __TEMPSTYLE = hashlib.md5("__TEMPSTYLE".encode()).hexdigest()
+    __TEMP_STYLE = hashlib.md5("__TEMP_STYLE".encode()).hexdigest()
+    __START_COLOR_SYMBOLS = "\x1b["
 
     class StyleFormatter(logging.Formatter):
         def __init__(self, format):
@@ -146,21 +147,15 @@ class Log(object):
 
     def __write_log(self, method, msg):
         if self.is_log_console:
-            if Log.__TEMPSTYLE in msg:
-                msg = msg.replace(Log.__TEMPSTYLE, getattr(Log.Style, method.upper()))
+            if Log.__TEMP_STYLE in msg:
+                msg = msg.replace(Log.__TEMP_STYLE, getattr(Log.Style, method.upper()))
             getattr(self.__log_console, method)(msg)
         if self.is_log_file:
-            msg = Log.__clear_color(msg)
+            if Log.__START_COLOR_SYMBOLS in msg:
+                for symbol in Log.Style.list():
+                    msg = msg.replace(symbol, "")
             getattr(self.__log_file, method)(msg)
             getattr(self.__log_file_error, method)(msg)
-
-    @classmethod
-    def __clear_color(self, msg):
-        if "\x1b[" not in msg:
-            return msg
-        for symbol in Log.Style.list():
-            msg = msg.replace(symbol, "")
-        return msg
 
     def debug(self, msg):
         self.__write_log("debug", msg)
@@ -179,7 +174,7 @@ class Log(object):
 
     def __text_style(self, style: Style, text):
         if self._is_show_color_in_console:
-            return Log.Style.RESET + style + text + Log.Style.RESET + Log.__TEMPSTYLE
+            return Log.Style.RESET + style + text + Log.Style.RESET + Log.__TEMP_STYLE
         return text
 
     def text_debug(self, text):
