@@ -137,13 +137,6 @@ class Log(object):
             self.__log_file.critical(msg)
             self.__log_file_error.critical(msg)
 
-    def exception(self, msg):  # TODO
-        if self.is_log_console:
-            self.__log_console.exception(msg)
-        if self.is_log_file:
-            self.__log_file.exception(msg)
-            self.__log_file_error.exception(msg)
-
     def text_debug(self, text):
         return Log.Style.DEBUG + text + Log.Style.RESET
 
