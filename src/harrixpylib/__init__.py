@@ -1,2 +1,2 @@
 from .functions import *
-from .logger import *
+from .log import *
