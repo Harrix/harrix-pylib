@@ -8,6 +8,11 @@ class Logger(object):
     log_format_no_time = "[%(levelname)s] %(message)s"  # TODO
 
     class Style(str, Enum):
+        DEBUG = "\x1b[36m"
+        INFO = "\x1b[0m"
+        WARNING = "\x1b[33m"
+        ERROR = "\x1b[31;20m"
+        CRITICAL = "\x1b[41m"
         NORMAL = "\x1b[0m"
         RED = "\x1b[31;20m"
         GREEN = "\x1b[32m"
@@ -65,7 +70,7 @@ class Logger(object):
         self.__handler_file = RotatingFileHandler(
             "harrix.log", maxBytes=104857600, backupCount=100
         )
-        self.__handler_file.setFormatter(Logger.StyleFormatter(Logger.log_format_time))
+        self.__handler_file.setFormatter(logging.Formatter(Logger.log_format_time))
         self.__handler_file.setLevel(logging.DEBUG)
         self.__logger_file = logging.getLogger("dev.harrix.logger.file")
         self.__logger_file.setLevel(logging.DEBUG)
@@ -74,9 +79,7 @@ class Logger(object):
         self.__handler_file_error = RotatingFileHandler(
             "harrix_error.log", maxBytes=104857600, backupCount=100
         )
-        self.__handler_file_error.setFormatter(
-            Logger.StyleFormatter(Logger.log_format_time)
-        )
+        self.__handler_file_error.setFormatter(logging.Formatter(Logger.log_format_time))
         self.__handler_file_error.setLevel(logging.ERROR)
         self.__logger_file_error = logging.getLogger("dev.harrix.logger.file.error")
         self.__logger_file_error.setLevel(logging.ERROR)
@@ -143,6 +146,27 @@ class Logger(object):
         if self.is_log_file:
             self.__logger_file.exception(msg)
             self.__logger_file_error.exception(msg)
+
+    @classmethod
+    def text_debug(self, text):
+        return Logger.Style.DEBUG + text + Logger.Style.RESET
+
+    @classmethod
+    def text_info(self, text):
+        return Logger.Style.INFO + text + Logger.Style.RESET
+
+    @classmethod
+    def text_warning(self, text):
+        return Logger.Style.WARNING + text + Logger.Style.RESET
+
+    @classmethod
+    def text_error(self, text):
+        return Logger.Style.ERROR + text + Logger.Style.RESET
+
+    @classmethod
+    def text_critical(self, text):
+        return Logger.Style.CRITICAL + text + Logger.Style.RESET
+
 
     @classmethod
     def text_normal(self, text):
@@ -213,6 +237,7 @@ log = Logger()
 
 if __name__ == "__main__":
     # log.is_show_time_in_console = False
+    log.is_log_file = True
     log.error("Test me 1")
     log.info("Test {} 2".format(Logger.text_normal("me")))
     log.info("Test {} 2".format(Logger.text_yellow("me")))
