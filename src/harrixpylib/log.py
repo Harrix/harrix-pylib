@@ -102,40 +102,27 @@ class Log(object):
     def is_show_time_in_console(self):
         del self._is_show_time_in_console
 
-    def debug(self, msg):
+    def __write_log(self, method, msg):
         if self.is_log_console:
-            self.__log_console.debug(msg)
+            getattr(self.__log_console, method)(msg)
         if self.is_log_file:
-            self.__log_file.debug(msg)
-            self.__log_file_error.debug(msg)
+            getattr(self.__log_file, method)(msg)
+            getattr(self.__log_file_error, method)(msg)
+
+    def debug(self, msg):
+        self.__write_log("debug", msg)
 
     def info(self, msg):
-        if self.is_log_console:
-            self.__log_console.info(msg)
-        if self.is_log_file:
-            self.__log_file.info(msg)
-            self.__log_file_error.info(msg)
+        self.__write_log("info", msg)
 
     def warning(self, msg):
-        if self.is_log_console:
-            self.__log_console.warning(msg)
-        if self.is_log_file:
-            self.__log_file.warning(msg)
-            self.__log_file_error.warning(msg)
+        self.__write_log("warning", msg)
 
     def error(self, msg):
-        if self.is_log_console:
-            self.__log_console.error(msg)
-        if self.is_log_file:
-            self.__log_file.error(msg)
-            self.__log_file_error.error(msg)
+        self.__write_log("error", msg)
 
     def critical(self, msg):
-        if self.is_log_console:
-            self.__log_console.critical(msg)
-        if self.is_log_file:
-            self.__log_file.critical(msg)
-            self.__log_file_error.critical(msg)
+        self.__write_log("critical", msg)
 
     def text_debug(self, text):
         return Log.Style.DEBUG + text + Log.Style.RESET
