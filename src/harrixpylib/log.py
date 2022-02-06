@@ -58,7 +58,6 @@ class Log(object):
         self.is_log_file = False
         self._is_show_time_in_console = False
         self.is_color_console = True
-        self.__is_console_now = True
 
         self.__handler_console = logging.StreamHandler()
         self.__handler_console.setFormatter(Log.StyleFormatter(Log.log_format_no_time))
