@@ -63,7 +63,7 @@ class Log(object):
         self.__handler_console = logging.StreamHandler()
         self.__handler_console.setFormatter(Log.StyleFormatter(Log.log_format_no_time))
         self.__handler_console.setLevel(logging.DEBUG)
-        self.__log_console = logging.getlog("dev.harrix.log.console")
+        self.__log_console = logging.getLogger("dev.harrix.log.console")
         self.__log_console.setLevel(logging.DEBUG)
         self.__log_console.addHandler(self.__handler_console)
 
@@ -72,7 +72,7 @@ class Log(object):
         )
         self.__handler_file.setFormatter(logging.Formatter(Log.log_format_time))
         self.__handler_file.setLevel(logging.DEBUG)
-        self.__log_file = logging.getlog("dev.harrix.log.file")
+        self.__log_file = logging.getLogger("dev.harrix.log.file")
         self.__log_file.setLevel(logging.DEBUG)
         self.__log_file.addHandler(self.__handler_file)
 
@@ -81,7 +81,7 @@ class Log(object):
         )
         self.__handler_file_error.setFormatter(logging.Formatter(Log.log_format_time))
         self.__handler_file_error.setLevel(logging.ERROR)
-        self.__log_file_error = logging.getlog("dev.harrix.log.file.error")
+        self.__log_file_error = logging.getLogger("dev.harrix.log.file.error")
         self.__log_file_error.setLevel(logging.ERROR)
         self.__log_file_error.addHandler(self.__handler_file_error)
 
