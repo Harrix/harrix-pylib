@@ -76,7 +76,7 @@ class Log(object):
         self.__log_console.addHandler(self.__handler_console)
 
         self.__handler_file = RotatingFileHandler(
-            "harrix.log", maxBytes=104857600, backupCount=100, encoding='utf-8'
+            "harrix.log", maxBytes=104857600, backupCount=100, encoding="utf-8"
         )
         self.__handler_file.setFormatter(logging.Formatter(Log.Format.TIME))
         self.__handler_file.setLevel(logging.DEBUG)
@@ -85,7 +85,7 @@ class Log(object):
         self.__log_file.addHandler(self.__handler_file)
 
         self.__handler_file_error = RotatingFileHandler(
-            "harrix_error.log", maxBytes=104857600, backupCount=100, encoding='utf-8'
+            "harrix_error.log", maxBytes=104857600, backupCount=100, encoding="utf-8"
         )
         self.__handler_file_error.setFormatter(logging.Formatter(Log.Format.TIME))
         self.__handler_file_error.setLevel(logging.ERROR)
@@ -244,12 +244,89 @@ class Log(object):
 log = Log()
 
 if __name__ == "__main__":
-    log.is_show_time_in_console = False
     log.is_log_file = True
+
+    log.is_show_time_in_console = False
+    log.is_show_color_in_console = False
+    log.debug("Test message.")
+    log.info("Test message.")
+    log.warning("Test message.")
+    log.error("Test message.")
+    log.critical("Test message.")
+
+    log.is_show_time_in_console = True
     log.is_show_color_in_console = True
-    log.info("Test me 1")
-    log.debug("Test {} 2gsdfgsdfg".format(log.text_normal("me")))
-    log.warning("Test {} 2sfdgsdf".format(log.text_blue("me")))
-    log.debug("Test {} 2sfg".format(log.text_green("me")))
-    log.critical("Test {} 2sgfsdfg".format(log.text_red("me")))
-    log.info("Test {} 2sвапывап".format(log.text_red_background("me")))
+    log.debug("Test message.")
+    log.info("Test message.")
+    log.warning("Test message.")
+    log.error("Test message.")
+    log.critical("Test message.")
+
+    log.is_show_time_in_console = False
+    log.info("Message: {}. End of line".format(log.text_debug("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_info("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_warning("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_error("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_critical("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_normal("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_red("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_green("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_yellow("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_blue("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_magenta("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_cyan("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_red_background("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_green_background("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_yellow_background("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_blue_background("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_magenta_background("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_cyan_background("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_italic("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_underline("x = 2")))
+    log.info("Message: {}. End of line".format(log.text_crossed_out("x = 2")))
+
+    log.is_show_time_in_console = False
+    log.error("Message: {}. End of line".format(log.text_debug("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_info("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_warning("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_error("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_critical("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_normal("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_red("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_green("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_yellow("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_blue("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_magenta("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_cyan("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_red_background("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_green_background("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_yellow_background("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_blue_background("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_magenta_background("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_cyan_background("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_italic("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_underline("x = 2")))
+    log.error("Message: {}. End of line".format(log.text_crossed_out("x = 2")))
+
+    log.is_show_time_in_console = True
+    log.info(log.text_debug("x = 2"))
+    log.info(log.text_info("x = 2"))
+    log.info(log.text_warning("x = 2"))
+    log.info(log.text_error("x = 2"))
+    log.info(log.text_critical("x = 2"))
+    log.info(log.text_normal("x = 2"))
+    log.info(log.text_red("x = 2"))
+    log.info(log.text_green("x = 2"))
+    log.info(log.text_yellow("x = 2"))
+    log.info(log.text_blue("x = 2"))
+    log.info(log.text_magenta("x = 2"))
+    log.info(log.text_cyan("x = 2"))
+    log.info(log.text_red_background("x = 2"))
+    log.info(log.text_green_background("x = 2"))
+    log.info(log.text_yellow_background("x = 2"))
+    log.info(log.text_blue_background("x = 2"))
+    log.info(log.text_magenta_background("x = 2"))
+    log.info(log.text_cyan_background("x = 2"))
+    log.info(log.text_italic("x = 2"))
+    log.info(log.text_underline("x = 2"))
+    log.info(log.text_crossed_out("x = 2"))
