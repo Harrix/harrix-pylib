@@ -67,6 +67,8 @@ class Log(object):
         self.is_log_file = False
         self._is_show_time_in_console = False
         self._is_show_color_in_console = True
+        self._filename_log = "harrix.log"
+        self._filename_error_log = "harrix_error.log"
 
         self.__handler_console = logging.StreamHandler()
         self.__handler_console.setFormatter(Log.StyleFormatter(Log.Format.NO_TIME))
@@ -76,7 +78,7 @@ class Log(object):
         self.__log_console.addHandler(self.__handler_console)
 
         self.__handler_file = RotatingFileHandler(
-            "harrix.log", maxBytes=104857600, backupCount=100, encoding="utf-8"
+            self._filename_log, maxBytes=104857600, backupCount=100, encoding="utf-8"
         )
         self.__handler_file.setFormatter(logging.Formatter(Log.Format.TIME))
         self.__handler_file.setLevel(logging.DEBUG)
@@ -85,7 +87,7 @@ class Log(object):
         self.__log_file.addHandler(self.__handler_file)
 
         self.__handler_file_error = RotatingFileHandler(
-            "harrix_error.log", maxBytes=104857600, backupCount=100, encoding="utf-8"
+            self._filename_error_log, maxBytes=104857600, backupCount=100, encoding="utf-8"
         )
         self.__handler_file_error.setFormatter(logging.Formatter(Log.Format.TIME))
         self.__handler_file_error.setLevel(logging.ERROR)
