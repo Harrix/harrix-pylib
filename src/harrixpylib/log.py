@@ -39,6 +39,8 @@ class Log(object):
 
     __TEMP_STYLE = hashlib.md5("__TEMP_STYLE".encode()).hexdigest()
     __START_COLOR_SYMBOLS = "\x1b["
+    __FILENAME_LOG = "harrix.log"
+    __FILENAME_ERROR_LOG = "harrix_error.log"
 
     class StyleFormatter(logging.Formatter):
         def __init__(self, format):
@@ -67,8 +69,8 @@ class Log(object):
         self.is_log_file = False
         self._is_show_time_in_console = False
         self._is_show_color_in_console = True
-        self._filename_log = "harrix.log"
-        self._filename_error_log = "harrix_error.log"
+        self._filename_log = Log.__FILENAME_LOG
+        self._filename_error_log = Log.__FILENAME_ERROR_LOG
 
         self.__create_log_console()
         self.__create_log_file()
