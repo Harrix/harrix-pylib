@@ -39,8 +39,8 @@ class Log(object):
 
     __TEMP_STYLE = hashlib.md5("__TEMP_STYLE".encode()).hexdigest()
     __START_COLOR_SYMBOLS = "\x1b["
-    __FILENAME_LOG = "harrix.log"
-    __FILENAME_ERROR_LOG = "harrix_error.log"
+    __FILENAME_LOG = "messages.log"
+    __FILENAME_ERROR_LOG = "errors.log"
     __REVERSE_DOMAIN = "dev.harrix"
 
     class StyleFormatter(logging.Formatter):
@@ -387,20 +387,4 @@ if __name__ == "__main__":
     log.info(log.text_italic("x = 2"))
     log.info(log.text_underline("x = 2"))
     log.info(log.text_crossed_out("x = 2"))
-
-    log.filename_log = "example.log"
-    log.filename_error_log = "example_error.log"
-    log.is_show_time_in_console = False
-    log.is_show_color_in_console = False
-    log.debug("Test message for other log file.")
-    log.info("Test message for other log file.")
-    log.warning("Test message for other log file.")
-    log.error("Test message for other log file.")
-    log.critical("Test message for other log file.")
-    log.is_show_time_in_console = True
-    log.is_show_color_in_console = True
-    log.debug("Test message for other log file.")
-    log.info("Test message for other log file.")
-    log.warning("Test message for other log file.")
-    log.error("Test message for other log file.")
-    log.critical("Test message for other log file.")
+    
