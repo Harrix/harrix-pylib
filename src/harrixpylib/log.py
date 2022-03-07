@@ -77,6 +77,37 @@ class Log(object):
         self.__log_console.setLevel(logging.DEBUG)
         self.__log_console.addHandler(self.__handler_console)
 
+        self.__create_log_file()
+        self.__create_log_file_error()
+
+    def __create_log_file_error(self):
+        self.__handler_file_error = RotatingFileHandler(
+            self._filename_error_log,
+            maxBytes=104857600,
+            backupCount=100,
+            encoding="utf-8",
+        )
+        self.__handler_file_error.setFormatter(logging.Formatter(Log.Format.TIME))
+        self.__handler_file_error.setLevel(logging.ERROR)
+        self.__log_file_error = logging.getLogger("dev.harrix.log.file.error"
+        )
+        self.__log_file_error.setLevel(logging.ERROR)
+        self.__log_file_error.addHandler(self.__handler_file_error)
+
+    @property
+    def filename_error_log(self):
+        return self._filename_error_log
+
+    @filename_error_log.setter
+    def filename_error_log(self, value):
+        self._filename_error_log = value
+        self.__create_log_file_error()
+
+    @filename_error_log.deleter
+    def filename_error_log(self):
+        del self._filename_error_log
+
+    def __create_log_file(self):
         self.__handler_file = RotatingFileHandler(
             self._filename_log, maxBytes=104857600, backupCount=100, encoding="utf-8"
         )
@@ -86,14 +117,18 @@ class Log(object):
         self.__log_file.setLevel(logging.DEBUG)
         self.__log_file.addHandler(self.__handler_file)
 
-        self.__handler_file_error = RotatingFileHandler(
-            self._filename_error_log, maxBytes=104857600, backupCount=100, encoding="utf-8"
-        )
-        self.__handler_file_error.setFormatter(logging.Formatter(Log.Format.TIME))
-        self.__handler_file_error.setLevel(logging.ERROR)
-        self.__log_file_error = logging.getLogger("dev.harrix.log.file.error")
-        self.__log_file_error.setLevel(logging.ERROR)
-        self.__log_file_error.addHandler(self.__handler_file_error)
+    @property
+    def filename_log(self):
+        return self._filename_log
+
+    @filename_log.setter
+    def filename_log(self, value):
+        self._filename_log = value
+        self.__create_log_file()
+
+    @filename_log.deleter
+    def filename_log(self):
+        del self._filename_log
 
     @property
     def is_show_time_in_console(self):
@@ -332,3 +367,20 @@ if __name__ == "__main__":
     log.info(log.text_italic("x = 2"))
     log.info(log.text_underline("x = 2"))
     log.info(log.text_crossed_out("x = 2"))
+
+    log.filename_log = "example.log"
+    log.filename_error_log = "example_error.log"
+    log.is_show_time_in_console = False
+    log.is_show_color_in_console = False
+    log.debug("Test message for other log file.")
+    log.info("Test message for other log file.")
+    log.warning("Test message for other log file.")
+    log.error("Test message for other log file.")
+    log.critical("Test message for other log file.")
+    log.is_show_time_in_console = True
+    log.is_show_color_in_console = True
+    log.debug("Test message for other log file.")
+    log.info("Test message for other log file.")
+    log.warning("Test message for other log file.")
+    log.error("Test message for other log file.")
+    log.critical("Test message for other log file.")
