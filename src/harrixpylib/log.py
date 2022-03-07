@@ -41,6 +41,7 @@ class Log(object):
     __START_COLOR_SYMBOLS = "\x1b["
     __FILENAME_LOG = "harrix.log"
     __FILENAME_ERROR_LOG = "harrix_error.log"
+    __REVERSE_DOMAIN = "dev.harrix"
 
     class StyleFormatter(logging.Formatter):
         def __init__(self, format):
@@ -71,6 +72,7 @@ class Log(object):
         self._is_show_color_in_console = True
         self._filename_log = Log.__FILENAME_LOG
         self._filename_error_log = Log.__FILENAME_ERROR_LOG
+        self._reverse_log = Log.__REVERSE_DOMAIN
 
         self.__create_log_console()
         self.__create_log_file()
@@ -80,10 +82,19 @@ class Log(object):
         self.__handler_console = logging.StreamHandler()
         self.__handler_console.setFormatter(Log.StyleFormatter(Log.Format.NO_TIME))
         self.__handler_console.setLevel(logging.DEBUG)
-        self.__log_console = logging.getLogger("dev.harrix.log.console")
+        self.__log_console = logging.getLogger(f"{self._reverse_log}.log.console")
         self.__log_console.setLevel(logging.DEBUG)
         self.__log_console.addHandler(self.__handler_console)
 
+    def __create_log_file(self):
+        self.__handler_file = RotatingFileHandler(
+            self._filename_log, maxBytes=104857600, backupCount=100, encoding="utf-8"
+        )
+        self.__handler_file.setFormatter(logging.Formatter(Log.Format.TIME))
+        self.__handler_file.setLevel(logging.DEBUG)
+        self.__log_file = logging.getLogger(f"{self._reverse_log}.log.file")
+        self.__log_file.setLevel(logging.DEBUG)
+        self.__log_file.addHandler(self.__handler_file)
 
     def __create_log_file_error(self):
         self.__handler_file_error = RotatingFileHandler(
@@ -94,33 +105,24 @@ class Log(object):
         )
         self.__handler_file_error.setFormatter(logging.Formatter(Log.Format.TIME))
         self.__handler_file_error.setLevel(logging.ERROR)
-        self.__log_file_error = logging.getLogger("dev.harrix.log.file.error"
-        )
+        self.__log_file_error = logging.getLogger(f"{self._reverse_log}.log.file.error")
         self.__log_file_error.setLevel(logging.ERROR)
         self.__log_file_error.addHandler(self.__handler_file_error)
 
     @property
-    def filename_error_log(self):
-        return self._filename_error_log
+    def reverse_log(self):
+        return self._reverse_log
 
-    @filename_error_log.setter
-    def filename_error_log(self, value):
-        self._filename_error_log = value
+    @reverse_log.setter
+    def filename_log(self, value):
+        self._reverse_log = value
+        self.__create_log_console()
+        self.__create_log_file()
         self.__create_log_file_error()
 
-    @filename_error_log.deleter
-    def filename_error_log(self):
-        del self._filename_error_log
-
-    def __create_log_file(self):
-        self.__handler_file = RotatingFileHandler(
-            self._filename_log, maxBytes=104857600, backupCount=100, encoding="utf-8"
-        )
-        self.__handler_file.setFormatter(logging.Formatter(Log.Format.TIME))
-        self.__handler_file.setLevel(logging.DEBUG)
-        self.__log_file = logging.getLogger("dev.harrix.log.file")
-        self.__log_file.setLevel(logging.DEBUG)
-        self.__log_file.addHandler(self.__handler_file)
+    @reverse_log.deleter
+    def reverse_log(self):
+        del self._reverse_log
 
     @property
     def filename_log(self):
@@ -134,6 +136,19 @@ class Log(object):
     @filename_log.deleter
     def filename_log(self):
         del self._filename_log
+
+    @property
+    def filename_error_log(self):
+        return self._filename_error_log
+
+    @filename_error_log.setter
+    def filename_error_log(self, value):
+        self._filename_error_log = value
+        self.__create_log_file_error()
+
+    @filename_error_log.deleter
+    def filename_error_log(self):
+        del self._filename_error_log
 
     @property
     def is_show_time_in_console(self):
