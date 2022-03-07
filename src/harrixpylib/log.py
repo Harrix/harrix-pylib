@@ -387,4 +387,3 @@ if __name__ == "__main__":
     log.info(log.text_italic("x = 2"))
     log.info(log.text_underline("x = 2"))
     log.info(log.text_crossed_out("x = 2"))
-    
