@@ -70,6 +70,11 @@ class Log(object):
         self._filename_log = "harrix.log"
         self._filename_error_log = "harrix_error.log"
 
+        self.__create_log_console()
+        self.__create_log_file()
+        self.__create_log_file_error()
+
+    def __create_log_console(self):
         self.__handler_console = logging.StreamHandler()
         self.__handler_console.setFormatter(Log.StyleFormatter(Log.Format.NO_TIME))
         self.__handler_console.setLevel(logging.DEBUG)
@@ -77,8 +82,6 @@ class Log(object):
         self.__log_console.setLevel(logging.DEBUG)
         self.__log_console.addHandler(self.__handler_console)
 
-        self.__create_log_file()
-        self.__create_log_file_error()
 
     def __create_log_file_error(self):
         self.__handler_file_error = RotatingFileHandler(
