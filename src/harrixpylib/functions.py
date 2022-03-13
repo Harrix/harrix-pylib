@@ -8,7 +8,7 @@ def path_to_pathlib(path: Union[Path, str]) -> Path:
     """If a string is passed to the function, it turns into Path from pathlib.
 
     Args:
-      path: string of path or Path from pathlib.
+      path: String of path or Path from pathlib.
 
     Returns:
       Path from pathlib.
@@ -20,7 +20,7 @@ def clear_directory(path: Union[Path, str]) -> None:
     """This function clear directory with sub-directories.
 
     Args:
-      path: path of directory from pathlib.
+      path: Path of directory from pathlib.
 
     Returns:
       None.
@@ -35,10 +35,15 @@ def open_file(filename: Union[Path, str]) -> str:
     """This function open file as UTF8 text file.
 
     Args:
-      filename: name of the file to open.
+      filename: Name of the file to open.
 
     Returns:
       Text file content.
+
+    Example:
+    ```
+    s = 
+    ```
     """
     filename = path_to_pathlib(filename)
     s = ""
@@ -51,8 +56,8 @@ def save_file(text: str, full_filename: Union[Path, str]) -> None:
     """This function save file as UTF8 text file.
 
     Args:
-      text: text for saving.
-      full_filename: name of the file to save.
+      text: Text for saving.
+      full_filename: Name of the file to save.
 
     Returns:
       None.
@@ -66,7 +71,7 @@ def remove_yaml_from_markdown(markdown_text: str) -> str:
     """Function remove YAML from text of markdown file.
 
     Args:
-      markdown_text: text of markdown file.
+      markdown_text: Text of markdown file.
 
     Returns:
       Text of markdown file without YAML.

@@ -1,3 +1,22 @@
+"""
+## Structure of the article
+
+```text
+data\2022-01-04-test-article
+├─ 2022-01-04-test-article.md
+├─ featured-image.png
+└─ img
+   └─ test-image.png
+```
+
+## Usage example
+
+```py
+md_filename = './tests/data/2022-01-04-test-article/2022-01-04-test-article.md'
+output_path = './build_site'
+a = hsg.Article().generate_from_md(md_filename, output_path)
+```
+"""
 import logging
 from logging.handlers import RotatingFileHandler
 from enum import Enum
