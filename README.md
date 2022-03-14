@@ -4,6 +4,14 @@ Common functions for working in Python.
 
 ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
 
+## Quick start
+
+```py
+import harrixpylib as h
+
+s = h.open
+```
+
 ## Install
 
 Pip:
