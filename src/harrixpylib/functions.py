@@ -1,22 +1,39 @@
+import re
+import shutil
 from pathlib import Path
 from typing import Union
-import shutil
-import re
 
 
 def clear_directory(path: Union[Path, str]) -> None:
     """This function clear directory with sub-directories.
 
     Args:
-      path: Path of directory from pathlib.
+      path: Path of directory.
 
     Returns:
       None.
+
+    Examples:
+    ```py
+    import harrixpylib as h
+
+    h.clear_directory("C:/temp_dir")
+    ```
+    ```py
+    from pathlib import Path
+    import harrixpylib as h
+
+    folder = Path(__file__).resolve().parent / "data"
+    folder.mkdir(parents=True, exist_ok=True)
+    h.save_file("Hello, world!", folder / "text.txt")
+    ...
+    h.clear_directory(folder)
+    ```
     """
     path = Path(path)
     if path.is_dir():
         shutil.rmtree(path)
-    path.mkdir(parents=True, exist_ok=True)
+        path.mkdir(parents=True, exist_ok=True)
 
 
 def open_file(filename: Union[Path, str]) -> str:
