@@ -4,18 +4,6 @@ import shutil
 import re
 
 
-def path_to_pathlib(path: Union[Path, str]) -> Path:
-    """If a string is passed to the function, it turns into Path from pathlib.
-
-    Args:
-      path: String of path or Path from pathlib.
-
-    Returns:
-      Path from pathlib.
-    """
-    return Path(path) if isinstance(path, str) else path
-
-
 def clear_directory(path: Union[Path, str]) -> None:
     """This function clear directory with sub-directories.
 
@@ -25,7 +13,7 @@ def clear_directory(path: Union[Path, str]) -> None:
     Returns:
       None.
     """
-    path = path_to_pathlib(path)
+    path = Path(path)
     if path.is_dir():
         shutil.rmtree(path)
     path.mkdir(parents=True, exist_ok=True)
@@ -38,18 +26,29 @@ def open_file(filename: Union[Path, str]) -> str:
       filename: Name of the file to open.
 
     Returns:
-      Text file content.
+      Text file content. If the file could not be opened, an empty string is returned.
 
-    Example:
+    Examples:
+    ```py
+    import harrixpylib as h
+
+    s = h.open_file("text.txt")
     ```
-    s = 
+    ```py
+    import harrixpylib as h
+
+    text = "Hello, world!"
+    h.save_file(text, "text.txt")
+
+    s = h.open_file("text.txt")
+    print(s)
     ```
     """
-    filename = path_to_pathlib(filename)
-    s = ""
-    with open(filename, "r", encoding="utf8") as file:
-        s = file.read()
-    return s
+    try:
+        with open(Path(filename), "r", encoding="utf8") as file:
+            return file.read()
+    except IOError:
+        return ""
 
 
 def save_file(text: str, full_filename: Union[Path, str]) -> None:
@@ -62,7 +61,7 @@ def save_file(text: str, full_filename: Union[Path, str]) -> None:
     Returns:
       None.
     """
-    filename = path_to_pathlib(full_filename)
+    filename = Path(full_filename)
     with open(filename, "w", encoding="utf8") as file:
         file.write(text)
 
