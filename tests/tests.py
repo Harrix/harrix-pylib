@@ -1,5 +1,4 @@
 import unittest
-import os, sys
 from pathlib import Path
 
 import harrixpylib as h
@@ -7,14 +6,14 @@ import harrixpylib as h
 
 class TestHarrixpylib(unittest.TestCase):
     def test_open_file(self):
-        currentdir = Path(os.path.dirname(os.path.realpath(__file__)))
-        s = h.open_file(currentdir / "data/simple_text.txt")
+        currentdir = Path(__file__).resolve().parent
+        s = h.open_file(currentdir / "data\simple_text.txt")
         self.assertEqual(s, "42")
 
     def test_path_to_pathlib(self):
-        currentdir = Path(os.path.dirname(os.path.realpath(__file__)))
+        currentdir = Path(__file__).resolve().parent
         self.assertEqual(
-            h.path_to_pathlib(os.path.dirname(os.path.realpath(__file__))), currentdir
+            h.path_to_pathlib(str(Path(__file__).resolve().parent)), currentdir
         )
 
 
