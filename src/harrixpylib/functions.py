@@ -67,12 +67,12 @@ def open_file(filename: Union[Path, str]) -> str:
         return ""
 
 
-def save_file(text: str, full_filename: Union[Path, str]) -> None:
+def save_file(text: str, filename: Union[Path, str]) -> None:
     """This function save file as UTF8 text file.
 
     Args:
       text: Text for saving.
-      full_filename: Name of the file to save.
+      filename: Name of the file to save.
 
     Returns:
       None.
@@ -93,7 +93,7 @@ def save_file(text: str, full_filename: Union[Path, str]) -> None:
     print(s)
     ```
     """
-    Path(full_filename).write_text(text, encoding="utf8")
+    Path(filename).write_text(text, encoding="utf8")
 
 
 def remove_yaml_from_markdown(markdown_text: str) -> str:
