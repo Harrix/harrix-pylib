@@ -25,7 +25,7 @@ def clear_directory(path: Union[Path, str]) -> None:
 
     folder = Path(__file__).resolve().parent / "data"
     folder.mkdir(parents=True, exist_ok=True)
-    h.save_file("Hello, world!", folder / "text.txt")
+    h.save_file("Hello, world!", folder / "temp.txt")
     ...
     h.clear_directory(folder)
     ```
@@ -49,22 +49,21 @@ def open_file(filename: Union[Path, str]) -> str:
     ```py
     import harrixpylib as h
 
-    s = h.open_file("text.txt")
+    s = h.open_file("file.txt")
     ```
     ```py
     import harrixpylib as h
 
     text = "Hello, world!"
-    h.save_file(text, "text.txt")
+    h.save_file(text, "file.txt")
 
-    s = h.open_file("text.txt")
+    s = h.open_file("file.txt")
     print(s)
     ```
     """
     try:
-        with open(Path(filename), "r", encoding="utf8") as file:
-            return file.read()
-    except IOError:
+        return Path(filename).read_text(encoding="utf8")
+    except:
         return ""
 
 
@@ -77,10 +76,24 @@ def save_file(text: str, full_filename: Union[Path, str]) -> None:
 
     Returns:
       None.
+
+    Examples:
+    ```py
+    import harrixpylib as h
+
+    h.save_file("text", "file.txt")
+    ```
+    ```py
+    import harrixpylib as h
+
+    text = "Hello, world!"
+    h.save_file(text, "file.txt")
+
+    s = h.open_file("file.txt")
+    print(s)
+    ```
     """
-    filename = Path(full_filename)
-    with open(filename, "w", encoding="utf8") as file:
-        file.write(text)
+    Path(full_filename).write_text(text, encoding="utf8")
 
 
 def remove_yaml_from_markdown(markdown_text: str) -> str:
