@@ -9,7 +9,7 @@ Common functions for working in Python.
 ```py
 import harrixpylib as h
 
-s = h.open_file("text.txt")
+h.clear_directory("C:/temp_dir")
 ```
 
 ## Install
