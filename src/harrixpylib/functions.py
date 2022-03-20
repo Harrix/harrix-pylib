@@ -99,10 +99,35 @@ def save_file(text: str, filename: Union[Path, str]) -> None:
 def remove_yaml_from_markdown(markdown_text: str) -> str:
     """Function remove YAML from text of markdown file.
 
+    Markdown before processing:
+    ```md
+    ---
+    categories: [it, program]
+    tags: [VSCode, FAQ]
+    ---
+
+    # Installing VSCode
+
+    ```
+    Markdown after processing:
+    ```md
+    # Installing VSCode
+    ```
+
     Args:
       markdown_text: Text of markdown file.
 
     Returns:
       Text of markdown file without YAML.
+
+    Example:
+    ```py
+    from pathlib import Path
+    import harrixpylib as h
+
+    md = Path("article.md").read_text(encoding="utf8")
+    md_clean = h.remove_yaml_from_markdown(md)
+    print(md_clean)
+    ```
     """
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
