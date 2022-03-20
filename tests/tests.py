@@ -26,7 +26,7 @@ class TestHarrixpylib(unittest.TestCase):
     def test_clear_directory__01(self):
         folder = Path(__file__).resolve().parent / "data/temp"
         folder.mkdir(parents=True, exist_ok=True)
-        h.save_file("Hello, world!", folder / "temp.txt")
+        Path(folder / "temp.txt").write_text("Hello, world!", encoding="utf8")
         h.clear_directory(folder)
         self.assertEqual(len(next(os.walk(folder))[2]), 0)
 

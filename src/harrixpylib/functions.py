@@ -25,7 +25,7 @@ def clear_directory(path: Union[Path, str]) -> None:
 
     folder = Path(__file__).resolve().parent / "data"
     folder.mkdir(parents=True, exist_ok=True)
-    h.save_file("Hello, world!", folder / "temp.txt")
+    Path(folder / "temp.txt").write_text("Hello, world!", encoding="utf8")
     ...
     h.clear_directory(folder)
     ```
