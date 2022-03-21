@@ -13,7 +13,7 @@ class TestHarrixpylib(unittest.TestCase):
         h.clear_directory(folder)
         self.assertEqual(len(next(os.walk(folder))[2]), 0)
 
-    def test_remove_yaml_from_markdown(self):
+    def test_remove_yaml_from_markdown__01(self):
         current_folder = Path(__file__).resolve().parent
         filename = current_folder / "data/article.md"
         md = Path(filename).read_text(encoding="utf8")
