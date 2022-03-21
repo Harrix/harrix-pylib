@@ -23,7 +23,7 @@ def clear_directory(path: Union[Path, str]) -> None:
     from pathlib import Path
     import harrixpylib as h
 
-    folder = Path(__file__).resolve().parent / "data"
+    folder = Path(__file__).resolve().parent / "data/temp"
     folder.mkdir(parents=True, exist_ok=True)
     Path(folder / "temp.txt").write_text("Hello, world!", encoding="utf8")
     ...
@@ -40,6 +40,7 @@ def remove_yaml_from_markdown(markdown_text: str) -> str:
     """Function remove YAML from text of markdown file.
 
     Markdown before processing:
+
     ```md
     ---
     categories: [it, program]
@@ -49,6 +50,7 @@ def remove_yaml_from_markdown(markdown_text: str) -> str:
     # Installing VSCode
 
     ```
+
     Markdown after processing:
     ```md
     # Installing VSCode
@@ -60,7 +62,14 @@ def remove_yaml_from_markdown(markdown_text: str) -> str:
     Returns:
       Text of markdown file without YAML.
 
-    Example:
+    Examples:
+    ```py
+    import harrixpylib as h
+
+    md_clean = h.remove_yaml_from_markdown("---\\ncategories: [it]\\n---\\n\\nText")
+    print(md_clean)  # Text
+    ```
+
     ```py
     from pathlib import Path
     import harrixpylib as h
