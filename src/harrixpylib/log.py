@@ -1,22 +1,135 @@
 """
-## Structure of the article
-
-```text
-data\2022-01-04-test-article
-├─ 2022-01-04-test-article.md
-├─ featured-image.png
-└─ img
-   └─ test-image.png
-```
+Colored logging class based on the standard python
+[logging class](https://docs.python.org/3/library/logging.html).
 
 ## Usage example
 
 ```py
-md_filename = './tests/data/2022-01-04-test-article/2022-01-04-test-article.md'
-output_path = './build_site'
-a = hsg.Article().generate_from_md(md_filename, output_path)
+import harrixpylib as h
+
+h.log.debug("Test message.")
 ```
+
+```py
+import harrixpylib as h
+
+h.log.is_show_time_in_console = False
+h.log.is_show_color_in_console = True
+h.log.debug("Test message.")
+h.log.info("Test message.")
+h.log.warning("Test message.")
+h.log.error("Test message.")
+h.log.critical("Test message.")
+```
+
+![Colored text in the console without time](img/log_01.png)
+
+```py
+import harrixpylib as h
+
+log.is_show_time_in_console = False
+log.is_show_color_in_console = False
+log.debug("Test message.")
+log.info("Test message.")
+log.warning("Test message.")
+log.error("Test message.")
+log.critical("Test message.")
+```
+
+![Text in the console without time and color](img/log_02.png)
+
+```py
+import harrixpylib as h
+
+log.is_show_time_in_console = False
+log.info("Message: {}. End of line".format(log.text_debug("x = 2")))
+log.info("Message: {}. End of line".format(log.text_info("x = 2")))
+log.info("Message: {}. End of line".format(log.text_warning("x = 2")))
+log.info("Message: {}. End of line".format(log.text_error("x = 2")))
+log.info("Message: {}. End of line".format(log.text_critical("x = 2")))
+log.info("Message: {}. End of line".format(log.text_normal("x = 2")))
+log.info("Message: {}. End of line".format(log.text_red("x = 2")))
+log.info("Message: {}. End of line".format(log.text_green("x = 2")))
+log.info("Message: {}. End of line".format(log.text_yellow("x = 2")))
+log.info("Message: {}. End of line".format(log.text_blue("x = 2")))
+log.info("Message: {}. End of line".format(log.text_magenta("x = 2")))
+log.info("Message: {}. End of line".format(log.text_cyan("x = 2")))
+log.info("Message: {}. End of line".format(log.text_red_background("x = 2")))
+log.info("Message: {}. End of line".format(log.text_green_background("x = 2")))
+log.info("Message: {}. End of line".format(log.text_yellow_background("x = 2")))
+log.info("Message: {}. End of line".format(log.text_blue_background("x = 2")))
+log.info("Message: {}. End of line".format(log.text_magenta_background("x = 2")))
+log.info("Message: {}. End of line".format(log.text_cyan_background("x = 2")))
+log.info("Message: {}. End of line".format(log.text_italic("x = 2")))
+log.info("Message: {}. End of line".format(log.text_underline("x = 2")))
+log.info("Message: {}. End of line".format(log.text_crossed_out("x = 2")))
+```
+
+![Info messages with formated text](img/log_03.png)
+
+```py
+import harrixpylib as h
+
+log.is_show_time_in_console = False
+log.error("Message: {}. End of line".format(log.text_debug("x = 2")))
+log.error("Message: {}. End of line".format(log.text_info("x = 2")))
+log.error("Message: {}. End of line".format(log.text_warning("x = 2")))
+log.error("Message: {}. End of line".format(log.text_error("x = 2")))
+log.error("Message: {}. End of line".format(log.text_critical("x = 2")))
+log.error("Message: {}. End of line".format(log.text_normal("x = 2")))
+log.error("Message: {}. End of line".format(log.text_red("x = 2")))
+log.error("Message: {}. End of line".format(log.text_green("x = 2")))
+log.error("Message: {}. End of line".format(log.text_yellow("x = 2")))
+log.error("Message: {}. End of line".format(log.text_blue("x = 2")))
+log.error("Message: {}. End of line".format(log.text_magenta("x = 2")))
+log.error("Message: {}. End of line".format(log.text_cyan("x = 2")))
+log.error("Message: {}. End of line".format(log.text_red_background("x = 2")))
+log.error("Message: {}. End of line".format(log.text_green_background("x = 2")))
+log.error("Message: {}. End of line".format(log.text_yellow_background("x = 2")))
+log.error("Message: {}. End of line".format(log.text_blue_background("x = 2")))
+log.error("Message: {}. End of line".format(log.text_magenta_background("x = 2")))
+log.error("Message: {}. End of line".format(log.text_cyan_background("x = 2")))
+log.error("Message: {}. End of line".format(log.text_italic("x = 2")))
+log.error("Message: {}. End of line".format(log.text_underline("x = 2")))
+log.error("Message: {}. End of line".format(log.text_crossed_out("x = 2")))
+```
+
+![Error messages with formated text](img/log_04.png)
+
+```py
+import harrixpylib as h
+
+log.is_show_time_in_console = True
+log.info(log.text_debug("x = 2"))
+log.info(log.text_info("x = 2"))
+log.info(log.text_warning("x = 2"))
+log.info(log.text_error("x = 2"))
+log.info(log.text_critical("x = 2"))
+log.info(log.text_normal("x = 2"))
+log.info(log.text_red("x = 2"))
+log.info(log.text_green("x = 2"))
+log.info(log.text_yellow("x = 2"))
+log.info(log.text_blue("x = 2"))
+log.info(log.text_magenta("x = 2"))
+log.info(log.text_cyan("x = 2"))
+log.info(log.text_red_background("x = 2"))
+log.info(log.text_green_background("x = 2"))
+log.info(log.text_yellow_background("x = 2"))
+log.info(log.text_blue_background("x = 2"))
+log.info(log.text_magenta_background("x = 2"))
+log.info(log.text_cyan_background("x = 2"))
+log.info(log.text_italic("x = 2"))
+log.info(log.text_underline("x = 2"))
+log.info(log.text_crossed_out("x = 2"))
+```
+
+![Info messages with formated text and time](img/log_05.png)
+
+![Messages in file messages.log](img/log-file_01.png)
+
+![Errors in file errors.log](img/log-file_02.png)
 """
+
 import logging
 from logging.handlers import RotatingFileHandler
 from enum import Enum
@@ -24,6 +137,14 @@ import hashlib
 
 
 class Log(object):
+    """Colored logging."""
+
+    __TEMP_STYLE = hashlib.md5("__TEMP_STYLE".encode()).hexdigest()
+    __START_COLOR_SYMBOLS = "\x1b["
+    __FILENAME_LOG = "messages.log"
+    __FILENAME_ERROR_LOG = "errors.log"
+    __REVERSE_DOMAIN = "dev.harrix"
+
     class _Format(str, Enum):
         TIME = "[%(levelname)s] %(asctime)s - %(message)s"
         NO_TIME = "[%(levelname)s] %(message)s"
@@ -56,12 +177,6 @@ class Log(object):
         def list():
             return list(map(lambda c: c.value, Log._Style))
 
-    __TEMP_STYLE = hashlib.md5("__TEMP_STYLE".encode()).hexdigest()
-    __START_COLOR_SYMBOLS = "\x1b["
-    __FILENAME_LOG = "messages.log"
-    __FILENAME_ERROR_LOG = "errors.log"
-    __REVERSE_DOMAIN = "dev.harrix"
-
     class _StyleFormatter(logging.Formatter):
         def __init__(self, format):
             super().__init__()
@@ -72,7 +187,9 @@ class Log(object):
                 logging.INFO: Log._Style.INFO + self.__format + Log._Style.RESET,
                 logging.WARNING: Log._Style.WARNING + self.__format + Log._Style.RESET,
                 logging.ERROR: Log._Style.ERROR + self.__format + Log._Style.RESET,
-                logging.CRITICAL: Log._Style.CRITICAL + self.__format + Log._Style.RESET,
+                logging.CRITICAL: Log._Style.CRITICAL
+                + self.__format
+                + Log._Style.RESET,
             }
 
         def format(self, record):
@@ -86,12 +203,13 @@ class Log(object):
 
     def __init__(self):
         self.is_log_console = True
+
         self.is_log_file = False
         self._is_show_time_in_console = False
         self._is_show_color_in_console = True
         self._filename_log = Log.__FILENAME_LOG
         self._filename_error_log = Log.__FILENAME_ERROR_LOG
-        self._reverse_log = Log.__REVERSE_DOMAIN
+        self._reverse_domain = Log.__REVERSE_DOMAIN
 
         self.__create_log_console()
         self.__create_log_file()
@@ -101,7 +219,7 @@ class Log(object):
         self.__handler_console = logging.StreamHandler()
         self.__handler_console.setFormatter(Log._StyleFormatter(Log._Format.NO_TIME))
         self.__handler_console.setLevel(logging.DEBUG)
-        self.__log_console = logging.getLogger(f"{self._reverse_log}.log.console")
+        self.__log_console = logging.getLogger(f"{self._reverse_domain}.log.console")
         self.__log_console.setLevel(logging.DEBUG)
         self.__log_console.addHandler(self.__handler_console)
 
@@ -111,7 +229,7 @@ class Log(object):
         )
         self.__handler_file.setFormatter(logging.Formatter(Log._Format.TIME))
         self.__handler_file.setLevel(logging.DEBUG)
-        self.__log_file = logging.getLogger(f"{self._reverse_log}.log.file")
+        self.__log_file = logging.getLogger(f"{self._reverse_domain}.log.file")
         self.__log_file.setLevel(logging.DEBUG)
         self.__log_file.addHandler(self.__handler_file)
 
@@ -124,24 +242,26 @@ class Log(object):
         )
         self.__handler_file_error.setFormatter(logging.Formatter(Log._Format.TIME))
         self.__handler_file_error.setLevel(logging.ERROR)
-        self.__log_file_error = logging.getLogger(f"{self._reverse_log}.log.file.error")
+        self.__log_file_error = logging.getLogger(
+            f"{self._reverse_domain}.log.file.error"
+        )
         self.__log_file_error.setLevel(logging.ERROR)
         self.__log_file_error.addHandler(self.__handler_file_error)
 
     @property
-    def reverse_log(self):
-        return self._reverse_log
+    def reverse_domain(self):
+        return self._reverse_domain
 
-    @reverse_log.setter
+    @reverse_domain.setter
     def filename_log(self, value):
-        self._reverse_log = value
+        self._reverse_domain = value
         self.__create_log_console()
         self.__create_log_file()
         self.__create_log_file_error()
 
-    @reverse_log.deleter
-    def reverse_log(self):
-        del self._reverse_log
+    @reverse_domain.deleter
+    def reverse_domain(self):
+        del self._reverse_domain
 
     @property
     def filename_log(self):
@@ -178,7 +298,9 @@ class Log(object):
         self._is_show_time_in_console = value
         if self._is_show_time_in_console:
             if self._is_show_color_in_console:
-                self.__handler_console.setFormatter(Log._StyleFormatter(Log._Format.TIME))
+                self.__handler_console.setFormatter(
+                    Log._StyleFormatter(Log._Format.TIME)
+                )
             else:
                 self.__handler_console.setFormatter(logging.Formatter(Log._Format.TIME))
         else:
@@ -204,7 +326,9 @@ class Log(object):
         self._is_show_color_in_console = value
         if self._is_show_color_in_console:
             if self._is_show_time_in_console:
-                self.__handler_console.setFormatter(Log._StyleFormatter(Log._Format.TIME))
+                self.__handler_console.setFormatter(
+                    Log._StyleFormatter(Log._Format.TIME)
+                )
             else:
                 self.__handler_console.setFormatter(
                     Log._StyleFormatter(Log._Format.NO_TIME)
@@ -254,7 +378,11 @@ class Log(object):
     def __text_style(self, style: _Style, text):
         if self._is_show_color_in_console:
             return (
-                Log._Style.RESET + style + str(text) + Log._Style.RESET + Log.__TEMP_STYLE
+                Log._Style.RESET
+                + style
+                + str(text)
+                + Log._Style.RESET
+                + Log.__TEMP_STYLE
             )
         return str(text)
 
@@ -277,15 +405,83 @@ class Log(object):
         return self.__text_style(Log._Style.NORMAL, text)
 
     def text_red(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is red in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_red("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.RED, text)
 
     def text_green(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is green in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_green("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.GREEN, text)
 
     def text_yellow(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is yellow in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_yellow("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.YELLOW, text)
 
     def text_blue(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is blue in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_blue("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.BLUE, text)
 
     def text_magenta(self, text):
@@ -295,22 +491,22 @@ class Log(object):
         return self.__text_style(Log._Style.CYAN, text)
 
     def text_red_background(self, text):
-        return self.__text_style(Log._Style.RED_BACKGROUND, text)
+        return self.__text_style(Log._Style.RED_BACKGROUND, " " + str(text) + " ")
 
     def text_green_background(self, text):
-        return self.__text_style(Log._Style.GREEN_BACKGROUND, text)
+        return self.__text_style(Log._Style.GREEN_BACKGROUND, " " + str(text) + " ")
 
     def text_yellow_background(self, text):
-        return self.__text_style(Log._Style.YELLOW_BACKGROUND, text)
+        return self.__text_style(Log._Style.YELLOW_BACKGROUND, " " + str(text) + " ")
 
     def text_blue_background(self, text):
-        return self.__text_style(Log._Style.BLUE_BACKGROUND, text)
+        return self.__text_style(Log._Style.BLUE_BACKGROUND, " " + str(text) + " ")
 
     def text_magenta_background(self, text):
-        return self.__text_style(Log._Style.MAGENTA_BACKGROUND, text)
+        return self.__text_style(Log._Style.MAGENTA_BACKGROUND, " " + str(text) + " ")
 
     def text_cyan_background(self, text):
-        return self.__text_style(Log._Style.CYAN_BACKGROUND, text)
+        return self.__text_style(Log._Style.CYAN_BACKGROUND, " " + str(text) + " ")
 
     def text_italic(self, text):
         return self.__text_style(Log._Style.ITALIC, text)
@@ -335,6 +531,8 @@ if __name__ == "__main__":
     log.error("Test message.")
     log.critical("Test message.")
 
+    print()
+
     log.is_show_time_in_console = True
     log.is_show_color_in_console = True
     log.debug("Test message.")
@@ -342,6 +540,8 @@ if __name__ == "__main__":
     log.warning("Test message.")
     log.error("Test message.")
     log.critical("Test message.")
+
+    print()
 
     log.is_show_time_in_console = False
     log.info("Message: {}. End of line".format(log.text_debug("x = 2")))
@@ -366,6 +566,8 @@ if __name__ == "__main__":
     log.info("Message: {}. End of line".format(log.text_underline("x = 2")))
     log.info("Message: {}. End of line".format(log.text_crossed_out("x = 2")))
 
+    print()
+
     log.is_show_time_in_console = False
     log.error("Message: {}. End of line".format(log.text_debug("x = 2")))
     log.error("Message: {}. End of line".format(log.text_info("x = 2")))
@@ -388,6 +590,8 @@ if __name__ == "__main__":
     log.error("Message: {}. End of line".format(log.text_italic("x = 2")))
     log.error("Message: {}. End of line".format(log.text_underline("x = 2")))
     log.error("Message: {}. End of line".format(log.text_crossed_out("x = 2")))
+
+    print()
 
     log.is_show_time_in_console = True
     log.info(log.text_debug("x = 2"))
