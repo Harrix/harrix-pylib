@@ -12,58 +12,31 @@ import harrixpylib as h
 h.clear_directory("C:/temp_dir")
 ```
 
+```py
+import harrixpylib as h
+
+md_clean = h.remove_yaml_from_markdown("""
+---
+categories: [it]
+---
+
+# Title
+""")
+print(md_clean)  # Title
+```
+
 ## Install
 
-Pip:
+Pip: `pip install harrix-pylib`.
 
-```console
-pip install harrix-pylib
-```
-
-Pipenv:
-
-```console
-pip update harrix-pylib
-```
+Pipenv: `pipenv install harrix-pylib`.
 
 ## Update
 
-Pip:
+Pip: `pip update harrix-pylib`.
 
-```console
-pipenv install harrix-pylib
-```
-
-Pipenv:
-
-```console
-pipenv update harrix-pylib
-```
+Pipenv: `pipenv update harrix-pylib`.
 
 ## Development
 
-If you don't have [pipenv](https://pipenv.pypa.io/en/latest/) installed, then you can install it via the commands:
-
-```console
-python -m pip install virtualenv
-python -m pip install pipenv
-```
-
-Installing packages by file `Pipfile`:
-
-```console
-pipenv install --dev
-pipenv shell
-```
-
-Generate docs:
-
-```console
-pdoc --docformat="google" src\harrixpylib\
-```
-
-Example of installing a package under development in a test project:
-
-```console
-pipenv install -e C:/GitHub/harrix-pylib
-```
+See [development.md](development.md).
