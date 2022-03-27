@@ -24,11 +24,11 @@ import hashlib
 
 
 class Log(object):
-    class Format(str, Enum):
+    class _Format(str, Enum):
         TIME = "[%(levelname)s] %(asctime)s - %(message)s"
         NO_TIME = "[%(levelname)s] %(message)s"
 
-    class Style(str, Enum):
+    class _Style(str, Enum):
         DEBUG = "\x1b[36m"
         INFO = "\x1b[0m"
         WARNING = "\x1b[33m"
@@ -54,7 +54,7 @@ class Log(object):
 
         @staticmethod
         def list():
-            return list(map(lambda c: c.value, Log.Style))
+            return list(map(lambda c: c.value, Log._Style))
 
     __TEMP_STYLE = hashlib.md5("__TEMP_STYLE".encode()).hexdigest()
     __START_COLOR_SYMBOLS = "\x1b["
@@ -62,17 +62,17 @@ class Log(object):
     __FILENAME_ERROR_LOG = "errors.log"
     __REVERSE_DOMAIN = "dev.harrix"
 
-    class StyleFormatter(logging.Formatter):
+    class _StyleFormatter(logging.Formatter):
         def __init__(self, format):
             super().__init__()
             self.__format = format
 
             self.FORMATS = {
-                logging.DEBUG: Log.Style.DEBUG + self.__format + Log.Style.RESET,
-                logging.INFO: Log.Style.INFO + self.__format + Log.Style.RESET,
-                logging.WARNING: Log.Style.WARNING + self.__format + Log.Style.RESET,
-                logging.ERROR: Log.Style.ERROR + self.__format + Log.Style.RESET,
-                logging.CRITICAL: Log.Style.CRITICAL + self.__format + Log.Style.RESET,
+                logging.DEBUG: Log._Style.DEBUG + self.__format + Log._Style.RESET,
+                logging.INFO: Log._Style.INFO + self.__format + Log._Style.RESET,
+                logging.WARNING: Log._Style.WARNING + self.__format + Log._Style.RESET,
+                logging.ERROR: Log._Style.ERROR + self.__format + Log._Style.RESET,
+                logging.CRITICAL: Log._Style.CRITICAL + self.__format + Log._Style.RESET,
             }
 
         def format(self, record):
@@ -99,7 +99,7 @@ class Log(object):
 
     def __create_log_console(self):
         self.__handler_console = logging.StreamHandler()
-        self.__handler_console.setFormatter(Log.StyleFormatter(Log.Format.NO_TIME))
+        self.__handler_console.setFormatter(Log._StyleFormatter(Log._Format.NO_TIME))
         self.__handler_console.setLevel(logging.DEBUG)
         self.__log_console = logging.getLogger(f"{self._reverse_log}.log.console")
         self.__log_console.setLevel(logging.DEBUG)
@@ -109,7 +109,7 @@ class Log(object):
         self.__handler_file = RotatingFileHandler(
             self._filename_log, maxBytes=104857600, backupCount=100, encoding="utf-8"
         )
-        self.__handler_file.setFormatter(logging.Formatter(Log.Format.TIME))
+        self.__handler_file.setFormatter(logging.Formatter(Log._Format.TIME))
         self.__handler_file.setLevel(logging.DEBUG)
         self.__log_file = logging.getLogger(f"{self._reverse_log}.log.file")
         self.__log_file.setLevel(logging.DEBUG)
@@ -122,7 +122,7 @@ class Log(object):
             backupCount=100,
             encoding="utf-8",
         )
-        self.__handler_file_error.setFormatter(logging.Formatter(Log.Format.TIME))
+        self.__handler_file_error.setFormatter(logging.Formatter(Log._Format.TIME))
         self.__handler_file_error.setLevel(logging.ERROR)
         self.__log_file_error = logging.getLogger(f"{self._reverse_log}.log.file.error")
         self.__log_file_error.setLevel(logging.ERROR)
@@ -178,17 +178,17 @@ class Log(object):
         self._is_show_time_in_console = value
         if self._is_show_time_in_console:
             if self._is_show_color_in_console:
-                self.__handler_console.setFormatter(Log.StyleFormatter(Log.Format.TIME))
+                self.__handler_console.setFormatter(Log._StyleFormatter(Log._Format.TIME))
             else:
-                self.__handler_console.setFormatter(logging.Formatter(Log.Format.TIME))
+                self.__handler_console.setFormatter(logging.Formatter(Log._Format.TIME))
         else:
             if self._is_show_color_in_console:
                 self.__handler_console.setFormatter(
-                    Log.StyleFormatter(Log.Format.NO_TIME)
+                    Log._StyleFormatter(Log._Format.NO_TIME)
                 )
             else:
                 self.__handler_console.setFormatter(
-                    logging.Formatter(Log.Format.NO_TIME)
+                    logging.Formatter(Log._Format.NO_TIME)
                 )
 
     @is_show_time_in_console.deleter
@@ -204,17 +204,17 @@ class Log(object):
         self._is_show_color_in_console = value
         if self._is_show_color_in_console:
             if self._is_show_time_in_console:
-                self.__handler_console.setFormatter(Log.StyleFormatter(Log.Format.TIME))
+                self.__handler_console.setFormatter(Log._StyleFormatter(Log._Format.TIME))
             else:
                 self.__handler_console.setFormatter(
-                    Log.StyleFormatter(Log.Format.NO_TIME)
+                    Log._StyleFormatter(Log._Format.NO_TIME)
                 )
         else:
             if self._is_show_time_in_console:
-                self.__handler_console.setFormatter(logging.Formatter(Log.Format.TIME))
+                self.__handler_console.setFormatter(logging.Formatter(Log._Format.TIME))
             else:
                 self.__handler_console.setFormatter(
-                    logging.Formatter(Log.Format.NO_TIME)
+                    logging.Formatter(Log._Format.NO_TIME)
                 )
 
     @is_show_color_in_console.deleter
@@ -226,12 +226,12 @@ class Log(object):
         if self.is_log_console:
             if Log.__TEMP_STYLE in text:
                 text = text.replace(
-                    Log.__TEMP_STYLE, getattr(Log.Style, method.upper())
+                    Log.__TEMP_STYLE, getattr(Log._Style, method.upper())
                 )
             getattr(self.__log_console, method)(text)
         if self.is_log_file:
             if Log.__START_COLOR_SYMBOLS in text:
-                for symbol in Log.Style.list():
+                for symbol in Log._Style.list():
                     text = text.replace(symbol, "")
             getattr(self.__log_file, method)(text)
             getattr(self.__log_file_error, method)(text)
@@ -251,75 +251,75 @@ class Log(object):
     def critical(self, text):
         self.__write_log("critical", text)
 
-    def __text_style(self, style: Style, text):
+    def __text_style(self, style: _Style, text):
         if self._is_show_color_in_console:
             return (
-                Log.Style.RESET + style + str(text) + Log.Style.RESET + Log.__TEMP_STYLE
+                Log._Style.RESET + style + str(text) + Log._Style.RESET + Log.__TEMP_STYLE
             )
         return str(text)
 
     def text_debug(self, text):
-        return self.__text_style(Log.Style.DEBUG, text)
+        return self.__text_style(Log._Style.DEBUG, text)
 
     def text_info(self, text):
-        return self.__text_style(Log.Style.DEBUG, text)
+        return self.__text_style(Log._Style.DEBUG, text)
 
     def text_warning(self, text):
-        return self.__text_style(Log.Style.WARNING, text)
+        return self.__text_style(Log._Style.WARNING, text)
 
     def text_error(self, text):
-        return self.__text_style(Log.Style.ERROR, text)
+        return self.__text_style(Log._Style.ERROR, text)
 
     def text_critical(self, text):
-        return self.__text_style(Log.Style.CRITICAL, text)
+        return self.__text_style(Log._Style.CRITICAL, text)
 
     def text_normal(self, text):
-        return self.__text_style(Log.Style.NORMAL, text)
+        return self.__text_style(Log._Style.NORMAL, text)
 
     def text_red(self, text):
-        return self.__text_style(Log.Style.RED, text)
+        return self.__text_style(Log._Style.RED, text)
 
     def text_green(self, text):
-        return self.__text_style(Log.Style.GREEN, text)
+        return self.__text_style(Log._Style.GREEN, text)
 
     def text_yellow(self, text):
-        return self.__text_style(Log.Style.YELLOW, text)
+        return self.__text_style(Log._Style.YELLOW, text)
 
     def text_blue(self, text):
-        return self.__text_style(Log.Style.BLUE, text)
+        return self.__text_style(Log._Style.BLUE, text)
 
     def text_magenta(self, text):
-        return self.__text_style(Log.Style.MAGENTA, text)
+        return self.__text_style(Log._Style.MAGENTA, text)
 
     def text_cyan(self, text):
-        return self.__text_style(Log.Style.CYAN, text)
+        return self.__text_style(Log._Style.CYAN, text)
 
     def text_red_background(self, text):
-        return self.__text_style(Log.Style.RED_BACKGROUND, text)
+        return self.__text_style(Log._Style.RED_BACKGROUND, text)
 
     def text_green_background(self, text):
-        return self.__text_style(Log.Style.GREEN_BACKGROUND, text)
+        return self.__text_style(Log._Style.GREEN_BACKGROUND, text)
 
     def text_yellow_background(self, text):
-        return self.__text_style(Log.Style.YELLOW_BACKGROUND, text)
+        return self.__text_style(Log._Style.YELLOW_BACKGROUND, text)
 
     def text_blue_background(self, text):
-        return self.__text_style(Log.Style.BLUE_BACKGROUND, text)
+        return self.__text_style(Log._Style.BLUE_BACKGROUND, text)
 
     def text_magenta_background(self, text):
-        return self.__text_style(Log.Style.MAGENTA_BACKGROUND, text)
+        return self.__text_style(Log._Style.MAGENTA_BACKGROUND, text)
 
     def text_cyan_background(self, text):
-        return self.__text_style(Log.Style.CYAN_BACKGROUND, text)
+        return self.__text_style(Log._Style.CYAN_BACKGROUND, text)
 
     def text_italic(self, text):
-        return self.__text_style(Log.Style.ITALIC, text)
+        return self.__text_style(Log._Style.ITALIC, text)
 
     def text_underline(self, text):
-        return self.__text_style(Log.Style.UNDERLINE, text)
+        return self.__text_style(Log._Style.UNDERLINE, text)
 
     def text_crossed_out(self, text):
-        return self.__text_style(Log.Style.CROSSED_OUT, text)
+        return self.__text_style(Log._Style.CROSSED_OUT, text)
 
 
 log = Log()
