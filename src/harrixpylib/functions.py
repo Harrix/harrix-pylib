@@ -1,3 +1,7 @@
+"""
+Common functions for working in Python.
+"""
+
 import re
 import shutil
 from pathlib import Path
