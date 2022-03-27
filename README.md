@@ -17,12 +17,13 @@ import harrixpylib as h
 
 md_clean = h.remove_yaml_from_markdown("""
 ---
-categories: [it]
+categories: [it, program]
+tags: [VSCode, FAQ]
 ---
 
-# Title
+# Installing VSCode
 """)
-print(md_clean)  # Title
+print(md_clean)  # Installing VSCode
 ```
 
 ## Install
