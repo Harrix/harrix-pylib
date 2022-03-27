@@ -221,37 +221,42 @@ class Log(object):
     def is_show_color_in_console(self):
         del self._is_show_color_in_console
 
-    def __write_log(self, method, msg):
+    def __write_log(self, method, text):
+        text = str(text)
         if self.is_log_console:
-            if Log.__TEMP_STYLE in msg:
-                msg = msg.replace(Log.__TEMP_STYLE, getattr(Log.Style, method.upper()))
-            getattr(self.__log_console, method)(msg)
+            if Log.__TEMP_STYLE in text:
+                text = text.replace(
+                    Log.__TEMP_STYLE, getattr(Log.Style, method.upper())
+                )
+            getattr(self.__log_console, method)(text)
         if self.is_log_file:
-            if Log.__START_COLOR_SYMBOLS in msg:
+            if Log.__START_COLOR_SYMBOLS in text:
                 for symbol in Log.Style.list():
-                    msg = msg.replace(symbol, "")
-            getattr(self.__log_file, method)(msg)
-            getattr(self.__log_file_error, method)(msg)
+                    text = text.replace(symbol, "")
+            getattr(self.__log_file, method)(text)
+            getattr(self.__log_file_error, method)(text)
 
-    def debug(self, msg):
-        self.__write_log("debug", msg)
+    def debug(self, text):
+        self.__write_log("debug", text)
 
-    def info(self, msg):
-        self.__write_log("info", msg)
+    def info(self, text):
+        self.__write_log("info", text)
 
-    def warning(self, msg):
-        self.__write_log("warning", msg)
+    def warning(self, text):
+        self.__write_log("warning", text)
 
-    def error(self, msg):
-        self.__write_log("error", msg)
+    def error(self, text):
+        self.__write_log("error", text)
 
-    def critical(self, msg):
-        self.__write_log("critical", msg)
+    def critical(self, text):
+        self.__write_log("critical", text)
 
     def __text_style(self, style: Style, text):
         if self._is_show_color_in_console:
-            return Log.Style.RESET + style + text + Log.Style.RESET + Log.__TEMP_STYLE
-        return text
+            return (
+                Log.Style.RESET + style + str(text) + Log.Style.RESET + Log.__TEMP_STYLE
+            )
+        return str(text)
 
     def text_debug(self, text):
         return self.__text_style(Log.Style.DEBUG, text)
