@@ -20,6 +20,10 @@ Generate docs:
 pdoc --docformat="google" src\harrixpylib\
 ```
 
+```console
+pdoc -o ./docs --docformat="google" src\harrixpylib\
+```
+
 Example of installing a package under development in a test project:
 
 ```console
