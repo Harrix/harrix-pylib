@@ -1,6 +1,6 @@
 # harrix-pylib
 
-Common functions for working in Python, colored logging.
+Common functions for working in Python.
 
 ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
 
@@ -26,16 +26,6 @@ tags: [VSCode, FAQ]
 print(md_clean)  # Installing VSCode
 ```
 
-```py
-import harrixpylib as h
-
-h.log.debug("Debug message")
-h.log.error("Error message")
-h.log.info("x = {}".format(h.log.text_red_background(6)))
-```
-
-![Colored text in the console](img/log_example.png)
-
 ## Install
 
 Pip: `pip install harrix-pylib`.
@@ -50,4 +40,4 @@ Pipenv: `pipenv update harrix-pylib`.
 
 ## Development
 
-See [development.md](development.md).
+See [development.md](https://github.com/Harrix/harrix-pylib/blob/main/development.md).
