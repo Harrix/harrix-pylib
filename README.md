@@ -34,7 +34,7 @@ h.log.error("Error message")
 h.log.info("x = {}".format(h.log.text_red_background(6)))
 ```
 
-![Colored text in the console](img/log.png)
+![Colored text in the console](img/log_example.png)
 
 ## Install
 

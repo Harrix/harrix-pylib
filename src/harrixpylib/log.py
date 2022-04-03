@@ -2,6 +2,11 @@
 Colored logging class based on the standard python
 [logging class](https://docs.python.org/3/library/logging.html).
 
+The methods output logging messages to the console, the file `messages.log`,
+and the file `errors.log` simultaneously. Output to a file or console can be disabled.
+
+Messages are output to files without color.
+
 ## Usage example
 
 ```py
@@ -125,6 +130,34 @@ log.info(log.text_crossed_out("x = 2"))
 
 ![Info messages with formated text and time](img/log_05.png)
 
+```py
+import harrixpylib as h
+
+h.log.is_log_file = True
+
+log.info(log.text_debug("x = 2"))
+log.info(log.text_info("x = 2"))
+log.info(log.text_warning("x = 2"))
+log.info(log.text_error("x = 2"))
+log.info(log.text_critical("x = 2"))
+log.info(log.text_normal("x = 2"))
+log.info(log.text_red("x = 2"))
+log.info(log.text_green("x = 2"))
+log.info(log.text_yellow("x = 2"))
+log.info(log.text_blue("x = 2"))
+log.info(log.text_magenta("x = 2"))
+log.info(log.text_cyan("x = 2"))
+log.info(log.text_red_background("x = 2"))
+log.info(log.text_green_background("x = 2"))
+log.info(log.text_yellow_background("x = 2"))
+log.info(log.text_blue_background("x = 2"))
+log.info(log.text_magenta_background("x = 2"))
+log.info(log.text_cyan_background("x = 2"))
+log.info(log.text_italic("x = 2"))
+log.info(log.text_underline("x = 2"))
+log.info(log.text_crossed_out("x = 2"))
+```
+
 ![Messages in file messages.log](img/log-file_01.png)
 
 ![Errors in file errors.log](img/log-file_02.png)
@@ -203,8 +236,30 @@ class Log(object):
 
     def __init__(self):
         self.is_log_console = True
+        """If the parameter is `True`, the messages are displayed in the console.
+        Defaults to `True`. Example:
+
+        ```py
+        import harrixpylib as h
+
+        h.log.is_log_console = False
+        h.log.error("Test message.")
+        # The message will appear only in log files
+        ```
+        """
 
         self.is_log_file = False
+        """If the parameter is `True`, the messages are displayed in log files.
+        Defaults to `False`. Example:
+
+        ```py
+        import harrixpylib as h
+
+        h.log.is_log_file = True
+        h.log.error("Test message.")
+        # The message will appear in log files and the console
+        ```
+        """
         self._is_show_time_in_console = False
         self._is_show_color_in_console = True
         self._filename_log = Log.__FILENAME_LOG
@@ -229,7 +284,9 @@ class Log(object):
         )
         self.__handler_file.setFormatter(logging.Formatter(Log._Format.TIME))
         self.__handler_file.setLevel(logging.DEBUG)
-        self.__log_file = logging.getLogger(f"{self._reverse_domain}.log.file")
+        self.__log_file = logging.getLogger(
+            f"log.file.{self._filename_log}.{self._reverse_domain}"
+        )
         self.__log_file.setLevel(logging.DEBUG)
         self.__log_file.addHandler(self.__handler_file)
 
@@ -243,17 +300,28 @@ class Log(object):
         self.__handler_file_error.setFormatter(logging.Formatter(Log._Format.TIME))
         self.__handler_file_error.setLevel(logging.ERROR)
         self.__log_file_error = logging.getLogger(
-            f"{self._reverse_domain}.log.file.error"
+            f"log.file.error.{self._filename_error_log}.{self._reverse_domain}"
         )
         self.__log_file_error.setLevel(logging.ERROR)
         self.__log_file_error.addHandler(self.__handler_file_error)
 
     @property
     def reverse_domain(self):
+        """Reverse domain for
+        [getLogger](https://docs.python.org/3/library/logging.html#logging.getLogger).
+        This parameter can not be changed. Defaults to `dev.harrix`. Example:
+
+        ```py
+        import harrixpylib as h
+
+        h.log.reverse_domain = "com.my-domain"
+        h.log.debug("Test message.")
+        ```
+        """
         return self._reverse_domain
 
     @reverse_domain.setter
-    def filename_log(self, value):
+    def reverse_domain(self, value):
         self._reverse_domain = value
         self.__create_log_console()
         self.__create_log_file()
@@ -265,6 +333,17 @@ class Log(object):
 
     @property
     def filename_log(self):
+        """Filename for log file. The variable `is_log_file` must be `True`.
+        Defaults to `messages.log`. Example:
+
+        ```py
+        import harrixpylib as h
+
+        h.log.is_log_file = True
+        h.log.filename_log = "my-messages.log"
+        h.log.debug("Test message.")
+        ```
+        """
         return self._filename_log
 
     @filename_log.setter
@@ -278,6 +357,17 @@ class Log(object):
 
     @property
     def filename_error_log(self):
+        """Filename for log file. The variable `is_log_file` must be `True`.
+        Defaults to `messages.log`. Example:
+
+        ```py
+        import harrixpylib as h
+
+        h.log.is_log_file = True
+        h.log.filename_error_log = "my-errors.log"
+        h.log.error("Test message.")
+        ```
+        """
         return self._filename_error_log
 
     @filename_error_log.setter
@@ -291,6 +381,19 @@ class Log(object):
 
     @property
     def is_show_time_in_console(self):
+        """If the parameter is `True`, then the time is displayed in the console.
+        Defaults to `False`. Example:
+
+        ```py
+        import harrixpylib as h
+
+        h.log.error("Test message.")
+        # [ERROR] Test message.
+        h.log.is_show_time_in_console = True
+        h.log.error("Test message.")
+        # [ERROR] 2022-04-03 21:56:49,570 - Test message.
+        ```
+        """
         return self._is_show_time_in_console
 
     @is_show_time_in_console.setter
@@ -319,6 +422,16 @@ class Log(object):
 
     @property
     def is_show_color_in_console(self):
+        """If the parameter is `True`, then the color is displayed in the console.
+        Defaults to `True`. Example:
+
+        ```py
+        import harrixpylib as h
+
+        h.log.is_show_color_in_console = False
+        h.log.error("Test message.")
+        ```
+        """
         return self._is_show_color_in_console
 
     @is_show_color_in_console.setter
@@ -361,18 +474,98 @@ class Log(object):
             getattr(self.__log_file_error, method)(text)
 
     def debug(self, text):
+        """Method outputs a debug message to the console and log files.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            None.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        x = 2
+        h.log.debug(f"x = {x}")
+        ```
+        """
         self.__write_log("debug", text)
 
     def info(self, text):
+        """Method outputs a info message to the console and log files.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            None.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        x = 2
+        h.log.info(f"x = {x}")
+        ```
+        """
         self.__write_log("info", text)
 
     def warning(self, text):
+        """Method outputs a warning message to the console and log files.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            None.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        x = 2
+        h.log.warning(f"x = {x}")
+        ```
+        """
         self.__write_log("warning", text)
 
     def error(self, text):
+        """Method outputs a error message to the console and log files.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            None.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        x = 2
+        h.log.error(f"x = {x}")
+        ```
+        """
         self.__write_log("error", text)
 
     def critical(self, text):
+        """Method outputs a critical message to the console and log files.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            None.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        x = 2
+        h.log.critical(f"x = {x}")
+        ```
+        """
         self.__write_log("critical", text)
 
     def __text_style(self, style: _Style, text):
@@ -387,27 +580,129 @@ class Log(object):
         return str(text)
 
     def text_debug(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is debug text (**cyan** text) in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_debug("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.DEBUG, text)
 
     def text_info(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is info text (**normal** text) in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_info("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.DEBUG, text)
 
     def text_warning(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is warning text (**yellow** text) in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_warning("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.WARNING, text)
 
     def text_error(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is error text (**red** text) in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_error("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.ERROR, text)
 
     def text_critical(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is critical text (text with **red background**) in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_critical("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.CRITICAL, text)
 
     def text_normal(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is **normal** in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_normal("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.NORMAL, text)
 
     def text_red(self, text):
         """Frame the text with
         [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
-        so that it is red in the console.
+        so that it is **red** in the console.
 
         Args:
             text (str): Message for logging.
@@ -427,7 +722,7 @@ class Log(object):
     def text_green(self, text):
         """Frame the text with
         [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
-        so that it is green in the console.
+        so that it is **green** in the console.
 
         Args:
             text (str): Message for logging.
@@ -447,7 +742,7 @@ class Log(object):
     def text_yellow(self, text):
         """Frame the text with
         [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
-        so that it is yellow in the console.
+        so that it is **yellow** in the console.
 
         Args:
             text (str): Message for logging.
@@ -467,7 +762,7 @@ class Log(object):
     def text_blue(self, text):
         """Frame the text with
         [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
-        so that it is blue in the console.
+        so that it is **blue** in the console.
 
         Args:
             text (str): Message for logging.
@@ -485,36 +780,223 @@ class Log(object):
         return self.__text_style(Log._Style.BLUE, text)
 
     def text_magenta(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is **magenta** in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_magenta("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.MAGENTA, text)
 
     def text_cyan(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is **cyan** in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_cyan("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.CYAN, text)
 
     def text_red_background(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is black with **red background** in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_red_background("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.RED_BACKGROUND, " " + str(text) + " ")
 
     def text_green_background(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is black with **green background** in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_green_background("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.GREEN_BACKGROUND, " " + str(text) + " ")
 
     def text_yellow_background(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is black with **yellow background** in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_yellow_background("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.YELLOW_BACKGROUND, " " + str(text) + " ")
 
     def text_blue_background(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is black with **blue background** in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_blue_background("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.BLUE_BACKGROUND, " " + str(text) + " ")
 
     def text_magenta_background(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is black with **magenta background** in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_magenta_background("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.MAGENTA_BACKGROUND, " " + str(text) + " ")
 
     def text_cyan_background(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is black with **cyan background** in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_cyan_background("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.CYAN_BACKGROUND, " " + str(text) + " ")
 
     def text_italic(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is text in italics in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_italic("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.ITALIC, text)
 
     def text_underline(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is underlined text in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_underlined("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.UNDERLINE, text)
 
     def text_crossed_out(self, text):
+        """Frame the text with
+        [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+        so that it is crossed out text in the console.
+
+        Args:
+            text (str): Message for logging.
+
+        Returns:
+            Returns framed text.
+
+        Example:
+        ```py
+        import harrixpylib as h
+
+        h.log.info("x = " + h.log.text_crossed_out("Message"))
+        ```
+        """
         return self.__text_style(Log._Style.CROSSED_OUT, text)
 
 
