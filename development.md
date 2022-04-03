@@ -14,15 +14,13 @@ pipenv install --dev
 pipenv shell
 ```
 
-Generate docs:
+Run pdoc:
 
 ```console
 pdoc --docformat="google" src\harrixpylib\
 ```
 
-```console
-pdoc -o ./docs --docformat="google" src\harrixpylib\
-```
+Run the file `generate_docs.py` to generate the documentation.
 
 Example of installing a package under development in a test project:
 
