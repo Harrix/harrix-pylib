@@ -12,10 +12,10 @@ def clear_directory(path: Union[Path, str]) -> None:
     """This function clear directory with sub-directories.
 
     Args:
-      path: Path of directory.
+        path: Path of directory.
 
     Returns:
-      None.
+        None.
 
     Examples:
     ```py
