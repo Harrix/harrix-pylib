@@ -9,7 +9,6 @@ twine = "*"
 
 [dev-packages]
 harrix-pylib = {editable = true, path = "."}
-pdoc = "*"
 black = "*"
 
 [requires]
