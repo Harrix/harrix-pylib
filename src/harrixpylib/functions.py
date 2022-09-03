@@ -5,24 +5,28 @@ Common functions for working in Python.
 import re
 import shutil
 from pathlib import Path
-from typing import Union
 
 
-def clear_directory(path: Union[Path, str]) -> None:
-    """This function clear directory with sub-directories.
+def clear_directory(path: Path | str) -> None:
+    """
+    This function clear directory with sub-directories.
 
     Args:
-        path: Path of directory.
+
+    - `path` (Path | str): Path of directory.
 
     Returns:
-        None.
+
+    - `None`.
 
     Examples:
+
     ```py
     import harrixpylib as h
 
     h.clear_directory("C:/temp_dir")
     ```
+
     ```py
     from pathlib import Path
     import harrixpylib as h
@@ -41,7 +45,8 @@ def clear_directory(path: Union[Path, str]) -> None:
 
 
 def remove_yaml_from_markdown(markdown_text: str) -> str:
-    """Function remove YAML from text of markdown file.
+    """
+    Function remove YAML from text of markdown file.
 
     Markdown before processing:
 
@@ -61,10 +66,12 @@ def remove_yaml_from_markdown(markdown_text: str) -> str:
     ```
 
     Args:
-      markdown_text: Text of markdown file.
+
+    - `markdown_text` (str): Text of markdown file.
 
     Returns:
-      Text of markdown file without YAML.
+
+    - `str`: Text of markdown file without YAML.
 
     Examples:
     ```py

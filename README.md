@@ -6,6 +6,8 @@ Common functions for working in Python.
 
 ## Quick start
 
+Examples of using the library:
+
 ```py
 import harrixpylib as h
 
