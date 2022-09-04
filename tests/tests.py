@@ -20,6 +20,13 @@ class TestHarrixpylib(unittest.TestCase):
         md_clean = h.remove_yaml_from_markdown(md)
         self.assertEqual(len(md_clean.splitlines()), 1)
 
+    def test_get_yaml_from_markdown__01(self):
+        current_folder = Path(__file__).resolve().parent
+        filename = current_folder / "data/article.md"
+        md = Path(filename).read_text(encoding="utf8")
+        md_clean = h.get_yaml_from_markdown(md)
+        self.assertEqual(len(md_clean.splitlines()), 4)
+
 
 if __name__ == "__main__":
     unittest.main()

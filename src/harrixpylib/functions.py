@@ -46,7 +46,7 @@ def clear_directory(path: Path | str) -> None:
 
 def remove_yaml_from_markdown(markdown_text: str) -> str:
     """
-    Function remove YAML from text of markdown file.
+    Function remove YAML from text of the Markdown file.
 
     Markdown before processing:
 
@@ -67,17 +67,17 @@ def remove_yaml_from_markdown(markdown_text: str) -> str:
 
     Args:
 
-    - `markdown_text` (str): Text of markdown file.
+    - `markdown_text` (str): Text of the Markdown file.
 
     Returns:
 
-    - `str`: Text of markdown file without YAML.
+    - `str`: Text of the Markdown file without YAML.
 
     Examples:
     ```py
     import harrixpylib as h
 
-    md_clean = h.remove_yaml_from_markdown("---\\ncategories: [it]\\n---\\n\\nText")
+    md_clean = h.remove_yaml_from_markdown("---\ncategories: [it]\n---\n\nText")
     print(md_clean)  # Text
     ```
 
@@ -91,3 +91,58 @@ def remove_yaml_from_markdown(markdown_text: str) -> str:
     ```
     """
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
+
+def get_yaml_from_markdown(markdown_text: str) -> str:
+    """
+    Function get YAML from text of the Markdown file.
+
+    Markdown before processing:
+
+    ```md
+    ---
+    categories: [it, program]
+    tags: [VSCode, FAQ]
+    ---
+
+    # Installing VSCode
+
+    ```
+
+    Text after processing:
+    ```md
+    ---
+    categories: [it, program]
+    tags: [VSCode, FAQ]
+    ---
+    ```
+
+    Args:
+
+    - `markdown_text` (str): Text of the Markdown file.
+
+    Returns:
+
+    - `str`: YAML from the Markdown file.
+
+    Examples:
+    ```py
+    import harrixpylib as h
+
+    md_clean = h.get_yaml_from_markdown("---\ncategories: [it]\n---\n\nText")
+    print(md_clean)  # Text
+    ```
+
+    ```py
+    from pathlib import Path
+    import harrixpylib as h
+
+    md = Path("article.md").read_text(encoding="utf8")
+    md_clean = h.get_yaml_from_markdown(md)
+    print(md_clean)
+    ```
+    """
+    find = re.search(r"^---(.|\n)*?---\n", markdown_text.lstrip(), re.DOTALL)
+    if find:
+        return(find.group().rstrip())
+    return ""
+
