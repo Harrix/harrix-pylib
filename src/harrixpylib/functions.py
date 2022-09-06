@@ -92,6 +92,7 @@ def remove_yaml_from_markdown(markdown_text: str) -> str:
     """
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
 
+
 def get_yaml_from_markdown(markdown_text: str) -> str:
     """
     Function get YAML from text of the Markdown file.
@@ -143,6 +144,5 @@ def get_yaml_from_markdown(markdown_text: str) -> str:
     """
     find = re.search(r"^---(.|\n)*?---\n", markdown_text.lstrip(), re.DOTALL)
     if find:
-        return(find.group().rstrip())
+        return find.group().rstrip()
     return ""
-
