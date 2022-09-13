@@ -9,7 +9,7 @@ from pathlib import Path
 
 def clear_directory(path: Path | str) -> None:
     """
-    This function clear directory with sub-directories.
+    This function clears directory with sub-directories.
 
     Args:
 
@@ -46,7 +46,7 @@ def clear_directory(path: Path | str) -> None:
 
 def remove_yaml_from_markdown(markdown_text: str) -> str:
     """
-    Function remove YAML from text of the Markdown file.
+    Function removes YAML from text of the Markdown file.
 
     Markdown before processing:
 
@@ -95,7 +95,7 @@ def remove_yaml_from_markdown(markdown_text: str) -> str:
 
 def get_yaml_from_markdown(markdown_text: str) -> str:
     """
-    Function get YAML from text of the Markdown file.
+    Function gets YAML from text of the Markdown file.
 
     Markdown before processing:
 
