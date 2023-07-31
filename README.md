@@ -1,6 +1,6 @@
 # harrix-pylib
 
-Common functions for working in Python.
+Common functions for working in Python (>= 3.10).
 
 ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
 
