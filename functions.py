@@ -1,7 +1,3 @@
-"""
-Common functions for working in Python.
-"""
-
 import re
 import shutil
 from pathlib import Path
@@ -146,7 +142,3 @@ def get_yaml_from_markdown(markdown_text: str) -> str:
     if find:
         return find.group().rstrip()
     return ""
-
-
-def test20240225():
-    print("2024-02-25")
