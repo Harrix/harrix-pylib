@@ -18,14 +18,14 @@ def clear_directory(path: Path | str) -> None:
     Examples:
 
     ```py
-    import harrixpylib as h
+    import harrix-py-funcs as h
 
     h.clear_directory("C:/temp_dir")
     ```
 
     ```py
     from pathlib import Path
-    import harrixpylib as h
+    import harrix-py-funcs as h
 
     folder = Path(__file__).resolve().parent / "data/temp"
     folder.mkdir(parents=True, exist_ok=True)
@@ -71,7 +71,7 @@ def remove_yaml_from_markdown(markdown_text: str) -> str:
 
     Examples:
     ```py
-    import harrixpylib as h
+    import harrix-py-funcs as h
 
     md_clean = h.remove_yaml_from_markdown("---\ncategories: [it]\n---\n\nText")
     print(md_clean)  # Text
@@ -79,7 +79,7 @@ def remove_yaml_from_markdown(markdown_text: str) -> str:
 
     ```py
     from pathlib import Path
-    import harrixpylib as h
+    import harrix-py-funcs as h
 
     md = Path("article.md").read_text(encoding="utf8")
     md_clean = h.remove_yaml_from_markdown(md)
@@ -123,7 +123,7 @@ def get_yaml_from_markdown(markdown_text: str) -> str:
 
     Examples:
     ```py
-    import harrixpylib as h
+    import harrix-py-funcs as h
 
     md_clean = h.get_yaml_from_markdown("---\ncategories: [it]\n---\n\nText")
     print(md_clean)  # Text
@@ -131,7 +131,7 @@ def get_yaml_from_markdown(markdown_text: str) -> str:
 
     ```py
     from pathlib import Path
-    import harrixpylib as h
+    import harrix-py-funcs as h
 
     md = Path("article.md").read_text(encoding="utf8")
     md_clean = h.get_yaml_from_markdown(md)
