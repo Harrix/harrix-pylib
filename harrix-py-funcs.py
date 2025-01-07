@@ -557,6 +557,34 @@ def file_clear_directory(path: Path | str) -> None:
         path.mkdir(parents=True, exist_ok=True)
 
 
+def file_find_max_folder_number(base_path: str, start_pattern: str) -> int:
+    """
+    Finds the highest folder number in a given folder based on a pattern.
+
+    Args:
+
+    - `base_path` (`str`): The base folder path to search for folders.
+    - `start_pattern` (`str`): A regex pattern for matching folder names.
+
+    Returns:
+
+    - `int`: The maximum folder number found, or 0 if no matches are found.
+    """
+    pattern = re.compile(start_pattern + r"(\d+)$")
+    max_number: int = 0
+    base_path = Path(base_path)
+
+    for item in base_path.iterdir():
+        if item.is_dir():
+            match = pattern.match(item.name)
+            if match:
+                number = int(match.group(1))
+                if number > max_number:
+                    max_number = number
+
+    return max_number
+
+
 def file_open_file_or_folder(path: Path | str) -> None:
     """
     Opens a file or folder using the operating system's default application.
