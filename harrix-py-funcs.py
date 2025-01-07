@@ -767,6 +767,35 @@ def markdown_add_author_book(filename: Path | str) -> str:
         lines_list.append(f"No changes in {filename}")
     return "\n".join(lines_list)
 
+def markdown_add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) -> str | Path:
+    """
+    Adds a note to the specified base path.
+
+    Args:
+
+    - `base_path` (`str | Path`): The path where the note will be added.
+    - `name` (`str`): The name for the note file or folder.
+    - `text` (`str`): The text content for the note.
+    - `is_with_images` (`bool`): If true, creates folders for images.
+
+    Returns:
+
+    - `str | Path`: A tuple containing a message about file creation and the path to the file.
+    """
+    base_path = Path(base_path)
+
+    if is_with_images:
+        (base_path / name).mkdir(exist_ok=True)
+        (base_path / name / "img").mkdir(exist_ok=True)
+        file_path = base_path / name / f"{name}.md"
+    else:
+        file_path = base_path / f"{name}.md"
+
+    with file_path.open(mode="w", encoding="utf-8") as file:
+        file.write(text)
+
+    return f"File {file_path} created.", file_path
+
 
 def markdown_get_yaml(markdown_text: str) -> str:
     """
