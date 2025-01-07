@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 
 
-def clear_directory(path: Path | str) -> None:
+def file_clear_directory(path: Path | str) -> None:
     """
     This function clears directory with sub-directories.
 
@@ -20,7 +20,7 @@ def clear_directory(path: Path | str) -> None:
     ```py
     import harrix-py-funcs as h
 
-    h.clear_directory("C:/temp_dir")
+    h.file_clear_directory("C:/temp_dir")
     ```
 
     ```py
@@ -31,7 +31,7 @@ def clear_directory(path: Path | str) -> None:
     folder.mkdir(parents=True, exist_ok=True)
     Path(folder / "temp.txt").write_text("Hello, world!", encoding="utf8")
     ...
-    h.clear_directory(folder)
+    h.file_clear_directory(folder)
     ```
     """
     path = Path(path)
@@ -40,56 +40,7 @@ def clear_directory(path: Path | str) -> None:
         path.mkdir(parents=True, exist_ok=True)
 
 
-def remove_yaml_from_markdown(markdown_text: str) -> str:
-    """
-    Function removes YAML from text of the Markdown file.
-
-    Markdown before processing:
-
-    ```md
-    ---
-    categories: [it, program]
-    tags: [VSCode, FAQ]
-    ---
-
-    # Installing VSCode
-
-    ```
-
-    Markdown after processing:
-    ```md
-    # Installing VSCode
-    ```
-
-    Args:
-
-    - `markdown_text` (str): Text of the Markdown file.
-
-    Returns:
-
-    - `str`: Text of the Markdown file without YAML.
-
-    Examples:
-    ```py
-    import harrix-py-funcs as h
-
-    md_clean = h.remove_yaml_from_markdown("---\ncategories: [it]\n---\n\nText")
-    print(md_clean)  # Text
-    ```
-
-    ```py
-    from pathlib import Path
-    import harrix-py-funcs as h
-
-    md = Path("article.md").read_text(encoding="utf8")
-    md_clean = h.remove_yaml_from_markdown(md)
-    print(md_clean)
-    ```
-    """
-    return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
-
-
-def get_yaml_from_markdown(markdown_text: str) -> str:
+def markdown_get_yaml(markdown_text: str) -> str:
     """
     Function gets YAML from text of the Markdown file.
 
@@ -125,7 +76,7 @@ def get_yaml_from_markdown(markdown_text: str) -> str:
     ```py
     import harrix-py-funcs as h
 
-    md_clean = h.get_yaml_from_markdown("---\ncategories: [it]\n---\n\nText")
+    md_clean = h.markdown_get_yaml("---\ncategories: [it]\n---\n\nText")
     print(md_clean)  # Text
     ```
 
@@ -134,7 +85,7 @@ def get_yaml_from_markdown(markdown_text: str) -> str:
     import harrix-py-funcs as h
 
     md = Path("article.md").read_text(encoding="utf8")
-    md_clean = h.get_yaml_from_markdown(md)
+    md_clean = h.markdown_get_yaml(md)
     print(md_clean)
     ```
     """
@@ -142,3 +93,52 @@ def get_yaml_from_markdown(markdown_text: str) -> str:
     if find:
         return find.group().rstrip()
     return ""
+
+
+def markdown_remove_yaml(markdown_text: str) -> str:
+    """
+    Function removes YAML from text of the Markdown file.
+
+    Markdown before processing:
+
+    ```md
+    ---
+    categories: [it, program]
+    tags: [VSCode, FAQ]
+    ---
+
+    # Installing VSCode
+
+    ```
+
+    Markdown after processing:
+    ```md
+    # Installing VSCode
+    ```
+
+    Args:
+
+    - `markdown_text` (str): Text of the Markdown file.
+
+    Returns:
+
+    - `str`: Text of the Markdown file without YAML.
+
+    Examples:
+    ```py
+    import harrix-py-funcs as h
+
+    md_clean = h.markdown_remove_yaml("---\ncategories: [it]\n---\n\nText")
+    print(md_clean)  # Text
+    ```
+
+    ```py
+    from pathlib import Path
+    import harrix-py-funcs as h
+
+    md = Path("article.md").read_text(encoding="utf8")
+    md_clean = h.markdown_remove_yaml(md)
+    print(md_clean)
+    ```
+    """
+    return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
