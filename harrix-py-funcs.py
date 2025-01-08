@@ -9,10 +9,15 @@ import time
 from pathlib import Path
 from typing import Callable, List, Optional
 
-import libcst as cst  # pip install libcst
-from PySide6.QtCore import Qt  # pip install pyside6
-from PySide6.QtGui import QFont, QIcon, QPainter, QPixmap  # pip install pyside6
-from PySide6.QtWidgets import QMenu  # pip install pyside6
+import libcst as cst
+from PySide6.QtCore import Qt
+from PySide6.QtGui import (
+    QFont,
+    QIcon,
+    QPainter,
+    QPixmap,
+)
+from PySide6.QtWidgets import QMenu
 
 
 def dev_get_project_root() -> Path:
@@ -52,7 +57,9 @@ def dev_load_config(file_path: str) -> dict:
 
     def process_snippet(value):
         if isinstance(value, str) and value.startswith("snippet:"):
-            snippet_path = Path(dev_get_project_root()) / value.split("snippet:", 1)[1].strip()
+            snippet_path = (
+                Path(dev_get_project_root()) / value.split("snippet:", 1)[1].strip()
+            )
             with snippet_path.open("r", encoding="utf-8") as snippet_file:
                 return snippet_file.read()
         return value
@@ -138,7 +145,9 @@ def dev_run_powershell_script_as_admin(commands: str) -> str:
         wrapper_script = f"& '{tmp_script_path}' | Out-File -FilePath '{tmp_output_path}' -Encoding UTF8"
 
         # Save the wrapper script to a temporary file
-        with tempfile.NamedTemporaryFile(suffix=".ps1", delete=False) as tmp_wrapper_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".ps1", delete=False
+        ) as tmp_wrapper_file:
             tmp_wrapper_file.write(wrapper_script.encode("utf-8"))
             tmp_wrapper_path = Path(tmp_wrapper_file.name)
 
@@ -230,7 +239,9 @@ def dev_sort_py_code(filename: str) -> None:
                 final_statements.append(stmt)
 
     # Sort classes alphabetically and process each class
-    class_defs_sorted: List[cst.ClassDef] = sorted(class_defs, key=lambda cls: cls.name.value)
+    class_defs_sorted: List[cst.ClassDef] = sorted(
+        class_defs, key=lambda cls: cls.name.value
+    )
 
     sorted_class_defs: List[cst.ClassDef] = []
     for class_def in class_defs_sorted:
@@ -280,7 +291,9 @@ def dev_sort_py_code(filename: str) -> None:
             else:
                 other_methods.append(method)
 
-        other_methods_sorted: List[cst.FunctionDef] = sorted(other_methods, key=lambda m: m.name.value)
+        other_methods_sorted: List[cst.FunctionDef] = sorted(
+            other_methods, key=lambda m: m.name.value
+        )
 
         if init_method is not None:
             methods_sorted: List[cst.FunctionDef] = [init_method] + other_methods_sorted
@@ -291,7 +304,9 @@ def dev_sort_py_code(filename: str) -> None:
         new_body: List[cst.BaseStatement] = []
         if docstring:
             new_body.append(docstring)
-        new_body.extend(class_attributes)  # Class attributes remain at the top in original order
+        new_body.extend(
+            class_attributes
+        )  # Class attributes remain at the top in original order
         new_body.extend(methods_sorted)
         new_body.extend(other_statements)
 
@@ -302,7 +317,9 @@ def dev_sort_py_code(filename: str) -> None:
         sorted_class_defs.append(new_class_def)
 
     # Sort functions alphabetically
-    func_defs_sorted: List[cst.FunctionDef] = sorted(func_defs, key=lambda func: func.name.value)
+    func_defs_sorted: List[cst.FunctionDef] = sorted(
+        func_defs, key=lambda func: func.name.value
+    )
 
     # Assemble the new module body
     new_module_body: List[cst.BaseStatement] = (
@@ -663,7 +680,9 @@ def file_tree_view_folder(path: Path, is_ignore_hidden_folders: bool = False) ->
             yield prefix + pointer + path.name
             if path.is_dir():
                 extension = "│  " if pointer == "├─ " else "   "
-                yield from __tree(path, is_ignore_hidden_folders, prefix=prefix + extension)
+                yield from __tree(
+                    path, is_ignore_hidden_folders, prefix=prefix + extension
+                )
 
     return "\n".join([line for line in __tree(Path(path), is_ignore_hidden_folders)])
 
@@ -767,7 +786,130 @@ def markdown_add_author_book(filename: Path | str) -> str:
         lines_list.append(f"No changes in {filename}")
     return "\n".join(lines_list)
 
-def markdown_add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) -> str | Path:
+
+def markdown_add_image_captions(filename: Path | str) -> str:
+    """
+    Processes a markdown file to add captions to images based on their alt text.
+
+    This function reads a markdown file, processes its content to:
+    - Recognize images by their markdown syntax.
+    - Add automatic captions with sequential numbering, localized for Russian or English.
+    - Skip image captions that already exist in italic format.
+    - Ensure proper handling within and outside of code blocks.
+
+    Args:
+
+    - `filename` (`Path | str`): The path to the markdown file to be processed.
+
+    Returns:
+
+    - `str`: A status message indicating whether the file was modified or not.
+
+    Note:
+
+    - The function modifies the file in place if changes are made.
+    - The first argument of the function can be either a `Path` object or a string representing the file path.
+    """
+    with open(filename, "r", encoding="utf-8") as f:
+        lines = f.read()
+
+    yaml_md, content_md = markdown_split_yaml_content(lines)
+
+    # Parse YAML
+    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+    lang = data_yaml.get("lang")
+
+    lines = content_md.split("\n")
+    new_lines = []
+    in_code_block = False
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+
+        # Check if the line is the start or end of a code block
+        if re.match(r"^`{3,}", line.strip()):
+            in_code_block = not in_code_block  # Toggle the state
+            new_lines.append(line)
+            i += 1
+            continue
+
+        if not in_code_block:
+            stripped_line = line.strip()
+            # Check if the line is an italic caption
+            if re.match(r"^_.*_$", stripped_line):
+                # Check if the previous line is empty
+                if i > 0 and lines[i - 1].strip() == "":
+                    # Check if the line before the previous one is an image
+                    if i > 1 and re.match(
+                        r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip()
+                    ):
+                        # Skip this line and the next one (do not add to new_lines)
+                        i += 2
+                        continue
+            # In other cases, add the line to new_lines
+            new_lines.append(line)
+        else:
+            # If inside a code block, just add the line
+            new_lines.append(line)
+
+        i += 1
+
+    content_md = "\n".join(new_lines)
+
+    lines = content_md.split("\n")
+    new_lines = []
+    in_code_block = False
+    image_count = 0  # Initialize the image counter
+    i = 0
+
+    while i < len(lines):
+        line = lines[i]
+
+        # Check for start/end of a code block
+        if re.match(r"^`{3,}", line.strip()):
+            in_code_block = not in_code_block  # Toggle the code block state
+            new_lines.append(line)
+            i += 1
+            continue
+
+        if not in_code_block:
+            # Check if the line is an image line
+            match = re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", line)
+            if match and line.startswith("![Featured image](featured-image"):
+                match = False
+            if match:
+                # Increment the image counter
+                image_count += 1
+                alt_text = match.group(1)  # Extract the Alt text
+                new_lines.append(line)  # Add the image line
+                # Create the caption and add it
+                if lang == "ru":
+                    caption = f"_Рисунок {image_count} — {alt_text}_"
+                else:
+                    caption = f"_Figure {image_count}: {alt_text}_"
+                new_lines.append("\n" + caption)
+            else:
+                # If not an image line, add the line as is
+                new_lines.append(line)
+        else:
+            # If inside a code block, just add the line
+            new_lines.append(line)
+
+        i += 1
+
+    content_md = "\n".join(new_lines)
+
+    lines_new = yaml_md + "\n\n" + content_md
+    if lines != lines_new:
+        with filename.open(mode="w", encoding="utf-8") as file:
+            file.write(lines_new)
+        return f"✅ File {filename} applied."
+    return f"File is not changed."
+
+
+def markdown_add_note(
+    base_path: str | Path, name: str, text: str, is_with_images: bool
+) -> str | Path:
     """
     Adds a note to the specified base path.
 
@@ -975,7 +1117,9 @@ def pyside_generate_markdown_from_qmenu(menu: QMenu, level: int = 0) -> List[str
             # Add a header for the submenu
             markdown_lines.append(f'{"  " * level}- **{action.text()}**')
             # Recursively traverse the submenu
-            markdown_lines.extend(pyside_generate_markdown_from_qmenu(action.menu(), level + 1))
+            markdown_lines.extend(
+                pyside_generate_markdown_from_qmenu(action.menu(), level + 1)
+            )
         else:
             # Add a regular menu item
             if action.text():
