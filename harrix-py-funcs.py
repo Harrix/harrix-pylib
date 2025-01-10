@@ -10,13 +10,9 @@ from pathlib import Path
 from typing import Callable, List, Optional
 
 import libcst as cst
+import yaml
 from PySide6.QtCore import Qt
-from PySide6.QtGui import (
-    QFont,
-    QIcon,
-    QPainter,
-    QPixmap,
-)
+from PySide6.QtGui import QFont, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QMenu
 
 
@@ -852,7 +848,9 @@ def markdown_add_image_captions(filename: Path | str) -> str:
             # Check if the previous line is empty
             if i > 0 and lines[i - 1].strip() == "":
                 # Check if the line before the previous one is an image
-                if i > 1 and re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip()):
+                if i > 1 and re.match(
+                    r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip()
+                ):
                     # Skip this line and the next one (do not add to new_lines)
                     is_caption = True
                     continue
@@ -911,7 +909,7 @@ def markdown_add_image_captions(filename: Path | str) -> str:
         with filename.open(mode="w", encoding="utf-8") as file:
             file.write(document_new)
         return f"✅ File {filename} applied."
-    return f"File is not changed."
+    return "File is not changed."
 
 
 def markdown_add_note(
@@ -1122,7 +1120,7 @@ def pyside_generate_markdown_from_qmenu(menu: QMenu, level: int = 0) -> List[str
     for action in menu.actions():
         if action.menu():  # If the action has a submenu
             # Add a header for the submenu
-            markdown_lines.append(f'{"  " * level}- **{action.text()}**')
+            markdown_lines.append(f"{'  ' * level}- **{action.text()}**")
             # Recursively traverse the submenu
             markdown_lines.extend(
                 pyside_generate_markdown_from_qmenu(action.menu(), level + 1)
@@ -1130,5 +1128,5 @@ def pyside_generate_markdown_from_qmenu(menu: QMenu, level: int = 0) -> List[str
         else:
             # Add a regular menu item
             if action.text():
-                markdown_lines.append(f'{"  " * level}- {action.text()}')
+                markdown_lines.append(f"{'  ' * level}- {action.text()}")
     return markdown_lines
