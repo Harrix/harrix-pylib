@@ -179,7 +179,8 @@ def add_image_captions(filename: Path | str) -> str:
             new_lines.append(line)
             continue
         match = re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", line)
-        if match and not line.startswith("![Featured image](featured-image"):
+        lst_forbidden = ["![Featured image](featured-image", "img.shields.io", "<!-- no caption →"]
+        if match and not any(forbidden_word in line for forbidden_word in lst_forbidden):
             image_count += 1
             alt_text = match.group(1)
             new_lines.append(line)
