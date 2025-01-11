@@ -50,11 +50,11 @@ def generate_markdown_from_qmenu(menu: QMenu, level: int = 0) -> List[str]:
     for action in menu.actions():
         if action.menu():  # If the action has a submenu
             # Add a header for the submenu
-            markdown_lines.append(f'{"  " * level}- **{action.text()}**')
+            markdown_lines.append(f"{'  ' * level}- **{action.text()}**")
             # Recursively traverse the submenu
             markdown_lines.extend(generate_markdown_from_qmenu(action.menu(), level + 1))
         else:
             # Add a regular menu item
             if action.text():
-                markdown_lines.append(f'{"  " * level}- {action.text()}')
+                markdown_lines.append(f"{'  ' * level}- {action.text()}")
     return markdown_lines

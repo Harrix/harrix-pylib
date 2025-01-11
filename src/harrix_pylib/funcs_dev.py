@@ -29,19 +29,19 @@ def get_project_root() -> Path:
     return current_file.parent
 
 
-def load_config(file_path: str) -> dict:
+def load_config(filename: str) -> dict:
     """
     Loads configuration from a JSON file.
 
     Args:
 
-    - `file_path` (`str`): Path to the JSON configuration file. Defaults to `None`.
+    - `filename` (`str`): Path to the JSON configuration file. Defaults to `None`.
 
     Returns:
 
     - `dict`: Configuration loaded from the file.
     """
-    config_file = Path(get_project_root()) / file_path
+    config_file = Path(get_project_root()) / filename
     with config_file.open("r", encoding="utf-8") as file:
         config = json.load(file)
 

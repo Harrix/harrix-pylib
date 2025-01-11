@@ -218,14 +218,14 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
     if is_with_images:
         (base_path / name).mkdir(exist_ok=True)
         (base_path / name / "img").mkdir(exist_ok=True)
-        file_path = base_path / name / f"{name}.md"
+        filename = base_path / name / f"{name}.md"
     else:
-        file_path = base_path / f"{name}.md"
+        filename = base_path / f"{name}.md"
 
-    with file_path.open(mode="w", encoding="utf-8") as file:
+    with filename.open(mode="w", encoding="utf-8") as file:
         file.write(text)
 
-    return f"File {file_path} created.", file_path
+    return f"File {filename} created.", filename
 
 
 def get_yaml(markdown_text: str) -> str:
