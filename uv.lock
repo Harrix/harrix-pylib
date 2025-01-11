@@ -11,7 +11,7 @@ wheels = [
 ]
 
 [[package]]
-name = "harrix-py-funcs"
+name = "harrix-pylib"
 version = "0.1"
 source = { editable = "." }
 dependencies = [

@@ -1,5 +1,5 @@
 [project]
-name = "harrix-py-funcs"
+name = "harrix-pylib"
 version = "0.1"
 description = "Common functions for working in Python"
 readme = "README.md"
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-harrix-py-funcs = "harrix_py_funcs:main"
+harrix-pylib = "harrix_py_funcs:main"
 
 [build-system]
 requires = ["hatchling"]

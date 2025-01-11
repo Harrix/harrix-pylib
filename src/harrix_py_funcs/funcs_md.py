@@ -261,7 +261,7 @@ def get_yaml(markdown_text: str) -> str:
 
     Examples:
     ```py
-    import harrix-py-funcs as h
+    import harrix-pylib as h
 
     md_clean = h.md.get_yaml("---\ncategories: [it]\n---\n\nText")
     print(md_clean)  # Text
@@ -269,7 +269,7 @@ def get_yaml(markdown_text: str) -> str:
 
     ```py
     from pathlib import Path
-    import harrix-py-funcs as h
+    import harrix-pylib as h
 
     md = Path("article.md").read_text(encoding="utf8")
     md_clean = h.md.get_yaml(md)
@@ -313,7 +313,7 @@ def remove_yaml(markdown_text: str) -> str:
 
     Examples:
     ```py
-    import harrix-py-funcs as h
+    import harrix-pylib as h
 
     md_clean = h.md.remove_yaml("---\ncategories: [it]\n---\n\nText")
     print(md_clean)  # Text
@@ -321,7 +321,7 @@ def remove_yaml(markdown_text: str) -> str:
 
     ```py
     from pathlib import Path
-    import harrix-py-funcs as h
+    import harrix-pylib as h
 
     md = Path("article.md").read_text(encoding="utf8")
     md_clean = h.md.remove_yaml(md)

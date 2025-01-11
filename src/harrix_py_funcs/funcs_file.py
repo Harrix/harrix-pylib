@@ -162,14 +162,14 @@ def clear_directory(path: Path | str) -> None:
     Examples:
 
     ```py
-    import harrix-py-funcs as h
+    import harrix-pylib as h
 
     h.file.clear_directory("C:/temp_dir")
     ```
 
     ```py
     from pathlib import Path
-    import harrix-py-funcs as h
+    import harrix-pylib as h
 
     folder = Path(__file__).resolve().parent / "data/temp"
     folder.mkdir(parents=True, exist_ok=True)
