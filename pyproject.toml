@@ -4,15 +4,29 @@ version = "0.1"
 description = "Common functions for working in Python"
 readme = "README.md"
 license = { file = "LICENSE.md" }
-requires-python = ">=3.10"
+authors = [
+    { name = "Sergienko Anton", email = "anton.b.sergienko@gmail.com" }
+]
+requires-python = ">=3.13"
 dependencies = [
-    "libcst>=1.5.1",
+    "libcst>=1.6.0",
     "pyside6>=6.8.1.1",
     "pyyaml>=6.0.2",
 ]
 
+[project.scripts]
+harrix-py-funcs = "harrix_py_funcs:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [dependency-groups]
 dev = [
     "isort>=5.13.2",
-    "ruff>=0.9.0",
+    "pytest>=8.3.4",
+    "ruff>=0.9.1",
 ]
+
+[tool.ruff]
+line-length = 120
