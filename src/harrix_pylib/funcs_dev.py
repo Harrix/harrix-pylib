@@ -7,7 +7,7 @@ from typing import Callable, List, Optional
 
 import libcst as cst
 
-from harrix_py_funcs import funcs_file
+from harrix_pylib import funcs_file
 
 
 def get_project_root() -> Path:
