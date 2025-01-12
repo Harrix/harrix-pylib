@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -102,6 +103,99 @@ def add_author_book(filename: Path | str) -> str:
     else:
         lines_list.append(f"No changes in {filename}")
     return "\n".join(lines_list)
+
+
+def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: bool = False) -> str | Path:
+    """
+    Creates a new diary entry for the current day and time.
+
+    Args:
+
+    - `is_with_images` (`bool`): Whether to create folders for images. Defaults to `False`.
+    - `path_diary` (`str`): The path to the folder for diary notes.
+    - `beginning_of_md` (`str`): The section of YAML for a Markdown note.
+
+    Example of `beginning_of_md`:
+
+    ```markdown
+    ---
+    author: Anton Sergienko
+    author-email: anton.b.sergienko@gmail.com
+    lang: ru
+    ---
+
+    ```
+
+    Returns:
+
+    - `str | Path`: The path to the created diary entry file or a string message indicating creation.
+    """
+    text = f"{beginning_of_md}\n\n"
+    text += f"# {datetime.now().strftime('%Y-%m-%d')}\n\n"
+    text += f"## {datetime.now().strftime('%H:%M')}\n\n"
+    return add_diary_new_note(path_diary, text, is_with_images)
+
+
+def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = False) -> str | Path:
+    """
+    Creates a new dream diary entry for the current day and time with placeholders for dream descriptions.
+
+    Args:
+
+    - `is_with_images` (`bool`): Whether to create folders for images. Defaults to `False`.
+    - `path_dream` (`str`): The path to the folder for dream notes.
+    - `beginning_of_md` (`str`): The section of YAML for a Markdown note.
+
+    Example of `beginning_of_md`:
+
+    ```markdown
+    ---
+    author: Anton Sergienko
+    author-email: anton.b.sergienko@gmail.com
+    lang: ru
+    ---
+
+    ```
+
+    Returns:
+
+    - `str | Path`: The path to the created dream diary entry file or a string message indicating creation.
+    """
+    text = f"{beginning_of_md}\n"
+    text += f"# {datetime.now().strftime('%Y-%m-%d')}\n\n"
+    text += f"## {datetime.now().strftime('%H:%M')}\n\n"
+    text += "`` — не помню.\n\n" * 15 + "`` — не помню.\n"
+    return add_diary_new_note(path_dream, text, is_with_images)
+
+
+def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -> str | Path:
+    """
+    Adds a new note to the diary or dream diary for the given base path.
+
+    Args:
+
+    - `base_path` (`str | Path`): The base path where the note should be added.
+    - `text` (`str`): The content to write in the note.
+    - `is_with_images` (`bool`): Whether to create a folder for images alongside the note.
+
+    Returns:
+
+    - `str | Path`: A string message indicating the file was created along with the file path.
+    """
+    current_date = datetime.now()
+    year = current_date.strftime("%Y")
+    month = current_date.strftime("%m")
+    day = current_date.strftime("%Y-%m-%d")
+
+    base_path = Path(base_path)
+
+    year_path = base_path / year
+    year_path.mkdir(exist_ok=True)
+
+    month_path = year_path / month
+    month_path.mkdir(exist_ok=True)
+
+    return add_note(month_path, day, text, is_with_images)
 
 
 def add_image_captions(filename: Path | str) -> str:
