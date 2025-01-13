@@ -464,6 +464,8 @@ def sort_sections(filename: Path | str) -> str:
 
 
     is_main_section = True
+    is_top_section = False
+    top_sections = []
     sections = []
     section = ""
 
@@ -495,16 +497,32 @@ def sort_sections(filename: Path | str) -> str:
                 main_section = section
                 is_main_section = False
             else:
-                sections.append(section)
+                if is_top_section:
+                    top_sections.append(section)
+                else:
+                    sections.append(section)
+
+            if "<!-- top section →" in line:
+                is_top_section = True
+            else:
+                is_top_section = False
+
             section = line + "\n"
         else:
             section += line + "\n"
 
     if not is_main_section:
-        sections.append(section)
-        sections.sort()
-        sections[-1] = sections[-1][:-1]
-        document_new = yaml_md + "\n\n" + main_section + "".join(sections)
+        if is_top_section:
+            top_sections.append(section)
+        else:
+            sections.append(section)
+        if sections:
+            sections.sort()
+            sections[-1] = sections[-1][:-1]
+        if top_sections:
+            top_sections[-1] = top_sections[-1][:-1]
+            top_sections.sort()
+        document_new = yaml_md + "\n\n" + main_section + "".join(top_sections) + "".join(sections)
     else:
         document_new = document
     if document != document_new:
