@@ -426,6 +426,94 @@ def remove_yaml(markdown_text: str) -> str:
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
 
 
+def sort_sections(filename: Path | str) -> str:
+    """
+    Sorts the sections of a markdown document by their headings, maintaining YAML front matter
+    and code blocks in their original order.
+
+    This function reads a markdown file, splits it into a YAML front matter (if present) and content,
+    then processes the content to identify and sort sections based on their headings (starting with `##`).
+    Code blocks are kept intact and not reordered.
+
+    Args:
+
+    - `filename` (`Path` | `str`): The path to the markdown file to be processed. Can be either a `Path`
+      object or a string representing the file path.
+
+    Returns:
+
+    - `str`: A message indicating whether the file was sorted and saved (`"✅ File {filename} applied."`)
+      or if no changes were made (`"File is not changed."`).
+
+    Notes:
+
+    - The function assumes that sections are marked by `##` at the beginning of a line,
+      and code blocks are delimited by triple backticks (```).
+    - If there's no YAML front matter, the entire document is considered content.
+    - The sorting of sections is done alphabetically, ignoring any code blocks or other formatting within the section.
+    """
+    with open(filename, "r", encoding="utf-8") as f:
+        document = f.read()
+
+    # yaml_md, content_md = markdown_split_yaml_content(document)
+    parts = document.split("---", 2)
+    if len(parts) < 3:
+        yaml_md, content_md = "", document
+    else:
+        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
+
+
+    is_main_section = True
+    sections = []
+    section = ""
+
+    def process_lines(lines):
+        code_block_delimiter = None
+        for line in lines:
+            match = re.match(r"^(`{3,})(.*)", line)
+            if match:
+                delimiter = match.group(1)
+                if code_block_delimiter is None:
+                    code_block_delimiter = delimiter
+                elif code_block_delimiter == delimiter:
+                    code_block_delimiter = None
+                yield line, True
+                continue
+            if code_block_delimiter:
+                yield line, True
+            else:
+                yield line, False
+
+    lines = content_md.split("\n")
+    for i, (line, is_code_block) in enumerate(process_lines(lines)):
+        if is_code_block:
+            section += line + "\n"
+            continue
+
+        if line.startswith("## "):
+            if is_main_section:
+                main_section = section
+                is_main_section = False
+            else:
+                sections.append(section)
+            section = line + "\n"
+        else:
+            section += line + "\n"
+
+    if not is_main_section:
+        sections.append(section)
+        sections.sort()
+        sections[-1] = sections[-1][:-1]
+        document_new = yaml_md + "\n\n" + main_section + "".join(sections)
+    else:
+        document_new = document
+    if document != document_new:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ File {filename} applied."
+    return "File is not changed."
+
+
 def split_yaml_content(note: str) -> tuple[str, str]:
     """
     Splits a markdown note into YAML front matter and the main content.
