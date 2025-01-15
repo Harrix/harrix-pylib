@@ -273,7 +273,7 @@ def add_image_captions(filename: Path | str) -> str:
             new_lines.append(line)
             continue
         match = re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", line)
-        lst_forbidden = ["![Featured image](featured-image", "img.shields.io", "<!-- no caption -->"]
+        lst_forbidden = ["![Featured image](featured-image", "img.shields.io", "<!-- no-caption -->"]
         if match and not any(forbidden_word in line for forbidden_word in lst_forbidden):
             image_count += 1
             alt_text = match.group(1)
@@ -502,7 +502,7 @@ def sort_sections(filename: Path | str) -> str:
                 else:
                     sections.append(section)
 
-            if "<!-- top section -->" in line:
+            if "<!-- top-section -->" in line:
                 is_top_section = True
             else:
                 is_top_section = False
@@ -520,7 +520,8 @@ def sort_sections(filename: Path | str) -> str:
             sections.sort()
             sections[-1] = sections[-1][:-1]
         if top_sections:
-            top_sections[-1] = top_sections[-1][:-1]
+            if not sections:
+                top_sections[-1] = top_sections[-1][:-1]
             top_sections.sort()
         document_new = yaml_md + "\n\n" + main_section + "".join(top_sections) + "".join(sections)
     else:
