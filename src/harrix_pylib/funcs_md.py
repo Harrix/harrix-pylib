@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 from pathlib import Path
+from typing import Iterator, List
 
 import yaml
 
@@ -227,23 +228,6 @@ def add_image_captions(filename: Path | str) -> str:
     data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
     lang = data_yaml.get("lang")
 
-    def process_lines(lines):
-        code_block_delimiter = None
-        for line in lines:
-            match = re.match(r"^(`{3,})(.*)", line)
-            if match:
-                delimiter = match.group(1)
-                if code_block_delimiter is None:
-                    code_block_delimiter = delimiter
-                elif code_block_delimiter == delimiter:
-                    code_block_delimiter = None
-                yield line, True
-                continue
-            if code_block_delimiter:
-                yield line, True
-            else:
-                yield line, False
-
     # Remove captions
     is_caption = False
     new_lines = []
@@ -377,6 +361,42 @@ def get_yaml(markdown_text: str) -> str:
     return ""
 
 
+def process_lines(lines: List[str]) -> Iterator[tuple[str, bool]]:
+    """
+    Processes a list of text lines to identify code blocks and yield each line with a boolean flag.
+
+    Args:
+
+    - `lines` (`list[str]`): A list of strings where each string is a line of text to be processed.
+
+    Returns:
+
+    - `Iterator[tuple[str, bool]]`: An iterator yielding tuples. Each tuple contains:
+        - The original line of text (`str`).
+        - A boolean flag (`bool`) indicating if the line is within a code block (`True`) or not (`False`).
+
+    Note:
+
+    - This function identifies code blocks by looking for lines that start with three or more backticks (````).
+    - Code blocks can be nested, and this function will toggle the `code_block_delimiter` on matching delimiters.
+    """
+    code_block_delimiter = None
+    for line in lines:
+        match = re.match(r"^(`{3,})(.*)", line)
+        if match:
+            delimiter = match.group(1)
+            if code_block_delimiter is None:
+                code_block_delimiter = delimiter
+            elif code_block_delimiter == delimiter:
+                code_block_delimiter = None
+            yield line, True
+            continue
+        if code_block_delimiter:
+            yield line, True
+        else:
+            yield line, False
+
+
 def remove_yaml(markdown_text: str) -> str:
     """
     Function removes YAML from text of the Markdown file.
@@ -462,29 +482,11 @@ def sort_sections(filename: Path | str) -> str:
     else:
         yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
 
-
     is_main_section = True
     is_top_section = False
     top_sections = []
     sections = []
     section = ""
-
-    def process_lines(lines):
-        code_block_delimiter = None
-        for line in lines:
-            match = re.match(r"^(`{3,})(.*)", line)
-            if match:
-                delimiter = match.group(1)
-                if code_block_delimiter is None:
-                    code_block_delimiter = delimiter
-                elif code_block_delimiter == delimiter:
-                    code_block_delimiter = None
-                yield line, True
-                continue
-            if code_block_delimiter:
-                yield line, True
-            else:
-                yield line, False
 
     lines = content_md.split("\n")
     for i, (line, is_code_block) in enumerate(process_lines(lines)):
