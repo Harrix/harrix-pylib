@@ -14,7 +14,6 @@ def test_add_image_captions():
         temp_filename.write_text(md, encoding="utf-8")
         h.md.add_image_captions(temp_filename)
         md_applied = temp_filename.read_text(encoding="utf8")
-        print(md_applied)
 
     assert md_after == md_applied
 
@@ -41,6 +40,5 @@ def test_sort_sections():
         temp_filename.write_text(md, encoding="utf-8")
         h.md.sort_sections(temp_filename)
         md_applied = temp_filename.read_text(encoding="utf8")
-        print(md_applied)
 
     assert md_after == md_applied
