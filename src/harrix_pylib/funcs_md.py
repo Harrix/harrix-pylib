@@ -232,7 +232,7 @@ def add_image_captions(filename: Path | str) -> str:
     is_caption = False
     new_lines = []
     lines = content_md.split("\n")
-    for i, (line, is_code_block) in enumerate(process_lines(lines)):
+    for i, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
         if is_code_block:
             new_lines.append(line)
             continue
@@ -252,7 +252,7 @@ def add_image_captions(filename: Path | str) -> str:
     image_count = 0
     new_lines = []
     lines = content_md.split("\n")
-    for line, is_code_block in process_lines(lines):
+    for line, is_code_block in identify_code_blocks(lines):
         if is_code_block:
             new_lines.append(line)
             continue
@@ -361,7 +361,7 @@ def get_yaml(markdown_text: str) -> str:
     return ""
 
 
-def process_lines(lines: List[str]) -> Iterator[tuple[str, bool]]:
+def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
     """
     Processes a list of text lines to identify code blocks and yield each line with a boolean flag.
 
@@ -489,7 +489,7 @@ def sort_sections(filename: Path | str) -> str:
     section = ""
 
     lines = content_md.split("\n")
-    for i, (line, is_code_block) in enumerate(process_lines(lines)):
+    for i, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
         if is_code_block:
             section += line + "\n"
             continue
