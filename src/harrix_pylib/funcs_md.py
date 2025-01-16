@@ -36,6 +36,7 @@ def add_author_book(filename: Path | str) -> str:
     Line 4.
 
     -- Modified title of book
+
     ```
 
     After processing:
@@ -47,7 +48,7 @@ def add_author_book(filename: Path | str) -> str:
     >
     > Line 2.
     >
-    > _Name Surname - Title of book_
+    > -- _Name Surname, Title of book_
 
     ---
 
@@ -55,7 +56,8 @@ def add_author_book(filename: Path | str) -> str:
     >
     > Line 4.
     >
-    > _Name Surname - Modified title of book_
+    > -- _Name Surname, Modified title of book_
+
     ```
 
     Note:
@@ -377,7 +379,7 @@ def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
 
     Note:
 
-    - This function identifies code blocks by looking for lines that start with three or more backticks (````).
+    - This function identifies code blocks by looking for lines that start with three or more backticks (`` ` ``).
     - Code blocks can be nested, and this function will toggle the `code_block_delimiter` on matching delimiters.
     """
     code_block_delimiter = None
