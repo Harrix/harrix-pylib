@@ -42,3 +42,18 @@ def test_sort_sections():
         md_applied = temp_filename.read_text(encoding="utf8")
 
     assert md_after == md_applied
+
+
+def test_add_author_book():
+    current_folder = h.dev.get_project_root()
+    md = Path(current_folder / "tests/data/add_author_book__before.md").read_text(encoding="utf8")
+    md_after = Path(current_folder / "tests/data/add_author_book__after.md").read_text(encoding="utf8")
+
+    with TemporaryDirectory() as temp_folder:
+        temp_filename = Path(temp_folder) / "temp.md"
+        temp_filename.write_text(md, encoding="utf-8")
+        h.md.add_author_book(temp_filename)
+        md_applied = temp_filename.read_text(encoding="utf8")
+        md_after = md_after.replace("Name Surname", Path(temp_folder).name)
+
+    assert md_after == md_applied
