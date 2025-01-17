@@ -1,6 +1,7 @@
 import os
 import shutil
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pytest
 
@@ -57,6 +58,23 @@ def test_all_to_parent_folder(setup_all_to_parent_folder, capsys):
 
     # Clean up
     shutil.rmtree(base_path)
+
+
+def test_apply_func():
+    def test_func(filename):
+        content = Path(filename).read_text(encoding="utf8")
+        content = content.upper()
+        Path(filename).write_text(content, encoding="utf8")
+
+    with TemporaryDirectory() as temp_folder:
+        file1 = Path(temp_folder) / "file1.txt"
+        file2 = Path(temp_folder) / "file2.txt"
+        Path(file1).write_text("text", encoding="utf8")
+        Path(file2).write_text("other", encoding="utf8")
+        h.file.apply_func(temp_folder, ".txt", test_func)
+        result = file1.read_text(encoding="utf8") + " " + file2.read_text(encoding="utf8")
+
+    assert result == "TEXT OTHER"
 
 
 def test_clear_directory():
