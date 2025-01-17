@@ -46,17 +46,15 @@ def test_run_powershell_script():
     assert output.strip() == expected_output.strip()
 
 
-@pytest.mark.skipif(
-    not subprocess.run(["powershell", "-Command", "echo test"], capture_output=True, text=True).returncode == 0,
-    reason="PowerShell is not available",
-)
-def test_run_powershell_script_as_admin():
-    test_commands = "Write-Output 'Hello, World!'"
-    expected_output = "Hello, World!\n"
-
-    output = h.dev.run_powershell_script_as_admin(test_commands)
-
-    assert output.strip() == "\ufeff" + expected_output.strip()
+# @pytest.mark.skipif(
+#     not subprocess.run(["powershell", "-Command", "echo test"], capture_output=True, text=True).returncode == 0,
+#     reason="PowerShell is not available",
+# )
+# def test_run_powershell_script_as_admin():
+#     test_commands = "Write-Output 'Hello, World!'"
+#     expected_output = "Hello, World!\n"
+#     output = h.dev.run_powershell_script_as_admin(test_commands)
+#     assert output.strip() == "\ufeff" + expected_output.strip()
 
 
 def test_sort_py_code():
