@@ -66,6 +66,13 @@ def test_apply_func():
     assert result == "TEXT OTHER"
 
 
+def test_check_featured_image():
+    folder = h.dev.get_project_root() / "tests/data/check_featured_image/folder_correct"
+    assert h.file.check_featured_image(folder)[0]
+    folder = h.dev.get_project_root() / "tests/data/check_featured_image/folder_wrong"
+    assert not h.file.check_featured_image(folder)[0]
+
+
 def test_clear_directory():
     folder = h.dev.get_project_root() / "tests/data/temp"
     folder.mkdir(parents=True, exist_ok=True)
