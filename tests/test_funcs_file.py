@@ -82,6 +82,11 @@ def test_clear_directory():
     shutil.rmtree(folder)
 
 
+def test_find_max_folder_number():
+    folder = h.dev.get_project_root() / "tests/data/check_featured_image/folder_correct"
+    assert h.file.find_max_folder_number(folder, "folder") == 2
+
+
 def test_tree_view_folder():
     current_folder = h.dev.get_project_root()
     tree_check = (current_folder / "tests/data/tree_view_folder__01.txt").read_text(encoding="utf8")
