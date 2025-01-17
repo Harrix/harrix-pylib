@@ -87,6 +87,11 @@ def test_find_max_folder_number():
     assert h.file.find_max_folder_number(folder, "folder") == 2
 
 
+def test_open_file_or_folder():
+    with pytest.raises(FileNotFoundError):
+        h.file.open_file_or_folder("this_path_does_not_exist")
+
+
 def test_tree_view_folder():
     current_folder = h.dev.get_project_root()
     tree_check = (current_folder / "tests/data/tree_view_folder__01.txt").read_text(encoding="utf8")
@@ -94,8 +99,3 @@ def test_tree_view_folder():
     assert h.file.tree_view_folder(folder_path) == tree_check
     tree_check = (current_folder / "tests/data/tree_view_folder__02.txt").read_text(encoding="utf8")
     assert h.file.tree_view_folder(folder_path, True) == tree_check
-
-
-def test_open_file_or_folder():
-    with pytest.raises(FileNotFoundError):
-        h.file.open_file_or_folder("this_path_does_not_exist")
