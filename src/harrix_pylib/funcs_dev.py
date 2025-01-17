@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import tempfile
 import time
@@ -27,6 +28,54 @@ def get_project_root() -> Path:
         if (parent / ".venv").exists():
             return parent
     return current_file.parent
+
+
+def lint_and_fix_python_code(py_content: str) -> str:
+    """
+    Lints and fixes the provided Python code using the `ruff` formatter.
+
+    This function formats the given Python code content by:
+
+    1. Writing the content to a temporary file.
+    2. Running `ruff format` on the temporary file to fix any linting issues.
+    3. Reading back the formatted content.
+    4. Cleaning up by removing the temporary file.
+
+    Args:
+
+    - `py_content` (`str`): The Python code content to be linted and fixed.
+
+    Returns:
+
+    - `str`: The formatted and fixed Python code.
+
+    Raises:
+
+    - `subprocess.CalledProcessError`: If `ruff` command fails to execute or returns an error status.
+    - `OSError`: If there are issues with file operations (e.g., creating or deleting the temporary file).
+
+    Note:
+
+    - This function assumes `ruff` is installed and accessible in the system's PATH.
+    - Any exceptions from `ruff` or file operations are not caught within this function and will propagate up.
+    """
+    # Create a temporary file with the content of py_content
+    with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as temp_file:
+        temp_file.write(py_content.encode("utf-8"))
+        temp_file_path = temp_file.name
+
+    try:
+        subprocess.run(["ruff", "format", temp_file_path], capture_output=True, text=True)
+
+        # Read the fixed code from the temporary file
+        with open(temp_file_path, "r", encoding="utf-8") as file:
+            fixed_content = file.read()
+
+        return fixed_content
+
+    finally:
+        # Delete the temporary file
+        os.remove(temp_file_path)
 
 
 def load_config(filename: str) -> dict:
@@ -174,7 +223,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
     return "\n".join(filter(None, res_output))
 
 
-def sort_py_code(filename: str) -> None:
+def sort_py_code(filename: str, is_use_ruff_format=False) -> None:
     """
     Sorts the Python code in the given file by organizing classes, functions, and statements.
 
@@ -308,6 +357,9 @@ def sort_py_code(filename: str) -> None:
 
     # Convert the module back to code
     new_code: str = new_module.code
+
+    if is_use_ruff_format:
+        new_code = lint_and_fix_python_code(new_code)
 
     # Write the sorted code back to the file
     with open(filename, "w", encoding="utf-8") as f:
