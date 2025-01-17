@@ -223,7 +223,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
     return "\n".join(filter(None, res_output))
 
 
-def sort_py_code(filename: str, is_use_ruff_format=False) -> None:
+def sort_py_code(filename: str, is_use_ruff_format=True) -> None:
     """
     Sorts the Python code in the given file by organizing classes, functions, and statements.
 
