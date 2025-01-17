@@ -11,7 +11,7 @@ def test_get_project_root():
     assert (path / "tests").is_dir()
 
 
-def test_get_project_root():
+def test_load_config():
     config = h.dev.load_config(h.dev.get_project_root() / "tests/data/config.json")
     assert config["path_github"] == "C:/GitHub"
 
