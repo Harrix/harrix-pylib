@@ -1,0 +1,29 @@
+def multiply(a, b):
+    """Returns the product of two numbers."""
+    return a * b
+
+
+def subtract(a, b):
+    """Returns the difference between two numbers."""
+    return a - b
+
+
+def add(a, b):
+    """Returns the sum of two numbers."""
+    return a + b
+
+
+class Point:
+    def move(self, dx, dy):
+        """Moves the point by a given distance along x and y axes."""
+        self.x += dx
+        self.y += dy
+
+    def __init__(self, x=0, y=0):
+        """Initializes a point with coordinates (x, y)."""
+        self.x = x
+        self.y = y
+
+    def distance_to_origin(self):
+        """Returns the distance from the point to the origin."""
+        return (self.x**2 + self.y**2) ** 0.5
