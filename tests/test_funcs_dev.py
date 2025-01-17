@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -70,3 +71,16 @@ def test_sort_py_code():
         py_applied = temp_filename.read_text(encoding="utf8")
 
     assert py_after == py_applied
+
+
+def test_write_in_output_txt():
+    @h.dev.write_in_output_txt(is_show_output=False)
+    def test_func():
+        test_func.add_line("Test")
+
+    test_func()
+
+    output_file = (h.dev.get_project_root() / "temp/output.txt").read_text(encoding="utf8")
+
+    assert "Test" in output_file
+    shutil.rmtree(h.dev.get_project_root() / "temp")
