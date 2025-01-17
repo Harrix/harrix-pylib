@@ -1,0 +1,15 @@
+├─ .hidden
+│  ├─ file1.txt
+│  ├─ file2.txt
+│  └─ subfolder
+│     ├─ file1.txt
+│     └─ file2.txt
+├─ folder1
+│  ├─ file1.txt
+│  ├─ file2.txt
+│  └─ subfolder
+│     ├─ file1.txt
+│     └─ file2.txt
+└─ folder2
+   ├─ file1.txt
+   └─ file2.txt
