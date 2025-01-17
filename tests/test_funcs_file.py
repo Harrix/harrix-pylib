@@ -33,30 +33,19 @@ def setup_all_to_parent_folder(tmp_path):
 
 def test_all_to_parent_folder(setup_all_to_parent_folder, capsys):
     base_path = setup_all_to_parent_folder
-
-    # Run the function
     result = h.file.all_to_parent_folder(base_path)
-
-    # Check if files were correctly moved
     assert (Path(base_path) / "folder1" / "file1.txt").exists()
     assert (Path(base_path) / "folder1" / "file3.txt").exists()
     assert (Path(base_path) / "folder2" / "file5.txt").exists()
     assert (Path(base_path) / "folder2" / "file6.txt").exists()
-
-    # Check if subfolders were removed
     assert not (Path(base_path) / "folder1" / "sub1").exists()
     assert not (Path(base_path) / "folder1" / "sub2").exists()
     assert not (Path(base_path) / "folder2" / "sub3" / "sub4").exists()
-
-    # Check the returned string for correct actions
     assert "folder1" in result
     assert "folder2" in result
-
     # Check if exceptions were printed (none should be printed in this ideal case)
     captured = capsys.readouterr()
     assert captured.out == ""
-
-    # Clean up
     shutil.rmtree(base_path)
 
 
