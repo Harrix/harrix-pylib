@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from harrix_pylib import funcs_dev
+import harrix_pylib as h
 
 
 def py_create_uv_new_project(project_name: str, path: str | Path, editor: str = "code", cli_commands: str = "") -> str:
@@ -48,7 +48,7 @@ def py_create_uv_new_project(project_name: str, path: str | Path, editor: str = 
         Add-Content -Path pyproject.toml -Value "line-length = 120"
         {editor} {path}/{project_name}"""
 
-    res = funcs_dev.run_powershell_script(commands)
+    res = h.dev.run_powershell_script(commands)
 
     readme_path = Path(path) / project_name / "README.md"
     try:

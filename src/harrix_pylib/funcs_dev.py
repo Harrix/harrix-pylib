@@ -8,7 +8,7 @@ from typing import Callable, List, Optional
 
 import libcst as cst
 
-from harrix_pylib import funcs_file
+import harrix_pylib as h
 
 
 def get_project_root() -> Path:
@@ -415,7 +415,7 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
 
             file.write_text(output_text, encoding="utf8")
             if is_show_output:
-                funcs_file.open_file_or_folder(file)
+                h.file.open_file_or_folder(file)
 
         def add_line(line: str):
             output_lines.append(line)
