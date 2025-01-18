@@ -63,3 +63,18 @@ def test_split_yaml_content():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml.md").read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)
     assert len(yaml.splitlines()) + len(content.splitlines()) == 5
+
+
+def test_identify_code_blocks():
+    md = Path(h.dev.get_project_root() / "tests/data/add_image_captions__before.md").read_text(encoding="utf8")
+    _, content = h.md.split_yaml_content(md)
+    count_lines_content = 0
+    count_lines_code = 0
+    for _, state in h.md.identify_code_blocks(content.splitlines()):
+        print(_)
+        if state:
+            count_lines_code+= 1
+        else:
+            count_lines_content+= 1
+    assert count_lines_code == 9
+    assert count_lines_content == 22
