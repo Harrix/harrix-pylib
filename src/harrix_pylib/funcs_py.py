@@ -3,7 +3,7 @@ from pathlib import Path
 import harrix_pylib as h
 
 
-def py_create_uv_new_project(project_name: str, path: str | Path, editor: str = "code", cli_commands: str = "") -> str:
+def create_uv_new_project(project_name: str, path: str | Path, editor: str = "code", cli_commands: str = "") -> str:
     """
     Creates a new project using uv, initializes it, and sets up necessary files.
 
