@@ -2,7 +2,7 @@
 
 ![harrix-pylib](img/featured-image.svg)
 
-Common functions for working in Python (>= 3.12).
+Common functions for working in Python (>= 3.12) for [my projects](https://github.com/Harrix?tab=repositories).
 
 ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
 
