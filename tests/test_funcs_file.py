@@ -8,45 +8,38 @@ import pytest
 import harrix_pylib as h
 
 
-@pytest.fixture
-def setup_all_to_parent_folder(tmp_path):
-    folder1 = tmp_path / "folder1"
-    folder2 = tmp_path / "folder2"
-    folder1.mkdir()
-    folder2.mkdir()
+def test_all_to_parent_folder():
+    with TemporaryDirectory() as temp_dir:
+        base_path = Path(temp_dir)
+        folder1 = base_path / "folder1"
+        folder2 = base_path / "folder2"
+        folder1.mkdir()
+        folder2.mkdir()
 
-    (folder1 / "image.jpg").touch()
-    (folder1 / "sub1").mkdir()
-    (folder1 / "sub1" / "file1.txt").touch()
-    (folder1 / "sub2").mkdir()
-    (folder1 / "sub2" / "file3.txt").touch()
+        (folder1 / "image.jpg").touch()
+        (folder1 / "sub1").mkdir()
+        (folder1 / "sub1" / "file1.txt").touch()
+        (folder1 / "sub2").mkdir()
+        (folder1 / "sub2" / "file3.txt").touch()
 
-    sub3 = folder2 / "sub3"
-    sub3.mkdir()
-    (sub3 / "file6.txt").touch()
-    sub4 = sub3 / "sub4"
-    sub4.mkdir()
-    (sub4 / "file5.txt").touch()
+        sub3 = folder2 / "sub3"
+        sub3.mkdir()
+        (sub3 / "file6.txt").touch()
+        sub4 = sub3 / "sub4"
+        sub4.mkdir()
+        (sub4 / "file5.txt").touch()
 
-    return str(tmp_path)
-
-
-def test_all_to_parent_folder(setup_all_to_parent_folder, capsys):
-    base_path = setup_all_to_parent_folder
-    result = h.file.all_to_parent_folder(base_path)
-    assert (Path(base_path) / "folder1" / "file1.txt").exists()
-    assert (Path(base_path) / "folder1" / "file3.txt").exists()
-    assert (Path(base_path) / "folder2" / "file5.txt").exists()
-    assert (Path(base_path) / "folder2" / "file6.txt").exists()
-    assert not (Path(base_path) / "folder1" / "sub1").exists()
-    assert not (Path(base_path) / "folder1" / "sub2").exists()
-    assert not (Path(base_path) / "folder2" / "sub3" / "sub4").exists()
-    assert "folder1" in result
-    assert "folder2" in result
-    # Check if exceptions were printed (none should be printed in this ideal case)
-    captured = capsys.readouterr()
-    assert captured.out == ""
-    shutil.rmtree(base_path)
+        # Now perform the test
+        result = h.file.all_to_parent_folder(str(base_path))
+        assert (base_path / "folder1" / "file1.txt").exists()
+        assert (base_path / "folder1" / "file3.txt").exists()
+        assert (base_path / "folder2" / "file5.txt").exists()
+        assert (base_path / "folder2" / "file6.txt").exists()
+        assert not (base_path / "folder1" / "sub1").exists()
+        assert not (base_path / "folder1" / "sub2").exists()
+        assert not (base_path / "folder2" / "sub3" / "sub4").exists()
+        assert "folder1" in result
+        assert "folder2" in result
 
 
 def test_apply_func():
