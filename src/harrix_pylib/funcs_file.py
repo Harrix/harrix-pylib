@@ -78,13 +78,13 @@ def all_to_parent_folder(path: Path | str) -> str:
     return "\n".join(list_lines)
 
 
-def apply_func(folder: str, ext: str, func: Callable) -> str:
+def apply_func(path: Path | str, ext: str, func: Callable) -> str:
     """
     Applies a given function to all files with a specified extension in a folder and its sub-folders.
 
     Args:
 
-    - `folder` (`str`): The path to the root folder where the function should be applied. Defaults to `None`.
+    - `path` (`str`): The path to the root folder where the function should be applied. Defaults to `None`.
     - `ext` (`str`): The file extension to filter files by. Should include the dot (e.g., '.py').
     - `func` (`Callable`): The function to apply to each file. This function should take an argument, the file path.
 
@@ -93,7 +93,7 @@ def apply_func(folder: str, ext: str, func: Callable) -> str:
     - `str`: A string listing the results of applying the function to each file, with each result on a new line.
     """
     list_files = []
-    folder_path = Path(folder)
+    folder_path = Path(path)
 
     for path in folder_path.rglob(f"*{ext}"):
         # Exclude all folders and files starting with a dot
