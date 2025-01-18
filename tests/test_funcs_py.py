@@ -25,7 +25,7 @@ CLI commands after installation.
 - `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
         """
 
-        result = h.py.create_uv_new_project(project_name, temp_dir, "code-insiders", cli_commands)
+        h.py.create_uv_new_project(project_name, temp_dir, "code-insiders", cli_commands)
 
         # Check if the project directory was created
         project_path = path / project_name
