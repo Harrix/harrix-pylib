@@ -179,3 +179,71 @@ def test_add_diary_new_note():
 
         # Check that there's image folder created for the second entry
         assert (diary_month_path / f"{day}/img").exists()
+
+def test_add_diary_new_dream():
+    with TemporaryDirectory() as temp_dir:
+        base_path = Path(temp_dir)
+        # Define the YAML header for the Markdown note
+        beginning_of_md = """---
+author: Anton Sergienko
+author-email: anton.b.sergienko@gmail.com
+lang: ru
+---
+"""
+
+        # Test with images
+        is_with_images = True
+
+        result_msg, result_path = h.md.add_diary_new_dream(base_path, beginning_of_md, is_with_images)
+
+        # Check if the message indicates file creation
+        assert "File" in result_msg
+
+        # Extract the date components from the result path for testing
+        current_date = datetime.now()
+        year = current_date.strftime("%Y")
+        month = current_date.strftime("%m")
+        day = current_date.strftime("%Y-%m-%d")
+
+        # Check if the diary structure is created correctly
+        diary_year_path = base_path / year
+        assert diary_year_path.is_dir()
+
+        diary_month_path = diary_year_path / month
+        assert diary_month_path.is_dir()
+
+        # Check if the dream diary file exists in the correct location
+        dream_diary_file = diary_month_path / f"{day}/{day}.md"
+        assert dream_diary_file.is_file()
+
+        # Check if the image folder was created
+        img_folder = diary_month_path / f"{day}/img"
+        assert img_folder.is_dir()
+
+        # Verify content of the dream diary file
+        with dream_diary_file.open('r', encoding='utf-8') as file:
+            content = file.read()
+            assert beginning_of_md in content
+            assert f"# {day}" in content
+            assert f"## {datetime.now().strftime('%H:%M')}" in content
+            assert content.count("`` — не помню.\n") == 16
+
+        # Test without images
+        is_with_images = False
+
+        result_msg, result_path = h.md.add_diary_new_dream(base_path, beginning_of_md, is_with_images)
+
+        # Check if the message indicates file creation
+        assert "File" in result_msg
+
+        # Verify that the new dream diary file is added to the existing diary structure
+        new_dream_diary_file = diary_month_path / f"{day}.md"
+        assert new_dream_diary_file.is_file()
+
+        # Verify content of the new dream diary file
+        with new_dream_diary_file.open('r', encoding='utf-8') as file:
+            content = file.read()
+            assert beginning_of_md in content
+            assert f"# {day}" in content
+            assert f"## {datetime.now().strftime('%H:%M')}" in content
+            assert content.count("`` — не помню.\n") == 16
