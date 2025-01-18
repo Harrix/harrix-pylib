@@ -8,7 +8,7 @@ Common functions for working in Python (>= 3.12) for [my projects](https://githu
 
 ## Install
 
-- Pip: `pip install harrix-pylib`
+- pip: `pip install harrix-pylib`
 - uv: `uv add harrix-pylib`
 
 ## Quick start
