@@ -4,9 +4,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
+import pytest
+
 import harrix_pylib as h
 
 
+@pytest.mark.slow
 def test_create_uv_new_project():
     with TemporaryDirectory() as temp_dir:
         project_name = "TestProject"
