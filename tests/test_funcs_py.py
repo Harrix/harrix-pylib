@@ -1,5 +1,8 @@
+import os
+import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 import harrix_pylib as h
 
@@ -30,3 +33,56 @@ def test_sort_py_code():
         py_applied = temp_filename.read_text(encoding="utf8")
 
     assert py_after == py_applied
+
+
+def test_create_uv_new_project():
+    with TemporaryDirectory() as temp_dir:
+        project_name = "TestProject"
+        path = Path(temp_dir)
+        editor = "code"
+        cli_commands = """
+## CLI commands
+
+CLI commands after installation.
+
+- `uv self update` — update uv itself.
+- `uv sync --upgrade` — update all project libraries.
+- `isort .` — sort imports.
+- `ruff format` — format the project's Python files.
+- `ruff check` — lint the project's Python files.
+- `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
+        """
+
+
+        result = h.py.create_uv_new_project(
+                project_name, temp_dir, "code-insiders", cli_commands
+            )
+
+        # Check if the project directory was created
+        project_path = path / project_name
+        assert project_path.is_dir()
+
+        # Check if the `src` directory was created
+        src_path = project_path / "src" / project_name
+        assert src_path.is_dir()
+
+        # Check for the presence of expected files
+        assert (src_path / "__init__.py").is_file()
+        assert (src_path / "main.py").is_file()
+        assert (project_path / "pyproject.toml").is_file()
+        assert (project_path / "README.md").is_file()
+
+        # Verify content in README.md
+        with (project_path / "README.md").open('r', encoding='utf-8') as file:
+            content = file.read()
+            assert f"# {project_name}\n\n" in content
+            assert "uv self update" in content
+            assert "uv sync --upgrade" in content
+            assert "isort ." in content
+            assert "ruff format" in content
+            assert "ruff check" in content
+            assert "uv python install 3.13" in content
+
+        # Clean up, if necessary
+        if project_path.exists():
+            shutil.rmtree(project_path)
