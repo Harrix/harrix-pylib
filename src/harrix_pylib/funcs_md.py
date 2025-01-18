@@ -226,7 +226,13 @@ def add_image_captions(filename: Path | str) -> str:
     """
     with open(filename, "r", encoding="utf-8") as f:
         document = f.read()
-    yaml_md, content_md = split_yaml_content(document)
+
+    parts = document.split("---", 2)
+    if len(parts) < 3:
+        yaml_md, content_md = "", document
+    else:
+        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
+
     data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
     lang = data_yaml.get("lang")
 
@@ -477,7 +483,6 @@ def sort_sections(filename: Path | str) -> str:
     with open(filename, "r", encoding="utf-8") as f:
         document = f.read()
 
-    # yaml_md, content_md = markdown_split_yaml_content(document)
     parts = document.split("---", 2)
     if len(parts) < 3:
         yaml_md, content_md = "", document
