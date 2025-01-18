@@ -1,8 +1,6 @@
-import os
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
 
 import pytest
 
@@ -14,7 +12,6 @@ def test_create_uv_new_project():
     with TemporaryDirectory() as temp_dir:
         project_name = "TestProject"
         path = Path(temp_dir)
-        editor = "code"
         cli_commands = """
 ## CLI commands
 
