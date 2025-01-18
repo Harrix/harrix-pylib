@@ -78,3 +78,50 @@ def test_identify_code_blocks():
             count_lines_content+= 1
     assert count_lines_code == 9
     assert count_lines_content == 22
+
+
+def test_add_note():
+    with TemporaryDirectory() as temp_dir:
+        base_path = Path(temp_dir)
+        # Test with images
+        name = "test_note"
+        text = "# Test Note\nThis is a test note with images."
+        is_with_images = True
+
+        result_msg, result_path = h.md.add_note(base_path, name, text, is_with_images)
+
+        # Check if the message indicates file creation
+        assert "File" in result_msg
+
+        # Check if the note file exists
+        note_file = base_path / f"{name}/{name}.md"
+        assert note_file.is_file()
+
+        # Check if the image folder was created
+        img_folder = base_path / f"{name}/img"
+        assert img_folder.is_dir()
+
+        # Verify content of the note file
+        with note_file.open('r', encoding='utf-8') as file:
+            assert file.read().strip() == text
+
+        # Test without images
+        name = "test_note_no_images"
+        text = "# Simple Note\nThis note has no images."
+        is_with_images = False
+
+        result_msg, result_path = h.md.add_note(base_path, name, text, is_with_images)
+
+        # Check if the message indicates file creation
+        assert "File" in result_msg
+
+        # Check if the note file exists at the base path
+        note_file_no_images = base_path / f"{name}.md"
+        assert note_file_no_images.is_file()
+
+        # Verify content of the note file
+        with note_file_no_images.open('r', encoding='utf-8') as file:
+            assert file.read().strip() == text
+
+        # Check that there's no image folder created
+        assert not (base_path / f"{name}/img").exists()
