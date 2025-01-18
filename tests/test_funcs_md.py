@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -125,3 +126,56 @@ def test_add_note():
 
         # Check that there's no image folder created
         assert not (base_path / f"{name}/img").exists()
+
+def test_add_diary_new_note():
+    with TemporaryDirectory() as temp_dir:
+        base_path = Path(temp_dir)
+        # Test without images
+        text = "# Diary Entry\nThis is a diary test entry without images."
+        is_with_images = False
+
+        result_msg, result_path = h.md.add_diary_new_note(base_path, text, is_with_images)
+
+        # Check if the message indicates file creation
+        assert "File" in result_msg
+
+        # Extract the date components from the result path for testing
+        current_date = datetime.now()
+        year = current_date.strftime("%Y")
+        month = current_date.strftime("%m")
+        day = current_date.strftime("%Y-%m-%d")
+
+        # Check if the diary structure is created correctly
+        diary_year_path = base_path / year
+        assert diary_year_path.is_dir()
+
+        diary_month_path = diary_year_path / month
+        assert diary_month_path.is_dir()
+
+        # Check if the note file exists in the correct location
+        note_file = diary_month_path / f"{day}.md"
+        assert note_file.is_file()
+
+        # Verify content of the note file
+        with note_file.open('r', encoding='utf-8') as file:
+            assert file.read().strip() == text
+
+        # Test with images
+        text = "# Diary Entry\nThis is a diary test entry with images."
+        is_with_images = True
+
+        result_msg, result_path = h.md.add_diary_new_note(base_path, text, is_with_images)
+
+        # Check if the message indicates file creation
+        assert "File" in result_msg
+
+        # Verify that the new note is added to the existing diary structure
+        note_file = diary_month_path / f"{day}/{day}.md"
+        assert note_file.is_file()
+
+        # Verify content of the new note file
+        with note_file.open('r', encoding='utf-8') as file:
+            assert file.read().strip() == text
+
+        # Check that there's image folder created for the second entry
+        assert (diary_month_path / f"{day}/img").exists()
