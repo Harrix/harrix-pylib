@@ -29,6 +29,4 @@ line-length = 120
 [tool.pytest.ini_options]
 addopts = "-m 'not slow'"
 
-markers = [
-    "slow: mark a test as slow."
-]
+markers = ["slow: mark a test as slow."]
