@@ -1,0 +1,54 @@
+class Cat(Animal):
+    """
+    Represents a domestic cat, inheriting from the `Animal` base class.
+    
+    Bla bla.
+
+    Attributes:
+
+    - `massa` (`int`): The weight of the cat in kilograms, default is 5.
+    """
+
+    massa: int = 5
+
+    def say() -> str:
+        """
+        Produces the sound a cat makes.
+
+        Returns:
+
+        `str`: 'Meow' — a sound typically associated with cats.
+        """
+        return "Meow"
+
+@bla
+def add(a: int, b: int) -> int:
+    """
+    Adds two integers.
+
+    Args:
+
+    - `a` (`int`): The first integer to add.
+    - `b` (`int`): The second integer to add.
+
+    Returns:
+
+    - `int`: The sum of a and b.
+    """
+    return a + b
+    
+    
+def multiply(a: int, b: int) -> int:
+    """
+    Multiples two integers.
+
+    Args:
+
+    - `a` (`int`): The first integer to add.
+    - `b` (`int`): The second integer to add.
+
+    Returns:
+
+    - `int`: The sum of a and b.
+    """
+    return a + b

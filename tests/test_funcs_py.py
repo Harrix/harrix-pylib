@@ -57,6 +57,15 @@ CLI commands after installation.
             shutil.rmtree(project_path)
 
 
+def test_extract_functions_and_classes():
+    current_folder = h.dev.get_project_root()
+    filename = Path(current_folder / "tests/data/extract_functions_and_classes__before.txt")
+    md_after = Path(current_folder / "tests/data/extract_functions_and_classes__after.txt").read_text(encoding="utf8")
+
+    md = h.py.extract_functions_and_classes(filename)
+    assert md == md_after
+
+
 def test_lint_and_fix_python_code():
     python_code = "def greet(name):\n    print('Hello, ' +    name)"
     expected_formatted_code = 'def greet(name):\n    print("Hello, " + name)\n'

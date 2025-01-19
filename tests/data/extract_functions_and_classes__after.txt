@@ -1,0 +1,5 @@
+### extract_functions_and_classes__before
+
+- `class Cat(Animal)`: Represents a domestic cat, inheriting from the `Animal` base class.
+- `def add(a: int, b: int) -> int`: Adds two integers.
+- `def multiply(a: int, b: int) -> int`: Multiples two integers.
