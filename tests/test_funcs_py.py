@@ -62,7 +62,7 @@ def test_extract_functions_and_classes():
     filename = Path(current_folder / "tests/data/extract_functions_and_classes__before.txt")
     md_after = Path(current_folder / "tests/data/extract_functions_and_classes__after.txt").read_text(encoding="utf8")
 
-    md = h.py.extract_functions_and_classes(filename)
+    md = h.py.extract_functions_and_classes(filename, False)
     assert md == md_after
 
 

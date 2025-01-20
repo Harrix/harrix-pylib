@@ -72,13 +72,15 @@ def create_uv_new_project(project_name: str, path: str | Path, editor: str = "co
     return res
 
 
-def extract_functions_and_classes(filename: Path | str) -> str:
+def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool = True, domain: str = "") -> str:
     """
     Extracts all classes and functions from a Python file and formats them into a markdown list.
 
     Args:
 
     - `filename` (Path | str): The path to the Python file to be parsed.
+    - `is_add_link_demo` (`bool`): Whether to add a link to the documentation demo. Defaults to `True`.
+    - `domain` (`str`): The domain for the documentation link. Defaults to an empty string.
 
     Returns:
 
@@ -147,6 +149,9 @@ def extract_functions_and_classes(filename: Path | str) -> str:
     # Create Markdown table
     output_lines = []
     output_lines.append(f"### {filename.stem}.py\n")
+    if is_add_link_demo:
+        link = f"{domain}/docs/{filename.stem}.md"
+        output_lines.append(f"Doc: [{filename.stem}.md]({link})\n")
     output_lines.append("| Function/Class | Description |")
     output_lines.append("|----------------|-------------|")
 
