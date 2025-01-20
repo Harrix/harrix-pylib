@@ -479,21 +479,58 @@ def replace_section(filename: Path | str, replace_content, title_section: str = 
     - If no section matches the `title_section`, or if the section spans till the end of the file,
       only the content up to `end_index` (or the end of the file) will be replaced.
     """
-    with open(filename, "r", encoding="utf-8") as file:
-        lines = file.readlines()
+    filename = Path(filename)  # Ensure filename is a Path object
 
-    start_index = end_index = None
+    if not filename.exists():
+        raise FileNotFoundError(f"The file {filename} does not exist.")
+
+    # Read the file content
+    with filename.open("r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    # Find the start index of the section to replace
+    start_index = None
     for i, line in enumerate(lines):
-        if line.startswith(title_section):
+        if line.strip() == title_section:
             start_index = i
-        elif start_index is not None and line.startswith("#") and i != start_index:
-            end_index = i
             break
 
-    if start_index is not None and end_index is not None:
-        new_lines = "".join(lines[: start_index + 1]) + "\n" + replace_content + "\n\n" + "".join(lines[end_index:])
-        with open(filename, "w", encoding="utf-8") as file:
-            file.writelines(new_lines)
+    if start_index is None:
+        raise ValueError(f"Section '{title_section}' not found in the file.")
+
+    # Determine the heading level of the section to replace
+    heading_match = re.match(r"^(#+)", title_section.strip())
+    if not heading_match:
+        raise ValueError(f"The section title '{title_section}' is not a valid Markdown heading.")
+    title_level = len(heading_match.group(1))  # Number of '#' characters
+
+    # Find the end index of the section to replace
+    end_index = len(lines)  # Default to end of file
+    for i in range(start_index + 1, len(lines)):
+        line = lines[i].strip()
+        # Check if the line is a heading of the same or higher level
+        line_heading_match = re.match(r"^(#+)\s.*", line)
+        if line_heading_match:
+            heading_level = len(line_heading_match.group(1))
+            if heading_level <= title_level:
+                end_index = i
+                break
+
+    # Prepare the new content lines (ensure each line ends with a newline character)
+    new_content_lines = [line + "\n" for line in replace_content.strip().split("\n")]
+
+    # Assemble the updated content
+    updated_lines = (
+        lines[: start_index + 1]  # Include lines up to and including the section title
+        + ["\n"]  # Add a blank line after the section title
+        + new_content_lines  # Add the new section content
+        + ["\n"]  # Add a blank line after the new content
+        + lines[end_index:]  # Include the rest of the original content
+    )
+
+    # Write the updated content back to the file
+    with filename.open("w", encoding="utf-8") as f:
+        f.writelines(updated_lines)
 
     return f"Section {title_section} is replaced."
 

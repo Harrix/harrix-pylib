@@ -309,9 +309,12 @@ Some content here
 ## List of commands
 
 - command1
+
+###  Subsection
+
 - command2
 
-# Footer
+## Footer
 
 More content here
 """
@@ -319,16 +322,17 @@ More content here
             file.write(original_content)
 
         # New content to replace the section
-        new_content = "New list of commands:\n- new command1\n- new command2"
+        new_content = "New list of commands:\n\n- new command1\n- new command2"
 
         # Call the function to replace the section
         result_message = h.md.replace_section(test_file_path, new_content)
+
+        print(result_message)
 
         # Check if the function returns the expected message
         assert result_message == "Section ## List of commands is replaced.", (
             "The message does not match the expected result"
         )
-        print(result_message)
 
         # Read the modified file content
         with open(test_file_path, "r", encoding="utf-8") as file:
@@ -342,13 +346,78 @@ Some content here
 ## List of commands
 
 New list of commands:
+
 - new command1
 - new command2
 
-# Footer
+## Footer
 
 More content here
 """
+
+        # Ensure the content was updated as expected
+        assert updated_content == expected_content, "The file content was not updated correctly"
+
+        original_content = """# Header
+
+Some content here
+
+## List of commands
+
+- command1
+
+###  Subsection
+
+- command2
+
+### Footer
+
+More content here
+
+#### Sub
+
+Text.
+"""
+        with open(test_file_path, "w", encoding="utf-8") as file:
+            file.write(original_content)
+
+        # New content to replace the section
+        new_content = "New list of commands:\n\n- new command1\n- new command2"
+
+        # Call the function to replace the section
+        result_message = h.md.replace_section(test_file_path, new_content, "### Footer")
+
+        print(result_message)
+
+        # Check if the function returns the expected message
+        assert result_message == "Section ### Footer is replaced.", "The message does not match the expected result"
+
+        # Read the modified file content
+        with open(test_file_path, "r", encoding="utf-8") as file:
+            updated_content = file.read()
+
+        # Expected content after replacement
+        expected_content = """# Header
+
+Some content here
+
+## List of commands
+
+- command1
+
+###  Subsection
+
+- command2
+
+### Footer
+
+New list of commands:
+
+- new command1
+- new command2
+
+"""
+
         # Ensure the content was updated as expected
         assert updated_content == expected_content, "The file content was not updated correctly"
 
@@ -371,3 +440,4 @@ def test_split_yaml_content():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml.md").read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)
     assert len(yaml.splitlines()) + len(content.splitlines()) == 5
+
