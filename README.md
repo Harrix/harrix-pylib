@@ -43,7 +43,6 @@ Doc: [funcs_dev.md](https://github.com/Harrix/harrix-pylib/docs/funcs_dev.md)
 
 | Function/Class | Description |
 |----------------|-------------|
-| Class `Point` |  |
 | `get_project_root` | Finds the root folder of the current project. |
 | `load_config` | Loads configuration from a JSON file. |
 | `run_powershell_script` | Runs a PowerShell script with the given commands. |
