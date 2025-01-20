@@ -1,5 +1,7 @@
-### extract_functions_and_classes__before
+### extract_functions_and_classes__before.py
 
-- `class Cat(Animal)`: Represents a domestic cat, inheriting from the `Animal` base class.
-- `def add(a: int, b: int) -> int`: Adds two integers.
-- `def multiply(a: int, b: int) -> int`: Multiples two integers.
+| Function/Class | Description |
+|----------------|-------------|
+| Class `Cat (Animal)` | Represents a domestic cat, inheriting from the `Animal` base class. |
+| `add` | Adds two integers. |
+| `multiply` | Multiples two integers. |

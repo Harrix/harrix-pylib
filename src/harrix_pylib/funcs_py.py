@@ -91,7 +91,7 @@ def extract_functions_and_classes(filename: Path | str) -> str:
 
     | Function/Class | Description |
     |----------------|-------------|
-    | Class `Cat (Animal`) | Represents a domestic cat, inheriting from the `Animal` base class. |
+    | Class `Cat (Animal)` | Represents a domestic cat, inheriting from the `Animal` base class. |
     | `add` | Adds two integers. |
     | `multiply` | Multiples two integers. |
     ```
@@ -129,7 +129,7 @@ def extract_functions_and_classes(filename: Path | str) -> str:
         summary = docstring.splitlines()[0] if docstring else ""
         # Format the class entry
         if base_classes_str:
-            name = f"Class `{class_name} ({base_classes_str}`)"
+            name = f"Class `{class_name} ({base_classes_str})`"
         else:
             name = f"Class `{class_name}`"
         description = summary
