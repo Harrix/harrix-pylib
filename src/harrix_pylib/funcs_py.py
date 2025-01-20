@@ -87,11 +87,13 @@ def extract_functions_and_classes(filename: Path | str) -> str:
     Example output:
 
     ```markdown
-    ### funcs
+    ### extract_functions_and_classes__before.py
 
-    - `class Cat(Animal)`: Represents a domestic cat, inheriting from the `Animal` base class.
-    - `def add(a: int, b: int) -> int`: Adds two integers.
-    - `def multiply(a: int, b: int) -> int`: Multiples two integers.
+    | Function/Class | Description |
+    |----------------|-------------|
+    | Class `Cat (Animal`) | Represents a domestic cat, inheriting from the `Animal` base class. |
+    | `add` | Adds two integers. |
+    | `multiply` | Multiples two integers. |
     ```
     """
     filename = Path(filename)
@@ -104,59 +106,54 @@ def extract_functions_and_classes(filename: Path | str) -> str:
     functions = []
     classes = []
 
-    # Traverse the AST and collect function and class definitions
+    # Traverse the AST to collect function and class definitions
     for node in tree.body:
         if isinstance(node, ast.FunctionDef):
             functions.append(node)
         elif isinstance(node, ast.ClassDef):
             classes.append(node)
-        # Skip other types of nodes (imports, variables, etc.)
+        # Skip other node types (imports, variables, etc.)
 
-    output_lines = []
-    output_lines.append(f"### {filename.stem}\n")
+    # List of entries for the table
+    entries = []
 
     # Process classes
     for class_node in classes:
-        # Get class name
+        # Get the class name
         class_name = class_node.name
         # Get base classes (inheritance)
-        base_classes = [ast.unparse(base) if node is not None else "" for base in class_node.bases]
-        base_classes_str = "(" + ", ".join(base_classes) + ")" if base_classes else ""
-        # Get the docstring and extract the first line (summary)
+        base_classes = [ast.unparse(base) if base is not None else "" for base in class_node.bases]
+        base_classes_str = ", ".join(base_classes) if base_classes else ""
+        # Retrieve docstring and extract the first line (summary)
         docstring = ast.get_docstring(class_node)
         summary = docstring.splitlines()[0] if docstring else ""
         # Format the class entry
-        output_lines.append(f"- `class {class_name}{base_classes_str}`: {summary}")
+        if base_classes_str:
+            name = f"Class `{class_name} ({base_classes_str}`)"
+        else:
+            name = f"Class `{class_name}`"
+        description = summary
+        entries.append((name, description))
 
     # Process functions
     for func_node in functions:
-        func_name = func_node.name
-        arg_list = []
-        # Retrieve function arguments and their annotations
-        for arg in func_node.args.args:
-            arg_name = arg.arg
-            if arg.annotation:
-                arg_type = ast.unparse(arg.annotation) if node is not None else ""
-                arg_list.append(f"{arg_name}: {arg_type}")
-            else:
-                arg_list.append(arg_name)
-        # Handle *args and **kwargs
-        if func_node.args.vararg:
-            vararg_name = func_node.args.vararg.arg
-            arg_list.append(f"*{vararg_name}")
-        if func_node.args.kwarg:
-            kwarg_name = func_node.args.kwarg.arg
-            arg_list.append(f"**{kwarg_name}")
-        # Get return type annotation
-        return_type = f" -> {ast.unparse(func_node.returns) if node is not None else ''}" if func_node.returns else ""
-        # Get the docstring and extract the first line (summary)
+        func_name = f"`{func_node.name}`"
+        # Retrieve docstring and extract the first line (summary)
         docstring = ast.get_docstring(func_node)
         summary = docstring.splitlines()[0] if docstring else ""
         # Format the function entry
-        arg_str = ", ".join(arg_list)
-        output_lines.append(f"- `def {func_name}({arg_str}){return_type}`: {summary}")
+        entries.append((func_name, summary))
 
-    # Combine all entries and print the result
+    # Create Markdown table
+    output_lines = []
+    output_lines.append(f"### {filename.stem}.py\n")
+    output_lines.append("| Function/Class | Description |")
+    output_lines.append("|----------------|-------------|")
+
+    for name, description in entries:
+        output_lines.append(f"| {name} | {description} |")
+
+    # Combine all lines and return the result
     result = "\n".join(output_lines)
     return result
 
