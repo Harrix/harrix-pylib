@@ -72,7 +72,7 @@ def create_uv_new_project(project_name: str, path: str | Path, editor: str = "co
     return res
 
 
-def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool = True, domain:str="") -> str:
+def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool = True, domain: str = "") -> str:
     """
     Extracts all classes and functions from a Python file and formats them into a markdown list.
 
