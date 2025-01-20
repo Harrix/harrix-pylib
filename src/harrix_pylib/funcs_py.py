@@ -72,7 +72,7 @@ def create_uv_new_project(project_name: str, path: str | Path, editor: str = "co
     return res
 
 
-def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool = True, domain: str = "") -> str:
+def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool = True, domain:str="") -> str:
     """
     Extracts all classes and functions from a Python file and formats them into a markdown list.
 
@@ -84,12 +84,12 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
 
     Returns:
 
-     - `str`: Returns the markdown-formatted list of classes and functions.
+    - `str`: Returns the markdown-formatted list of classes and functions.
 
     Example output:
 
     ```markdown
-    ### extract_functions_and_classes__before.py
+    ### File `extract_functions_and_classes__before.py`
 
     | Function/Class | Description |
     |----------------|-------------|
@@ -148,7 +148,7 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
 
     # Create Markdown table
     output_lines = []
-    output_lines.append(f"### {filename.stem}.py\n")
+    output_lines.append(f"### File `{filename.name}`\n")
     if is_add_link_demo:
         link = f"{domain}/docs/{filename.stem}.md"
         output_lines.append(f"Doc: [{filename.stem}.md]({link})\n")
