@@ -325,7 +325,9 @@ More content here
         result_message = h.md.replace_section(test_file_path, new_content)
 
         # Check if the function returns the expected message
-        assert result_message == "Section ## List of commands is replaced.", "The message does not match the expected result"
+        assert result_message == "Section ## List of commands is replaced.", (
+            "The message does not match the expected result"
+        )
         print(result_message)
 
         # Read the modified file content

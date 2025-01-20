@@ -454,7 +454,7 @@ def remove_yaml(markdown_text: str) -> str:
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
 
 
-def replace_section(filename: Path | str, replace_content, title_section: str="## List of commands") -> str:
+def replace_section(filename: Path | str, replace_content, title_section: str = "## List of commands") -> str:
     """
     Replaces a section in a file defined by `title_section` with the provided `replace_content`.
 
