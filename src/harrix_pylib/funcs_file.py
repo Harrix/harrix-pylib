@@ -29,7 +29,7 @@ def all_to_parent_folder(path: Path | str) -> str:
     Before:
 
     ```text
-    C:\test
+    C:/test
     ├─ folder1
     │  ├─ image.jpg
     │  ├─ sub1
@@ -48,7 +48,7 @@ def all_to_parent_folder(path: Path | str) -> str:
     After:
 
     ```text
-    C:\test
+    C:/test
     ├─ folder1
     │  ├─ file1.txt
     │  ├─ file2.txt
