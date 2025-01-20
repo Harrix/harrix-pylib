@@ -454,6 +454,50 @@ def remove_yaml(markdown_text: str) -> str:
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
 
 
+def replace_section(filename: Path | str, replace_content, title_section: str="## List of commands") -> str:
+    """
+    Replaces a section in a file defined by `title_section` with the provided `replace_content`.
+
+    This function searches for a section in a text file starting with `title_section` and
+    ending at the next line starting with a '#'. It then replaces the content of that section
+    with `replace_content`.
+
+    Args:
+
+    - `filename` (`Path | str`): The path to the file where the section needs to be replaced.
+    - `replace_content` (`str`): The content to replace the section with.
+    - `title_section` (`str`, Defaults to `"## List of commands"`): The title of the section to be replaced.
+
+    Returns:
+
+    - `str`: A message indicating that the section has been replaced.
+
+    Notes:
+
+    - If `start_index` or `end_index` is not found, the file remains unchanged.
+    - The function assumes that the file uses UTF-8 encoding for reading and writing.
+    - If no section matches the `title_section`, or if the section spans till the end of the file,
+      only the content up to `end_index` (or the end of the file) will be replaced.
+    """
+    with open(filename, "r", encoding="utf-8") as file:
+        lines = file.readlines()
+
+    start_index = end_index = None
+    for i, line in enumerate(lines):
+        if line.startswith(title_section):
+            start_index = i
+        elif start_index is not None and line.startswith("#") and i != start_index:
+            end_index = i
+            break
+
+    if start_index is not None and end_index is not None:
+        new_lines = "".join(lines[: start_index + 1]) + "\n" + replace_content + "\n\n" + "".join(lines[end_index:])
+        with open(filename, "w", encoding="utf-8") as file:
+            file.writelines(new_lines)
+
+    return f"Section {title_section} is replaced."
+
+
 def sort_sections(filename: Path | str) -> str:
     """
     Sorts the sections of a markdown document by their headings, maintaining YAML front matter

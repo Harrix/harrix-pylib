@@ -298,6 +298,59 @@ def test_remove_yaml_from_markdown():
     assert len(md_clean.splitlines()) == 1
 
 
+def test_replace_section():
+    with TemporaryDirectory() as temp_dir:
+        # Create a test file with some content
+        test_file_path = Path(temp_dir) / "testfile.md"
+        original_content = """# Header
+
+Some content here
+
+## List of commands
+
+- command1
+- command2
+
+# Footer
+
+More content here
+"""
+        with open(test_file_path, "w", encoding="utf-8") as file:
+            file.write(original_content)
+
+        # New content to replace the section
+        new_content = "New list of commands:\n- new command1\n- new command2"
+
+        # Call the function to replace the section
+        result_message = h.md.replace_section(test_file_path, new_content)
+
+        # Check if the function returns the expected message
+        assert result_message == "Section ## List of commands is replaced.", "The message does not match the expected result"
+        print(result_message)
+
+        # Read the modified file content
+        with open(test_file_path, "r", encoding="utf-8") as file:
+            updated_content = file.read()
+
+        # Expected content after replacement
+        expected_content = """# Header
+
+Some content here
+
+## List of commands
+
+New list of commands:
+- new command1
+- new command2
+
+# Footer
+
+More content here
+"""
+        # Ensure the content was updated as expected
+        assert updated_content == expected_content, "The file content was not updated correctly"
+
+
 def test_sort_sections():
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/sort_sections__before.md").read_text(encoding="utf8")
