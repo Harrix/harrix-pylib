@@ -623,7 +623,7 @@ def remove_yaml(markdown_text: str) -> str:
     ```py
     import harrix-pylib as h
 
-    md_clean = h.md.remove_yaml("---\ncategories: [it]\n---\n\nText")
+    md_clean = h.md.remove_yaml("---\\ncategories: [it]\\n---\\n\\nText")
     print(md_clean)  # Text
     ```
 

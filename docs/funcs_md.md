@@ -684,54 +684,49 @@ def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
 def remove_yaml(markdown_text: str) -> str
 ```
 
-    Function removes YAML from text of the Markdown file.
+Function removes YAML from text of the Markdown file.
 
-    Markdown before processing:
+Markdown before processing:
 
-    ```markdown
-    ---
-    categories: [it, program]
-    tags: [VSCode, FAQ]
-    ---
-
-    # Installing VSCode
-
-    ```
-
-    Markdown after processing:
-    ```markdown
-    # Installing VSCode
-    ```
-
-    Args:
-
-    - `markdown_text` (str): Text of the Markdown file.
-
-    Returns:
-
-    - `str`: Text of the Markdown file without YAML.
-
-    Examples:
-    ```py
-    import harrix-pylib as h
-
-    md_clean = h.md.remove_yaml("---
-categories: [it]
+```markdown
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
 ---
 
-Text")
-    print(md_clean)  # Text
-    ```
+# Installing VSCode
 
-    ```py
-    from pathlib import Path
-    import harrix-pylib as h
+```
 
-    md = Path("article.md").read_text(encoding="utf8")
-    md_clean = h.md.remove_yaml(md)
-    print(md_clean)
-    ```
-    
+Markdown after processing:
+```markdown
+# Installing VSCode
+```
+
+Args:
+
+- `markdown_text` (str): Text of the Markdown file.
+
+Returns:
+
+- `str`: Text of the Markdown file without YAML.
+
+Examples:
+```py
+import harrix-pylib as h
+
+md_clean = h.md.remove_yaml("---\ncategories: [it]\n---\n\nText")
+print(md_clean)  # Text
+```
+
+```py
+from pathlib import Path
+import harrix-pylib as h
+
+md = Path("article.md").read_text(encoding="utf8")
+md_clean = h.md.remove_yaml(md)
+print(md_clean)
+```
 
 <details>
 <summary>Code:</summary>
