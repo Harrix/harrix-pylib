@@ -558,8 +558,19 @@ def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
     Example:
 
     ```py
+    from pathlib import Path
+
     import harrix_pylib as h
 
+    md = Path("C:/Notes/note.md").read_text(encoding="utf8")
+    _, content = h.md.split_yaml_content(md)
+    count_lines_content = 0
+    count_lines_code = 0
+    for _, state in h.md.identify_code_blocks(content.splitlines()):
+        if state:
+            count_lines_code += 1
+        else:
+            count_lines_content += 1
     ```
     """
     code_block_delimiter = None
