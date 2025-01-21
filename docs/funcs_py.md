@@ -45,12 +45,27 @@ Examples:
 
 ```py
 import harrix_pylib as h
+from pathlib import Path
 
+project_name = "TestProject"
+path = Path("C:/projects")
+h.py.create_uv_new_project(project_name, path, "code")
 ```
 
-```py
-import harrix_pylib as h
+Structure "C:/projects/TestProject":
 
+```
+├─ .git
+├─ .gitignore
+├─ .python-version
+├─ .venv
+├─ pyproject.toml
+├─ README.md
+├─ src
+│  └─ testproject
+│     ├─ main.py
+│     └─ __init__.py
+└─ uv.lock
 ```
 
 <details>
