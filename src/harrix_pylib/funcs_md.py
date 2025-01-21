@@ -485,7 +485,7 @@ def get_yaml(markdown_text: str) -> str:
 
     Markdown before processing:
 
-    ```md
+    ```markdown
     ---
     categories: [it, program]
     tags: [VSCode, FAQ]
@@ -497,7 +497,7 @@ def get_yaml(markdown_text: str) -> str:
 
     Text after processing:
 
-    ```md
+    ```markdown
     ---
     categories: [it, program]
     tags: [VSCode, FAQ]
@@ -596,7 +596,7 @@ def remove_yaml(markdown_text: str) -> str:
 
     Markdown before processing:
 
-    ```md
+    ```markdown
     ---
     categories: [it, program]
     tags: [VSCode, FAQ]
@@ -607,7 +607,7 @@ def remove_yaml(markdown_text: str) -> str:
     ```
 
     Markdown after processing:
-    ```md
+    ```markdown
     # Installing VSCode
     ```
 
