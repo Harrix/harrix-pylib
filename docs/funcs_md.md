@@ -223,6 +223,15 @@ Example:
 ```py
 import harrix_pylib as h
 
+yaml_front_matter = '''---
+author: Jane Doe
+author-email: jane.doe@example.com
+lang: en
+---
+'''
+
+new_entry_path = h.md.add_diary_new_dream("C:/Dreams/", yaml_front_matter, is_with_images=True)
+print(new_entry_path)
 ```
 
 <details>
