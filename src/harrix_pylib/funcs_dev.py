@@ -273,9 +273,38 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
     Examples:
 
     ```py
-    import harrix-pylib as h
+        import harrix_pylib as h
 
 
+        @h.dev.write_in_output_txt(is_show_output=True)
+        def f():
+            f.add_line("Test")
+            return 42
+
+
+        f()
+        # Test
+        # Execution time: 0.0000 seconds
+    ```
+
+    ```py
+    import harrix_pylib as h
+
+
+    class ActionBase:
+        icon: str = ""
+        title: str = ""
+        is_show_output: bool = False
+
+        def __init__(self, **kwargs): ...
+
+        def __call__(self, *args, **kwargs):
+            decorated_execute = h.dev.write_in_output_txt(is_show_output=self.is_show_output)(self.execute)
+            self.add_line = decorated_execute.add_line
+            return decorated_execute(*args, **kwargs)
+
+        def execute(self, *args, **kwargs):
+            raise NotImplementedError("The execute method must be implemented in subclasses")
     ```
     """
 
