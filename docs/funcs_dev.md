@@ -319,18 +319,18 @@ Note:
 Examples:
 
 ```py
-    import harrix_pylib as h
+import harrix_pylib as h
 
 
-    @h.dev.write_in_output_txt(is_show_output=True)
-    def f():
-        f.add_line("Test")
-        return 42
+@h.dev.write_in_output_txt(is_show_output=True)
+def f():
+    f.add_line("Test")
+    return 42
 
 
-    f()
-    # Test
-    # Execution time: 0.0000 seconds
+f()
+# Test
+# Execution time: 0.0000 seconds
 ```
 
 ```py
