@@ -65,6 +65,7 @@ def all_to_parent_folder(path: Path | str) -> str:
     ```py
     import harrix_pylib as h
 
+    h.file.all_to_parent_folder("C:/test")
     ```
     """
     list_lines = []

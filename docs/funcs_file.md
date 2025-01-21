@@ -68,6 +68,7 @@ Example:
 ```py
 import harrix_pylib as h
 
+h.file.all_to_parent_folder("C:/test")
 ```
 
 <details>
