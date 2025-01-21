@@ -41,7 +41,7 @@ Returns:
 
 - `str`: A string containing the result of the operations performed.
 
-Examples:
+Example:
 
 ```py
 import harrix_pylib as h
