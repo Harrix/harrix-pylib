@@ -224,16 +224,14 @@ def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: 
     - `str`: A string containing a summary of the operations performed, with each line indicating which file
       was processed or created.
 
-    Examples:
+    Example:
 
     ```py
     import harrix_pylib as h
 
-    ```
-
-    ```py
-    import harrix_pylib as h
-
+    path = "C:/projects/project"
+    domain = "https://github.com/Harrix/harrix-pylib"
+    result = h.py.generate_docs_for_project(path, "---\\nlang: en\\n---\\n", domain)
     ```
     """
     result_lines = []
