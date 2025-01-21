@@ -386,57 +386,54 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
 def get_yaml(markdown_text: str) -> str
 ```
 
-    Function gets YAML from text of the Markdown file.
+Function gets YAML from text of the Markdown file.
 
-    Markdown before processing:
+Markdown before processing:
 
-    ```md
-    ---
-    categories: [it, program]
-    tags: [VSCode, FAQ]
-    ---
-
-    # Installing VSCode
-
-    ```
-
-    Text after processing:
-    ```md
-    ---
-    categories: [it, program]
-    tags: [VSCode, FAQ]
-    ---
-    ```
-
-    Args:
-
-    - `markdown_text` (str): Text of the Markdown file.
-
-    Returns:
-
-    - `str`: YAML from the Markdown file.
-
-    Examples:
-    ```py
-    import harrix-pylib as h
-
-    md_clean = h.md.get_yaml("---
-categories: [it]
+```md
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
 ---
 
-Text")
-    print(md_clean)  # Text
-    ```
+# Installing VSCode
 
-    ```py
-    from pathlib import Path
-    import harrix-pylib as h
+```
 
-    md = Path("article.md").read_text(encoding="utf8")
-    md_clean = h.md.get_yaml(md)
-    print(md_clean)
-    ```
-    
+Text after processing:
+
+```md
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
+---
+```
+
+Args:
+
+- `markdown_text` (str): Text of the Markdown file.
+
+Returns:
+
+- `str`: YAML from the Markdown file.
+
+Examples:
+
+```py
+import harrix-pylib as h
+
+md_clean = h.md.get_yaml("---\ncategories: [it]\n---\n\nText")
+print(md_clean)  # Text
+```
+
+```py
+from pathlib import Path
+import harrix-pylib as h
+
+md = Path("article.md").read_text(encoding="utf8")
+md_clean = h.md.get_yaml(md)
+print(md_clean)
+```
 
 <details>
 <summary>Code:</summary>

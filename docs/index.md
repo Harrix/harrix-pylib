@@ -75,7 +75,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/docs/funcs_md.md)
 | `add_diary_new_note` | Adds a new note to the diary or dream diary for the given base path. |
 | `add_image_captions` | Processes a markdown file to add captions to images based on their alt text. |
 | `add_note` | Adds a note to the specified base path. |
-| `get_yaml` |     Function gets YAML from text of the Markdown file. |
+| `get_yaml` | Function gets YAML from text of the Markdown file. |
 | `identify_code_blocks` | Processes a list of text lines to identify code blocks and yield each line with a boolean flag. |
 | `remove_yaml` |     Function removes YAML from text of the Markdown file. |
 | `replace_section` | Replaces a section in a file defined by `title_section` with the provided `replace_content`. |

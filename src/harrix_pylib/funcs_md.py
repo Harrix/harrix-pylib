@@ -331,6 +331,7 @@ def get_yaml(markdown_text: str) -> str:
     ```
 
     Text after processing:
+
     ```md
     ---
     categories: [it, program]
@@ -347,10 +348,11 @@ def get_yaml(markdown_text: str) -> str:
     - `str`: YAML from the Markdown file.
 
     Examples:
+
     ```py
     import harrix-pylib as h
 
-    md_clean = h.md.get_yaml("---\ncategories: [it]\n---\n\nText")
+    md_clean = h.md.get_yaml("---\\ncategories: [it]\\n---\\n\\nText")
     print(md_clean)  # Text
     ```
 
