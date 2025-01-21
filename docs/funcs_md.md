@@ -333,7 +333,97 @@ Example:
 ```py
 import harrix_pylib as h
 
+h.md.add_image_captions("C:/Notes/note.md")
 ```
+
+Before processing:
+
+````markdown
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
+lang: en
+---
+
+# Installing VSCode
+
+## Section
+
+Example text.
+
+![Alt text](img/image1.png)
+
+Example text.
+
+```markdown
+Example text.
+
+![Alt text](img/image1.png)
+
+Example text.
+
+## About
+```
+
+## About
+
+Another text.
+
+![Alt text 2](img/image2.png)
+
+_Figure 22: Alt ds sdsd text_
+
+Another text.
+
+![Alt text](img/image3.png)
+
+````
+
+After processing:
+
+````markdown
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
+lang: en
+---
+
+# Installing VSCode
+
+## Section
+
+Example text.
+
+![Alt text](img/image1.png)
+
+_Figure 1: Alt text_
+
+Example text.
+
+```markdown
+Example text.
+
+![Alt text](img/image1.png)
+
+Example text.
+
+## About
+```
+
+## About
+
+Another text.
+
+![Alt text 2](img/image2.png)
+
+_Figure 2: Alt text 2_
+
+Another text.
+
+![Alt text](img/image3.png)
+
+_Figure 3: Alt text_
+````
 
 <details>
 <summary>Code:</summary>
