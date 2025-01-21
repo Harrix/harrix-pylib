@@ -548,7 +548,7 @@ def lint_and_fix_python_code(py_content: str) -> str:
 ## Function `sort_py_code`
 
 ```python
-def sort_py_code(filename: str, is_use_ruff_format = True) -> None
+def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None
 ```
 
 Sorts the Python code in the given file by organizing classes, functions, and statements.
@@ -560,6 +560,7 @@ in a structured manner. The sorted code is then written back to the file.
 Args:
 
 - `filename` (`str`): The path to the Python file that needs sorting.
+- `is_use_ruff_format` (`bool`, optional): If True, use Ruff to format the sorted code. Defaults to `True`.
 
 Returns:
 
@@ -573,11 +574,88 @@ Note:
 - Within classes, `__init__` method is placed first among methods, followed by other methods
   sorted alphabetically.
 
+Example:
+
+```py
+    import harrix_pylib as h
+
+    h.py.sort_py_code("C:/projects/project/main.py", True)
+
+```
+
+Before sorting:
+
+```py
+def multiply(a, b):
+    """Returns the product of two numbers."""
+    return a * b
+
+
+def subtract(a, b):
+    """Returns the difference between two numbers."""
+    return a - b
+
+
+def add(a, b):
+    """Returns the sum of two numbers."""
+    return a + b
+
+
+class Point:
+    def move(self, dx, dy):
+        """Moves the point by a given distance along x and y axes."""
+        self.x += dx
+        self.y += dy
+
+    def __init__(self, x=0, y=0):
+        """Initializes a point with coordinates (x, y)."""
+        self.x = x
+        self.y = y
+
+    def distance_to_origin(self):
+        """Returns the distance from the point to the origin."""
+        return (self.x**2 + self.y**2) ** 0.5
+```
+
+After sorting:
+
+```py
+    class Point:
+            def __init__(self, x=0, y=0):
+                    """Initializes a point with coordinates (x, y)."""
+                    self.x = x
+                    self.y = y
+
+            def distance_to_origin(self):
+                    """Returns the distance from the point to the origin."""
+                    return (self.x**2 + self.y**2) ** 0.5
+
+            def move(self, dx, dy):
+                    """Moves the point by a given distance along x and y axes."""
+                    self.x += dx
+                    self.y += dy
+
+
+    def add(a, b):
+            """Returns the sum of two numbers."""
+            return a + b
+
+
+    def multiply(a, b):
+            """Returns the product of two numbers."""
+            return a * b
+
+
+    def subtract(a, b):
+            """Returns the difference between two numbers."""
+            return a - b
+```
+
 <details>
 <summary>Code:</summary>
 
 ```python
-def sort_py_code(filename: str, is_use_ruff_format=True) -> None:
+def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
     with open(filename, "r", encoding="utf-8") as f:
         code: str = f.read()
 
