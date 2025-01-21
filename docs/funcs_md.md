@@ -777,6 +777,8 @@ Example:
 ```py
 import harrix_pylib as h
 
+new_content = "New list of commands:\n\n- new command1\n- new command2"
+result_message = h.md.replace_section("C:/Notes/note.md", new_content, "## List of commands")
 ```
 
 <details>
