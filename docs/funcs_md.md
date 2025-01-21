@@ -40,7 +40,6 @@ Line 3.
 Line 4.
 
 -- Modified title of book
-
 ```
 
 After processing:
@@ -61,7 +60,6 @@ After processing:
 > Line 4.
 >
 > -- _Name Surname, Modified title of book_
-
 ```
 
 Note:
@@ -153,7 +151,6 @@ author: Anton Sergienko
 author-email: anton.b.sergienko@gmail.com
 lang: ru
 ---
-
 ```
 
 Returns:
@@ -211,7 +208,6 @@ author: Anton Sergienko
 author-email: anton.b.sergienko@gmail.com
 lang: ru
 ---
-
 ```
 
 Returns:
@@ -310,6 +306,7 @@ def add_image_captions(filename: Path | str) -> str
 Processes a markdown file to add captions to images based on their alt text.
 
 This function reads a markdown file, processes its content to:
+
 - Recognize images by their markdown syntax.
 - Add automatic captions with sequential numbering, localized for Russian or English.
 - Skip image captions that already exist in italic format.
@@ -376,7 +373,6 @@ _Figure 22: Alt ds sdsd text_
 Another text.
 
 ![Alt text](img/image3.png)
-
 ````
 
 After processing:
@@ -562,7 +558,6 @@ tags: [VSCode, FAQ]
 ---
 
 # Installing VSCode
-
 ```
 
 Text after processing:
@@ -628,8 +623,8 @@ Args:
 Returns:
 
 - `Iterator[tuple[str, bool]]`: An iterator yielding tuples. Each tuple contains:
-    - The original line of text (`str`).
-    - A boolean flag (`bool`) indicating if the line is within a code block (`True`) or not (`False`).
+  - The original line of text (`str`).
+  - A boolean flag (`bool`) indicating if the line is within a code block (`True`) or not (`False`).
 
 Note:
 
@@ -695,10 +690,10 @@ tags: [VSCode, FAQ]
 ---
 
 # Installing VSCode
-
 ```
 
 Markdown after processing:
+
 ```markdown
 # Installing VSCode
 ```
@@ -712,6 +707,7 @@ Returns:
 - `str`: Text of the Markdown file without YAML.
 
 Examples:
+
 ```py
 import harrix-pylib as h
 
@@ -898,7 +894,6 @@ Example text.
 Another text.
 
 Another text.
-
 ```
 
 After sorting:
@@ -922,7 +917,6 @@ Another text.
 Example text.
 
 Example text.
-
 ```
 
 <details>
@@ -1011,8 +1005,8 @@ Args:
 Returns:
 
 - `tuple[str, str]`: A tuple containing:
-    - The YAML front matter as a string, prefixed and suffixed with '---'.
-    - The remaining markdown content after the YAML front matter, with leading whitespace removed.
+  - The YAML front matter as a string, prefixed and suffixed with '---'.
+  - The remaining markdown content after the YAML front matter, with leading whitespace removed.
 
 Note:
 

@@ -34,7 +34,6 @@ CLI commands after installation.
 - `ruff format` — format the project's Python files.
 - `ruff check` — lint the project's Python files.
 - `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
-
 ```
 
 Returns:
@@ -129,11 +128,11 @@ Example output:
 ```markdown
 ### File `extract_functions_and_classes__before.py`
 
-| Function/Class | Description |
-|----------------|-------------|
+| Function/Class       | Description                                                         |
+| -------------------- | ------------------------------------------------------------------- |
 | Class `Cat (Animal)` | Represents a domestic cat, inheriting from the `Animal` base class. |
-| `add` | Adds two integers. |
-| `multiply` | Multiples two integers. |
+| `add`                | Adds two integers.                                                  |
+| `multiply`           | Multiples two integers.                                             |
 ```
 
 Examples:
@@ -326,7 +325,7 @@ result = h.py.generate_md_docs_content(filename)
 <details>
 <summary>Code:</summary>
 
-```python
+````python
 def generate_md_docs_content(file_path: Path | str) -> str:
 
     def get_function_signature(node: ast.FunctionDef) -> str:
@@ -469,7 +468,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
     # Join all lines
     markdown_doc = "\n".join(markdown_lines)
     return markdown_doc
-```
+````
 
 </details>
 

@@ -172,8 +172,8 @@ Args:
 Returns:
 
 - `tuple[bool, str]`: A tuple where:
-    - The first element (`bool`) indicates if all folders have a `featured_image.*` file.
-    - The second element (`str`) contains a formatted string with status or error messages.
+  - The first element (`bool`) indicates if all folders have a `featured_image.*` file.
+  - The second element (`str`) contains a formatted string with status or error messages.
 
 Note:
 

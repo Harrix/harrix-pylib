@@ -29,7 +29,7 @@ import harrix_pylib as h
 root_path = h.dev.get_project_root()
 ```
 
- ```py
+```py
 from pathlib import Path
 
 import harrix_pylib as h
