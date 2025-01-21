@@ -39,7 +39,7 @@ print(md_clean)  # Installing VSCode
 
 ### File `funcs_dev.py`
 
-Doc: [funcs_dev.md](https://github.com/Harrix/harrix-pylib/docs/funcs_dev.md)
+Doc: [funcs_dev.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_dev.md)
 
 | Function/Class | Description |
 |----------------|-------------|
@@ -51,7 +51,7 @@ Doc: [funcs_dev.md](https://github.com/Harrix/harrix-pylib/docs/funcs_dev.md)
 
 ### File `funcs_file.py`
 
-Doc: [funcs_file.md](https://github.com/Harrix/harrix-pylib/docs/funcs_file.md)
+Doc: [funcs_file.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_file.md)
 
 | Function/Class | Description |
 |----------------|-------------|
@@ -65,7 +65,7 @@ Doc: [funcs_file.md](https://github.com/Harrix/harrix-pylib/docs/funcs_file.md)
 
 ### File `funcs_md.py`
 
-Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/docs/funcs_md.md)
+Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_md.md)
 
 | Function/Class | Description |
 |----------------|-------------|
@@ -84,7 +84,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/docs/funcs_md.md)
 
 ### File `funcs_py.py`
 
-Doc: [funcs_py.md](https://github.com/Harrix/harrix-pylib/docs/funcs_py.md)
+Doc: [funcs_py.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_py.md)
 
 | Function/Class | Description |
 |----------------|-------------|
@@ -95,7 +95,7 @@ Doc: [funcs_py.md](https://github.com/Harrix/harrix-pylib/docs/funcs_py.md)
 
 ### File `funcs_pyside.py`
 
-Doc: [funcs_pyside.md](https://github.com/Harrix/harrix-pylib/docs/funcs_pyside.md)
+Doc: [funcs_pyside.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_pyside.md)
 
 | Function/Class | Description |
 |----------------|-------------|
