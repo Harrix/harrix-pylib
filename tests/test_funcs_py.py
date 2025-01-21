@@ -132,6 +132,58 @@ class ExampleClass:
         assert "File index.md is created." in result, "Result should indicate creation of index.md."
 
 
+def test_generate_md_docs_content():
+    # Setup
+    content = '''
+def example_function(a: int, b: int) -> int:
+    """Adds two integers and returns the sum."""
+    return a + b
+
+class ExampleClass:
+    """A class for demonstration."""
+
+    def __init__(self, value: str):
+        """Initialize the class."""
+        self.value = value
+
+    def example_method(self):
+        """A method that does nothing."""
+        pass
+'''
+
+    with TemporaryDirectory() as temp_folder:
+        temp_path = Path(temp_folder)
+
+        # Create the test file
+        test_file = temp_path / "test_file.py"
+        test_file.write_text(content, encoding="utf8")
+
+        # Test
+        md_content = h.py.generate_md_docs_content(str(test_file))
+
+        # Assertions
+        assert "# File `test_file.py`" in md_content, "Doc should start with file name."
+        assert "```python" in md_content, "Doc should contain code blocks."
+        assert "<details>" in md_content, "Doc should have details tags for code sections."
+        assert "<summary>Code:</summary>" in md_content, "Doc should have summary tags for code sections."
+
+        assert "## Function `example_function`" in md_content, "Example function should be documented."
+        assert "def example_function(a: int, b: int) -> int" in md_content, "Function signature should be present."
+        assert "Adds two integers and returns the sum" in md_content, "Function docstring should be included."
+
+        assert "## Class `ExampleClass`" in md_content, "Example class should be documented."
+        assert "class ExampleClass" in md_content, "Class signature should be present."
+        assert "A class for demonstration" in md_content, "Class docstring should be included."
+
+        assert "### Method `__init__`" in md_content, "Class __init__ method should be documented."
+        assert "def __init__(self, value: str)" in md_content, "Method signature should be present."
+        assert "Initialize the class" in md_content, "Method docstring should be included."
+
+        assert "### Method `example_method`" in md_content, "Class method should be documented."
+        assert "def example_method(self)" in md_content, "Method signature should be present."
+        assert "A method that does nothing" in md_content, "Method docstring should be included."
+
+
 def test_lint_and_fix_python_code():
     python_code = "def greet(name):\n    print('Hello, ' +    name)"
     expected_formatted_code = 'def greet(name):\n    print("Hello, " + name)\n'
