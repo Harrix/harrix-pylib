@@ -273,8 +273,8 @@ def test_add_note():
 
 def test_get_yaml_from_markdown():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml.md").read_text(encoding="utf8")
-    md_clean = h.md.get_yaml(md)
-    assert len(md_clean.splitlines()) == 4
+    yaml = h.md.get_yaml(md)
+    assert len(yaml.splitlines()) == 4
 
 
 def test_identify_code_blocks():
