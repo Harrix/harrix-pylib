@@ -516,6 +516,11 @@ Example:
 ```py
 import harrix_pylib as h
 
+
+name = "test_note"
+text = "# Test Note\nThis is a test note with images."
+is_with_images = True
+result_msg, result_path = h.md.add_note("C:/Notes/", name, text, is_with_images)
 ```
 
 <details>
