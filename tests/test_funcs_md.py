@@ -283,7 +283,6 @@ def test_identify_code_blocks():
     count_lines_content = 0
     count_lines_code = 0
     for _, state in h.md.identify_code_blocks(content.splitlines()):
-        print(_)
         if state:
             count_lines_code += 1
         else:
