@@ -40,6 +40,18 @@ def create_uv_new_project(project_name: str, path: str | Path, editor: str = "co
     Returns:
 
     - `str`: A string containing the result of the operations performed.
+
+    Examples:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     commands = f"""
         cd {path}
@@ -96,6 +108,18 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
     | Class `Cat (Animal)` | Represents a domestic cat, inheriting from the `Animal` base class. |
     | `add` | Adds two integers. |
     | `multiply` | Multiples two integers. |
+    ```
+
+    Examples:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
+
+    ```py
+    import harrix_pylib as h
+
     ```
     """
     filename = Path(filename)
@@ -169,13 +193,29 @@ def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: 
 
     Args:
 
-    - `folder` (`Path | str`): The path to the project folder, can be either a `Path` object or a string. Defaults to the current directory if not specified.
-    - `beginning_of_md` (`str`): The content to prepend to each documentation file. This could include headers or other markdown formatting.
-    - `domain` (`str`): The domain or context in which the project is used, which might influence how documentation is generated or formatted.
+    - `folder` (`Path | str`): The path to the project folder, can be either a `Path` object or a string. Defaults to
+      the current directory if not specified.
+    - `beginning_of_md` (`str`): The content to prepend to each documentation file. This could include headers
+      or other markdown formatting.
+    - `domain` (`str`): The domain or context in which the project is used, which might influence how
+      documentation is generated or formatted.
 
     Returns:
 
-    - `str`: A string containing a summary of the operations performed, with each line indicating which file was processed or created.
+    - `str`: A string containing a summary of the operations performed, with each line indicating which file
+      was processed or created.
+
+    Examples:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     result_lines = []
     folder = Path(folder)
@@ -216,11 +256,25 @@ def generate_md_docs_content(file_path: Path | str) -> str:
 
     Args:
 
-    - `file_path` (`Path | str`): The path to the Python file to be documented, can be either a `Path` object or a string.
+    - `file_path` (`Path | str`): The path to the Python file to be documented, can be either
+      a `Path` object or a string.
 
     Returns:
 
-    - `str`: A Markdown string containing documentation for the file, including its classes, methods, and functions with their signatures, docstrings, and implementation details.
+    - `str`: A Markdown string containing documentation for the file, including its classes, methods,
+      and functions with their signatures, docstrings, and implementation details.
+
+    Examples:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
 
     def get_function_signature(node: ast.FunctionDef) -> str:
@@ -393,6 +447,18 @@ def lint_and_fix_python_code(py_content: str) -> str:
 
     - This function assumes `ruff` is installed and accessible in the system's PATH.
     - Any exceptions from `ruff` or file operations are not caught within this function and will propagate up.
+
+    Examples:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     # Create a temporary file with the content of py_content
     with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as temp_file:

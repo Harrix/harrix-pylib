@@ -41,6 +41,18 @@ Returns:
 
 - `str`: A string containing the result of the operations performed.
 
+Examples:
+
+```py
+import harrix_pylib as h
+
+```
+
+```py
+import harrix_pylib as h
+
+```
+
 <details>
 <summary>Code:</summary>
 
@@ -107,6 +119,18 @@ Example output:
 | Class `Cat (Animal)` | Represents a domestic cat, inheriting from the `Animal` base class. |
 | `add` | Adds two integers. |
 | `multiply` | Multiples two integers. |
+```
+
+Examples:
+
+```py
+import harrix_pylib as h
+
+```
+
+```py
+import harrix_pylib as h
+
 ```
 
 <details>
@@ -191,13 +215,29 @@ Generates documentation for all Python files within a given project folder.
 
 Args:
 
-- `folder` (`Path | str`): The path to the project folder, can be either a `Path` object or a string. Defaults to the current directory if not specified.
-- `beginning_of_md` (`str`): The content to prepend to each documentation file. This could include headers or other markdown formatting.
-- `domain` (`str`): The domain or context in which the project is used, which might influence how documentation is generated or formatted.
+- `folder` (`Path | str`): The path to the project folder, can be either a `Path` object or a string. Defaults to
+  the current directory if not specified.
+- `beginning_of_md` (`str`): The content to prepend to each documentation file. This could include headers
+  or other markdown formatting.
+- `domain` (`str`): The domain or context in which the project is used, which might influence how
+  documentation is generated or formatted.
 
 Returns:
 
-- `str`: A string containing a summary of the operations performed, with each line indicating which file was processed or created.
+- `str`: A string containing a summary of the operations performed, with each line indicating which file
+  was processed or created.
+
+Examples:
+
+```py
+import harrix_pylib as h
+
+```
+
+```py
+import harrix_pylib as h
+
+```
 
 <details>
 <summary>Code:</summary>
@@ -249,11 +289,25 @@ Generates Markdown documentation for a single Python file.
 
 Args:
 
-- `file_path` (`Path | str`): The path to the Python file to be documented, can be either a `Path` object or a string.
+- `file_path` (`Path | str`): The path to the Python file to be documented, can be either
+  a `Path` object or a string.
 
 Returns:
 
-- `str`: A Markdown string containing documentation for the file, including its classes, methods, and functions with their signatures, docstrings, and implementation details.
+- `str`: A Markdown string containing documentation for the file, including its classes, methods,
+  and functions with their signatures, docstrings, and implementation details.
+
+Examples:
+
+```py
+import harrix_pylib as h
+
+```
+
+```py
+import harrix_pylib as h
+
+```
 
 <details>
 <summary>Code:</summary>
@@ -437,6 +491,18 @@ Note:
 
 - This function assumes `ruff` is installed and accessible in the system's PATH.
 - Any exceptions from `ruff` or file operations are not caught within this function and will propagate up.
+
+Examples:
+
+```py
+import harrix_pylib as h
+
+```
+
+```py
+import harrix_pylib as h
+
+```
 
 <details>
 <summary>Code:</summary>
