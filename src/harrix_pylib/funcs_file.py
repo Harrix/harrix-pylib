@@ -103,8 +103,18 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
     Example:
 
     ```py
+    from pathlib import Path
+
     import harrix_pylib as h
 
+
+    def test_func(filename):
+        content = Path(filename).read_text(encoding="utf8")
+        content = content.upper()
+        Path(filename).write_text(content, encoding="utf8")
+
+
+    h.file.apply_func("C:/Notes/", ".txt", test_func)
     ```
     """
     list_files = []
