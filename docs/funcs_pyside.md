@@ -25,13 +25,13 @@ Returns:
 
 Examples:
 
-```python
+```py
 import harrix_pylib as h
 
 icon = h.pyside.create_emoji_icon("❌")
 ```
 
-```python
+```py
 import harrix_pylib as h
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QAction
@@ -82,7 +82,7 @@ Returns:
 
 Example:
 
-```python
+```py
 import harrix_pylib as h
 from PySide6.QtWidgets import QApplication, QMenu
 from PySide6.QtGui import QAction

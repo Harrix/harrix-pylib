@@ -65,7 +65,7 @@ C:/test
 
 Example:
 
-```python
+```py
 import harrix_pylib as h
 
 ```
@@ -115,7 +115,7 @@ Returns:
 
 Example:
 
-```python
+```py
 import harrix_pylib as h
 
 ```
@@ -171,7 +171,7 @@ Note:
 
 Example:
 
-```python
+```py
 import harrix_pylib as h
 
 ```
@@ -218,13 +218,13 @@ Returns:
 
 Examples:
 
-```python
+```py
 import harrix-pylib as h
 
 h.file.clear_directory("C:/temp_dir")
 ```
 
-```python
+```py
 from pathlib import Path
 import harrix-pylib as h
 
@@ -267,7 +267,7 @@ Returns:
 
 Example:
 
-```python
+```py
 import harrix_pylib as h
 
 ```
@@ -325,7 +325,7 @@ Note:
 
 Example:
 
-```python
+```py
 import harrix_pylib as h
 
 ```
@@ -382,7 +382,7 @@ Note:
 
 Example:
 
-```python
+```py
 import harrix_pylib as h
 
 ```

@@ -43,7 +43,7 @@ Returns:
 
 Example:
 
-```python
+```py
 import harrix_pylib as h
 from pathlib import Path
 
@@ -138,13 +138,13 @@ Example output:
 
 Examples:
 
-```python
+```py
 import harrix_pylib as h
 
 md = h.py.extract_functions_and_classes("C:/project/main.py", False)
 ```
 
-```python
+```py
 import harrix_pylib as h
 
 filename = "C:/project/main.py"
@@ -248,7 +248,7 @@ Returns:
 
 Example:
 
-```python
+```py
 import harrix_pylib as h
 
 path = "C:/projects/project"
@@ -316,7 +316,7 @@ Returns:
 
 Example:
 
-```python
+```py
 import harrix_pylib as h
 
 filename = "C:/projects/project/main.py"
@@ -508,7 +508,7 @@ Note:
 
 Example:
 
-```python
+```py
 import harrix_pylib as h
 
 python_code = "def greet(name):
@@ -576,7 +576,7 @@ Note:
 
 Example:
 
-```python
+```py
     import harrix_pylib as h
 
     h.py.sort_py_code("C:/projects/project/main.py", True)
@@ -585,7 +585,7 @@ Example:
 
 Before sorting:
 
-```python
+```py
 def multiply(a, b):
     """Returns the product of two numbers."""
     return a * b
@@ -619,7 +619,7 @@ class Point:
 
 After sorting:
 
-```python
+```py
 class Point:
     def __init__(self, x=0, y=0):
         """Initializes a point with coordinates (x, y)."""
