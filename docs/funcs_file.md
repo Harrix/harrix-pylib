@@ -185,6 +185,8 @@ Example:
 ```py
 import harrix_pylib as h
 
+
+is_correct = h.file.check_featured_image("C:/articles/")
 ```
 
 <details>
@@ -281,6 +283,8 @@ Example:
 ```py
 import harrix_pylib as h
 
+
+number = h.file.find_max_folder_number("C:/projects/", "python_project_")
 ```
 
 <details>
@@ -339,6 +343,8 @@ Example:
 ```py
 import harrix_pylib as h
 
+
+h.file.open_file_or_folder("C:/Notes/note.md")
 ```
 
 <details>
@@ -360,7 +366,7 @@ def open_file_or_folder(path: Path | str) -> None:
 ## Function `tree_view_folder`
 
 ```python
-def tree_view_folder(path: Path, is_ignore_hidden_folders: bool = False) -> str
+def tree_view_folder(path: str | Path, is_ignore_hidden_folders: bool = False) -> str
 ```
 
 Generates a tree-like representation of folder contents.
@@ -377,7 +383,7 @@ Example output:
 
 Args:
 
-- `path` (`Path`): The root folder path to start the tree from.
+- `path` (`str | Path`): The root folder path to start the tree from.
 - `is_ignore_hidden_folders` (`bool`): If `True`, hidden folders (starting with a dot) are excluded from the tree.
   Defaults to `False`.
 
@@ -396,15 +402,18 @@ Example:
 ```py
 import harrix_pylib as h
 
+
+tree = h.file.tree_view_folder("C:/Notes")
+print(tree)
 ```
 
 <details>
 <summary>Code:</summary>
 
 ```python
-def tree_view_folder(path: Path, is_ignore_hidden_folders: bool = False) -> str:
+def tree_view_folder(path: str | Path, is_ignore_hidden_folders: bool = False) -> str:
 
-    def __tree(path: Path, is_ignore_hidden_folders: bool = False, prefix: str = ""):
+    def __tree(path: str | Path, is_ignore_hidden_folders: bool = False, prefix: str = ""):
         if is_ignore_hidden_folders and path.name.startswith("."):
             contents = []
         else:
