@@ -271,6 +271,11 @@ Example:
 ```py
 import harrix_pylib as h
 
+text = "# Diary Entry\nThis is a diary test entry without images.\n"
+is_with_images = False
+
+result_msg, result_path = h.md.add_diary_new_note("C:/Diary/", text, is_with_images)
+# File C:\Diary55-01-21.md is created
 ```
 
 <details>
