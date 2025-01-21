@@ -74,7 +74,12 @@ Example:
 
 ```py
 import harrix_pylib as h
+from pathlib import Path
 
+filename = Path("C:/test/Name_Surname/Title_of_book.md")
+
+result = h.md.add_author_book(filename)
+print(result)
 ```
 
 <details>
@@ -160,6 +165,15 @@ Example:
 ```py
 import harrix_pylib as h
 
+yaml_front_matter = '''---
+author: Jane Doe
+author-email: jane.doe@example.com
+lang: en
+---
+'''
+
+new_entry_path = h.md.add_diary_new_diary("C:/Diary/", yaml_front_matter, is_with_images=True)
+print(new_entry_path)
 ```
 
 <details>

@@ -70,7 +70,12 @@ def add_author_book(filename: Path | str) -> str:
 
     ```py
     import harrix_pylib as h
+    from pathlib import Path
 
+    filename = Path("C:/test/Name_Surname/Title_of_book.md")
+
+    result = h.md.add_author_book(filename)
+    print(result)
     ```
     """
     lines_list = []
@@ -145,6 +150,15 @@ def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: b
     ```py
     import harrix_pylib as h
 
+    yaml_front_matter = '''---
+    author: Jane Doe
+    author-email: jane.doe@example.com
+    lang: en
+    ---
+    '''
+
+    new_entry_path = h.md.add_diary_new_diary("C:/Diary/", yaml_front_matter, is_with_images=True)
+    print(new_entry_path)
     ```
     """
     text = f"{beginning_of_md}\n\n"
