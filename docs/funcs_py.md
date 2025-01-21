@@ -9,7 +9,7 @@ lang: en
 ## Function `create_uv_new_project`
 
 ```python
-def create_uv_new_project(project_name: str, path: str | Path, editor: str = 'code', cli_commands: str = '') -> str
+def create_uv_new_project(project_name: str, path: str | Path, editor: str = "code", cli_commands: str = "") -> str
 ```
 
 Creates a new project using uv, initializes it, and sets up necessary files.
@@ -82,7 +82,7 @@ def create_uv_new_project(project_name: str, path: str | Path, editor: str = "co
 ## Function `extract_functions_and_classes`
 
 ```python
-def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool = True, domain: str = '') -> str
+def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool = True, domain: str = "") -> str
 ```
 
 Extracts all classes and functions from a Python file and formats them into a markdown list.
