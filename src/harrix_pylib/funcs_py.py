@@ -281,16 +281,13 @@ def generate_md_docs_content(file_path: Path | str) -> str:
     - `str`: A Markdown string containing documentation for the file, including its classes, methods,
       and functions with their signatures, docstrings, and implementation details.
 
-    Examples:
+    Example:
 
     ```py
     import harrix_pylib as h
 
-    ```
-
-    ```py
-    import harrix_pylib as h
-
+    filename = "C:/projects/project/main.py"
+    result = h.py.generate_md_docs_content(filename)
     ```
     """
 
