@@ -23,13 +23,13 @@ Returns:
 
 Examples:
 
-```py
+```python
 import harrix_pylib as h
 
 root_path = h.dev.get_project_root()
 ```
 
- ```py
+ ```python
 from pathlib import Path
 
 import harrix_pylib as h
@@ -70,13 +70,13 @@ Returns:
 
 Examples:
 
-```py
+```python
 import harrix-pylib as h
 
 config = h.dev.load_config("config.json")
 ```
 
-```py
+```python
 from pathlib import Path
 
 import harrix_pylib as h
@@ -136,14 +136,14 @@ Returns:
 
 Examples:
 
-```py
+```python
 import harrix_pylib as h
 
 result_output = h.dev.run_powershell_script("python --version")
 print(result_output)  # Python 3.13.1
 ```
 
-```py
+```python
 import harrix_pylib as h
 
 result_output = h.dev.run_powershell_script("python --version\npip --version")
@@ -203,14 +203,14 @@ Note:
 
 Examples:
 
-```py
+```python
 import harrix_pylib as h
 
 result_output = h.dev.run_powershell_script_as_admin("python --version")
 print(result_output)  # ﻿Python 3.11.9
 ```
 
-```py
+```python
 import harrix_pylib as h
 
 result_output = h.dev.run_powershell_script_as_admin("python --version\npip --version")
@@ -318,7 +318,7 @@ Note:
 
 Examples:
 
-```py
+```python
 import harrix_pylib as h
 
 
@@ -333,7 +333,7 @@ f()
 # Execution time: 0.0000 seconds
 ```
 
-```py
+```python
 import harrix_pylib as h
 
 

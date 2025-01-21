@@ -72,7 +72,7 @@ Note:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 from pathlib import Path
 
@@ -162,7 +162,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 yaml_front_matter = '''---
@@ -220,7 +220,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 yaml_front_matter = '''---
@@ -268,7 +268,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 text = "# Diary Entry\nThis is a diary test entry without images.\n"
@@ -330,7 +330,7 @@ Note:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 h.md.add_image_captions("C:/Notes/note.md")
@@ -513,7 +513,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 
@@ -584,14 +584,14 @@ Returns:
 
 Examples:
 
-```py
+```python
 import harrix-pylib as h
 
 md_clean = h.md.get_yaml("---\ncategories: [it]\n---\n\nText")
 print(md_clean)  # Text
 ```
 
-```py
+```python
 from pathlib import Path
 import harrix-pylib as h
 
@@ -638,7 +638,7 @@ Note:
 
 Example:
 
-```py
+```python
 from pathlib import Path
 
 import harrix_pylib as h
@@ -712,7 +712,7 @@ def remove_yaml(markdown_text: str) -> str
     - `str`: Text of the Markdown file without YAML.
 
     Examples:
-    ```py
+    ```python
     import harrix-pylib as h
 
     md_clean = h.md.remove_yaml("---
@@ -723,7 +723,7 @@ Text")
     print(md_clean)  # Text
     ```
 
-    ```py
+    ```python
     from pathlib import Path
     import harrix-pylib as h
 
@@ -774,7 +774,7 @@ Notes:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 new_content = "New list of commands:\n\n- new command1\n- new command2"
@@ -876,7 +876,7 @@ Notes:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 h.md.sort_sections("C:/Notes/note.md")
@@ -1027,7 +1027,7 @@ Note:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 ```

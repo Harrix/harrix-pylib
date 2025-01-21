@@ -23,13 +23,13 @@ Documentation: [docs](https://github.com/Harrix/harrix-pylib/blob/main/docs/inde
 
 Examples of using the library:
 
-```py
+```python
 import harrixpylib as h
 
 h.file.clear_directory("C:/temp_dir")
 ```
 
-```py
+```python
 import harrixpylib as h
 
 md_clean = h.file.remove_yaml_from_markdown("""
