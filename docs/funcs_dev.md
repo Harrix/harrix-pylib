@@ -21,6 +21,23 @@ Returns:
 
 - `Path`: The path to the project's root folder.
 
+Examples:
+
+```py
+import harrix_pylib as h
+
+root_path = h.dev.get_project_root()
+```
+
+ ```py
+from pathlib import Path
+
+import harrix_pylib as h
+
+root_path = h.dev.get_project_root()
+Path(root_path / "1.txt").write_text("Test", encoding="utf8")
+```
+
 <details>
 <summary>Code:</summary>
 
@@ -50,6 +67,26 @@ Args:
 Returns:
 
 - `dict`: Configuration loaded from the file.
+
+Examples:
+
+```py
+import harrix-pylib as h
+
+config = h.dev.load_config("config.json")
+```
+
+```py
+from pathlib import Path
+
+import harrix_pylib as h
+
+root_path = h.dev.get_project_root()
+Path(root_path / "config.json").write_text('{"pi": 3.14}', encoding="utf8")
+
+config = h.dev.load_config("config.json")
+print(config["pi"])  # 3.14
+```
 
 <details>
 <summary>Code:</summary>
@@ -96,6 +133,14 @@ Args:
 Returns:
 
 - `str`: Combined output and error messages from the PowerShell execution.
+
+Examples:
+
+```py
+import harrix-pylib as h
+
+
+```
 
 <details>
 <summary>Code:</summary>
@@ -147,6 +192,14 @@ Note:
 
 - This function creates temporary files to store the script and its output, which are deleted after execution.
 - The function waits for the script to finish and ensures the output file exists before reading from it.
+
+Examples:
+
+```py
+import harrix-pylib as h
+
+
+```
 
 <details>
 <summary>Code:</summary>
@@ -246,6 +299,14 @@ Note:
   its output and timing its execution.
 - The `output.txt` file is created in a `temp` folder under the project root.
   If the folder does not exist, it will be created.
+
+Examples:
+
+```py
+import harrix-pylib as h
+
+
+```
 
 <details>
 <summary>Code:</summary>
