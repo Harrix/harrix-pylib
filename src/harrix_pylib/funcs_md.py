@@ -900,6 +900,8 @@ def split_yaml_content(note: str) -> tuple[str, str]:
     ```py
     import harrix_pylib as h
 
+    md = h.md.sort_sections("C:/Notes/note.md")
+    yaml, content = h.md.split_yaml_content(md)
     ```
     """
     parts = note.split("---", 2)

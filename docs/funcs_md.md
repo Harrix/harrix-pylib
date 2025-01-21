@@ -1025,6 +1025,8 @@ Example:
 ```py
 import harrix_pylib as h
 
+md = h.md.sort_sections("C:/Notes/note.md")
+yaml, content = h.md.split_yaml_content(md)
 ```
 
 <details>
