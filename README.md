@@ -1,10 +1,12 @@
 # harrix-pylib
 
-![harrix-pylib](img/featured-image.svg)
+![harrix-pylib](https://raw.githubusercontent.com/Harrix/harrix-pylib/refs/heads/main/img/featured-image.svg)
 
 Common functions for working in Python (>= 3.12) for [my projects](https://github.com/Harrix?tab=repositories).
 
 ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
+
+[Docs](https://github.com/Harrix/harrix-pylib/tree/main/docs)
 
 ## Install
 
