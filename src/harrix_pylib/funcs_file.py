@@ -59,6 +59,13 @@ def all_to_parent_folder(path: Path | str) -> str:
        ├─ file5.txt
        └─ file6.txt
     ```
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     list_lines = []
     for child_folder in Path(path).iterdir():
@@ -91,6 +98,13 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
     Returns:
 
     - `str`: A string listing the results of applying the function to each file, with each result on a new line.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     list_files = []
     folder_path = Path(path)
@@ -129,6 +143,13 @@ def check_featured_image(path: str) -> tuple[bool, str]:
 
     - This function does not search recursively; it only checks the immediate child folders.
     - The output string uses ANSI color codes for visual distinction of errors.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     line_list: list[str] = []
     is_correct: bool = True
@@ -196,6 +217,13 @@ def find_max_folder_number(base_path: str, start_pattern: str) -> int:
     Returns:
 
     - `int`: The maximum folder number found, or 0 if no matches are found.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     pattern = re.compile(start_pattern + r"(\d+)$")
     max_number: int = 0
@@ -236,6 +264,13 @@ def open_file_or_folder(path: Path | str) -> None:
     - Ensure the path provided is valid and accessible.
     - If the path does not exist or cannot be opened, the function might raise an exception,
       depending on the underlying command's behavior.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     if platform.system() == "Windows":
         os.startfile(path)
@@ -275,6 +310,13 @@ def tree_view_folder(path: Path, is_ignore_hidden_folders: bool = False) -> str:
     - This function uses recursion to traverse folders. It handles `PermissionError`
       by excluding folders without permission.
     - Uses ASCII characters to represent tree branches (`├──`, `└──`, `│`).
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
 
     def __tree(path: Path, is_ignore_hidden_folders: bool = False, prefix: str = ""):

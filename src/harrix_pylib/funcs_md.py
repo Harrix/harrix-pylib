@@ -65,6 +65,13 @@ def add_author_book(filename: Path | str) -> str:
     - If the file does not exist or is not a Markdown file, the function will return `None`.
     - If the file has been modified, it returns a message indicating the changes; otherwise,
       it indicates no changes were made.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     lines_list = []
     file = Path(filename)
@@ -132,6 +139,13 @@ def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: b
     Returns:
 
     - `str | Path`: The path to the created diary entry file or a string message indicating creation.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     text = f"{beginning_of_md}\n\n"
     text += f"# {datetime.now().strftime('%Y-%m-%d')}\n\n"
@@ -163,6 +177,13 @@ def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = Fals
     Returns:
 
     - `str | Path`: The path to the created dream diary entry file or a string message indicating creation.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     text = f"{beginning_of_md}\n"
     text += f"# {datetime.now().strftime('%Y-%m-%d')}\n\n"
@@ -184,6 +205,13 @@ def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -
     Returns:
 
     - `str | Path`: A string message indicating the file was created along with the file path.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     current_date = datetime.now()
     year = current_date.strftime("%Y")
@@ -223,6 +251,13 @@ def add_image_captions(filename: Path | str) -> str:
 
     - The function modifies the file in place if changes are made.
     - The first argument of the function can be either a `Path` object or a string representing the file path.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     with open(filename, "r", encoding="utf-8") as f:
         document = f.read()
@@ -298,6 +333,13 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
     Returns:
 
     - `str | Path`: A tuple containing a message about file creation and the path to the file.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     base_path = Path(base_path)
 
@@ -389,6 +431,13 @@ def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
 
     - This function identifies code blocks by looking for lines that start with three or more backticks (`` ` ``).
     - Code blocks can be nested, and this function will toggle the `code_block_delimiter` on matching delimiters.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     code_block_delimiter = None
     for line in lines:
@@ -480,6 +529,13 @@ def replace_section(filename: Path | str, replace_content, title_section: str = 
     - The function assumes that the file uses UTF-8 encoding for reading and writing.
     - If no section matches the `title_section`, or if the section spans till the end of the file,
       only the content up to `end_index` (or the end of the file) will be replaced.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     filename = Path(filename)  # Ensure filename is a Path object
 
@@ -562,6 +618,13 @@ def sort_sections(filename: Path | str) -> str:
       and code blocks are delimited by triple backticks (```).
     - If there's no YAML front matter, the entire document is considered content.
     - The sorting of sections is done alphabetically, ignoring any code blocks or other formatting within the section.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     with open(filename, "r", encoding="utf-8") as f:
         document = f.read()
@@ -643,8 +706,16 @@ def split_yaml_content(note: str) -> tuple[str, str]:
 
     Note:
 
-    - If there is no '---' or only one '---' in the note, the function returns an empty string for YAML content and the entire note for the content part.
+    - If there is no '---' or only one '---' in the note, the function returns an empty string for YAML content
+      and the entire note for the content part.
     - The function does not validate if the YAML content is properly formatted YAML.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+
+    ```
     """
     parts = note.split("---", 2)
     if len(parts) < 3:

@@ -63,6 +63,13 @@ C:/test
    └─ file6.txt
 ```
 
+Example:
+
+```py
+import harrix_pylib as h
+
+```
+
 <details>
 <summary>Code:</summary>
 
@@ -105,6 +112,13 @@ Args:
 Returns:
 
 - `str`: A string listing the results of applying the function to each file, with each result on a new line.
+
+Example:
+
+```py
+import harrix_pylib as h
+
+```
 
 <details>
 <summary>Code:</summary>
@@ -154,6 +168,13 @@ Note:
 
 - This function does not search recursively; it only checks the immediate child folders.
 - The output string uses ANSI color codes for visual distinction of errors.
+
+Example:
+
+```py
+import harrix_pylib as h
+
+```
 
 <details>
 <summary>Code:</summary>
@@ -244,6 +265,13 @@ Returns:
 
 - `int`: The maximum folder number found, or 0 if no matches are found.
 
+Example:
+
+```py
+import harrix_pylib as h
+
+```
+
 <details>
 <summary>Code:</summary>
 
@@ -295,6 +323,13 @@ Note:
 - If the path does not exist or cannot be opened, the function might raise an exception,
   depending on the underlying command's behavior.
 
+Example:
+
+```py
+import harrix_pylib as h
+
+```
+
 <details>
 <summary>Code:</summary>
 
@@ -344,6 +379,13 @@ Note:
 - This function uses recursion to traverse folders. It handles `PermissionError`
   by excluding folders without permission.
 - Uses ASCII characters to represent tree branches (`├──`, `└──`, `│`).
+
+Example:
+
+```py
+import harrix_pylib as h
+
+```
 
 <details>
 <summary>Code:</summary>
