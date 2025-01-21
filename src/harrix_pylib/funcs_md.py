@@ -760,6 +760,55 @@ def sort_sections(filename: Path | str) -> str:
     ```py
     import harrix_pylib as h
 
+    h.md.sort_sections("C:/Notes/note.md")
+    ```
+
+    Before sorting:
+
+    ```markdown
+    ---
+    categories: [it, program]
+    tags: [VSCode, FAQ]
+    ---
+
+    # Installing VSCode
+
+    ## Section
+
+    Example text.
+
+    Example text.
+
+    ## About
+
+    Another text.
+
+    Another text.
+
+    ```
+
+    After sorting:
+
+    ```markdown
+    ---
+    categories: [it, program]
+    tags: [VSCode, FAQ]
+    ---
+
+    # Installing VSCode
+
+    ## About
+
+    Another text.
+
+    Another text.
+
+    ## Section
+
+    Example text.
+
+    Example text.
+
     ```
     """
     with open(filename, "r", encoding="utf-8") as f:
