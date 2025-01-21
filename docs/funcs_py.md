@@ -212,7 +212,7 @@ def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: 
 
     list_funcs_all = ""
 
-    for filename in (Path(folder) / "src").rglob(f"*.py"):
+    for filename in (Path(folder) / "src").rglob("*.py"):
         if not (filename.is_file() and not filename.stem.startswith("__")):
             continue
 
@@ -232,7 +232,7 @@ def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: 
     h.md.replace_section(folder / "README.md", list_funcs_all, "## List of functions")
     index_content = beginning_of_md + "\n" + Path(folder / "README.md").read_text(encoding="utf8")
     Path(docs_folder / "index.md").write_text(index_content, encoding="utf8")
-    result_lines.append(f"File index.md is created.")
+    result_lines.append("File index.md is created.")
 
     return "\n".join(result_lines)
 ```
