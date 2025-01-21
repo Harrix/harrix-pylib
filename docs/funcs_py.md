@@ -506,16 +506,17 @@ Note:
 - This function assumes `ruff` is installed and accessible in the system's PATH.
 - Any exceptions from `ruff` or file operations are not caught within this function and will propagate up.
 
-Examples:
+Example:
 
 ```py
 import harrix_pylib as h
 
-```
-
-```py
-import harrix_pylib as h
-
+python_code = "def greet(name):
+print('Hello, ' +    name)"
+formatted_code = h.py.lint_and_fix_python_code(python_code)
+print(formatted_code)
+# def greet(name):
+#     print("Hello, " + name)
 ```
 
 <details>
