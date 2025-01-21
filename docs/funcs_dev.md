@@ -137,9 +137,17 @@ Returns:
 Examples:
 
 ```py
-import harrix-pylib as h
+import harrix_pylib as h
 
+result_output = h.dev.run_powershell_script("python --version")
+print(result_output)  # Python 3.13.1
+```
 
+```py
+import harrix_pylib as h
+
+result_output = h.dev.run_powershell_script("python --version\npip --version")
+print(result_output)
 ```
 
 <details>
@@ -196,9 +204,17 @@ Note:
 Examples:
 
 ```py
-import harrix-pylib as h
+import harrix_pylib as h
 
+result_output = h.dev.run_powershell_script_as_admin("python --version")
+print(result_output)  # ﻿Python 3.11.9
+```
 
+```py
+import harrix_pylib as h
+
+result_output = h.dev.run_powershell_script_as_admin("python --version\npip --version")
+print(result_output)
 ```
 
 <details>
