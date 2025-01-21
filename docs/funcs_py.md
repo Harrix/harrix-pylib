@@ -142,7 +142,6 @@ Examples:
 import harrix_pylib as h
 
 md = h.py.extract_functions_and_classes("C:/project/main.py", False)
-
 ```
 
 ```py

@@ -131,7 +131,6 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
     import harrix_pylib as h
 
     md = h.py.extract_functions_and_classes("C:/project/main.py", False)
-
     ```
 
     ```py
