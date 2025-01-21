@@ -1,3 +1,9 @@
+---
+author: Anton Sergienko
+author-email: anton.b.sergienko@gmail.com
+lang: en
+---
+
 # harrix-pylib
 
 ![harrix-pylib](img/featured-image.svg)
