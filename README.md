@@ -69,21 +69,22 @@ Doc: [funcs_file.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs
 
 Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_md.md)
 
-| Function/Class         | Description                                                                                            |
-| ---------------------- | ------------------------------------------------------------------------------------------------------ |
-| `add_author_book`      | Adds the author and the title of the book to the quotes and formats them as Markdown quotes.           |
-| `add_diary_new_diary`  | Creates a new diary entry for the current day and time.                                                |
-| `add_diary_new_dream`  | Creates a new dream diary entry for the current day and time with placeholders for dream descriptions. |
-| `add_diary_new_note`   | Adds a new note to the diary or dream diary for the given base path.                                   |
-| `add_image_captions`   | Processes a markdown file to add captions to images based on their alt text.                           |
-| `add_note`             | Adds a note to the specified base path.                                                                |
-| `get_yaml`             | Function gets YAML from text of the Markdown file.                                                     |
-| `identify_code_blocks` | Processes a list of text lines to identify code blocks and yield each line with a boolean flag.        |
-| `remove_yaml`          | Function removes YAML from text of the Markdown file.                                                  |
-| `remove_yaml_and_code` | Removes YAML front matter and code blocks, and returns the remaining content.                          |
-| `replace_section`      | Replaces a section in a file defined by `title_section` with the provided `replace_content`.           |
-| `sort_sections`        | Sorts the sections of a markdown document by their headings, maintaining YAML front matter             |
-| `split_yaml_content`   | Splits a markdown note into YAML front matter and the main content.                                    |
+| Function/Class            | Description                                                                                                 |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `add_author_book`         | Adds the author and the title of the book to the quotes and formats them as Markdown quotes.                |
+| `add_diary_new_diary`     | Creates a new diary entry for the current day and time.                                                     |
+| `add_diary_new_dream`     | Creates a new dream diary entry for the current day and time with placeholders for dream descriptions.      |
+| `add_diary_new_note`      | Adds a new note to the diary or dream diary for the given base path.                                        |
+| `add_image_captions`      | Processes a markdown file to add captions to images based on their alt text.                                |
+| `add_note`                | Adds a note to the specified base path.                                                                     |
+| `generate_toc_with_links` | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes |
+| `get_yaml`                | Function gets YAML from text of the Markdown file.                                                          |
+| `identify_code_blocks`    | Processes a list of text lines to identify code blocks and yield each line with a boolean flag.             |
+| `remove_yaml`             | Function removes YAML from text of the Markdown file.                                                       |
+| `remove_yaml_and_code`    | Removes YAML front matter and code blocks, and returns the remaining content.                               |
+| `replace_section`         | Replaces a section in a file defined by `title_section` with the provided `replace_content`.                |
+| `sort_sections`           | Sorts the sections of a markdown document by their headings, maintaining YAML front matter                  |
+| `split_yaml_content`      | Splits a markdown note into YAML front matter and the main content.                                         |
 
 ### File `funcs_py.py`
 

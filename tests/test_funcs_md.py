@@ -271,7 +271,21 @@ def test_add_note():
         assert not (base_path / f"{name}/img").exists()
 
 
-def test_get_yaml_from_markdown():
+def test_generate_toc_with_links():
+    current_folder = h.dev.get_project_root()
+    md = Path(current_folder / "tests/data/generate_toc_with_links__before.md").read_text(encoding="utf8")
+    md_after = Path(current_folder / "tests/data/generate_toc_with_links__after.md").read_text(encoding="utf8")
+
+    with TemporaryDirectory() as temp_folder:
+        temp_filename = Path(temp_folder) / "temp.md"
+        temp_filename.write_text(md, encoding="utf-8")
+        h.md.generate_toc_with_links(temp_filename)
+        md_applied = temp_filename.read_text(encoding="utf8")
+
+    assert md_after == md_applied
+
+
+def test_get_yaml():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml.md").read_text(encoding="utf8")
     yaml = h.md.get_yaml(md)
     assert len(yaml.splitlines()) == 4
