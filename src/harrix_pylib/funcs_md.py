@@ -639,6 +639,57 @@ def remove_yaml(markdown_text: str) -> str:
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
 
 
+def remove_yaml_and_code(markdown_text: str) -> str:
+    """
+    Removes YAML front matter and code blocks, and returns the remaining content.
+
+    This function processes a file by:
+    1. Reading the entire content.
+    2. Removing any YAML front matter at the beginning of the file.
+    3. Stripping out code blocks identified by fenced code blocks (```).
+    4. Returning the cleaned text.
+
+    Args:
+
+    - `markdown_text` (str): Text of the Markdown file.
+
+    Returns:
+
+    - `str`: A string containing the markdown content with YAML front matter and code blocks removed.
+
+    Examples:
+    ```py
+    import harrix-pylib as h
+
+    md_clean = h.md.remove_yaml_and_code("---\\ncategories: [it]\\n---\\n\\nText")
+    print(md_clean)  # Text
+    ```
+
+    ```py
+    from pathlib import Path
+    import harrix-pylib as h
+
+    md = Path("article.md").read_text(encoding="utf8")
+    md_clean = h.md.remove_yaml_and_code(md)
+    print(md_clean)
+    ```
+    """
+    parts = markdown_text.split("---", 2)
+    if len(parts) < 3:
+        content_md = markdown_text
+    else:
+        content_md = parts[2].lstrip()
+
+    new_lines = []
+    lines = content_md.split("\n")
+    for line, is_code_block in identify_code_blocks(lines):
+        if is_code_block:
+            continue
+        new_lines.append(line)
+
+    return "\n".join(new_lines)
+
+
 def replace_section(filename: Path | str, replace_content, title_section: str = "## List of commands") -> str:
     """
     Replaces a section in a file defined by `title_section` with the provided `replace_content`.
