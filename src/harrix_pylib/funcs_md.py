@@ -511,6 +511,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
     print(result)
     ```
     """
+
     def generate_id(text: str, existing_ids: set) -> str:
         # Convert text to lowercase
         text = text.lower()
