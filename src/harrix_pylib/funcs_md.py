@@ -643,12 +643,6 @@ def remove_yaml_and_code(markdown_text: str) -> str:
     """
     Removes YAML front matter and code blocks, and returns the remaining content.
 
-    This function processes a file by:
-    1. Reading the entire content.
-    2. Removing any YAML front matter at the beginning of the file.
-    3. Stripping out code blocks identified by fenced code blocks (```).
-    4. Returning the cleaned text.
-
     Args:
 
     - `markdown_text` (str): Text of the Markdown file.
