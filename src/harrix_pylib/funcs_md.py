@@ -517,6 +517,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
         text = text.lower()
 
         # Remove all non-word characters (e.g., punctuation, HTML)
+        text = text.replace("-", " ")
         text = re.sub(r"[^\w\s]", "", text)
 
         # Replace spaces with hyphens
