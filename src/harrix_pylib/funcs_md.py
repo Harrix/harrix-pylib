@@ -520,7 +520,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
         text = re.sub(r"[^\w\s]", "", text)
 
         # Replace spaces with hyphens
-        text = re.sub(r"\s+", "-", text)
+        text = text.replace(" ", "-")
 
         # Ensure uniqueness by appending a number if necessary
         original_text = text
