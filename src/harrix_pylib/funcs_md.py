@@ -522,9 +522,6 @@ def generate_toc_with_links(filename: Path | str) -> str:
         # Replace spaces with hyphens
         text = re.sub(r"\s+", "-", text)
 
-        # Replace two or more hyphens in a row with one
-        text = re.sub(r"-+", "-", text)
-
         # Ensure uniqueness by appending a number if necessary
         original_text = text
         counter = 1
