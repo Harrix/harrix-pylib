@@ -68,6 +68,8 @@ def create_uv_new_project(project_name: str, path: str | Path, editor: str = "co
     └─ uv.lock
     ```
     """
+    project_name = project_name.replace("_", "-").replace(" ", "-")
+    project_name_under = project_name.replace("-", "_")
     commands = f"""
         cd {path}
         uv init --package {project_name}
@@ -76,8 +78,8 @@ def create_uv_new_project(project_name: str, path: str | Path, editor: str = "co
         uv add --dev isort
         uv add --dev ruff
         uv add --dev pytest
-        New-Item -ItemType File -Path src/{project_name}/main.py -Force
-        New-Item -ItemType File -Path src/{project_name}/__init__.py -Force
+        New-Item -ItemType File -Path src/{project_name_under}/main.py -Force
+        New-Item -ItemType File -Path src/{project_name_under}/__init__.py -Force
         Add-Content -Path pyproject.toml -Value "`n[tool.ruff]"
         Add-Content -Path pyproject.toml -Value "line-length = 120"
         {editor} {path}/{project_name}"""
