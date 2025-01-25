@@ -6,6 +6,8 @@ Common functions for working in Python (>= 3.12) for [my projects](https://githu
 
 ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
 
+GitHub: <https://github.com/Harrix/harrix-swiss-knife>.
+
 Documentation: [docs](https://github.com/Harrix/harrix-pylib/blob/main/docs/index.md).
 
 ## Install
