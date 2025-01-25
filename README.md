@@ -107,3 +107,7 @@ Doc: [funcs_pyside.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/fun
 | ------------------------------ | --------------------------------------------------------- |
 | `create_emoji_icon`            | Creates an icon with the given emoji.                     |
 | `generate_markdown_from_qmenu` | Generates a markdown representation of a QMenu structure. |
+
+## License
+
+License: [MIT](https://github.com/Harrix/harrix-swiss-knife/blob/main/LICENSE.md).
