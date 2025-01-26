@@ -12,6 +12,8 @@ Common functions for working in Python (>= 3.12) for [my projects](https://githu
 
 ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
 
+GitHub: <https://github.com/Harrix/harrix-pylib>.
+
 Documentation: [docs](https://github.com/Harrix/harrix-pylib/blob/main/docs/index.md).
 
 ## Install
@@ -86,6 +88,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `generate_toc_with_links` | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes |
 | `get_yaml`                | Function gets YAML from text of the Markdown file.                                                          |
 | `identify_code_blocks`    | Processes a list of text lines to identify code blocks and yield each line with a boolean flag.             |
+| `format_yaml`             | Formats YAML content in a file, ensuring proper indentation and structure.                                  |
 | `remove_yaml`             | Function removes YAML from text of the Markdown file.                                                       |
 | `remove_yaml_and_code`    | Removes YAML front matter and code blocks, and returns the remaining content.                               |
 | `replace_section`         | Replaces a section in a file defined by `title_section` with the provided `replace_content`.                |
@@ -113,3 +116,7 @@ Doc: [funcs_pyside.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/fun
 | ------------------------------ | --------------------------------------------------------- |
 | `create_emoji_icon`            | Creates an icon with the given emoji.                     |
 | `generate_markdown_from_qmenu` | Generates a markdown representation of a QMenu structure. |
+
+## License
+
+License: [MIT](https://github.com/Harrix/harrix-swiss-knife/blob/main/LICENSE.md).

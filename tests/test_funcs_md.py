@@ -305,6 +305,20 @@ def test_identify_code_blocks():
     assert count_lines_content == 22
 
 
+def test_format_yaml():
+    current_folder = h.dev.get_project_root()
+    md = Path(current_folder / "tests/data/format_yaml__before.md").read_text(encoding="utf8")
+    md_after = Path(current_folder / "tests/data/format_yaml__after.md").read_text(encoding="utf8")
+
+    with TemporaryDirectory() as temp_folder:
+        temp_filename = Path(temp_folder) / "temp.md"
+        temp_filename.write_text(md, encoding="utf-8")
+        h.md.format_yaml(temp_filename)
+        md_applied = temp_filename.read_text(encoding="utf8")
+
+    assert md_after == md_applied
+
+
 def test_remove_yaml():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml.md").read_text(encoding="utf8")
     md_clean = h.md.remove_yaml(md)
