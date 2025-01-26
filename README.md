@@ -116,6 +116,8 @@ Doc: [funcs_pyside.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/fun
 <details>
 <summary>Adding a new function</summary>
 
+For me:
+
 - Add the function in `src/harrix_pylib/funcs_<module>.py`
 - Write a docstring in Markdown style.
 - Add a test in `tests/funcs_<module>.py`
