@@ -479,6 +479,70 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
     return f"File {filename} created.", filename
 
 
+def format_yaml(filename: Path | str) -> str:
+    """
+    Formats YAML content in a file, ensuring proper indentation and structure.
+
+    Args:
+
+    - `filename` (`Path | str`): The path to the file containing YAML content.
+
+    Returns:
+
+    - `str`: A message indicating whether the file was changed or not.
+
+    Note:
+
+    - If the file does not contain YAML front matter separated by "---", it will treat the entire
+      content as markdown without YAML.
+    - The function will overwrite the file if changes are made to the YAML formatting.
+    - It uses a custom YAML dumper (`IndentDumper`) to adjust indentation.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+    from pathlib import Path
+
+    path = Path('example.md')
+    print(h.md.format_yaml(path))
+    ```
+    """
+    with open(filename, "r", encoding="utf-8") as f:
+        document = f.read()
+
+    parts = document.split("---", 2)
+    if len(parts) < 3:
+        yaml_md, content_md = "", document
+    else:
+        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
+
+    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+
+    class IndentDumper(yaml.Dumper):
+        def increase_indent(self, flow=False, indentless=False):
+            return super(IndentDumper, self).increase_indent(flow, False)
+
+    yaml_md = (
+        yaml.dump(
+            data_yaml,
+            Dumper=IndentDumper,
+            sort_keys=False,
+            allow_unicode=True,
+            explicit_start=True,
+            default_flow_style=False,
+        )
+        + "---"
+    )
+
+    document_new = yaml_md + "\n\n" + content_md
+    if document != document_new:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ File {filename} applied."
+    return "File is not changed."
+
+
 def generate_toc_with_links(filename: Path | str) -> str:
     """
     Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes
@@ -725,67 +789,6 @@ def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
             yield line, True
         else:
             yield line, False
-
-
-def format_yaml(filename: Path | str) -> str:
-    """
-    Formats YAML content in a file, ensuring proper indentation and structure.
-
-    Args:
-
-    - `filename` (`Path | str`): The path to the file containing YAML content.
-
-    Returns:
-
-    - `str`: A message indicating whether the file was changed or not.
-
-    Note:
-
-    - If the file does not contain YAML front matter separated by "---", it will treat the entire
-      content as markdown without YAML.
-    - The function will overwrite the file if changes are made to the YAML formatting.
-    - It uses a custom YAML dumper (`IndentDumper`) to adjust indentation.
-
-    Example:
-
-    ```python
-    import harrix_pylib as h
-    from pathlib import Path
-
-    path = Path('example.md')
-    print(h.md.format_yaml(path))
-    ```
-    """
-    with open(filename, "r", encoding="utf-8") as f:
-        document = f.read()
-
-    parts = document.split("---", 2)
-    if len(parts) < 3:
-        yaml_md, content_md = "", document
-    else:
-        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
-
-    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
-
-    class IndentDumper(yaml.Dumper):
-        def increase_indent(self, flow=False, indentless=False):
-            return super(IndentDumper, self).increase_indent(flow, False)
-
-    yaml_md = yaml.dump(
-        data_yaml,
-        Dumper=IndentDumper,
-        sort_keys=False,
-        allow_unicode=True,
-        explicit_start=True,
-        default_flow_style=False,
-    ) + '---'
-
-    document_new = yaml_md +  "\n\n" + content_md
-    if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
-            file.write(document_new)
-        return f"✅ File {filename} applied."
-    return "File is not changed."
 
 
 def remove_yaml(markdown_text: str) -> str:

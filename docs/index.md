@@ -85,10 +85,10 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `add_diary_new_note`      | Adds a new note to the diary or dream diary for the given base path.                                        |
 | `add_image_captions`      | Processes a markdown file to add captions to images based on their alt text.                                |
 | `add_note`                | Adds a note to the specified base path.                                                                     |
+| `format_yaml`             | Formats YAML content in a file, ensuring proper indentation and structure.                                  |
 | `generate_toc_with_links` | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes |
 | `get_yaml`                | Function gets YAML from text of the Markdown file.                                                          |
 | `identify_code_blocks`    | Processes a list of text lines to identify code blocks and yield each line with a boolean flag.             |
-| `format_yaml`             | Formats YAML content in a file, ensuring proper indentation and structure.                                  |
 | `remove_yaml`             | Function removes YAML from text of the Markdown file.                                                       |
 | `remove_yaml_and_code`    | Removes YAML front matter and code blocks, and returns the remaining content.                               |
 | `replace_section`         | Replaces a section in a file defined by `title_section` with the provided `replace_content`.                |
@@ -116,6 +116,144 @@ Doc: [funcs_pyside.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/fun
 | ------------------------------ | --------------------------------------------------------- |
 | `create_emoji_icon`            | Creates an icon with the given emoji.                     |
 | `generate_markdown_from_qmenu` | Generates a markdown representation of a QMenu structure. |
+
+## Development
+
+<details>
+<summary>Deploy on an empty machine</summary>
+
+For me:
+
+- Install [uv](https://docs.astral.sh/uv/) ([Установка и работа с uv (Python) в VSCode](https://github.com/Harrix/harrix.dev-articles-2025/blob/main/uv-vscode-python/uv-vscode-python.md)), VSCode (with python extensions), Git.
+
+- Clone project:
+
+  ```shell
+  mkdir C:/GitHub
+  cd C:/GitHub
+  git clone https://github.com/Harrix/harrix-pylib.git
+  ```
+
+- Open the folder `C:/GitHub/harrix-pylibe` in VSCode.
+
+- Open a terminal `Ctrl` + `` ` ``.
+
+- Run `uv sync`.
+
+CLI commands after installation.
+
+- `uv self update` — update uv itself.
+- `uv sync --upgrade` — update all project libraries (sometimes you need to call twice).
+- `isort .` — sort imports.
+- `ruff format` — format the project's Python files.
+- `ruff check` — lint the project's Python files.
+- `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
+
+</details>
+
+<details>
+<summary>Adding a new function</summary>
+
+For me:
+
+- Add the function in `src/harrix_pylib/funcs_<module>.py`
+- Write a docstring in Markdown style.
+- Add an example in Markdown style.
+- Add a test in `tests/funcs_<module>.py`
+- Run `pytest`
+- From `harrix-swiss-knife`, call the command `Python` → `Sort classes, methods, functions in PY files`
+  and select folder `harrix-pylib`
+- From `harrix-swiss-knife`, call the command `Python` → `Generate MD documentation in …` and select folder `harrix-pylib`
+- Create a commit `➕ Add function def <function>()`
+- Update the version in `pyproject.toml`
+- Delete the folder `dist`
+- Run `uv sync --upgrade`
+- Run `uv build`
+- Run `uv publish --token <token>`
+- Create a commit `🚀 Build version <number>`
+
+Example of a function:
+
+````python
+def format_yaml(filename: Path | str) -> str:
+    """
+    Formats YAML content in a file, ensuring proper indentation and structure.
+
+    Args:
+
+    - `filename` (`Path | str`): The path to the file containing YAML content.
+
+    Returns:
+
+    - `str`: A message indicating whether the file was changed or not.
+
+    Note:
+
+    - If the file does not contain YAML front matter separated by "---", it will treat the entire
+      content as markdown without YAML.
+    - The function will overwrite the file if changes are made to the YAML formatting.
+    - It uses a custom YAML dumper (`IndentDumper`) to adjust indentation.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+    from pathlib import Path
+
+    path = Path('example.md')
+    print(h.md.format_yaml(path))
+    ```
+    """
+    with open(filename, "r", encoding="utf-8") as f:
+        document = f.read()
+
+    parts = document.split("---", 2)
+    if len(parts) < 3:
+        yaml_md, content_md = "", document
+    else:
+        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
+
+    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+
+    class IndentDumper(yaml.Dumper):
+        def increase_indent(self, flow=False, indentless=False):
+            return super(IndentDumper, self).increase_indent(flow, False)
+
+    yaml_md = yaml.dump(
+        data_yaml,
+        Dumper=IndentDumper,
+        sort_keys=False,
+        allow_unicode=True,
+        explicit_start=True,
+        default_flow_style=False,
+    ) + '---'
+
+    document_new = yaml_md +  "\n\n" + content_md
+    if document != document_new:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ File {filename} applied."
+    return "File is not changed."
+````
+
+Example of a test:
+
+```python
+def test_format_yaml():
+    current_folder = h.dev.get_project_root()
+    md = Path(current_folder / "tests/data/format_yaml__before.md").read_text(encoding="utf8")
+    md_after = Path(current_folder / "tests/data/format_yaml__after.md").read_text(encoding="utf8")
+
+    with TemporaryDirectory() as temp_folder:
+        temp_filename = Path(temp_folder) / "temp.md"
+        temp_filename.write_text(md, encoding="utf-8")
+        h.md.format_yaml(temp_filename)
+        md_applied = temp_filename.read_text(encoding="utf8")
+
+    assert md_after == md_applied
+```
+
+</details>
 
 ## License
 
