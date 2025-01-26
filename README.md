@@ -114,12 +114,36 @@ Doc: [funcs_pyside.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/fun
 ## Development
 
 <details>
+<summary>Deploy on an empty machine</summary>
+
+For me:
+
+- Install [uv](https://docs.astral.sh/uv/) ([Установка и работа с uv (Python) в VSCode](https://github.com/Harrix/harrix.dev-articles-2025/blob/main/uv-vscode-python/uv-vscode-python.md)), VSCode (with python extensions), Git.
+
+- Clone project:
+
+  ```shell
+  mkdir C:/GitHub
+  cd C:/GitHub
+  git clone https://github.com/Harrix/harrix-pylib.git
+  ```
+
+- Open the folder `C:/GitHub/harrix-pylibe` in VSCode.
+
+- Open a terminal `Ctrl` + `` ` ``.
+
+- Run `uv sync`.
+
+</details>
+
+<details>
 <summary>Adding a new function</summary>
 
 For me:
 
 - Add the function in `src/harrix_pylib/funcs_<module>.py`
 - Write a docstring in Markdown style.
+- Add an example in Markdown style.
 - Add a test in `tests/funcs_<module>.py`
 - Run `pytest`
 - From `harrix-swiss-knife`, call the command `Python` → `Sort classes, methods, functions in PY files`
