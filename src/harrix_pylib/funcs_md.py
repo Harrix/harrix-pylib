@@ -850,6 +850,7 @@ def remove_yaml_and_code(markdown_text: str) -> str:
     - `str`: A string containing the markdown content with YAML front matter and code blocks removed.
 
     Examples:
+
     ```py
     import harrix-pylib as h
 
