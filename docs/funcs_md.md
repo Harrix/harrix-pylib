@@ -559,8 +559,6 @@ Returns:
 
 Note:
 
-- If the file does not contain YAML front matter separated by "---", it will treat the entire
-  content as markdown without YAML.
 - The function will overwrite the file if changes are made to the YAML formatting.
 - It uses a custom YAML dumper (`IndentDumper`) to adjust indentation.
 
@@ -584,7 +582,7 @@ def format_yaml(filename: Path | str) -> str:
 
     parts = document.split("---", 2)
     if len(parts) < 3:
-        yaml_md, content_md = "", document
+        return "File is not changed."
     else:
         yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
 
