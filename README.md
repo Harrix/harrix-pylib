@@ -147,7 +147,7 @@ CLI commands after installation.
 </details>
 
 <details>
-<summary>Adding a new function</summary>
+<summary>Adding a new function ⬇️</summary>
 
 For me:
 
