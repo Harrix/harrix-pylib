@@ -2,7 +2,7 @@
 
 ![harrix-pylib](https://raw.githubusercontent.com/Harrix/harrix-pylib/refs/heads/main/img/featured-image.svg)
 
-Common functions for working in Python (>= 3.12) for [my projects](https://github.com/Harrix?tab=repositories).
+Common functions for working in Python (>= 3.10) for [my projects](https://github.com/Harrix?tab=repositories).
 
 ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
 
@@ -134,6 +134,7 @@ CLI commands after installation.
 - `ruff check` — lint the project's Python files.
 - `ruff check --fix` — lint and fix the project's Python files.
 - `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
+- `vermin src` — determines the minimum version of Python.
 
 </details>
 
@@ -239,6 +240,16 @@ def test_format_yaml():
 
     assert md_after == md_applied
 ```
+
+### Minimum Python Version
+
+We determine the minimum Python version using [vermin](https://github.com/netromdk/vermin):
+
+```shell
+vermin src
+```
+
+However, if the version is below 3.10, we stick with 3.10 because Python 3.10 annotations are used.
 
 </details>
 
