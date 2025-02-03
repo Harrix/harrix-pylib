@@ -102,19 +102,10 @@ Doc: [funcs_py.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_p
 | `lint_and_fix_python_code`      | Lints and fixes the provided Python code using the `ruff` formatter.                         |
 | `sort_py_code`                  | Sorts the Python code in the given file by organizing classes, functions, and statements.    |
 
-### File `funcs_pyside.py`
-
-Doc: [funcs_pyside.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_pyside.md)
-
-| Function/Class                 | Description                                               |
-| ------------------------------ | --------------------------------------------------------- |
-| `create_emoji_icon`            | Creates an icon with the given emoji.                     |
-| `generate_markdown_from_qmenu` | Generates a markdown representation of a QMenu structure. |
-
 ## Development
 
 <details>
-<summary>Deploy on an empty machine</summary>
+<summary>Deploy on an empty machine ⬇️</summary>
 
 For me:
 
