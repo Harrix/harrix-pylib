@@ -79,12 +79,12 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 
 | Function/Class            | Description                                                                                                 |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `add_author_book`         | Adds the author and the title of the book to the quotes and formats them as Markdown quotes.                |
 | `add_diary_new_diary`     | Creates a new diary entry for the current day and time.                                                     |
 | `add_diary_new_dream`     | Creates a new dream diary entry for the current day and time with placeholders for dream descriptions.      |
 | `add_diary_new_note`      | Adds a new note to the diary or dream diary for the given base path.                                        |
 | `add_note`                | Adds a note to the specified base path.                                                                     |
 | `format_yaml`             | Formats YAML content in a file, ensuring proper indentation and structure.                                  |
+| `generate_author_book`    | Adds the author and the title of the book to the quotes and formats them as Markdown quotes.                |
 | `generate_image_captions` | Processes a markdown file to add captions to images based on their alt text.                                |
 | `generate_toc_with_links` | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes |
 | `get_yaml`                | Function gets YAML from text of the Markdown file.                                                          |

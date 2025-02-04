@@ -5,21 +5,6 @@ from tempfile import TemporaryDirectory
 import harrix_pylib as h
 
 
-def test_add_author_book():
-    current_folder = h.dev.get_project_root()
-    md = Path(current_folder / "tests/data/add_author_book__before.md").read_text(encoding="utf8")
-    md_after = Path(current_folder / "tests/data/add_author_book__after.md").read_text(encoding="utf8")
-
-    with TemporaryDirectory() as temp_folder:
-        temp_filename = Path(temp_folder) / "temp.md"
-        temp_filename.write_text(md, encoding="utf-8")
-        h.md.add_author_book(temp_filename)
-        md_applied = temp_filename.read_text(encoding="utf8")
-        md_after = md_after.replace("Name Surname", Path(temp_folder).name)
-
-    assert md_after == md_applied
-
-
 def test_add_diary_new_diary():
     with TemporaryDirectory() as temp_dir:
         base_path = Path(temp_dir)
@@ -271,6 +256,21 @@ def test_format_yaml():
     assert md_after == md_applied
 
 
+def test_generate_author_book():
+    current_folder = h.dev.get_project_root()
+    md = Path(current_folder / "tests/data/generate_author_book__before.md").read_text(encoding="utf8")
+    md_after = Path(current_folder / "tests/data/generate_author_book__after.md").read_text(encoding="utf8")
+
+    with TemporaryDirectory() as temp_folder:
+        temp_filename = Path(temp_folder) / "temp.md"
+        temp_filename.write_text(md, encoding="utf-8")
+        h.md.generate_author_book(temp_filename)
+        md_applied = temp_filename.read_text(encoding="utf8")
+        md_after = md_after.replace("Name Surname", Path(temp_folder).name)
+
+    assert md_after == md_applied
+
+
 def test_generate_image_captions():
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/generate_image_captions__before.md").read_text(encoding="utf8")
@@ -306,9 +306,7 @@ def test_get_yaml():
 
 
 def test_identify_code_blocks():
-    md = Path(h.dev.get_project_root() / "tests/data/generate_image_captions__before.md").read_text(
-        encoding="utf8"
-    )
+    md = Path(h.dev.get_project_root() / "tests/data/generate_image_captions__before.md").read_text(encoding="utf8")
     _, content = h.md.split_yaml_content(md)
     count_lines_content = 0
     count_lines_code = 0
