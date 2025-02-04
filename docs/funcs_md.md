@@ -894,7 +894,64 @@ def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
 
 </details>
 
-## Function `remove_yaml`
+## Function `remove_yaml_and_code_content`
+
+```python
+def remove_yaml_and_code_content(markdown_text: str) -> str
+```
+
+Removes YAML front matter and code blocks, and returns the remaining content.
+
+Args:
+
+- `markdown_text` (str): Text of the Markdown file.
+
+Returns:
+
+- `str`: A string containing the markdown content with YAML front matter and code blocks removed.
+
+Examples:
+
+```py
+import harrix-pylib as h
+
+md_clean = h.md.remove_yaml_and_code_content("---\ncategories: [it]\n---\n\nText")
+print(md_clean)  # Text
+```
+
+```py
+from pathlib import Path
+import harrix-pylib as h
+
+md = Path("article.md").read_text(encoding="utf8")
+md_clean = h.md.remove_yaml_and_code_content(md)
+print(md_clean)
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def remove_yaml_and_code_content(markdown_text: str) -> str:
+    parts = markdown_text.split("---", 2)
+    if len(parts) < 3:
+        content_md = markdown_text
+    else:
+        content_md = parts[2].lstrip()
+
+    new_lines = []
+    lines = content_md.split("\n")
+    for line, is_code_block in identify_code_blocks(lines):
+        if is_code_block:
+            continue
+        new_lines.append(line)
+
+    return "\n".join(new_lines)
+```
+
+</details>
+
+## Function `remove_yaml_content`
 
 ```python
 def remove_yaml_content(markdown_text: str) -> str
@@ -951,63 +1008,6 @@ print(md_clean)
 ```python
 def remove_yaml_content(markdown_text: str) -> str:
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
-```
-
-</details>
-
-## Function `remove_yaml_and_code_content`
-
-```python
-def remove_yaml_and_code_content(markdown_text: str) -> str
-```
-
-Removes YAML front matter and code blocks, and returns the remaining content.
-
-Args:
-
-- `markdown_text` (str): Text of the Markdown file.
-
-Returns:
-
-- `str`: A string containing the markdown content with YAML front matter and code blocks removed.
-
-Examples:
-
-```py
-import harrix-pylib as h
-
-md_clean = h.md.remove_yaml_and_code_content("---\ncategories: [it]\n---\n\nText")
-print(md_clean)  # Text
-```
-
-```py
-from pathlib import Path
-import harrix-pylib as h
-
-md = Path("article.md").read_text(encoding="utf8")
-md_clean = h.md.remove_yaml_and_code_content(md)
-print(md_clean)
-```
-
-<details>
-<summary>Code:</summary>
-
-```python
-def remove_yaml_and_code_content(markdown_text: str) -> str:
-    parts = markdown_text.split("---", 2)
-    if len(parts) < 3:
-        content_md = markdown_text
-    else:
-        content_md = parts[2].lstrip()
-
-    new_lines = []
-    lines = content_md.split("\n")
-    for line, is_code_block in identify_code_blocks(lines):
-        if is_code_block:
-            continue
-        new_lines.append(line)
-
-    return "\n".join(new_lines)
 ```
 
 </details>
@@ -1269,7 +1269,7 @@ def sort_sections(filename: Path | str) -> str:
 ## Function `split_yaml_content`
 
 ```python
-def split_yaml_content(note: str) -> tuple[str, str]
+def split_yaml_content(markdown_text: str) -> tuple[str, str]
 ```
 
 Splits a markdown note into YAML front matter and the main content.
@@ -1278,7 +1278,7 @@ This function assumes that the note starts with YAML front matter separated by '
 
 Args:
 
-- `note` (`str`): The markdown note string to be split.
+- `markdown_text` (`str`): The markdown note string to be split.
 
 Returns:
 
@@ -1305,10 +1305,10 @@ yaml, content = h.md.split_yaml_content(md)
 <summary>Code:</summary>
 
 ```python
-def split_yaml_content(note: str) -> tuple[str, str]:
-    parts = note.split("---", 2)
+def split_yaml_content(markdown_text: str) -> tuple[str, str]:
+    parts = markdown_text.split("---", 2)
     if len(parts) < 3:
-        return "", note
+        return "", markdown_text
     return f"---{parts[1]}---", parts[2].lstrip()
 ```
 
