@@ -762,10 +762,10 @@ def generate_toc_with_links(filename: Path | str) -> str:
 
 </details>
 
-## Function `get_yaml`
+## Function `get_yaml_content`
 
 ```python
-def get_yaml(markdown_text: str) -> str
+def get_yaml_content(markdown_text: str) -> str
 ```
 
 Function gets YAML from text of the Markdown file.
@@ -803,7 +803,7 @@ Examples:
 ```py
 import harrix-pylib as h
 
-md_clean = h.md.get_yaml("---\ncategories: [it]\n---\n\nText")
+md_clean = h.md.get_yaml_content("---\ncategories: [it]\n---\n\nText")
 print(md_clean)  # Text
 ```
 
@@ -812,7 +812,7 @@ from pathlib import Path
 import harrix-pylib as h
 
 md = Path("article.md").read_text(encoding="utf8")
-md_clean = h.md.get_yaml(md)
+md_clean = h.md.get_yaml_content(md)
 print(md_clean)
 ```
 
@@ -820,7 +820,7 @@ print(md_clean)
 <summary>Code:</summary>
 
 ```python
-def get_yaml(markdown_text: str) -> str:
+def get_yaml_content(markdown_text: str) -> str:
     find = re.search(r"^---(.|\n)*?---\n", markdown_text.lstrip(), re.DOTALL)
     if find:
         return find.group().rstrip()

@@ -678,7 +678,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
     return "\n".join(result_lines)
 
 
-def get_yaml(markdown_text: str) -> str:
+def get_yaml_content(markdown_text: str) -> str:
     """
     Function gets YAML from text of the Markdown file.
 
@@ -716,7 +716,7 @@ def get_yaml(markdown_text: str) -> str:
     ```py
     import harrix-pylib as h
 
-    md_clean = h.md.get_yaml("---\\ncategories: [it]\\n---\\n\\nText")
+    md_clean = h.md.get_yaml_content("---\\ncategories: [it]\\n---\\n\\nText")
     print(md_clean)  # Text
     ```
 
@@ -725,7 +725,7 @@ def get_yaml(markdown_text: str) -> str:
     import harrix-pylib as h
 
     md = Path("article.md").read_text(encoding="utf8")
-    md_clean = h.md.get_yaml(md)
+    md_clean = h.md.get_yaml_content(md)
     print(md_clean)
     ```
     """

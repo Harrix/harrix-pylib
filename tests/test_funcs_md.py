@@ -299,9 +299,9 @@ def test_generate_toc_with_links():
     assert md_after == md_applied
 
 
-def test_get_yaml():
-    md = Path(h.dev.get_project_root() / "tests/data/get_yaml.md").read_text(encoding="utf8")
-    yaml = h.md.get_yaml(md)
+def test_get_yaml_content():
+    md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
+    yaml = h.md.get_yaml_content(md)
     assert len(yaml.splitlines()) == 4
 
 
@@ -320,7 +320,7 @@ def test_identify_code_blocks():
 
 
 def test_remove_yaml():
-    md = Path(h.dev.get_project_root() / "tests/data/get_yaml.md").read_text(encoding="utf8")
+    md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     md_clean = h.md.remove_yaml(md)
     assert len(md_clean.splitlines()) == 1
 
@@ -470,6 +470,6 @@ def test_sort_sections():
 
 
 def test_split_yaml_content():
-    md = Path(h.dev.get_project_root() / "tests/data/get_yaml.md").read_text(encoding="utf8")
+    md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)
     assert len(yaml.splitlines()) + len(content.splitlines()) == 5

@@ -81,7 +81,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `generate_author_book`         | Adds the author and the title of the book to the quotes and formats them as Markdown quotes.                |
 | `generate_image_captions`      | Processes a markdown file to add captions to images based on their alt text.                                |
 | `generate_toc_with_links`      | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes |
-| `get_yaml`                     | Function gets YAML from text of the Markdown file.                                                          |
+| `get_yaml_content`             | Function gets YAML from text of the Markdown file.                                                          |
 | `identify_code_blocks`         | Processes a list of text lines to identify code blocks and yield each line with a boolean flag.             |
 | `remove_yaml`                  | Function removes YAML from text of the Markdown file.                                                       |
 | `remove_yaml_and_code_content` | Removes YAML front matter and code blocks, and returns the remaining content.                               |
