@@ -271,15 +271,15 @@ def test_format_yaml():
     assert md_after == md_applied
 
 
-def test_generate_image_captions_file():
+def test_generate_image_captions():
     current_folder = h.dev.get_project_root()
-    md = Path(current_folder / "tests/data/generate_image_captions_file__before.md").read_text(encoding="utf8")
-    md_after = Path(current_folder / "tests/data/generate_image_captions_file__after.md").read_text(encoding="utf8")
+    md = Path(current_folder / "tests/data/generate_image_captions__before.md").read_text(encoding="utf8")
+    md_after = Path(current_folder / "tests/data/generate_image_captions__after.md").read_text(encoding="utf8")
 
     with TemporaryDirectory() as temp_folder:
         temp_filename = Path(temp_folder) / "temp.md"
         temp_filename.write_text(md, encoding="utf-8")
-        h.md.generate_image_captions_file(temp_filename)
+        h.md.generate_image_captions(temp_filename)
         md_applied = temp_filename.read_text(encoding="utf8")
 
     assert md_after == md_applied
@@ -306,7 +306,7 @@ def test_get_yaml():
 
 
 def test_identify_code_blocks():
-    md = Path(h.dev.get_project_root() / "tests/data/generate_image_captions_file__before.md").read_text(
+    md = Path(h.dev.get_project_root() / "tests/data/generate_image_captions__before.md").read_text(
         encoding="utf8"
     )
     _, content = h.md.split_yaml_content(md)

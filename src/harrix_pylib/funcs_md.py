@@ -361,7 +361,7 @@ def format_yaml(filename: Path | str) -> str:
     return "File is not changed."
 
 
-def generate_image_captions_file(filename: Path | str) -> str:
+def generate_image_captions(filename: Path | str) -> str:
     """
     Processes a markdown file to add captions to images based on their alt text.
 
@@ -389,7 +389,7 @@ def generate_image_captions_file(filename: Path | str) -> str:
     ```py
     import harrix_pylib as h
 
-    h.md.generate_image_captions_file("C:/Notes/note.md")
+    h.md.generate_image_captions("C:/Notes/note.md")
     ```
 
     Before processing:

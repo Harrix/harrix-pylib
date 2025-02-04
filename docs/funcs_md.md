@@ -423,10 +423,10 @@ def format_yaml(filename: Path | str) -> str:
 
 </details>
 
-## Function `generate_image_captions_file`
+## Function `generate_image_captions`
 
 ```python
-def generate_image_captions_file(filename: Path | str) -> str
+def generate_image_captions(filename: Path | str) -> str
 ```
 
 Processes a markdown file to add captions to images based on their alt text.
@@ -456,7 +456,7 @@ Example:
 ```py
 import harrix_pylib as h
 
-h.md.generate_image_captions_file("C:/Notes/note.md")
+h.md.generate_image_captions("C:/Notes/note.md")
 ```
 
 Before processing:
@@ -551,7 +551,7 @@ _Figure 3: Alt text_
 <summary>Code:</summary>
 
 ```python
-def generate_image_captions_file(filename: Path | str) -> str:
+def generate_image_captions(filename: Path | str) -> str:
     with open(filename, "r", encoding="utf-8") as f:
         document = f.read()
 
