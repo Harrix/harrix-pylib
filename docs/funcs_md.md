@@ -692,7 +692,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
 
     # Generate TOC
     existing_ids = set()
-    lines = remove_yaml_and_code(document).splitlines()
+    lines = remove_yaml_and_code_content(document).splitlines()
     toc_lines = []
     for line in lines:
         if line.startswith("##"):
@@ -955,10 +955,10 @@ def remove_yaml(markdown_text: str) -> str:
 
 </details>
 
-## Function `remove_yaml_and_code`
+## Function `remove_yaml_and_code_content`
 
 ```python
-def remove_yaml_and_code(markdown_text: str) -> str
+def remove_yaml_and_code_content(markdown_text: str) -> str
 ```
 
 Removes YAML front matter and code blocks, and returns the remaining content.
@@ -976,7 +976,7 @@ Examples:
 ```py
 import harrix-pylib as h
 
-md_clean = h.md.remove_yaml_and_code("---\ncategories: [it]\n---\n\nText")
+md_clean = h.md.remove_yaml_and_code_content("---\ncategories: [it]\n---\n\nText")
 print(md_clean)  # Text
 ```
 
@@ -985,7 +985,7 @@ from pathlib import Path
 import harrix-pylib as h
 
 md = Path("article.md").read_text(encoding="utf8")
-md_clean = h.md.remove_yaml_and_code(md)
+md_clean = h.md.remove_yaml_and_code_content(md)
 print(md_clean)
 ```
 
@@ -993,7 +993,7 @@ print(md_clean)
 <summary>Code:</summary>
 
 ```python
-def remove_yaml_and_code(markdown_text: str) -> str:
+def remove_yaml_and_code_content(markdown_text: str) -> str:
     parts = markdown_text.split("---", 2)
     if len(parts) < 3:
         content_md = markdown_text

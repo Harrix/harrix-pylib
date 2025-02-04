@@ -325,9 +325,9 @@ def test_remove_yaml():
     assert len(md_clean.splitlines()) == 1
 
 
-def test_remove_yaml_and_code():
-    md = Path(h.dev.get_project_root() / "tests/data/remove_yaml_and_code.md").read_text(encoding="utf8")
-    md_clean = h.md.remove_yaml_and_code(md)
+def test_remove_yaml_and_code_content():
+    md = Path(h.dev.get_project_root() / "tests/data/remove_yaml_and_code_content.md").read_text(encoding="utf8")
+    md_clean = h.md.remove_yaml_and_code_content(md)
     assert len(md_clean.splitlines()) == 26
 
 
