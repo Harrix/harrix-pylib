@@ -297,197 +297,6 @@ def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -
 
 </details>
 
-## Function `add_image_captions`
-
-```python
-def add_image_captions(filename: Path | str) -> str
-```
-
-Processes a markdown file to add captions to images based on their alt text.
-
-This function reads a markdown file, processes its content to:
-
-- Recognize images by their markdown syntax.
-- Add automatic captions with sequential numbering, localized for Russian or English.
-- Skip image captions that already exist in italic format.
-- Ensure proper handling within and outside of code blocks.
-
-Args:
-
-- `filename` (`Path | str`): The path to the markdown file to be processed.
-
-Returns:
-
-- `str`: A status message indicating whether the file was modified or not.
-
-Note:
-
-- The function modifies the file in place if changes are made.
-- The first argument of the function can be either a `Path` object or a string representing the file path.
-
-Example:
-
-```py
-import harrix_pylib as h
-
-h.md.add_image_captions("C:/Notes/note.md")
-```
-
-Before processing:
-
-````markdown
----
-categories: [it, program]
-tags: [VSCode, FAQ]
-lang: en
----
-
-# Installing VSCode
-
-## Section
-
-Example text.
-
-![Alt text](img/image1.png)
-
-Example text.
-
-```markdown
-Example text.
-
-![Alt text](img/image1.png)
-
-Example text.
-
-## About
-```
-
-## About
-
-Another text.
-
-![Alt text 2](img/image2.png)
-
-_Figure 22: Alt ds sdsd text_
-
-Another text.
-
-![Alt text](img/image3.png)
-````
-
-After processing:
-
-````markdown
----
-categories: [it, program]
-tags: [VSCode, FAQ]
-lang: en
----
-
-# Installing VSCode
-
-## Section
-
-Example text.
-
-![Alt text](img/image1.png)
-
-_Figure 1: Alt text_
-
-Example text.
-
-```markdown
-Example text.
-
-![Alt text](img/image1.png)
-
-Example text.
-
-## About
-```
-
-## About
-
-Another text.
-
-![Alt text 2](img/image2.png)
-
-_Figure 2: Alt text 2_
-
-Another text.
-
-![Alt text](img/image3.png)
-
-_Figure 3: Alt text_
-````
-
-<details>
-<summary>Code:</summary>
-
-```python
-def add_image_captions(filename: Path | str) -> str:
-    with open(filename, "r", encoding="utf-8") as f:
-        document = f.read()
-
-    parts = document.split("---", 2)
-    if len(parts) < 3:
-        yaml_md, content_md = "", document
-    else:
-        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
-
-    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
-    lang = data_yaml.get("lang")
-
-    # Remove captions
-    is_caption = False
-    new_lines = []
-    lines = content_md.split("\n")
-    for i, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
-        if is_code_block:
-            new_lines.append(line)
-            continue
-        if is_caption:
-            is_caption = False
-            if line.strip() == "":
-                continue
-        if re.match(r"^_.*_$", line):
-            if i > 0 and lines[i - 1].strip() == "":
-                if i > 1 and re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip()):
-                    is_caption = True
-                    continue
-        new_lines.append(line)
-    content_md = "\n".join(new_lines)
-
-    # Add captions
-    image_count = 0
-    new_lines = []
-    lines = content_md.split("\n")
-    for line, is_code_block in identify_code_blocks(lines):
-        if is_code_block:
-            new_lines.append(line)
-            continue
-        match = re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", line)
-        lst_forbidden = ["![Featured image](featured-image", "img.shields.io", "<!-- no-caption -->"]
-        if match and not any(forbidden_word in line for forbidden_word in lst_forbidden):
-            image_count += 1
-            alt_text = match.group(1)
-            new_lines.append(line)
-            caption = f"_Рисунок {image_count} — {alt_text}_" if lang == "ru" else f"_Figure {image_count}: {alt_text}_"
-            new_lines.append("\n" + caption)
-        else:
-            new_lines.append(line)
-    content_md = "\n".join(new_lines)
-
-    document_new = yaml_md + "\n\n" + content_md
-    if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
-            file.write(document_new)
-        return f"✅ File {filename} applied."
-    return "File is not changed."
-```
-
-</details>
-
 ## Function `add_note`
 
 ```python
@@ -603,6 +412,197 @@ def format_yaml(filename: Path | str) -> str:
         )
         + "---"
     )
+
+    document_new = yaml_md + "\n\n" + content_md
+    if document != document_new:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ File {filename} applied."
+    return "File is not changed."
+```
+
+</details>
+
+## Function `generate_image_captions_file`
+
+```python
+def generate_image_captions_file(filename: Path | str) -> str
+```
+
+Processes a markdown file to add captions to images based on their alt text.
+
+This function reads a markdown file, processes its content to:
+
+- Recognize images by their markdown syntax.
+- Add automatic captions with sequential numbering, localized for Russian or English.
+- Skip image captions that already exist in italic format.
+- Ensure proper handling within and outside of code blocks.
+
+Args:
+
+- `filename` (`Path | str`): The path to the markdown file to be processed.
+
+Returns:
+
+- `str`: A status message indicating whether the file was modified or not.
+
+Note:
+
+- The function modifies the file in place if changes are made.
+- The first argument of the function can be either a `Path` object or a string representing the file path.
+
+Example:
+
+```py
+import harrix_pylib as h
+
+h.md.generate_image_captions_file("C:/Notes/note.md")
+```
+
+Before processing:
+
+````markdown
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
+lang: en
+---
+
+# Installing VSCode
+
+## Section
+
+Example text.
+
+![Alt text](img/image1.png)
+
+Example text.
+
+```markdown
+Example text.
+
+![Alt text](img/image1.png)
+
+Example text.
+
+## About
+```
+
+## About
+
+Another text.
+
+![Alt text 2](img/image2.png)
+
+_Figure 22: Alt ds sdsd text_
+
+Another text.
+
+![Alt text](img/image3.png)
+````
+
+After processing:
+
+````markdown
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
+lang: en
+---
+
+# Installing VSCode
+
+## Section
+
+Example text.
+
+![Alt text](img/image1.png)
+
+_Figure 1: Alt text_
+
+Example text.
+
+```markdown
+Example text.
+
+![Alt text](img/image1.png)
+
+Example text.
+
+## About
+```
+
+## About
+
+Another text.
+
+![Alt text 2](img/image2.png)
+
+_Figure 2: Alt text 2_
+
+Another text.
+
+![Alt text](img/image3.png)
+
+_Figure 3: Alt text_
+````
+
+<details>
+<summary>Code:</summary>
+
+```python
+def generate_image_captions_file(filename: Path | str) -> str:
+    with open(filename, "r", encoding="utf-8") as f:
+        document = f.read()
+
+    parts = document.split("---", 2)
+    if len(parts) < 3:
+        yaml_md, content_md = "", document
+    else:
+        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
+
+    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+    lang = data_yaml.get("lang")
+
+    # Remove captions
+    is_caption = False
+    new_lines = []
+    lines = content_md.split("\n")
+    for i, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
+        if is_code_block:
+            new_lines.append(line)
+            continue
+        if is_caption:
+            is_caption = False
+            if line.strip() == "":
+                continue
+        if re.match(r"^_.*_$", line):
+            if i > 0 and lines[i - 1].strip() == "":
+                if i > 1 and re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip()):
+                    is_caption = True
+                    continue
+        new_lines.append(line)
+    content_md = "\n".join(new_lines)
+
+    # Add captions
+    image_count = 0
+    new_lines = []
+    lines = content_md.split("\n")
+    for line, is_code_block in identify_code_blocks(lines):
+        if is_code_block:
+            new_lines.append(line)
+            continue
+        match = re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", line)
+        lst_forbidden = ["![Featured image](featured-image", "img.shields.io", "<!-- no-caption -->"]
+        if match and not any(forbidden_word in line for forbidden_word in lst_forbidden):
+            image_count += 1
+            alt_text = match.group(1)
+            new_lines.append(line)
+            caption = f"_Рисунок {image_count} — {alt_text}_" if lang == "ru" else f"_Figure {image_count}: {alt_text}_"
+            new_lines.append("\n" + caption)
+        else:
+            new_lines.append(line)
+    content_md = "\n".join(new_lines)
 
     document_new = yaml_md + "\n\n" + content_md
     if document != document_new:

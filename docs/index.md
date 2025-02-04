@@ -8,7 +8,7 @@ lang: en
 
 ![harrix-pylib](https://raw.githubusercontent.com/Harrix/harrix-pylib/refs/heads/main/img/featured-image.svg)
 
-Common functions for working in Python (>= 3.12) for [my projects](https://github.com/Harrix?tab=repositories).
+Common functions for working in Python (>= 3.10) for [my projects](https://github.com/Harrix?tab=repositories).
 
 ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
 
@@ -77,23 +77,23 @@ Doc: [funcs_file.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs
 
 Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_md.md)
 
-| Function/Class            | Description                                                                                                 |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `add_author_book`         | Adds the author and the title of the book to the quotes and formats them as Markdown quotes.                |
-| `add_diary_new_diary`     | Creates a new diary entry for the current day and time.                                                     |
-| `add_diary_new_dream`     | Creates a new dream diary entry for the current day and time with placeholders for dream descriptions.      |
-| `add_diary_new_note`      | Adds a new note to the diary or dream diary for the given base path.                                        |
-| `add_image_captions`      | Processes a markdown file to add captions to images based on their alt text.                                |
-| `add_note`                | Adds a note to the specified base path.                                                                     |
-| `format_yaml`             | Formats YAML content in a file, ensuring proper indentation and structure.                                  |
-| `generate_toc_with_links` | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes |
-| `get_yaml`                | Function gets YAML from text of the Markdown file.                                                          |
-| `identify_code_blocks`    | Processes a list of text lines to identify code blocks and yield each line with a boolean flag.             |
-| `remove_yaml`             | Function removes YAML from text of the Markdown file.                                                       |
-| `remove_yaml_and_code`    | Removes YAML front matter and code blocks, and returns the remaining content.                               |
-| `replace_section`         | Replaces a section in a file defined by `title_section` with the provided `replace_content`.                |
-| `sort_sections`           | Sorts the sections of a markdown document by their headings, maintaining YAML front matter                  |
-| `split_yaml_content`      | Splits a markdown note into YAML front matter and the main content.                                         |
+| Function/Class                 | Description                                                                                                 |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `add_author_book`              | Adds the author and the title of the book to the quotes and formats them as Markdown quotes.                |
+| `add_diary_new_diary`          | Creates a new diary entry for the current day and time.                                                     |
+| `add_diary_new_dream`          | Creates a new dream diary entry for the current day and time with placeholders for dream descriptions.      |
+| `add_diary_new_note`           | Adds a new note to the diary or dream diary for the given base path.                                        |
+| `add_note`                     | Adds a note to the specified base path.                                                                     |
+| `format_yaml`                  | Formats YAML content in a file, ensuring proper indentation and structure.                                  |
+| `generate_image_captions_file` | Processes a markdown file to add captions to images based on their alt text.                                |
+| `generate_toc_with_links`      | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes |
+| `get_yaml`                     | Function gets YAML from text of the Markdown file.                                                          |
+| `identify_code_blocks`         | Processes a list of text lines to identify code blocks and yield each line with a boolean flag.             |
+| `remove_yaml`                  | Function removes YAML from text of the Markdown file.                                                       |
+| `remove_yaml_and_code`         | Removes YAML front matter and code blocks, and returns the remaining content.                               |
+| `replace_section`              | Replaces a section in a file defined by `title_section` with the provided `replace_content`.                |
+| `sort_sections`                | Sorts the sections of a markdown document by their headings, maintaining YAML front matter                  |
+| `split_yaml_content`           | Splits a markdown note into YAML front matter and the main content.                                         |
 
 ### File `funcs_py.py`
 
@@ -108,19 +108,10 @@ Doc: [funcs_py.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_p
 | `lint_and_fix_python_code`      | Lints and fixes the provided Python code using the `ruff` formatter.                         |
 | `sort_py_code`                  | Sorts the Python code in the given file by organizing classes, functions, and statements.    |
 
-### File `funcs_pyside.py`
-
-Doc: [funcs_pyside.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_pyside.md)
-
-| Function/Class                 | Description                                               |
-| ------------------------------ | --------------------------------------------------------- |
-| `create_emoji_icon`            | Creates an icon with the given emoji.                     |
-| `generate_markdown_from_qmenu` | Generates a markdown representation of a QMenu structure. |
-
 ## Development
 
 <details>
-<summary>Deploy on an empty machine</summary>
+<summary>Deploy on an empty machine ⬇️</summary>
 
 For me:
 
@@ -147,12 +138,14 @@ CLI commands after installation.
 - `isort .` — sort imports.
 - `ruff format` — format the project's Python files.
 - `ruff check` — lint the project's Python files.
+- `ruff check --fix` — lint and fix the project's Python files.
 - `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
+- `vermin src` — determines the minimum version of Python.
 
 </details>
 
 <details>
-<summary>Adding a new function</summary>
+<summary>Adding a new function ⬇️</summary>
 
 For me:
 
@@ -253,6 +246,16 @@ def test_format_yaml():
 
     assert md_after == md_applied
 ```
+
+### Minimum Python Version
+
+We determine the minimum Python version using [vermin](https://github.com/netromdk/vermin):
+
+```shell
+vermin src
+```
+
+However, if the version is below 3.10, we stick with 3.10 because Python 3.10 annotations are used.
 
 </details>
 
