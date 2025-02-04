@@ -319,9 +319,9 @@ def test_identify_code_blocks():
     assert count_lines_content == 22
 
 
-def test_remove_yaml():
+def test_remove_yaml_content():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
-    md_clean = h.md.remove_yaml(md)
+    md_clean = h.md.remove_yaml_content(md)
     assert len(md_clean.splitlines()) == 1
 
 
