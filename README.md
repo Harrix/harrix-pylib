@@ -83,6 +83,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `generate_image_captions`         | Processes a markdown file to add captions to images based on their alt text.                                |
 | `generate_image_captions_content` | Generates image captions in the provided markdown text.                                                     |
 | `generate_toc_with_links`         | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes |
+| `generate_toc_with_links_content` | Generates a Table of Contents (TOC) with links for the provided markdown content.                           |
 | `get_yaml_content`                | Function gets YAML from text of the Markdown file.                                                          |
 | `identify_code_blocks`            | Processes a list of text lines to identify code blocks and yield each line with a boolean flag.             |
 | `remove_yaml_and_code_content`    | Removes YAML front matter and code blocks, and returns the remaining content.                               |

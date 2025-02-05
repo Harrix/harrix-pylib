@@ -297,7 +297,6 @@ def test_generate_image_captions_content():
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/generate_image_captions__before.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/generate_image_captions__after.md").read_text(encoding="utf8")
-
     assert md_after == h.md.generate_image_captions_content(md)
 
 
@@ -313,6 +312,13 @@ def test_generate_toc_with_links():
         md_applied = temp_filename.read_text(encoding="utf8")
 
     assert md_after == md_applied
+
+
+def test_generate_toc_with_links_content():
+    current_folder = h.dev.get_project_root()
+    md = Path(current_folder / "tests/data/generate_toc_with_links__before.md").read_text(encoding="utf8")
+    md_after = Path(current_folder / "tests/data/generate_toc_with_links__after.md").read_text(encoding="utf8")
+    assert md_after == h.md.generate_toc_with_links_content(md)
 
 
 def test_get_yaml_content():

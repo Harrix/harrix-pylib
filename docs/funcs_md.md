@@ -826,6 +826,56 @@ print(result)
 
 ```python
 def generate_toc_with_links(filename: Path | str) -> str:
+    with open(filename, "r", encoding="utf-8") as f:
+        document = f.read()
+
+    document_new = generate_toc_with_links_content(document)
+    if document != document_new:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ TOC is added or refreshed in {filename}."
+    return "File is not changed."
+```
+
+</details>
+
+## Function `generate_toc_with_links_content`
+
+```python
+def generate_toc_with_links_content(markdown_text: str) -> str
+```
+
+Generates a Table of Contents (TOC) with links for the provided markdown content.
+
+Args:
+
+- `markdown_text` (`str`): The markdown text from which to generate the TOC.
+
+Returns:
+
+- `str`: The markdown content with the generated TOC inserted.
+
+Note:
+
+- The function handles YAML frontmatter by preserving it and only modifying the content below the YAML if present.
+- If the TOC already exists in the document, it will be replaced with the new TOC.
+- Headers in the document are used to generate TOC entries, with appropriate indentation based on header level.
+
+Example:
+
+```python
+import harrix_pylib as h
+from pathlib import Path
+
+text = Path("C:/Notes/note.md").read_text(encoding="utf8")
+print(h.md.sort_sections(text))
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def generate_toc_with_links_content(markdown_text: str) -> str:
 
     def generate_id(text: str, existing_ids: set) -> str:
         # Convert text to lowercase
@@ -850,12 +900,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
 
         return text
 
-    result_lines = []
-    filename = Path(filename)
-
-    document = filename.read_text(encoding="utf8")
-
-    parts = document.split("---", 2)
+    parts = markdown_text.split("---", 2)
     if len(parts) < 3:
         yaml_md = ""
     else:
@@ -863,7 +908,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
 
     # Generate TOC
     existing_ids = set()
-    lines = remove_yaml_and_code_content(document).splitlines()
+    lines = remove_yaml_and_code_content(markdown_text).splitlines()
     toc_lines = []
     for line in lines:
         if line.startswith("##"):
@@ -878,12 +923,11 @@ def generate_toc_with_links(filename: Path | str) -> str:
             # Form the table of contents entry
             toc_lines.append(f"{'  ' * (level - 2)}- [{title_text}]({link})")
     toc = "\n".join(toc_lines)
-    result_lines.append("TOC:\n\n" + toc)
 
     # Delete old TOC
     is_stop_searching_toc = False
     new_lines = []
-    lines = remove_yaml_content(document).splitlines()
+    lines = remove_yaml_content(markdown_text).splitlines()
     for line, is_code_block in identify_code_blocks(lines):
         if is_code_block:
             new_lines.append(line)
@@ -920,15 +964,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
     if content_without_yaml[-1] != "\n":
         content_without_yaml += "\n"
 
-    document_new = yaml_md + "\n\n" + content_without_yaml
-    if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
-            file.write(document_new)
-        result_lines.append(f"✅ TOC is added or refreshed in {filename}.")
-    else:
-        result_lines.append("File is not changed.")
-
-    return "\n".join(result_lines)
+    return yaml_md + "\n\n" + content_without_yaml
 ```
 
 </details>
