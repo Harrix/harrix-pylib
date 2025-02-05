@@ -380,14 +380,7 @@ More content here
         new_content = "New list of commands:\n\n- new command1\n- new command2"
 
         # Call the function to replace the section
-        result_message = h.md.replace_section(test_file_path, new_content)
-
-        print(result_message)
-
-        # Check if the function returns the expected message
-        assert result_message == "Section ## List of commands is replaced.", (
-            "The message does not match the expected result"
-        )
+        h.md.replace_section(test_file_path, new_content)
 
         # Read the modified file content
         with open(test_file_path, "r", encoding="utf-8") as file:
@@ -440,16 +433,111 @@ Text.
         new_content = "New list of commands:\n\n- new command1\n- new command2"
 
         # Call the function to replace the section
-        result_message = h.md.replace_section(test_file_path, new_content, "### Footer")
-
-        print(result_message)
-
-        # Check if the function returns the expected message
-        assert result_message == "Section ### Footer is replaced.", "The message does not match the expected result"
+        h.md.replace_section(test_file_path, new_content, "### Footer")
 
         # Read the modified file content
         with open(test_file_path, "r", encoding="utf-8") as file:
             updated_content = file.read()
+
+        # Expected content after replacement
+        expected_content = """# Header
+
+Some content here
+
+## List of commands
+
+- command1
+
+###  Subsection
+
+- command2
+
+### Footer
+
+New list of commands:
+
+- new command1
+- new command2
+
+"""
+
+        # Ensure the content was updated as expected
+        assert updated_content == expected_content, "The file content was not updated correctly"
+
+
+def test_replace_section_content():
+    with TemporaryDirectory() as temp_dir:
+        # Create a test file with some content
+        test_file_path = Path(temp_dir) / "testfile.md"
+        original_content = """# Header
+
+Some content here
+
+## List of commands
+
+- command1
+
+###  Subsection
+
+- command2
+
+## Footer
+
+More content here
+"""
+
+        # New content to replace the section
+        new_content = "New list of commands:\n\n- new command1\n- new command2"
+
+        # Call the function to replace the section
+        updated_content = h.md.replace_section_content(original_content, new_content)
+
+        # Expected content after replacement
+        expected_content = """# Header
+
+Some content here
+
+## List of commands
+
+New list of commands:
+
+- new command1
+- new command2
+
+## Footer
+
+More content here
+"""
+
+        # Ensure the content was updated as expected
+        assert updated_content == expected_content, "The file content was not updated correctly"
+
+        original_content = """# Header
+
+Some content here
+
+## List of commands
+
+- command1
+
+###  Subsection
+
+- command2
+
+### Footer
+
+More content here
+
+#### Sub
+
+Text.
+"""
+
+        # New content to replace the section
+        new_content = "New list of commands:\n\n- new command1\n- new command2"
+
+        # Call the function to replace the section
+        updated_content = h.md.replace_section_content(original_content, new_content, "### Footer")
 
         # Expected content after replacement
         expected_content = """# Header
@@ -495,3 +583,6 @@ def test_split_yaml_content():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)
     assert len(yaml.splitlines()) + len(content.splitlines()) == 5
+
+
+test_replace_section()

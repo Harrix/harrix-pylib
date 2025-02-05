@@ -1092,19 +1092,59 @@ def replace_section(filename: Path | str, replace_content, title_section: str = 
     result_message = h.md.replace_section("C:/Notes/note.md", new_content, "## List of commands")
     ```
     """
-    filename = Path(filename)  # Ensure filename is a Path object
+    with open(filename, "r", encoding="utf-8") as f:
+        document = f.read()
 
-    if not filename.exists():
-        raise FileNotFoundError(f"The file {filename} does not exist.")
+    document_new = replace_section_content(document, replace_content, title_section)
+    if document != document_new:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ File {filename} is changed."
+    return "File is not changed."
 
-    # Read the file content
-    with filename.open("r", encoding="utf-8") as f:
-        lines = f.readlines()
+
+def replace_section_content(markdown_text: str, replace_content, title_section: str = "## List of commands") -> str:
+    """
+    Replaces a section in the markdown text defined by `title_section` with the provided `replace_content`.
+
+    This function searches for a section in the markdown text starting with `title_section` and
+    ending at the next line starting with a '#'. It then replaces the content of that section
+    with `replace_content`.
+
+    Args:
+
+    - `markdown_text` (`str`): The markdown text.
+    - `replace_content` (`str`): The content to replace the section with.
+    - `title_section` (`str`, Defaults to `"## List of commands"`): The title of the section to be replaced.
+
+    Returns:
+
+    - `str`: The markdown content with the replaced section.
+
+    Notes:
+
+    - If `start_index` or `end_index` is not found, the text remains unchanged.
+    - If no section matches the `title_section`, or if the section spans till the end of the text,
+      only the content up to `end_index` (or the end of the file) will be replaced.
+
+    Example:
+
+    ```py
+    import harrix_pylib as h
+    from pathlib import Path
+
+    new_content = "New list of commands:\\n\\n- new command1\\n- new command2"
+    text = Path('C:/Notes/note.md').read_text(encoding="utf8")
+    print(h.md.replace_section_content(text, new_content, "## List of commands"))
+    ```
+    """
+    ends_with_newline = markdown_text.endswith("\n")
+    lines = markdown_text.splitlines()
 
     # Find the start index of the section to replace
     start_index = None
     for i, line in enumerate(lines):
-        if line.strip() == title_section:
+        if line.strip() == title_section.strip():
             start_index = i
             break
 
@@ -1118,7 +1158,7 @@ def replace_section(filename: Path | str, replace_content, title_section: str = 
     title_level = len(heading_match.group(1))  # Number of '#' characters
 
     # Find the end index of the section to replace
-    end_index = len(lines)  # Default to end of file
+    end_index = len(lines)  # Default to the end of the file
     for i in range(start_index + 1, len(lines)):
         line = lines[i].strip()
         # Check if the line is a heading of the same or higher level
@@ -1129,23 +1169,22 @@ def replace_section(filename: Path | str, replace_content, title_section: str = 
                 end_index = i
                 break
 
-    # Prepare the new content lines (ensure each line ends with a newline character)
-    new_content_lines = [line + "\n" for line in replace_content.strip().split("\n")]
+    # Prepare the new content lines
+    new_content_lines = replace_content.strip().split("\n")
 
     # Assemble the updated content
     updated_lines = (
-        lines[: start_index + 1]  # Include lines up to and including the section title
-        + ["\n"]  # Add a blank line after the section title
-        + new_content_lines  # Add the new section content
-        + ["\n"]  # Add a blank line after the new content
-        + lines[end_index:]  # Include the rest of the original content
+        lines[: start_index + 1]  # Including the section heading
+        + [""]  # Add a blank line after the heading
+        + new_content_lines  # New section content
+        + [""]  # Add a blank line after the new content
+        + lines[end_index:]  # Rest of the original content
     )
 
-    # Write the updated content back to the file
-    with filename.open("w", encoding="utf-8") as f:
-        f.writelines(updated_lines)
+    if ends_with_newline:
+        updated_lines.append("")  # Ensure the markdown ends with a newline
 
-    return f"Section {title_section} is replaced."
+    return "\n".join(updated_lines)
 
 
 def sort_sections(filename: Path | str) -> str:
