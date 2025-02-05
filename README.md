@@ -155,7 +155,7 @@ For me:
 - Run `pytest`.
 - From `harrix-swiss-knife`, call the command `Python` → `Sort classes, methods, functions in PY files`.
   and select folder `harrix-pylib`.
-- From `harrix-swiss-knife`, call the command `Python` → `Generate MD documentation in …`.
+- From `harrix-swiss-knife`, call the command `Python` → `Generate MD documentation in …`
   and select folder `harrix-pylib`.
 - Create a commit `➕ Add function def <function>()`.
 - Update the version in `pyproject.toml`.
