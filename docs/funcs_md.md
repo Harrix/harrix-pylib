@@ -1376,7 +1376,7 @@ def replace_section_content(markdown_text: str, replace_content, title_section: 
 def sort_sections(filename: Path | str) -> str
 ```
 
-Sorts the sections of a markdown document by their headings, maintaining YAML front matter
+Sorts the sections of a markdown file by their headings, maintaining YAML front matter
 and code blocks in their original order.
 
 This function reads a markdown file, splits it into a YAML front matter (if present) and content,
@@ -1462,9 +1462,105 @@ def sort_sections(filename: Path | str) -> str:
     with open(filename, "r", encoding="utf-8") as f:
         document = f.read()
 
-    parts = document.split("---", 2)
+    document_new = sort_sections_content(document)
+
+    if document != document_new:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ File {filename} applied."
+    return "File is not changed."
+```
+
+</details>
+
+## Function `sort_sections_content`
+
+```python
+def sort_sections_content(markdown_text: str) -> str
+```
+
+Sorts the sections of a markdown text by their headings, maintaining YAML front matter
+and code blocks in their original order.
+
+Args:
+
+- `markdown_text` (`str`): The Markdown text to sort sections from.
+
+Returns:
+
+- `str`: The sorted Markdown text.
+
+Notes:
+
+- The function assumes that sections are marked by `##` at the beginning of a line,
+  and code blocks are delimited by triple backticks (```).
+- If there's no YAML front matter, the entire document is considered content.
+- The sorting of sections is done alphabetically, ignoring any code blocks or other formatting within the section.
+
+Example:
+
+```py
+import harrix_pylib as h
+from pathlib import Path
+
+text = Path('C:/Notes/note.md').read_text(encoding="utf8")
+print(h.md.sort_sections("C:/Notes/note.md"))
+```
+
+Before sorting:
+
+```markdown
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
+---
+
+# Installing VSCode
+
+## Section
+
+Example text.
+
+Example text.
+
+## About
+
+Another text.
+
+Another text.
+```
+
+After sorting:
+
+```markdown
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
+---
+
+# Installing VSCode
+
+## About
+
+Another text.
+
+Another text.
+
+## Section
+
+Example text.
+
+Example text.
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def sort_sections_content(markdown_text: str) -> str:
+    parts = markdown_text.split("---", 2)
     if len(parts) < 3:
-        yaml_md, content_md = "", document
+        yaml_md, content_md = "", markdown_text
     else:
         yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
 
@@ -1511,14 +1607,8 @@ def sort_sections(filename: Path | str) -> str:
             if not sections:
                 top_sections[-1] = top_sections[-1][:-1]
             top_sections.sort()
-        document_new = yaml_md + "\n\n" + main_section + "".join(top_sections) + "".join(sections)
-    else:
-        document_new = document
-    if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
-            file.write(document_new)
-        return f"✅ File {filename} applied."
-    return "File is not changed."
+        return yaml_md + "\n\n" + main_section + "".join(top_sections) + "".join(sections)
+    return markdown_text
 ```
 
 </details>

@@ -579,6 +579,14 @@ def test_sort_sections():
     assert md_after == md_applied
 
 
+def test_sort_sections_content():
+    current_folder = h.dev.get_project_root()
+    md = Path(current_folder / "tests/data/sort_sections__before.md").read_text(encoding="utf8")
+    md_after = Path(current_folder / "tests/data/sort_sections__after.md").read_text(encoding="utf8")
+    md_applied = h.md.sort_sections_content(md)
+    assert md_after == md_applied
+
+
 def test_split_yaml_content():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)
