@@ -596,9 +596,144 @@ def generate_image_captions(filename: Path | str) -> str:
     with open(filename, "r", encoding="utf-8") as f:
         document = f.read()
 
-    parts = document.split("---", 2)
+    document_new = generate_image_captions_content(document)
+    if document != document_new:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ File {filename} applied."
+    return "File is not changed."
+```
+
+</details>
+
+## Function `generate_image_captions_content`
+
+```python
+def generate_image_captions_content(markdown_text: str) -> str
+```
+
+Generates image captions in the provided markdown text.
+
+This function reads a markdown file, processes its content to:
+
+- Recognize images by their markdown syntax.
+- Add automatic captions with sequential numbering, localized for Russian or English.
+- Skip image captions that already exist in italic format.
+- Ensure proper handling within and outside of code blocks.
+
+Args:
+
+- `markdown_text` (`str`): The markdown text to process.
+
+Returns:
+
+- `str`: The markdown text with image captions added.
+
+Example:
+
+```py
+import harrix_pylib as h
+
+text = Path('example.md').read_text(encoding="utf8")
+print(h.md.generate_image_captions(text))
+```
+
+Before processing:
+
+````markdown
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
+lang: en
+---
+
+# Installing VSCode
+
+## Section
+
+Example text.
+
+![Alt text](img/image1.png)
+
+Example text.
+
+```markdown
+Example text.
+
+![Alt text](img/image1.png)
+
+Example text.
+
+## About
+```
+
+## About
+
+Another text.
+
+![Alt text 2](img/image2.png)
+
+_Figure 22: Alt ds sdsd text_
+
+Another text.
+
+![Alt text](img/image3.png)
+````
+
+After processing:
+
+````markdown
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
+lang: en
+---
+
+# Installing VSCode
+
+## Section
+
+Example text.
+
+![Alt text](img/image1.png)
+
+_Figure 1: Alt text_
+
+Example text.
+
+```markdown
+Example text.
+
+![Alt text](img/image1.png)
+
+Example text.
+
+## About
+```
+
+## About
+
+Another text.
+
+![Alt text 2](img/image2.png)
+
+_Figure 2: Alt text 2_
+
+Another text.
+
+![Alt text](img/image3.png)
+
+_Figure 3: Alt text_
+````
+
+<details>
+<summary>Code:</summary>
+
+```python
+def generate_image_captions_content(markdown_text: str) -> str:
+    parts = markdown_text.split("---", 2)
     if len(parts) < 3:
-        yaml_md, content_md = "", document
+        yaml_md, content_md = "", markdown_text
     else:
         yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
 
@@ -645,12 +780,7 @@ def generate_image_captions(filename: Path | str) -> str:
             new_lines.append(line)
     content_md = "\n".join(new_lines)
 
-    document_new = yaml_md + "\n\n" + content_md
-    if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
-            file.write(document_new)
-        return f"✅ File {filename} applied."
-    return "File is not changed."
+    return yaml_md + "\n\n" + content_md
 ```
 
 </details>
