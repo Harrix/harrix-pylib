@@ -215,7 +215,42 @@ def format_yaml(filename: Path | str) -> str:
     with open(filename, "r", encoding="utf-8") as f:
         document = f.read()
 
-    parts = document.split("---", 2)
+    document_new = format_yaml_content(document)
+
+    if document != document_new:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ File {filename} applied."
+    return "File is not changed."
+
+
+def format_yaml_content(markdown_text: str) -> str:
+    """
+    Formats the YAML front matter within the given markdown text.
+
+    Args:
+
+    - `markdown_text` (`str`): The markdown text containing YAML front matter.
+
+    Returns:
+
+    - `str`: The formatted YAML content followed by the markdown content.
+
+    Note:
+
+    - It uses a custom YAML dumper (`IndentDumper`) to adjust indentation.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+    from pathlib import Path
+
+    text = Path('example.md').read_text(encoding="utf8")
+    print(h.md.format_yaml(text))
+    ```
+    """
+    parts = markdown_text.split("---", 2)
     if len(parts) < 3:
         return "File is not changed."
     else:
@@ -239,12 +274,7 @@ def format_yaml(filename: Path | str) -> str:
         + "---"
     )
 
-    document_new = yaml_md + "\n\n" + content_md
-    if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
-            file.write(document_new)
-        return f"✅ File {filename} applied."
-    return "File is not changed."
+    return yaml_md + "\n\n" + content_md
 
 
 def generate_author_book(filename: Path | str) -> str:

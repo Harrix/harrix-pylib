@@ -84,6 +84,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `add_diary_new_note`           | Adds a new note to the diary or dream diary for the given base path.                                        |
 | `add_note`                     | Adds a note to the specified base path.                                                                     |
 | `format_yaml`                  | Formats YAML content in a file, ensuring proper indentation and structure.                                  |
+| `format_yaml_content`          | Formats the YAML front matter within the given markdown text.                                               |
 | `generate_author_book`         | Adds the author and the title of the book to the quotes and formats them as Markdown quotes.                |
 | `generate_image_captions`      | Processes a markdown file to add captions to images based on their alt text.                                |
 | `generate_toc_with_links`      | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes |
@@ -165,87 +166,6 @@ For me:
 - Run `uv build`.
 - Run `uv publish --token <token>`.
 - Create a commit `🚀 Build version <number>`.
-
-Example of a function:
-
-````python
-def format_yaml(filename: Path | str) -> str:
-    """
-    Formats YAML content in a file, ensuring proper indentation and structure.
-
-    Args:
-
-    - `filename` (`Path | str`): The path to the file containing YAML content.
-
-    Returns:
-
-    - `str`: A message indicating whether the file was changed or not.
-
-    Note:
-
-    - If the file does not contain YAML front matter separated by "---", it will treat the entire
-      content as markdown without YAML.
-    - The function will overwrite the file if changes are made to the YAML formatting.
-    - It uses a custom YAML dumper (`IndentDumper`) to adjust indentation.
-
-    Example:
-
-    ```python
-    import harrix_pylib as h
-    from pathlib import Path
-
-    path = Path('example.md')
-    print(h.md.format_yaml(path))
-    ```
-    """
-    with open(filename, "r", encoding="utf-8") as f:
-        document = f.read()
-
-    parts = document.split("---", 2)
-    if len(parts) < 3:
-        yaml_md, content_md = "", document
-    else:
-        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
-
-    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
-
-    class IndentDumper(yaml.Dumper):
-        def increase_indent(self, flow=False, indentless=False):
-            return super(IndentDumper, self).increase_indent(flow, False)
-
-    yaml_md = yaml.dump(
-        data_yaml,
-        Dumper=IndentDumper,
-        sort_keys=False,
-        allow_unicode=True,
-        explicit_start=True,
-        default_flow_style=False,
-    ) + '---'
-
-    document_new = yaml_md +  "\n\n" + content_md
-    if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
-            file.write(document_new)
-        return f"✅ File {filename} applied."
-    return "File is not changed."
-````
-
-Example of a test:
-
-```python
-def test_format_yaml():
-    current_folder = h.dev.get_project_root()
-    md = Path(current_folder / "tests/data/format_yaml__before.md").read_text(encoding="utf8")
-    md_after = Path(current_folder / "tests/data/format_yaml__after.md").read_text(encoding="utf8")
-
-    with TemporaryDirectory() as temp_folder:
-        temp_filename = Path(temp_folder) / "temp.md"
-        temp_filename.write_text(md, encoding="utf-8")
-        h.md.format_yaml(temp_filename)
-        md_applied = temp_filename.read_text(encoding="utf8")
-
-    assert md_after == md_applied
-```
 
 ### Minimum Python Version
 

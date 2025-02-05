@@ -256,6 +256,14 @@ def test_format_yaml():
     assert md_after == md_applied
 
 
+def test_format_yaml_content():
+    current_folder = h.dev.get_project_root()
+    md = Path(current_folder / "tests/data/format_yaml__before.md").read_text(encoding="utf8")
+    md_after = Path(current_folder / "tests/data/format_yaml__after.md").read_text(encoding="utf8")
+
+    assert md_after == h.md.format_yaml_content(md)
+
+
 def test_generate_author_book():
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/generate_author_book__before.md").read_text(encoding="utf8")
