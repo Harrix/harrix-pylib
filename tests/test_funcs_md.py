@@ -466,10 +466,7 @@ New list of commands:
 
 
 def test_replace_section_content():
-    with TemporaryDirectory() as temp_dir:
-        # Create a test file with some content
-        test_file_path = Path(temp_dir) / "testfile.md"
-        original_content = """# Header
+    original_content = """# Header
 
 Some content here
 
@@ -486,14 +483,14 @@ Some content here
 More content here
 """
 
-        # New content to replace the section
-        new_content = "New list of commands:\n\n- new command1\n- new command2"
+    # New content to replace the section
+    new_content = "New list of commands:\n\n- new command1\n- new command2"
 
-        # Call the function to replace the section
-        updated_content = h.md.replace_section_content(original_content, new_content)
+    # Call the function to replace the section
+    updated_content = h.md.replace_section_content(original_content, new_content)
 
-        # Expected content after replacement
-        expected_content = """# Header
+    # Expected content after replacement
+    expected_content = """# Header
 
 Some content here
 
@@ -509,10 +506,10 @@ New list of commands:
 More content here
 """
 
-        # Ensure the content was updated as expected
-        assert updated_content == expected_content, "The file content was not updated correctly"
+    # Ensure the content was updated as expected
+    assert updated_content == expected_content, "The file content was not updated correctly"
 
-        original_content = """# Header
+    original_content = """# Header
 
 Some content here
 
@@ -533,14 +530,14 @@ More content here
 Text.
 """
 
-        # New content to replace the section
-        new_content = "New list of commands:\n\n- new command1\n- new command2"
+    # New content to replace the section
+    new_content = "New list of commands:\n\n- new command1\n- new command2"
 
-        # Call the function to replace the section
-        updated_content = h.md.replace_section_content(original_content, new_content, "### Footer")
+    # Call the function to replace the section
+    updated_content = h.md.replace_section_content(original_content, new_content, "### Footer")
 
-        # Expected content after replacement
-        expected_content = """# Header
+    # Expected content after replacement
+    expected_content = """# Header
 
 Some content here
 
@@ -561,8 +558,8 @@ New list of commands:
 
 """
 
-        # Ensure the content was updated as expected
-        assert updated_content == expected_content, "The file content was not updated correctly"
+    # Ensure the content was updated as expected
+    assert updated_content == expected_content, "The file content was not updated correctly"
 
 
 def test_sort_sections():

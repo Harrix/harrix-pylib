@@ -1372,7 +1372,7 @@ def sort_sections_content(markdown_text: str) -> str:
     section = ""
 
     lines = content_md.split("\n")
-    for i, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
+    for line, is_code_block in identify_code_blocks(lines):
         if is_code_block:
             section += line + "\n"
             continue
