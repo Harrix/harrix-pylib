@@ -1101,6 +1101,72 @@ def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
 
 </details>
 
+## Function `increase_heading_level_content`
+
+```python
+def increase_heading_level_content(markdown_text: str) -> str
+```
+
+Increases the heading level of Markdown content.
+
+This function processes a Markdown text and increases the level of all headings
+(lines starting with '#') outside of code blocks by prepending an additional '#'.
+If a YAML header (delimited by '---') is present at the beginning of the text, it is
+preserved and re-appended before the processed Markdown content.
+
+Args:
+
+- `markdown_text` (`str`): The Markdown text to process.
+
+Returns:
+
+- `str`: The updated Markdown text with increased heading levels. The YAML header,
+  if present, is preserved and included at the beginning of the output.
+
+Note:
+
+- Code blocks are detected using the helper function `identify_code_blocks` and are not modified.
+- When no YAML header is detected, the entire text is processed as Markdown content.
+
+Example:
+
+```py
+from pathlib import Path
+
+import harrix_pylib as h
+
+md = "# Title\n\nText## Subtitle\n\nText"
+print(h.md.increase_heading_level_content(md))
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def increase_heading_level_content(markdown_text: str) -> str:
+    parts = markdown_text.split("---", 2)
+    if len(parts) < 3:
+        yaml_md, content_md = "", markdown_text
+    else:
+        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
+
+    new_lines = []
+    lines = content_md.split("\n")
+    for line, is_code_block in identify_code_blocks(lines):
+        if is_code_block:
+            new_lines.append(line)
+            continue
+
+        new_lines.append("#" + line if line.startswith("#") else line)
+    content_md = "\n".join(new_lines)
+
+    if yaml_md:
+        return yaml_md + "\n\n" + content_md
+    return content_md
+```
+
+</details>
+
 ## Function `remove_yaml_and_code_content`
 
 ```python
@@ -1571,7 +1637,7 @@ def sort_sections_content(markdown_text: str) -> str:
     section = ""
 
     lines = content_md.split("\n")
-    for i, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
+    for line, is_code_block in identify_code_blocks(lines):
         if is_code_block:
             section += line + "\n"
             continue

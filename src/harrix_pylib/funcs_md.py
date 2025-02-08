@@ -1010,10 +1010,12 @@ def increase_heading_level_content(markdown_text: str) -> str:
             new_lines.append(line)
             continue
 
-        new_lines.append("#" + line if line.startswith('#') else line)
+        new_lines.append("#" + line if line.startswith("#") else line)
     content_md = "\n".join(new_lines)
 
-    return yaml_md + "\n\n" + content_md
+    if yaml_md:
+        return yaml_md + "\n\n" + content_md
+    return content_md
 
 
 def remove_yaml_and_code_content(markdown_text: str) -> str:

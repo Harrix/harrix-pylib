@@ -92,6 +92,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `generate_toc_with_links_content` | Generates a Table of Contents (TOC) with links for the provided markdown content.                           |
 | `get_yaml_content`                | Function gets YAML from text of the Markdown file.                                                          |
 | `identify_code_blocks`            | Processes a list of text lines to identify code blocks and yield each line with a boolean flag.             |
+| `increase_heading_level_content`  | Increases the heading level of Markdown content.                                                            |
 | `remove_yaml_and_code_content`    | Removes YAML front matter and code blocks, and returns the remaining content.                               |
 | `remove_yaml_content`             | Function removes YAML from text of the Markdown file.                                                       |
 | `replace_section`                 | Replaces a section in a file defined by `title_section` with the provided `replace_content`.                |
@@ -161,7 +162,7 @@ For me:
 - Run `pytest`.
 - From `harrix-swiss-knife`, call the command `Python` → `Sort classes, methods, functions in PY files`.
   and select folder `harrix-pylib`.
-- From `harrix-swiss-knife`, call the command `Python` → `Generate MD documentation in …`.
+- From `harrix-swiss-knife`, call the command `Python` → `Generate MD documentation in …`
   and select folder `harrix-pylib`.
 - Create a commit `➕ Add function def <function>()`.
 - Update the version in `pyproject.toml`.

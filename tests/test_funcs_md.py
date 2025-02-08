@@ -341,6 +341,21 @@ def test_identify_code_blocks():
     assert count_lines_content == 22
 
 
+def test_increase_heading_level_content():
+    md_text = """# Heading
+This is some text.
+
+## Subheading
+More text here."""
+
+    expected = """## Heading
+This is some text.
+
+### Subheading
+More text here."""
+    assert h.md.increase_heading_level_content(md_text) == expected
+
+
 def test_remove_yaml_and_code_content():
     md = Path(h.dev.get_project_root() / "tests/data/remove_yaml_and_code_content.md").read_text(encoding="utf8")
     md_clean = h.md.remove_yaml_and_code_content(md)
@@ -588,6 +603,3 @@ def test_split_yaml_content():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)
     assert len(yaml.splitlines()) + len(content.splitlines()) == 5
-
-
-test_replace_section()
