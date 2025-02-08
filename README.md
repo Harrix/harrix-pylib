@@ -158,7 +158,7 @@ For me:
   and select folder `harrix-pylib`.
 - From `harrix-swiss-knife`, call the command `Python` → `Generate MD documentation in …`
   and select folder `harrix-pylib`.
-- Create a commit `➕ Add function def <function>()`.
+- Create a commit `➕ Add function <function>()`.
 - Update the version in `pyproject.toml`.
 - Delete the folder `dist`.
 - Run `uv sync --upgrade`.
