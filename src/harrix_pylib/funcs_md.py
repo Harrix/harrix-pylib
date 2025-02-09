@@ -2,7 +2,9 @@ import re
 from datetime import datetime
 from pathlib import Path
 from typing import Iterator, List
+from urllib.parse import urlparse
 
+import requests
 import yaml
 
 
@@ -183,6 +185,158 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
         file.write(text)
 
     return f"File {filename} created.", filename
+
+
+def download_and_replace_images(filename: Path | str) -> str:
+    """
+    Downloads remote images in Markdown text and replaces their URLs with local paths.
+
+    Args:
+
+    - `filename` (`Path` | `str`): The path to the Markdown file. Can be either a `Path` object or a string.
+
+    Returns:
+
+    - `str`: A string containing the status of the operation or if the file was unchanged.
+
+    For example, here is the Markdown text before:
+
+    ```markdown
+    ![Alt text](https://example.com/image.png)
+    ```
+
+    For example, here is the Markdown text after:
+
+    ```markdown
+    ![Alt text](img/image.png)
+    ```
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    result = h.md.download_and_replace_images("C:/Notes/note.md")
+    print(result)
+    ```
+    """
+    filename = Path(filename)
+    with open(filename, "r", encoding="utf-8") as f:
+        document = f.read()
+
+    document_new = download_and_replace_images_content(document, filename.parent)
+
+    if document != document_new:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ File {filename} applied."
+    return "File is not changed."
+
+
+def download_and_replace_images_content(markdown_text: str, path_md: Path | str, image_folder: str = "img") -> str:
+    """
+    Downloads remote images in Markdown text and replaces their URLs with local paths.
+
+    Args:
+
+    - `markdown_text` (`str`): The markdown text containing image links.
+    - `path_md` (`Path | str`): The path to the markdown file or its directory.
+    - `image_folder` (`str`, Defaults to "img"): The folder where images will be stored locally.
+
+    Returns:
+
+    - `str`: The updated markdown text with remote image URLs replaced by local relative paths.
+
+    For example, here is the Markdown text before:
+
+    ```markdown
+    ![Alt text](https://example.com/image.png)
+    ```
+
+    For example, here is the Markdown text after:
+
+    ```markdown
+    ![Alt text](img/image.png)
+    ```
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+    from pathlib import Path
+
+    md_text = "![Example](http://example.com/image.png)"
+    md_path = Path("C:/Notes/Note")
+    updated_md_text = h.md.download_and_replace_images_content(md_text, md_path)
+    print(updated_md_text)
+    ```
+    """
+
+    def download_and_replace_image_content_line(markdown_line, path_md, image_folder="img"):
+        # Regular expression to match markdown image with remote URL (http or https)
+        pattern = r"^\!\[(.*?)\]\((http.*?)\)$"
+        match = re.search(pattern, markdown_line.strip())
+
+        # If the line doesn't contain a remote image, return the line unchanged.
+        if not match:
+            return markdown_line
+
+        remote_url = match.group(2)
+
+        # Create the img directory inside path_md if it doesn't exist.
+        base_path = Path(path_md)
+        image_folder_full = base_path / image_folder
+        image_folder_full.mkdir(parents=True, exist_ok=True)
+
+        # Parse the URL to retrieve the file name.
+        parsed_url = urlparse(remote_url)
+        original_file_name = Path(parsed_url.path).name
+        if not original_file_name:
+            original_file_name = "image"
+
+        # Create a candidate file path and add a suffix if a file in the destination already exists.
+        base_name = Path(original_file_name).stem
+        extension = Path(original_file_name).suffix
+        candidate_file = image_folder_full / original_file_name
+        counter = 2
+        while candidate_file.exists():
+            candidate_file = image_folder_full / f"{base_name}__{counter:02d}{extension}"
+            counter += 1
+
+        # Attempt to download the image.
+        try:
+            response = requests.get(remote_url)
+            if response.status_code != 200:
+                return markdown_line  # If download failed, return the original line.
+            # Save the image content to the candidate file.
+            with candidate_file.open("wb") as file:
+                file.write(response.content)
+        except Exception:
+            # In case of any exception during downloading, return the original line.
+            return markdown_line
+
+        # Replace the remote URL with the local relative path (img/candidate_file.name)
+        new_line = markdown_line.replace(remote_url, f"{image_folder}/{candidate_file.name}")
+        return new_line
+
+    parts = markdown_text.split("---", 2)
+    if len(parts) < 3:
+        yaml_md, content_md = "", markdown_text
+    else:
+        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
+
+    new_lines = []
+    lines = content_md.split("\n")
+    for line, is_code_block in identify_code_blocks(lines):
+        if is_code_block:
+            new_lines.append(line)
+            continue
+
+        line = download_and_replace_image_content_line(line, path_md, image_folder)
+        new_lines.append(line)
+    content_md = "\n".join(new_lines)
+
+    return yaml_md + "\n\n" + content_md
 
 
 def format_yaml(filename: Path | str) -> str:
