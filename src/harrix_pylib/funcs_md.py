@@ -837,6 +837,9 @@ def generate_image_captions_content(markdown_text: str) -> str:
         if match and not any(forbidden_word in line for forbidden_word in lst_forbidden):
             image_count += 1
             alt_text = match.group(1)
+            if not alt_text:
+                alt_text = match.group(2).split("/")[-1].replace("_", " ").replace("-", " ").title()
+                line = line.replace("![](", f"![{alt_text}](", 1)
             new_lines.append(line)
             caption = f"_Рисунок {image_count} — {alt_text}_" if lang == "ru" else f"_Figure {image_count}: {alt_text}_"
             new_lines.append("\n" + caption)
