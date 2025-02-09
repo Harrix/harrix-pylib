@@ -363,6 +363,22 @@ def test_identify_code_blocks():
     assert count_lines_content == 22
 
 
+def test_identify_code_blocks_line():
+    test_cases = [
+        ("No code here", [("No code here", False)]),
+        ("`code` within text", [("`code`", True), (" within text", False)]),
+        ("Before `code` and after", [("Before ", False), ("`code`", True), (" and after", False)]),
+        ("`backtick` alone", [("`backtick`", True), (" alone", False)]),
+        ("```triple backticks```", [("```triple backticks```", True)]),
+        ("``double backticks``", [("``double backticks``", True)]),
+        ("Mixed `code` and ``double``", [("Mixed ", False), ("`code`", True), (" and ", False), ("``double``", True)]),
+    ]
+
+    for markdown_line, expected in test_cases:
+        result = list(h.md.identify_code_blocks_line(markdown_line))
+        assert result == expected, f"Failed for: {markdown_line}"
+
+
 def test_increase_heading_level_content():
     md_text = """# Heading
 This is some text.

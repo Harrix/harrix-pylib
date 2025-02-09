@@ -950,6 +950,9 @@ def generate_image_captions_content(markdown_text: str) -> str:
         if match and not any(forbidden_word in line for forbidden_word in lst_forbidden):
             image_count += 1
             alt_text = match.group(1)
+            if not alt_text:
+                alt_text = match.group(2).split("/")[-1].replace("_", " ").replace("-", " ").title()
+                line = line.replace("![](", f"![{alt_text}](", 1)
             new_lines.append(line)
             caption = f"_Рисунок {image_count} — {alt_text}_" if lang == "ru" else f"_Figure {image_count}: {alt_text}_"
             new_lines.append("\n" + caption)
@@ -1274,6 +1277,82 @@ def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
             yield line, True
         else:
             yield line, False
+```
+
+</details>
+
+## Function `identify_code_blocks_line`
+
+```python
+def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]
+```
+
+Parses a single line of Markdown to identify inline code blocks.
+
+This function scans through a markdown line, identifying sequences of backticks (`) to determine where code
+blocks start and end.
+
+Args:
+
+- `markdown_line` (`str`): The input Markdown line to analyze.
+
+Returns:
+
+- `Iterator[tuple[str, bool]]`: An iterator yielding tuples where the first element is a segment of the line,
+  and the second is a boolean indicating whether this segment is part of an inline code block.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+line = "Here is some `code` and more `code`."
+for segment, in_code in h.md.identify_code_blocks_line(line):
+    print(f"{'Code' if in_code else 'Text'}: {segment}")
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
+    current_text = ""
+    in_code = False
+    backtick_count = 0
+
+    i = 0
+    while i < len(markdown_line):
+        if markdown_line[i] == "`":
+            # Counting the number of consecutive backquotes
+            count = 1
+            while i + 1 < len(markdown_line) and markdown_line[i + 1] == "`":
+                count += 1
+                i += 1
+
+            if not in_code:
+                # Start of code block
+                if current_text:
+                    yield current_text, False
+                    current_text = ""
+                backtick_count = count
+                current_text = "`" * count
+                in_code = True
+            elif count == backtick_count:
+                # End of code block
+                current_text += "`" * count
+                yield current_text, True
+                current_text = ""
+                in_code = False
+            else:
+                # Backquotes inside the code
+                current_text += "`" * count
+        else:
+            current_text += markdown_line[i]
+
+        i += 1
+
+    if current_text:
+        yield current_text, False
 ```
 
 </details>
