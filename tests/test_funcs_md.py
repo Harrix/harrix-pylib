@@ -1,7 +1,6 @@
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-
 import harrix_pylib as h
 
 
@@ -603,3 +602,13 @@ def test_split_yaml_content():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)
     assert len(yaml.splitlines()) + len(content.splitlines()) == 5
+
+
+# @pytest.mark.slow
+def test_download_and_replace_images_content():
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        md_file = temp_path / "test.md"
+        md_file.write_text("![Test Image](https://picsum.photos/200/300.png)")
+        updated_text = h.md.download_and_replace_images_content(md_file.read_text(), temp_dir, image_folder="img")
+        assert "![Test Image](300.png)" not in updated_text

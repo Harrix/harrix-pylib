@@ -303,6 +303,9 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
             candidate_file = image_folder_full / f"{base_name}__{counter:02d}{extension}"
             counter += 1
 
+        if "." not in candidate_file.name:
+            candidate_file = image_folder_full / f"{candidate_file.name}.png"
+
         # Attempt to download the image.
         try:
             response = requests.get(remote_url)
