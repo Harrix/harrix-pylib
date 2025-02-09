@@ -77,29 +77,31 @@ Doc: [funcs_file.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs
 
 Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_md.md)
 
-| Function/Class                    | Description                                                                                                 |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `add_diary_new_diary`             | Creates a new diary entry for the current day and time.                                                     |
-| `add_diary_new_dream`             | Creates a new dream diary entry for the current day and time with placeholders for dream descriptions.      |
-| `add_diary_new_note`              | Adds a new note to the diary or dream diary for the given base path.                                        |
-| `add_note`                        | Adds a note to the specified base path.                                                                     |
-| `format_yaml`                     | Formats YAML content in a file, ensuring proper indentation and structure.                                  |
-| `format_yaml_content`             | Formats the YAML front matter within the given markdown text.                                               |
-| `generate_author_book`            | Adds the author and the title of the book to the quotes and formats them as Markdown quotes.                |
-| `generate_image_captions`         | Processes a markdown file to add captions to images based on their alt text.                                |
-| `generate_image_captions_content` | Generates image captions in the provided markdown text.                                                     |
-| `generate_toc_with_links`         | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes |
-| `generate_toc_with_links_content` | Generates a Table of Contents (TOC) with links for the provided markdown content.                           |
-| `get_yaml_content`                | Function gets YAML from text of the Markdown file.                                                          |
-| `identify_code_blocks`            | Processes a list of text lines to identify code blocks and yield each line with a boolean flag.             |
-| `increase_heading_level_content`  | Increases the heading level of Markdown content.                                                            |
-| `remove_yaml_and_code_content`    | Removes YAML front matter and code blocks, and returns the remaining content.                               |
-| `remove_yaml_content`             | Function removes YAML from text of the Markdown file.                                                       |
-| `replace_section`                 | Replaces a section in a file defined by `title_section` with the provided `replace_content`.                |
-| `replace_section_content`         | Replaces a section in the markdown text defined by `title_section` with the provided `replace_content`.     |
-| `sort_sections`                   | Sorts the sections of a markdown file by their headings, maintaining YAML front matter                      |
-| `sort_sections_content`           | Sorts the sections of a markdown text by their headings, maintaining YAML front matter                      |
-| `split_yaml_content`              | Splits a markdown note into YAML front matter and the main content.                                         |
+| Function/Class                        | Description                                                                                                 |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `add_diary_new_diary`                 | Creates a new diary entry for the current day and time.                                                     |
+| `add_diary_new_dream`                 | Creates a new dream diary entry for the current day and time with placeholders for dream descriptions.      |
+| `add_diary_new_note`                  | Adds a new note to the diary or dream diary for the given base path.                                        |
+| `add_note`                            | Adds a note to the specified base path.                                                                     |
+| `download_and_replace_images`         | Downloads remote images in Markdown text and replaces their URLs with local paths.                          |
+| `download_and_replace_images_content` | Downloads remote images in Markdown text and replaces their URLs with local paths.                          |
+| `format_yaml`                         | Formats YAML content in a file, ensuring proper indentation and structure.                                  |
+| `format_yaml_content`                 | Formats the YAML front matter within the given markdown text.                                               |
+| `generate_author_book`                | Adds the author and the title of the book to the quotes and formats them as Markdown quotes.                |
+| `generate_image_captions`             | Processes a markdown file to add captions to images based on their alt text.                                |
+| `generate_image_captions_content`     | Generates image captions in the provided markdown text.                                                     |
+| `generate_toc_with_links`             | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes |
+| `generate_toc_with_links_content`     | Generates a Table of Contents (TOC) with links for the provided markdown content.                           |
+| `get_yaml_content`                    | Function gets YAML from text of the Markdown file.                                                          |
+| `identify_code_blocks`                | Processes a list of text lines to identify code blocks and yield each line with a boolean flag.             |
+| `increase_heading_level_content`      | Increases the heading level of Markdown content.                                                            |
+| `remove_yaml_and_code_content`        | Removes YAML front matter and code blocks, and returns the remaining content.                               |
+| `remove_yaml_content`                 | Function removes YAML from text of the Markdown file.                                                       |
+| `replace_section`                     | Replaces a section in a file defined by `title_section` with the provided `replace_content`.                |
+| `replace_section_content`             | Replaces a section in the markdown text defined by `title_section` with the provided `replace_content`.     |
+| `sort_sections`                       | Sorts the sections of a markdown file by their headings, maintaining YAML front matter                      |
+| `sort_sections_content`               | Sorts the sections of a markdown text by their headings, maintaining YAML front matter                      |
+| `split_yaml_content`                  | Splits a markdown note into YAML front matter and the main content.                                         |
 
 ### File `funcs_py.py`
 
@@ -164,7 +166,7 @@ For me:
   and select folder `harrix-pylib`.
 - From `harrix-swiss-knife`, call the command `Python` → `Generate MD documentation in …`
   and select folder `harrix-pylib`.
-- Create a commit `➕ Add function def <function>()`.
+- Create a commit `➕ Add function <function>()`.
 - Update the version in `pyproject.toml`.
 - Delete the folder `dist`.
 - Run `uv sync --upgrade`.
