@@ -272,7 +272,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
     ```
     """
 
-    def download_and_replace_image_content_line(markdown_line, path_md, image_folder="img"):
+    def download_and_replace_image_line(markdown_line, path_md, image_folder="img"):
         # Regular expression to match markdown image with remote URL (http or https)
         pattern = r"^\!\[(.*?)\]\((http.*?)\)$"
         match = re.search(pattern, markdown_line.strip())
@@ -335,7 +335,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
             new_lines.append(line)
             continue
 
-        line = download_and_replace_image_content_line(line, path_md, image_folder)
+        line = download_and_replace_image_line(line, path_md, image_folder)
         new_lines.append(line)
     content_md = "\n".join(new_lines)
 
