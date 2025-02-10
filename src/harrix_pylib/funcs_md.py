@@ -187,6 +187,33 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
     return f"File {filename} created.", filename
 
 
+def append_path_to_local_links_images_line(markdown_line, adding_path):
+    adding_path = adding_path.replace('\\', '/')
+    if adding_path.endswith('/'):
+        adding_path = adding_path[:-1]
+
+    regex_for_images = r"\!\[(.*?)\]\((?!http)(.*?)\.(.*?)\)"
+
+    def replace_path_in_images(match):
+        alt_text = match.group(1)
+        img_path = match.group(2).replace('\\', '/')
+        extension = match.group(3)
+        return f"![{alt_text}]({adding_path}/{img_path}.{extension})"
+
+    markdown_line = re.sub(regex_for_images, replace_path_in_images, markdown_line)
+
+    regex_for_links = r"\[(.*?)\]\((?!http)(.*?)\)"
+
+    def replace_path_in_links(match):
+        link_text = match.group(1)
+        file_path = match.group(2).replace('\\', '/')
+        return f"[{link_text}]({adding_path}/{file_path})"
+
+    markdown_line = re.sub(regex_for_links, replace_path_in_links, markdown_line)
+
+    return markdown_line
+
+
 def download_and_replace_images(filename: Path | str) -> str:
     """
     Downloads remote images in Markdown text and replaces their URLs with local paths.
