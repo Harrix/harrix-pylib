@@ -187,6 +187,47 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
     return f"File {filename} created.", filename
 
 
+def append_path_to_local_links_images_line(markdown_line: str, adding_path: str) -> str:
+    """
+    Appends a path to local links and images within a Markdown line.
+
+    Args:
+
+    - `markdown_line` (`str`): The Markdown line containing links or images.
+    - `adding_path` (`str`): The path to prepend to local links.
+
+    Returns:
+
+    - `str`: A string with updated paths for local links and images.
+
+    Note:
+
+    This function processes only links that do not start with `http` or `https`, assuming they are local.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+    import re
+
+    markdown_line = "Here is an ![image](image.jpg) and a [link](folder/link.md)"
+    adding_path = "path/to/add"
+    result = h.md.append_path_to_local_links_images_line(markdown_line, adding_path)
+    print(result)
+    ```
+    """
+
+    def replace_path_in_links(match):
+        link_text = match.group(1)
+        file_path = match.group(2).replace("\\", "/")
+        return f"[{link_text}]({adding_path}/{file_path})"
+
+    adding_path = adding_path.replace("\\", "/")
+    if adding_path.endswith("/"):
+        adding_path = adding_path[:-1]
+    return re.sub(r"\[(.*?)\]\(((?!http).*?)\)", replace_path_in_links, markdown_line)
+
+
 def download_and_replace_images(filename: Path | str) -> str:
     """
     Downloads remote images in Markdown text and replaces their URLs with local paths.

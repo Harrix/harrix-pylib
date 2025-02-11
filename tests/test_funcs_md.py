@@ -244,6 +244,46 @@ def test_add_note():
         assert not (base_path / f"{name}/img").exists()
 
 
+def test_append_path_to_local_links_images_line():
+    with TemporaryDirectory() as temp_dir:
+        adding_path = temp_dir.replace("\\", "/")
+
+        # Test case for image
+        markdown_line = "Here is an ![image](image.jpg)"
+        expected_result = f"Here is an ![image]({adding_path}/image.jpg)"
+        assert h.md.append_path_to_local_links_images_line(markdown_line, adding_path) == expected_result
+
+        # Test case for link
+        markdown_line = "Here is a [link](folder/link.md)"
+        expected_result = f"Here is a [link]({adding_path}/folder/link.md)"
+        assert h.md.append_path_to_local_links_images_line(markdown_line, adding_path) == expected_result
+
+        # Test case with Windows-style backslashes
+        markdown_line = "Here is an ![image](image\\with\\backslashes.jpg)"
+        expected_result = f"Here is an ![image]({adding_path}/image/with/backslashes.jpg)"
+        assert h.md.append_path_to_local_links_images_line(markdown_line, adding_path) == expected_result
+
+        # Test case to ensure external links are not modified
+        markdown_line = "Here is a [link](https://example.com)"
+        expected_result = "Here is a [link](https://example.com)"
+        assert h.md.append_path_to_local_links_images_line(markdown_line, adding_path) == expected_result
+
+        # Test case with multiple links in one line
+        markdown_line = "Here is an ![image](image.jpg) and a [link](folder/link.md)"
+        expected_result = f"Here is an ![image]({adding_path}/image.jpg) and a [link]({adding_path}/folder/link.md)"
+        assert h.md.append_path_to_local_links_images_line(markdown_line, adding_path) == expected_result
+
+        # Test case to ensure trailing slash in adding_path is removed
+        adding_path_with_slash = f"{adding_path}/"
+        markdown_line = "Here is an ![image](image.jpg)"
+        expected_result = f"Here is an ![image]({adding_path}/image.jpg)"
+        assert h.md.append_path_to_local_links_images_line(markdown_line, adding_path_with_slash) == expected_result
+
+        # Test case with no links
+        markdown_line = "No links here"
+        assert h.md.append_path_to_local_links_images_line(markdown_line, adding_path) == "No links here"
+
+
 @pytest.mark.slow
 def test_download_and_replace_images():
     with TemporaryDirectory() as temp_dir:

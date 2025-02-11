@@ -227,6 +227,58 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
 
 </details>
 
+## Function `append_path_to_local_links_images_line`
+
+```python
+def append_path_to_local_links_images_line(markdown_line: str, adding_path: str) -> str
+```
+
+Appends a path to local links and images within a Markdown line.
+
+Args:
+
+- `markdown_line` (`str`): The Markdown line containing links or images.
+- `adding_path` (`str`): The path to prepend to local links.
+
+Returns:
+
+- `str`: A string with updated paths for local links and images.
+
+Note:
+
+This function processes only links that do not start with `http` or `https`, assuming they are local.
+
+Example:
+
+```python
+import harrix_pylib as h
+import re
+
+markdown_line = "Here is an ![image](image.jpg) and a [link](folder/link.md)"
+adding_path = "path/to/add"
+result = h.md.append_path_to_local_links_images_line(markdown_line, adding_path)
+print(result)
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def append_path_to_local_links_images_line(markdown_line: str, adding_path: str) -> str:
+
+    def replace_path_in_links(match):
+        link_text = match.group(1)
+        file_path = match.group(2).replace("\\", "/")
+        return f"[{link_text}]({adding_path}/{file_path})"
+
+    adding_path = adding_path.replace("\\", "/")
+    if adding_path.endswith("/"):
+        adding_path = adding_path[:-1]
+    return re.sub(r"\[(.*?)\]\(((?!http).*?)\)", replace_path_in_links, markdown_line)
+```
+
+</details>
+
 ## Function `download_and_replace_images`
 
 ```python
@@ -332,7 +384,7 @@ print(updated_md_text)
 ```python
 def download_and_replace_images_content(markdown_text: str, path_md: Path | str, image_folder: str = "img") -> str:
 
-    def download_and_replace_image_content_line(markdown_line, path_md, image_folder="img"):
+    def download_and_replace_image_line(markdown_line, path_md, image_folder="img"):
         # Regular expression to match markdown image with remote URL (http or https)
         pattern = r"^\!\[(.*?)\]\((http.*?)\)$"
         match = re.search(pattern, markdown_line.strip())
@@ -395,7 +447,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
             new_lines.append(line)
             continue
 
-        line = download_and_replace_image_content_line(line, path_md, image_folder)
+        line = download_and_replace_image_line(line, path_md, image_folder)
         new_lines.append(line)
     content_md = "\n".join(new_lines)
 
@@ -1367,8 +1419,6 @@ Increases the heading level of Markdown content.
 
 This function processes a Markdown text and increases the level of all headings
 (lines starting with '#') outside of code blocks by prepending an additional '#'.
-If a YAML header (delimited by '---') is present at the beginning of the text, it is
-preserved and re-appended before the processed Markdown content.
 
 Args:
 
@@ -1382,7 +1432,6 @@ Returns:
 Note:
 
 - Code blocks are detected using the helper function `identify_code_blocks` and are not modified.
-- When no YAML header is detected, the entire text is processed as Markdown content.
 
 Example:
 
@@ -1400,25 +1449,14 @@ print(h.md.increase_heading_level_content(md))
 
 ```python
 def increase_heading_level_content(markdown_text: str) -> str:
-    parts = markdown_text.split("---", 2)
-    if len(parts) < 3:
-        yaml_md, content_md = "", markdown_text
-    else:
-        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
-
     new_lines = []
-    lines = content_md.split("\n")
+    lines = markdown_text.split("\n")
     for line, is_code_block in identify_code_blocks(lines):
         if is_code_block:
             new_lines.append(line)
             continue
-
         new_lines.append("#" + line if line.startswith("#") else line)
-    content_md = "\n".join(new_lines)
-
-    if yaml_md:
-        return yaml_md + "\n\n" + content_md
-    return content_md
+    return "\n".join(new_lines)
 ```
 
 </details>
