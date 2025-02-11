@@ -1074,8 +1074,8 @@ def get_yaml_content(markdown_text: str) -> str:
     ```py
     import harrix-pylib as h
 
-    md_clean = h.md.get_yaml_content("---\\ncategories: [it]\\n---\\n\\nText")
-    print(md_clean)  # Text
+    yaml_content = h.md.get_yaml_content("---\\ncategories: [it]\\n---\\n\\nText")
+    print(yaml_content)  # Text
     ```
 
     ```py
@@ -1083,8 +1083,8 @@ def get_yaml_content(markdown_text: str) -> str:
     import harrix-pylib as h
 
     md = Path("article.md").read_text(encoding="utf8")
-    md_clean = h.md.get_yaml_content(md)
-    print(md_clean)
+    yaml_content = h.md.get_yaml_content(md)
+    print(yaml_content)
     ```
     """
     find = re.search(r"^---(.|\n)*?---\n", markdown_text.lstrip(), re.DOTALL)
