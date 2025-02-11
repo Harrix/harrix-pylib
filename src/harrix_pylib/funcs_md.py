@@ -1750,6 +1750,8 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     yaml, content = h.md.split_yaml_content(md)
     ```
     """
+    if not markdown_text.startswith("---"):
+        return "", markdown_text
     parts = markdown_text.split("---", 2)
     if len(parts) < 3:
         return "", markdown_text
