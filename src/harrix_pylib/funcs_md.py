@@ -187,33 +187,6 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
     return f"File {filename} created.", filename
 
 
-def append_path_to_local_links_images_line(markdown_line, adding_path):
-    adding_path = adding_path.replace('\\', '/')
-    if adding_path.endswith('/'):
-        adding_path = adding_path[:-1]
-
-    regex_for_images = r"\!\[(.*?)\]\((?!http)(.*?)\.(.*?)\)"
-
-    def replace_path_in_images(match):
-        alt_text = match.group(1)
-        img_path = match.group(2).replace('\\', '/')
-        extension = match.group(3)
-        return f"![{alt_text}]({adding_path}/{img_path}.{extension})"
-
-    markdown_line = re.sub(regex_for_images, replace_path_in_images, markdown_line)
-
-    regex_for_links = r"\[(.*?)\]\((?!http)(.*?)\)"
-
-    def replace_path_in_links(match):
-        link_text = match.group(1)
-        file_path = match.group(2).replace('\\', '/')
-        return f"[{link_text}]({adding_path}/{file_path})"
-
-    markdown_line = re.sub(regex_for_links, replace_path_in_links, markdown_line)
-
-    return markdown_line
-
-
 def download_and_replace_images(filename: Path | str) -> str:
     """
     Downloads remote images in Markdown text and replaces their URLs with local paths.
@@ -1221,8 +1194,6 @@ def increase_heading_level_content(markdown_text: str) -> str:
 
     This function processes a Markdown text and increases the level of all headings
     (lines starting with '#') outside of code blocks by prepending an additional '#'.
-    If a YAML header (delimited by '---') is present at the beginning of the text, it is
-    preserved and re-appended before the processed Markdown content.
 
     Args:
 
@@ -1236,7 +1207,6 @@ def increase_heading_level_content(markdown_text: str) -> str:
     Note:
 
     - Code blocks are detected using the helper function `identify_code_blocks` and are not modified.
-    - When no YAML header is detected, the entire text is processed as Markdown content.
 
     Example:
 
@@ -1249,25 +1219,14 @@ def increase_heading_level_content(markdown_text: str) -> str:
     print(h.md.increase_heading_level_content(md))
     ```
     """
-    parts = markdown_text.split("---", 2)
-    if len(parts) < 3:
-        yaml_md, content_md = "", markdown_text
-    else:
-        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
-
     new_lines = []
-    lines = content_md.split("\n")
+    lines = markdown_text.split("\n")
     for line, is_code_block in identify_code_blocks(lines):
         if is_code_block:
             new_lines.append(line)
             continue
-
         new_lines.append("#" + line if line.startswith("#") else line)
-    content_md = "\n".join(new_lines)
-
-    if yaml_md:
-        return yaml_md + "\n\n" + content_md
-    return content_md
+    return "\n".join(new_lines)
 
 
 def remove_yaml_and_code_content(markdown_text: str) -> str:
