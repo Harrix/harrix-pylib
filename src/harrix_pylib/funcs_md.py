@@ -585,6 +585,7 @@ def generate_image_captions(filename: Path | str) -> str:
     Processes a markdown file to add captions to images based on their alt text.
 
     This function reads a markdown file, processes its content to:
+
     - Recognize images by their markdown syntax.
     - Add automatic captions with sequential numbering, localized for Russian or English.
     - Skip image captions that already exist in italic format.
@@ -716,6 +717,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
     Generates image captions in the provided markdown text.
 
     This function reads a markdown file, processes its content to:
+
     - Recognize images by their markdown syntax.
     - Add automatic captions with sequential numbering, localized for Russian or English.
     - Skip image captions that already exist in italic format.
