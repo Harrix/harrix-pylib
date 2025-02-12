@@ -6,6 +6,14 @@ lang: en
 
 # File `funcs_file.py`
 
+- [Function `all_to_parent_folder`](#function-all_to_parent_folder)
+- [Function `apply_func`](#function-apply_func)
+- [Function `check_featured_image`](#function-check_featured_image)
+- [Function `clear_directory`](#function-clear_directory)
+- [Function `find_max_folder_number`](#function-find_max_folder_number)
+- [Function `open_file_or_folder`](#function-open_file_or_folder)
+- [Function `tree_view_folder`](#function-tree_view_folder)
+
 ## Function `all_to_parent_folder`
 
 ```python
@@ -65,7 +73,7 @@ C:/test
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 h.file.all_to_parent_folder("C:/test")
@@ -116,7 +124,7 @@ Returns:
 
 Example:
 
-```py
+```python
 from pathlib import Path
 
 import harrix_pylib as h
@@ -182,7 +190,7 @@ Note:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 
@@ -231,13 +239,13 @@ Returns:
 
 Examples:
 
-```py
+```python
 import harrix-pylib as h
 
 h.file.clear_directory("C:/temp_dir")
 ```
 
-```py
+```python
 from pathlib import Path
 import harrix-pylib as h
 
@@ -280,7 +288,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 
@@ -340,7 +348,7 @@ Note:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 
@@ -399,7 +407,7 @@ Note:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 

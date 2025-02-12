@@ -6,6 +6,32 @@ lang: en
 
 # File `funcs_md.py`
 
+- [Function `add_diary_new_diary`](#function-add_diary_new_diary)
+- [Function `add_diary_new_dream`](#function-add_diary_new_dream)
+- [Function `add_diary_new_note`](#function-add_diary_new_note)
+- [Function `add_note`](#function-add_note)
+- [Function `append_path_to_local_links_images_line`](#function-append_path_to_local_links_images_line)
+- [Function `download_and_replace_images`](#function-download_and_replace_images)
+- [Function `download_and_replace_images_content`](#function-download_and_replace_images_content)
+- [Function `format_yaml`](#function-format_yaml)
+- [Function `format_yaml_content`](#function-format_yaml_content)
+- [Function `generate_author_book`](#function-generate_author_book)
+- [Function `generate_image_captions`](#function-generate_image_captions)
+- [Function `generate_image_captions_content`](#function-generate_image_captions_content)
+- [Function `generate_toc_with_links`](#function-generate_toc_with_links)
+- [Function `generate_toc_with_links_content`](#function-generate_toc_with_links_content)
+- [Function `get_yaml_content`](#function-get_yaml_content)
+- [Function `identify_code_blocks`](#function-identify_code_blocks)
+- [Function `identify_code_blocks_line`](#function-identify_code_blocks_line)
+- [Function `increase_heading_level_content`](#function-increase_heading_level_content)
+- [Function `remove_yaml_and_code_content`](#function-remove_yaml_and_code_content)
+- [Function `remove_yaml_content`](#function-remove_yaml_content)
+- [Function `replace_section`](#function-replace_section)
+- [Function `replace_section_content`](#function-replace_section_content)
+- [Function `sort_sections`](#function-sort_sections)
+- [Function `sort_sections_content`](#function-sort_sections_content)
+- [Function `split_yaml_content`](#function-split_yaml_content)
+
 ## Function `add_diary_new_diary`
 
 ```python
@@ -36,7 +62,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 yaml_front_matter = '''---
@@ -93,7 +119,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 yaml_front_matter = '''---
@@ -141,7 +167,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 text = "# Diary Entry\nThis is a diary test entry without images.\n"
@@ -195,7 +221,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 
@@ -626,7 +652,7 @@ Note:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 from pathlib import Path
 
@@ -714,7 +740,7 @@ Note:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 h.md.generate_image_captions("C:/Notes/note.md")
@@ -851,7 +877,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 text = Path('example.md').read_text(encoding="utf8")
@@ -1222,14 +1248,14 @@ Returns:
 
 Examples:
 
-```py
+```python
 import harrix-pylib as h
 
 yaml_content = h.md.get_yaml_content("---\ncategories: [it]\n---\n\nText")
 print(yaml_content)  # Text
 ```
 
-```py
+```python
 from pathlib import Path
 import harrix-pylib as h
 
@@ -1276,7 +1302,7 @@ Note:
 
 Example:
 
-```py
+```python
 from pathlib import Path
 
 import harrix_pylib as h
@@ -1418,7 +1444,7 @@ Note:
 
 Example:
 
-```py
+```python
 from pathlib import Path
 
 import harrix_pylib as h
@@ -1462,14 +1488,14 @@ Returns:
 
 Examples:
 
-```py
+```python
 import harrix-pylib as h
 
 md_clean = h.md.remove_yaml_and_code_content("---\ncategories: [it]\n---\n\nText")
 print(md_clean)  # Text
 ```
 
-```py
+```python
 from pathlib import Path
 import harrix-pylib as h
 
@@ -1532,14 +1558,14 @@ Returns:
 
 Examples:
 
-```py
+```python
 import harrix-pylib as h
 
 md_clean = h.md.remove_yaml_content("---\ncategories: [it]\n---\n\nText")
 print(md_clean)  # Text
 ```
 
-```py
+```python
 from pathlib import Path
 import harrix-pylib as h
 
@@ -1589,7 +1615,7 @@ Notes:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 new_content = "New list of commands:\n\n- new command1\n- new command2"
@@ -1644,7 +1670,7 @@ Notes:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 from pathlib import Path
 
@@ -1741,7 +1767,7 @@ Notes:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 h.md.sort_sections("C:/Notes/note.md")
@@ -1838,7 +1864,7 @@ Notes:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 from pathlib import Path
 
@@ -1976,7 +2002,7 @@ Note:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 md = h.md.sort_sections("C:/Notes/note.md")

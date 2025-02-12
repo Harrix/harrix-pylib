@@ -6,6 +6,13 @@ lang: en
 
 # File `funcs_py.py`
 
+- [Function `create_uv_new_project`](#function-create_uv_new_project)
+- [Function `extract_functions_and_classes`](#function-extract_functions_and_classes)
+- [Function `generate_docs_for_project`](#function-generate_docs_for_project)
+- [Function `generate_md_docs_content`](#function-generate_md_docs_content)
+- [Function `lint_and_fix_python_code`](#function-lint_and_fix_python_code)
+- [Function `sort_py_code`](#function-sort_py_code)
+
 ## Function `create_uv_new_project`
 
 ```python
@@ -42,7 +49,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 from pathlib import Path
 
@@ -139,13 +146,13 @@ Example output:
 
 Examples:
 
-```py
+```python
 import harrix_pylib as h
 
 md = h.py.extract_functions_and_classes("C:/project/main.py", False)
 ```
 
-```py
+```python
 import harrix_pylib as h
 
 filename = "C:/project/main.py"
@@ -249,7 +256,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 path = "C:/projects/project"
@@ -289,7 +296,10 @@ def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: 
     if len(list_funcs_all.splitlines()) > 2:
         list_funcs_all = list_funcs_all[:-1]
 
-    h.md.replace_section(folder / "README.md", list_funcs_all, "## List of functions")
+    try:
+        h.md.replace_section(folder / "README.md", list_funcs_all, "## List of functions")
+    except:
+        result_lines.append("Don't find `## List of functions`.")
     index_content = beginning_of_md + "\n" + Path(folder / "README.md").read_text(encoding="utf8")
     Path(docs_folder / "index.md").write_text(index_content, encoding="utf8")
     result_lines.append("File index.md is created.")
@@ -319,7 +329,7 @@ Returns:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 filename = "C:/projects/project/main.py"
@@ -511,7 +521,7 @@ Note:
 
 Example:
 
-```py
+```python
 import harrix_pylib as h
 
 python_code = "def greet(name):
@@ -579,7 +589,7 @@ Note:
 
 Example:
 
-```py
+```python
     import harrix_pylib as h
 
     h.py.sort_py_code("C:/projects/project/main.py", True)
@@ -588,7 +598,7 @@ Example:
 
 Before sorting:
 
-```py
+```python
 def multiply(a, b):
     """Returns the product of two numbers."""
     return a * b
@@ -622,7 +632,7 @@ class Point:
 
 After sorting:
 
-```py
+```python
 class Point:
     def __init__(self, x=0, y=0):
         """Initializes a point with coordinates (x, y)."""
