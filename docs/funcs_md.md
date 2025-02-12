@@ -434,11 +434,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
         new_line = markdown_line.replace(remote_url, f"{image_folder}/{candidate_file.name}")
         return new_line
 
-    parts = markdown_text.split("---", 2)
-    if len(parts) < 3:
-        yaml_md, content_md = "", markdown_text
-    else:
-        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
+    yaml_md, content_md = split_yaml_content(markdown_text)
 
     new_lines = []
     lines = content_md.split("\n")
@@ -541,11 +537,7 @@ print(h.md.format_yaml(text))
 
 ```python
 def format_yaml_content(markdown_text: str) -> str:
-    parts = markdown_text.split("---", 2)
-    if len(parts) < 3:
-        return "File is not changed."
-    else:
-        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
+    yaml_md, content_md = split_yaml_content(markdown_text)
 
     data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
 
@@ -655,12 +647,11 @@ def generate_author_book(filename: Path | str) -> str:
         return
     if file.suffix.lower() != ".md":
         return
-    note_initial = file.read_text(encoding="utf8")
+    markdown_text = file.read_text(encoding="utf8")
 
-    parts = note_initial.split("---", 2)
-    yaml_content, main_content = f"---{parts[1]}---", parts[2].lstrip()
+    yaml_md, content_md = split_yaml_content(markdown_text)
 
-    lines = main_content.splitlines()
+    lines = content_md.splitlines()
 
     author = file.parts[-2].replace("-", " ")
     title = lines[0].replace("# ", "")
@@ -668,7 +659,7 @@ def generate_author_book(filename: Path | str) -> str:
     lines = lines[1:] if lines and lines[0].startswith("# ") else lines
     lines = lines[:-1] if lines[-1].strip() == "---" else lines
 
-    note = f"{yaml_content}\n\n# {title}\n\n"
+    note = f"{yaml_md}\n\n# {title}\n\n"
     quotes = list(map(str.strip, filter(None, "\n".join(lines).split("\n---\n"))))
 
     quotes_fix = []
@@ -683,7 +674,7 @@ def generate_author_book(filename: Path | str) -> str:
         quote_fix = "\n".join([f"> {line}".rstrip() for line in lines_quote])
         quotes_fix.append(f"{quote_fix}\n>\n> -- _{author}, {title}_")
     note += "\n\n---\n\n".join(quotes_fix) + "\n"
-    if note_initial != note:
+    if markdown_text != note:
         file.write_text(note, encoding="utf8")
         lines_list.append(f"Fix {filename}")
     else:
@@ -960,11 +951,7 @@ _Figure 3: Alt text_
 
 ```python
 def generate_image_captions_content(markdown_text: str) -> str:
-    parts = markdown_text.split("---", 2)
-    if len(parts) < 3:
-        yaml_md, content_md = "", markdown_text
-    else:
-        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
+    yaml_md, content_md = split_yaml_content(markdown_text)
 
     data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
     lang = data_yaml.get("lang")
@@ -1132,11 +1119,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
 
         return text
 
-    parts = markdown_text.split("---", 2)
-    if len(parts) < 3:
-        yaml_md = ""
-    else:
-        yaml_md = f"---{parts[1]}---"
+    yaml_md, _ = split_yaml_content(markdown_text)
 
     # Generate TOC
     existing_ids = set()
@@ -1242,8 +1225,8 @@ Examples:
 ```py
 import harrix-pylib as h
 
-md_clean = h.md.get_yaml_content("---\ncategories: [it]\n---\n\nText")
-print(md_clean)  # Text
+yaml_content = h.md.get_yaml_content("---\ncategories: [it]\n---\n\nText")
+print(yaml_content)  # Text
 ```
 
 ```py
@@ -1251,8 +1234,8 @@ from pathlib import Path
 import harrix-pylib as h
 
 md = Path("article.md").read_text(encoding="utf8")
-md_clean = h.md.get_yaml_content(md)
-print(md_clean)
+yaml_content = h.md.get_yaml_content(md)
+print(yaml_content)
 ```
 
 <details>
@@ -1500,11 +1483,7 @@ print(md_clean)
 
 ```python
 def remove_yaml_and_code_content(markdown_text: str) -> str:
-    parts = markdown_text.split("---", 2)
-    if len(parts) < 3:
-        content_md = markdown_text
-    else:
-        content_md = parts[2].lstrip()
+    _, content_md = split_yaml_content(markdown_text)
 
     new_lines = []
     lines = content_md.split("\n")
@@ -1918,11 +1897,7 @@ Example text.
 
 ```python
 def sort_sections_content(markdown_text: str) -> str:
-    parts = markdown_text.split("---", 2)
-    if len(parts) < 3:
-        yaml_md, content_md = "", markdown_text
-    else:
-        yaml_md, content_md = f"---{parts[1]}---", parts[2].lstrip()
+    yaml_md, content_md = split_yaml_content(markdown_text)
 
     is_main_section = True
     is_top_section = False
@@ -2013,6 +1988,8 @@ yaml, content = h.md.split_yaml_content(md)
 
 ```python
 def split_yaml_content(markdown_text: str) -> tuple[str, str]:
+    if not markdown_text.startswith("---"):
+        return "", markdown_text
     parts = markdown_text.split("---", 2)
     if len(parts) < 3:
         return "", markdown_text
