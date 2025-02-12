@@ -35,7 +35,7 @@ def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: b
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     yaml_front_matter = '''---
@@ -82,7 +82,7 @@ def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = Fals
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     yaml_front_matter = '''---
@@ -119,7 +119,7 @@ def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     text = "# Diary Entry\\nThis is a diary test entry without images.\\n"
@@ -162,7 +162,7 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
 
@@ -529,7 +529,7 @@ def generate_author_book(filename: Path | str) -> str:
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
     from pathlib import Path
 
@@ -606,7 +606,7 @@ def generate_image_captions(filename: Path | str) -> str:
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     h.md.generate_image_captions("C:/Notes/note.md")
@@ -733,7 +733,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     text = Path('example.md').read_text(encoding="utf8")
@@ -1073,14 +1073,14 @@ def get_yaml_content(markdown_text: str) -> str:
 
     Examples:
 
-    ```py
+    ```python
     import harrix-pylib as h
 
     yaml_content = h.md.get_yaml_content("---\\ncategories: [it]\\n---\\n\\nText")
     print(yaml_content)  # Text
     ```
 
-    ```py
+    ```python
     from pathlib import Path
     import harrix-pylib as h
 
@@ -1106,8 +1106,8 @@ def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
     Returns:
 
     - `Iterator[tuple[str, bool]]`: An iterator yielding tuples. Each tuple contains:
-        - The original line of text (`str`).
-        - A boolean flag (`bool`) indicating if the line is within a code block (`True`) or not (`False`).
+      - The original line of text (`str`).
+      - A boolean flag (`bool`) indicating if the line is within a code block (`True`) or not (`False`).
 
     Note:
 
@@ -1116,7 +1116,7 @@ def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
 
     Example:
 
-    ```py
+    ```python
     from pathlib import Path
 
     import harrix_pylib as h
@@ -1236,7 +1236,7 @@ def increase_heading_level_content(markdown_text: str) -> str:
 
     Example:
 
-    ```py
+    ```python
     from pathlib import Path
 
     import harrix_pylib as h
@@ -1269,14 +1269,14 @@ def remove_yaml_and_code_content(markdown_text: str) -> str:
 
     Examples:
 
-    ```py
+    ```python
     import harrix-pylib as h
 
     md_clean = h.md.remove_yaml_and_code_content("---\\ncategories: [it]\\n---\\n\\nText")
     print(md_clean)  # Text
     ```
 
-    ```py
+    ```python
     from pathlib import Path
     import harrix-pylib as h
 
@@ -1314,6 +1314,7 @@ def remove_yaml_content(markdown_text: str) -> str:
     ```
 
     Markdown after processing:
+
     ```markdown
     # Installing VSCode
     ```
@@ -1327,14 +1328,15 @@ def remove_yaml_content(markdown_text: str) -> str:
     - `str`: Text of the Markdown file without YAML.
 
     Examples:
-    ```py
+
+    ```python
     import harrix-pylib as h
 
     md_clean = h.md.remove_yaml_content("---\\ncategories: [it]\\n---\\n\\nText")
     print(md_clean)  # Text
     ```
 
-    ```py
+    ```python
     from pathlib import Path
     import harrix-pylib as h
 
@@ -1373,7 +1375,7 @@ def replace_section(filename: Path | str, replace_content, title_section: str = 
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     new_content = "New list of commands:\\n\\n- new command1\\n- new command2"
@@ -1417,7 +1419,7 @@ def replace_section_content(markdown_text: str, replace_content, title_section: 
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
     from pathlib import Path
 
@@ -1503,7 +1505,7 @@ def sort_sections(filename: Path | str) -> str:
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     h.md.sort_sections("C:/Notes/note.md")
@@ -1591,7 +1593,7 @@ def sort_sections_content(markdown_text: str) -> str:
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
     from pathlib import Path
 
@@ -1709,8 +1711,8 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     Returns:
 
     - `tuple[str, str]`: A tuple containing:
-        - The YAML front matter as a string, prefixed and suffixed with '---'.
-        - The remaining markdown content after the YAML front matter, with leading whitespace removed.
+      - The YAML front matter as a string, prefixed and suffixed with '---'.
+      - The remaining markdown content after the YAML front matter, with leading whitespace removed.
 
     Note:
 
@@ -1720,7 +1722,7 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     md = h.md.sort_sections("C:/Notes/note.md")

@@ -21,13 +21,13 @@ def get_project_root() -> Path:
 
     Examples:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     root_path = h.dev.get_project_root()
     ```
 
-    ```py
+    ```python
     from pathlib import Path
 
     import harrix_pylib as h
@@ -57,13 +57,13 @@ def load_config(filename: str) -> dict:
 
     Examples:
 
-    ```py
+    ```python
     import harrix-pylib as h
 
     config = h.dev.load_config("config.json")
     ```
 
-    ```py
+    ```python
     from pathlib import Path
 
     import harrix_pylib as h
@@ -112,14 +112,14 @@ def run_powershell_script(commands: str) -> str:
 
     Examples:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     result_output = h.dev.run_powershell_script("python --version")
     print(result_output)  # Python 3.13.1
     ```
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     result_output = h.dev.run_powershell_script("python --version\\npip --version")
@@ -168,14 +168,14 @@ def run_powershell_script_as_admin(commands: str) -> str:
 
     Examples:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     result_output = h.dev.run_powershell_script_as_admin("python --version")
     print(result_output)  # ﻿Python 3.11.9
     ```
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     result_output = h.dev.run_powershell_script_as_admin("python --version\\npip --version")
@@ -272,7 +272,7 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
 
     Examples:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
 
@@ -287,7 +287,7 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
     # Execution time: 0.0000 seconds
     ```
 
-    ```py
+    ```python
     import harrix_pylib as h
 
 

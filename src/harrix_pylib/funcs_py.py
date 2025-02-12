@@ -43,7 +43,7 @@ def create_uv_new_project(project_name: str, path: str | Path, editor: str = "co
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
     from pathlib import Path
 
@@ -129,13 +129,13 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
 
     Examples:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     md = h.py.extract_functions_and_classes("C:/project/main.py", False)
     ```
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     filename = "C:/project/main.py"
@@ -228,7 +228,7 @@ def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: 
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     path = "C:/projects/project"
@@ -290,7 +290,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     filename = "C:/projects/project/main.py"
@@ -471,7 +471,7 @@ def lint_and_fix_python_code(py_content: str) -> str:
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     python_code = "def greet(name):\n    print('Hello, ' +    name)"
@@ -527,7 +527,7 @@ def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
 
     Example:
 
-    ```py
+    ```python
         import harrix_pylib as h
 
         h.py.sort_py_code("C:/projects/project/main.py", True)
@@ -536,7 +536,7 @@ def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
 
     Before sorting:
 
-    ```py
+    ```python
     def multiply(a, b):
         \"\"\"Returns the product of two numbers.\"\"\"
         return a * b
@@ -570,7 +570,7 @@ def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
 
     After sorting:
 
-    ```py
+    ```python
     class Point:
         def __init__(self, x=0, y=0):
             \"\"\"Initializes a point with coordinates (x, y).\"\"\"

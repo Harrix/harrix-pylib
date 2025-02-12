@@ -62,7 +62,7 @@ def all_to_parent_folder(path: Path | str) -> str:
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
     h.file.all_to_parent_folder("C:/test")
@@ -102,7 +102,7 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
 
     Example:
 
-    ```py
+    ```python
     from pathlib import Path
 
     import harrix_pylib as h
@@ -157,7 +157,7 @@ def check_featured_image(path: str) -> tuple[bool, str]:
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
 
@@ -195,13 +195,13 @@ def clear_directory(path: Path | str) -> None:
 
     Examples:
 
-    ```py
+    ```python
     import harrix-pylib as h
 
     h.file.clear_directory("C:/temp_dir")
     ```
 
-    ```py
+    ```python
     from pathlib import Path
     import harrix-pylib as h
 
@@ -233,7 +233,7 @@ def find_max_folder_number(base_path: str, start_pattern: str) -> int:
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
 
@@ -282,7 +282,7 @@ def open_file_or_folder(path: Path | str) -> None:
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
 
@@ -330,7 +330,7 @@ def tree_view_folder(path: str | Path, is_ignore_hidden_folders: bool = False) -
 
     Example:
 
-    ```py
+    ```python
     import harrix_pylib as h
 
 
