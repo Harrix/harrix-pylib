@@ -254,6 +254,8 @@ def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: 
         filename_docs = docs_folder / f"{filename.stem}.md"
         Path(filename_docs).write_text(beginning_of_md + "\n" + docs, encoding="utf8")
 
+        h.md.generate_toc_with_links(filename_docs)
+
         list_funcs_all += list_funcs + "\n\n"
 
         result_lines.append(f"File {filename.name} is processed.")
