@@ -263,7 +263,10 @@ def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: 
     if len(list_funcs_all.splitlines()) > 2:
         list_funcs_all = list_funcs_all[:-1]
 
-    h.md.replace_section(folder / "README.md", list_funcs_all, "## List of functions")
+    try:
+        h.md.replace_section(folder / "README.md", list_funcs_all, "## List of functions")
+    except:
+        result_lines.append("Don't find `## List of functions`.")
     index_content = beginning_of_md + "\n" + Path(folder / "README.md").read_text(encoding="utf8")
     Path(docs_folder / "index.md").write_text(index_content, encoding="utf8")
     result_lines.append("File index.md is created.")
