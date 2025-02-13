@@ -134,14 +134,14 @@ Returns:
 
 Example output:
 
-```markdown
+```text
 ### File `extract_functions_and_classes__before.py`
 
-| Function/Class       | Description                                                         |
-| -------------------- | ------------------------------------------------------------------- |
+| Function/Class | Description |
+|----------------|-------------|
 | Class `Cat (Animal)` | Represents a domestic cat, inheriting from the `Animal` base class. |
-| `add`                | Adds two integers.                                                  |
-| `multiply`           | Multiples two integers.                                             |
+| `add` | Adds two integers. |
+| `multiply` | Multiples two integers. |
 ```
 
 Examples:

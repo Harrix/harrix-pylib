@@ -117,7 +117,7 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
 
     Example output:
 
-    ```markdown
+    ```text
     ### File `extract_functions_and_classes__before.py`
 
     | Function/Class | Description |
