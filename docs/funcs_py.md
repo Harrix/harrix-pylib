@@ -288,6 +288,7 @@ def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: 
         Path(filename_docs).write_text(beginning_of_md + "\n" + docs, encoding="utf8")
 
         h.md.generate_toc_with_links(filename_docs)
+        h.md.generate_image_captions(filename_docs)
 
         list_funcs_all += list_funcs + "\n\n"
 
