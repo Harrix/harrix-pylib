@@ -832,7 +832,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
     yaml_md, content_md = split_yaml_content(markdown_text)
 
     data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
-    lang = data_yaml.get("lang")
+    lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
 
     # Remove captions
     is_caption = False
