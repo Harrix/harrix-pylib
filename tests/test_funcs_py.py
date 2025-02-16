@@ -66,7 +66,7 @@ def test_extract_functions_and_classes():
     assert md == md_after
 
 
-def test_generate_docs_for_project():
+def test_generate_md_docs():
     # Setup
     with TemporaryDirectory() as temp_folder:
         temp_path = Path(temp_folder)
@@ -97,9 +97,7 @@ class ExampleClass:
         (temp_path / "README.md").write_text("""# Test\n\n## List of functions\n""", encoding="utf8")
 
         # Test the function
-        result = h.py.generate_docs_for_project(
-            folder=temp_path, beginning_of_md="# Test Documentation\n", domain="test"
-        )
+        result = h.py.generate_md_docs(folder=temp_path, beginning_of_md="# Test Documentation\n", domain="test")
 
         # Assertions
         docs_folder = temp_path / "docs"

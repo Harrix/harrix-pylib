@@ -208,7 +208,7 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
     return result
 
 
-def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: str) -> str:
+def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> str:
     """
     Generates documentation for all Python files within a given project folder.
 
@@ -233,7 +233,7 @@ def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: 
 
     path = "C:/projects/project"
     domain = "https://github.com/Harrix/harrix-pylib"
-    result = h.py.generate_docs_for_project(path, "---\\nlang: en\\n---\\n", domain)
+    result = h.py.generate_md_docs(path, "---\\nlang: en\\n---\\n", domain)
     ```
     """
     result_lines = []

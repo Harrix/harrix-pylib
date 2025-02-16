@@ -8,7 +8,7 @@ lang: en
 
 - [Function `create_uv_new_project`](#function-create_uv_new_project)
 - [Function `extract_functions_and_classes`](#function-extract_functions_and_classes)
-- [Function `generate_docs_for_project`](#function-generate_docs_for_project)
+- [Function `generate_md_docs`](#function-generate_md_docs)
 - [Function `generate_md_docs_content`](#function-generate_md_docs_content)
 - [Function `lint_and_fix_python_code`](#function-lint_and_fix_python_code)
 - [Function `sort_py_code`](#function-sort_py_code)
@@ -232,10 +232,10 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
 
 </details>
 
-## Function `generate_docs_for_project`
+## Function `generate_md_docs`
 
 ```python
-def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: str) -> str
+def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> str
 ```
 
 Generates documentation for all Python files within a given project folder.
@@ -261,14 +261,14 @@ import harrix_pylib as h
 
 path = "C:/projects/project"
 domain = "https://github.com/Harrix/harrix-pylib"
-result = h.py.generate_docs_for_project(path, "---\nlang: en\n---\n", domain)
+result = h.py.generate_md_docs(path, "---\nlang: en\n---\n", domain)
 ```
 
 <details>
 <summary>Code:</summary>
 
 ```python
-def generate_docs_for_project(folder: Path | str, beginning_of_md: str, domain: str) -> str:
+def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> str:
     result_lines = []
     folder = Path(folder)
 
