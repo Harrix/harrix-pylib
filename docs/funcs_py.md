@@ -285,10 +285,11 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
         docs = generate_md_docs_content(filename)
 
         filename_docs = docs_folder / f"{filename.stem}.md"
-        Path(filename_docs).write_text(beginning_of_md + "\n" + docs, encoding="utf8")
 
-        h.md.generate_toc_with_links(filename_docs)
-        h.md.generate_image_captions(filename_docs)
+        final_content = beginning_of_md + "\n" + docs
+        final_content = h.md.generate_toc_with_links_content(final_content)
+        final_content = h.md.generate_image_captions_content(final_content)
+        Path(filename_docs).write_text(final_content, encoding="utf8")
 
         list_funcs_all += list_funcs + "\n\n"
 
