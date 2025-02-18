@@ -677,6 +677,66 @@ def test_sort_sections_content():
     assert md_after == md_applied
 
 
+def test_split_toc_content_basic():
+    markdown = (
+        "# Title\n\n"
+        "- [Introduction](#introduction)\n"
+        "- [Content](#content)\n\n"
+        "## Introduction\n\n"
+        "This is the start.\n\n"
+        "## Content\n\n"
+        "This is the content."
+    )
+
+    expected_toc = (
+        "- [Introduction](#introduction)\n"
+        "- [Content](#content)"
+    )
+
+    expected_content = (
+        "# Title\n\n"
+        "## Introduction\n\n"
+        "This is the start.\n\n"
+        "## Content\n\n"
+        "This is the content."
+    )
+
+    toc, content = h.md.split_toc_content(markdown)
+    assert toc == expected_toc
+    assert content == expected_content
+
+    markdown = (
+        "---\n"
+        "title: My Document\n"
+        "author: John Doe\n"
+        "---\n"
+        "# Title\n\n"
+        "- [Introduction](#introduction)\n"
+        "- [Content](#content)\n\n"
+        "## Introduction\n\n"
+        "This is the start.\n\n"
+        "## Content\n\n"
+        "This is the content."
+    )
+
+    expected_toc = (
+        "- [Introduction](#introduction)\n"
+        "- [Content](#content)"
+    )
+
+    expected_content = (
+        "# Title\n\n"
+        "## Introduction\n\n"
+        "This is the start.\n\n"
+        "## Content\n\n"
+        "This is the content."
+    )
+
+    toc, content = h.md.split_toc_content(markdown)
+    assert toc == expected_toc
+    assert content == expected_content
+
+
 def test_split_yaml_content():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)

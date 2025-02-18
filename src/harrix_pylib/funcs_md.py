@@ -1348,55 +1348,6 @@ def remove_yaml_content(markdown_text: str) -> str:
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
 
 
-def split_toc_content(markdown_text: str) -> tuple[str, str]:
-    """
-    Separates the Table of Contents (TOC) from the rest of the Markdown content.
-
-    Args:
-
-    - `markdown_text` (`str`): The string containing the markdown text which includes a TOC.
-
-    Returns:
-
-    - `tuple[str, str]`: A tuple containing:
-        - The extracted TOC lines as a string.
-        - The remaining markdown content without the TOC as a string.
-
-    Example:
-
-    ```python\\n
-    import harrix_pylib as h
-    import re
-
-    markdown = "# Title\\n\\n- [Introduction](#introduction)\\n- [Content](#content)\\n\\n"
-    markdown += "## Introduction\\n\\nThis is the start.\\n\\n"
-
-    toc, content = h.md.split_toc_content(markdown)
-    print(toc)
-    print(content)
-    ```
-    """
-    is_stop_searching_toc = False
-    new_lines = []
-    toc_lines = []
-    lines = remove_yaml_content(markdown_text).splitlines()
-    for line, is_code_block in identify_code_blocks(lines):
-        if is_code_block:
-            new_lines.append(line)
-            continue
-        if line.startswith("##"):
-            is_stop_searching_toc = True
-        if is_stop_searching_toc:
-            new_lines.append(line)
-        elif not re.match(r"- \[(.*?)\]\(#(.*?)\)$", line.strip()):
-            if len(new_lines) == 0 or new_lines[-1].strip() or line:
-                new_lines.append(line)
-        else:
-            toc_lines.append(line)
-
-    return "\n".join(toc_lines), "\n".join(new_lines)
-
-
 def replace_section(filename: Path | str, replace_content, title_section: str = "## List of commands") -> str:
     """
     Replaces a section in a file defined by `title_section` with the provided `replace_content`.
@@ -1745,6 +1696,55 @@ def sort_sections_content(markdown_text: str) -> str:
             top_sections.sort()
         return yaml_md + "\n\n" + main_section + "".join(top_sections) + "".join(sections)
     return markdown_text
+
+
+def split_toc_content(markdown_text: str) -> tuple[str, str]:
+    """
+    Separates the Table of Contents (TOC) from the rest of the Markdown content.
+
+    Args:
+
+    - `markdown_text` (`str`): The string containing the markdown text which includes a TOC.
+
+    Returns:
+
+    - `tuple[str, str]`: A tuple containing:
+        - The extracted TOC lines as a string.
+        - The remaining markdown content without the TOC as a string.
+
+    Example:
+
+    ```python\\n
+    import harrix_pylib as h
+    import re
+
+    markdown = "# Title\\n\\n- [Introduction](#introduction)\\n- [Content](#content)\\n\\n"
+    markdown += "## Introduction\\n\\nThis is the start.\\n\\n"
+
+    toc, content = h.md.split_toc_content(markdown)
+    print(toc)
+    print(content)
+    ```
+    """
+    is_stop_searching_toc = False
+    new_lines = []
+    toc_lines = []
+    lines = remove_yaml_content(markdown_text).splitlines()
+    for line, is_code_block in identify_code_blocks(lines):
+        if is_code_block:
+            new_lines.append(line)
+            continue
+        if line.startswith("##"):
+            is_stop_searching_toc = True
+        if is_stop_searching_toc:
+            new_lines.append(line)
+        elif not re.match(r"- \[(.*?)\]\(#(.*?)\)$", line.strip()):
+            if len(new_lines) == 0 or new_lines[-1].strip() or line:
+                new_lines.append(line)
+        else:
+            toc_lines.append(line)
+
+    return "\n".join(toc_lines), "\n".join(new_lines)
 
 
 def split_yaml_content(markdown_text: str) -> tuple[str, str]:

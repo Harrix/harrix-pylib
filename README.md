@@ -97,6 +97,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `replace_section_content`                | Replaces a section in the markdown text defined by `title_section` with the provided `replace_content`.     |
 | `sort_sections`                          | Sorts the sections of a markdown file by their headings, maintaining YAML front matter                      |
 | `sort_sections_content`                  | Sorts the sections of a markdown text by their headings, maintaining YAML front matter                      |
+| `split_toc_content`                      | Separates the Table of Contents (TOC) from the rest of the Markdown content.                                |
 | `split_yaml_content`                     | Splits a markdown note into YAML front matter and the main content.                                         |
 
 ### File `funcs_py.py`
