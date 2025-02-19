@@ -688,18 +688,9 @@ def test_split_toc_content_basic():
         "This is the content."
     )
 
-    expected_toc = (
-        "- [Introduction](#introduction)\n"
-        "- [Content](#content)"
-    )
+    expected_toc = "- [Introduction](#introduction)\n- [Content](#content)"
 
-    expected_content = (
-        "# Title\n\n"
-        "## Introduction\n\n"
-        "This is the start.\n\n"
-        "## Content\n\n"
-        "This is the content."
-    )
+    expected_content = "# Title\n\n## Introduction\n\nThis is the start.\n\n## Content\n\nThis is the content."
 
     toc, content = h.md.split_toc_content(markdown)
     assert toc == expected_toc
@@ -719,18 +710,9 @@ def test_split_toc_content_basic():
         "This is the content."
     )
 
-    expected_toc = (
-        "- [Introduction](#introduction)\n"
-        "- [Content](#content)"
-    )
+    expected_toc = "- [Introduction](#introduction)\n- [Content](#content)"
 
-    expected_content = (
-        "# Title\n\n"
-        "## Introduction\n\n"
-        "This is the start.\n\n"
-        "## Content\n\n"
-        "This is the content."
-    )
+    expected_content = "# Title\n\n## Introduction\n\nThis is the start.\n\n## Content\n\nThis is the content."
 
     toc, content = h.md.split_toc_content(markdown)
     assert toc == expected_toc
