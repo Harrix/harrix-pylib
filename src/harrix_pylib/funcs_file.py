@@ -125,7 +125,7 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
         if path.is_file() and not any(part.startswith(".") for part in path.parts):
             try:
                 func(str(path))
-                list_files.append(f"File {path.name} is applied.")
+                list_files.append(f"✅ File {path.name} is applied.")
             except Exception:
                 list_files.append(f"❌ File {path.name} is not applied.")
 
@@ -177,7 +177,7 @@ def check_featured_image(path: str) -> tuple[bool, str]:
             line_list.append(f"❌ {child_folder} without featured-image")
 
     if is_correct:
-        line_list.append(f"All correct in {path}")
+        line_list.append(f"✅ All correct in {path}")
     return is_correct, "\n".join(line_list)
 
 
