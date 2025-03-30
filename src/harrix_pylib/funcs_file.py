@@ -124,8 +124,11 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
         # Exclude all folders and files starting with a dot
         if path.is_file() and not any(part.startswith(".") for part in path.parts):
             try:
-                func(str(path))
-                list_files.append(f"✅ File {path.name} is applied.")
+                result = func(str(path))
+                if result is None:
+                    list_files.append(f"✅ File {path.name} is applied.")
+                else:
+                    list_files.append(f"✅ File {path.name} is applied: {result}")
             except Exception:
                 list_files.append(f"❌ File {path.name} is not applied.")
 
