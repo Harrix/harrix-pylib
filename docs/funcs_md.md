@@ -1176,34 +1176,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     toc = "\n".join(toc_lines)
 
     # Delete old TOC and its header
-    is_stop_searching_toc = False
-    new_lines = []
-    lines = remove_yaml_content(markdown_text).splitlines()
-    toc_header_found = False
-
-    for line, is_code_block in identify_code_blocks(lines):
-        if is_code_block:
-            new_lines.append(line)
-            continue
-
-        # Check for TOC header and skip it
-        if not toc_header_found and not is_stop_searching_toc:
-            if (lang == "ru" and line.strip() == "## Содержание") or (
-                lang != "ru" and line.strip() == "## Table of contents"
-            ):
-                toc_header_found = True
-                continue
-
-        if line.startswith("##") and not toc_header_found:
-            is_stop_searching_toc = True
-
-        if is_stop_searching_toc:
-            new_lines.append(line)
-        elif not re.match(r"- \[(.*?)\]\(#(.*?)\)$", line.strip()):
-            if len(new_lines) == 0 or new_lines[-1].strip() or line:
-                new_lines.append(line)
-
-    content_without_yaml = "\n".join(new_lines)
+    content_without_yaml = remove_yaml_content(remove_toc_content(markdown_text))
 
     # Paste TOC
     is_stop_searching_place_toc = False
