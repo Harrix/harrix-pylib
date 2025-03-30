@@ -1279,6 +1279,78 @@ def increase_heading_level_content(markdown_text: str) -> str:
     return "\n".join(new_lines)
 
 
+def remove_toc_content(markdown_text: str) -> str:
+    """
+    Removes the table of contents (TOC) section from a Markdown document.
+
+    The function identifies the TOC based on the document language (from YAML frontmatter)
+    and removes both the TOC header and all TOC links. It preserves code blocks and
+    other content in the document.
+
+    Args:
+
+    - `markdown_text` (`str`): The Markdown text containing a TOC to be removed.
+
+    Returns:
+
+    - `str`: The Markdown text with the TOC section removed.
+
+    Note:
+
+    - The function detects the document language from the YAML frontmatter's `lang` field.
+    - TOC headers are identified as "## Содержание" for Russian documents and "## Table of contents"
+      for other languages.
+    - The function preserves the YAML frontmatter in the output.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+    from pathlib import Path
+
+    text = Path("C:/Notes/note.md").read_text(encoding="utf8")
+    print(h.md.remove_toc_content(text))
+    ```
+    """
+    yaml_md, _ = split_yaml_content(markdown_text)
+    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+    lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
+
+    # Delete old TOC and its header
+    is_stop_searching_toc = False
+    new_lines = []
+    lines = remove_yaml_content(markdown_text).splitlines()
+    toc_header_found = False
+
+    for line, is_code_block in identify_code_blocks(lines):
+        if is_code_block:
+            new_lines.append(line)
+            continue
+
+        # Check for TOC header and skip it
+        if not toc_header_found and not is_stop_searching_toc:
+            if (lang == "ru" and line.strip() == "## Содержание") or (
+                lang != "ru" and line.strip() == "## Table of contents"
+            ):
+                toc_header_found = True
+                continue
+
+        if line.startswith("##") and not toc_header_found:
+            is_stop_searching_toc = True
+
+        if is_stop_searching_toc:
+            new_lines.append(line)
+        elif not re.match(r"- \[(.*?)\]\(#(.*?)\)$", line.strip()):
+            if len(new_lines) == 0 or new_lines[-1].strip() or line:
+                new_lines.append(line)
+
+    content_without_yaml = "\n".join(new_lines)
+    if content_without_yaml[-1] != "\n":
+        content_without_yaml += "\n"
+
+    return yaml_md + "\n\n" + content_without_yaml
+
+
 def remove_yaml_and_code_content(markdown_text: str) -> str:
     """
     Removes YAML front matter and code blocks, and returns the remaining content.

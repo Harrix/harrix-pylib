@@ -434,6 +434,13 @@ More text here."""
     assert h.md.increase_heading_level_content(md_text) == expected
 
 
+def test_remove_toc_content():
+    current_folder = h.dev.get_project_root()
+    md = Path(current_folder / "tests/data/generate_toc_with_links__after.md").read_text(encoding="utf8")
+    md_after = Path(current_folder / "tests/data/generate_toc_with_links__before.md").read_text(encoding="utf8")
+    assert md_after == h.md.remove_toc_content(md)
+
+
 def test_remove_yaml_and_code_content():
     md = Path(h.dev.get_project_root() / "tests/data/remove_yaml_and_code_content.md").read_text(encoding="utf8")
     md_clean = h.md.remove_yaml_and_code_content(md)
