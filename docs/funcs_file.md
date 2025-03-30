@@ -6,6 +6,8 @@ lang: en
 
 # File `funcs_file.py`
 
+## Table of contents
+
 - [Function `all_to_parent_folder`](#function-all_to_parent_folder)
 - [Function `apply_func`](#function-apply_func)
 - [Function `check_featured_image`](#function-check_featured_image)

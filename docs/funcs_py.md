@@ -6,6 +6,8 @@ lang: en
 
 # File `funcs_py.py`
 
+## Table of contents
+
 - [Function `create_uv_new_project`](#function-create_uv_new_project)
 - [Function `extract_functions_and_classes`](#function-extract_functions_and_classes)
 - [Function `generate_md_docs`](#function-generate_md_docs)

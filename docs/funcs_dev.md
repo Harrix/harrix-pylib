@@ -6,6 +6,8 @@ lang: en
 
 # File `funcs_dev.py`
 
+## Table of contents
+
 - [Function `get_project_root`](#function-get_project_root)
 - [Function `load_config`](#function-load_config)
 - [Function `run_powershell_script`](#function-run_powershell_script)
