@@ -979,7 +979,6 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
     lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
 
-
     # Generate TOC
     existing_ids = set()
     lines = remove_yaml_and_code_content(markdown_text).splitlines()
@@ -1011,8 +1010,9 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
 
         # Check for TOC header and skip it
         if not toc_header_found and not is_stop_searching_toc:
-            if (lang == "ru" and line.strip() == "## Содержание") or \
-            (lang != "ru" and line.strip() == "## Table of contents"):
+            if (lang == "ru" and line.strip() == "## Содержание") or (
+                lang != "ru" and line.strip() == "## Table of contents"
+            ):
                 toc_header_found = True
                 continue
 
