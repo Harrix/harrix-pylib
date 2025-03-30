@@ -110,17 +110,23 @@ def all_to_parent_folder(path: Path | str) -> str:
 def apply_func(path: Path | str, ext: str, func: Callable) -> str
 ```
 
-Applies a given function to all files with a specified extension in a folder and its sub-folders.
+Recursively applies a function to all files with a specified extension in a directory.
 
 Args:
 
-- `path` (`str`): The path to the root folder where the function should be applied. Defaults to `None`.
-- `ext` (`str`): The file extension to filter files by. Should include the dot (e.g., '.py').
-- `func` (`Callable`): The function to apply to each file. This function should take an argument, the file path.
+- `path` (Union[Path, str]): The directory path where the files will be searched.
+  If provided as a string, it will be converted to a Path object.
+- `ext` (`str`): The file extension to filter files. For example, ".txt".
+- `func` (`Callable`): A function that takes a single argument (the file path as a string)
+  and performs an operation on the file. It may return a value.
 
 Returns:
 
-- `str`: A string listing the results of applying the function to each file, with each result on a new line.
+- `str`: A newline-separated string of messages indicating the success or failure of applying `func` to each file.
+
+Note:
+
+- Hidden files and folders (those with names starting with a dot) are ignored during processing.
 
 Example:
 
@@ -151,8 +157,11 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
         # Exclude all folders and files starting with a dot
         if path.is_file() and not any(part.startswith(".") for part in path.parts):
             try:
-                func(str(path))
-                list_files.append(f"✅ File {path.name} is applied.")
+                result = func(str(path))
+                if result is None:
+                    list_files.append(f"✅ File {path.name} is applied.")
+                else:
+                    list_files.append(f"✅ File {path.name} is applied: {result}")
             except Exception:
                 list_files.append(f"❌ File {path.name} is not applied.")
 
