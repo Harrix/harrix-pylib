@@ -1065,7 +1065,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-result = h.md.sort_sections("C:/Notes/note.md")
+result = h.md.generate_toc_with_links_content("C:/Notes/note.md")
 print(result)
 ```
 
@@ -1116,7 +1116,7 @@ import harrix_pylib as h
 from pathlib import Path
 
 text = Path("C:/Notes/note.md").read_text(encoding="utf8")
-print(h.md.sort_sections(text))
+print(h.md.generate_toc_with_links_content(text))
 ```
 
 <details>
@@ -2092,7 +2092,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-md = h.md.sort_sections("C:/Notes/note.md")
+md = Path('C:/Notes/note.md').read_text(encoding="utf8")
 yaml, content = h.md.split_yaml_content(md)
 ```
 

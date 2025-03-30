@@ -908,7 +908,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
     ```python
     import harrix_pylib as h
 
-    result = h.md.sort_sections("C:/Notes/note.md")
+    result = h.md.generate_toc_with_links_content("C:/Notes/note.md")
     print(result)
     ```
     """
@@ -948,7 +948,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     from pathlib import Path
 
     text = Path("C:/Notes/note.md").read_text(encoding="utf8")
-    print(h.md.sort_sections(text))
+    print(h.md.generate_toc_with_links_content(text))
     ```
     """
 
@@ -1798,7 +1798,7 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     ```python
     import harrix_pylib as h
 
-    md = h.md.sort_sections("C:/Notes/note.md")
+    md = Path('C:/Notes/note.md').read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)
     ```
     """
