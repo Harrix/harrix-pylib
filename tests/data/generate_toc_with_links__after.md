@@ -1,10 +1,12 @@
 ---
 categories: [it, program]
 tags: [VSCode, FAQ]
-lang: ru
+lang: en
 ---
 
 # Installing VSCode
+
+## Table of contents
 
 - [Section](#section)
 - [About](#about)

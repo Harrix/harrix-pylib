@@ -976,6 +976,9 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
         return text
 
     yaml_md, _ = split_yaml_content(markdown_text)
+    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+    lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
+
 
     # Generate TOC
     existing_ids = set()
@@ -995,21 +998,33 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             toc_lines.append(f"{'  ' * (level - 2)}- [{title_text}]({link})")
     toc = "\n".join(toc_lines)
 
-    # Delete old TOC
+    # Delete old TOC and its header
     is_stop_searching_toc = False
     new_lines = []
     lines = remove_yaml_content(markdown_text).splitlines()
+    toc_header_found = False
+
     for line, is_code_block in identify_code_blocks(lines):
         if is_code_block:
             new_lines.append(line)
             continue
-        if line.startswith("##"):
+
+        # Check for TOC header and skip it
+        if not toc_header_found and not is_stop_searching_toc:
+            if (lang == "ru" and line.strip() == "## Содержание") or \
+            (lang != "ru" and line.strip() == "## Table of contents"):
+                toc_header_found = True
+                continue
+
+        if line.startswith("##") and not toc_header_found:
             is_stop_searching_toc = True
+
         if is_stop_searching_toc:
             new_lines.append(line)
-        elif not re.match(r"- \[(.*?)\]\(#(.*?)\)$", line.strip()):
+        elif not re.match(r"- $$(.*?)$$$$#(.*?)$$$", line.strip()):
             if len(new_lines) == 0 or new_lines[-1].strip() or line:
                 new_lines.append(line)
+
     content_without_yaml = "\n".join(new_lines)
 
     # Paste TOC
@@ -1017,18 +1032,23 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     is_first_paragraph = False
     new_lines = []
     lines = content_without_yaml.splitlines()
+
+    # Create TOC header based on language
+    toc_header = "## Содержание" if lang == "ru" else "## Table of contents"
+    toc_with_header = toc_header + "\n\n" + toc  # Add header to the TOC
+
     for line, is_code_block in identify_code_blocks(lines):
         new_lines.append(line)
         if is_code_block:
             continue
         if line.startswith("##"):
             if not is_stop_searching_place_toc and len(toc_lines) > 1:
-                new_lines.insert(len(new_lines) - 1, toc + "\n")
+                new_lines.insert(len(new_lines) - 1, toc_with_header + "\n")
             is_stop_searching_place_toc = True
         if is_stop_searching_place_toc or line.startswith("# ") or line.startswith("![") or not line.strip():
             continue
         if line and not is_first_paragraph and len(toc_lines) > 1:
-            new_lines.append("\n" + toc)
+            new_lines.append("\n" + toc_with_header)
             is_first_paragraph = True
             is_stop_searching_place_toc = True
     content_without_yaml = "\n".join(new_lines)
