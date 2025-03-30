@@ -985,6 +985,10 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     toc_lines = []
     for line in lines:
         if line.startswith("##"):
+            if (lang == "ru" and line.strip() == "## Содержание") or (
+                lang != "ru" and line.strip() == "## Table of contents"
+            ):
+                continue
             # Determine the header level
             level = len(re.match(r"#+", line).group())
             # Extract the header text
@@ -1021,7 +1025,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
 
         if is_stop_searching_toc:
             new_lines.append(line)
-        elif not re.match(r"- $$(.*?)$$$$#(.*?)$$$", line.strip()):
+        elif not re.match(r"- \[(.*?)\]\(#(.*?)\)$", line.strip()):
             if len(new_lines) == 0 or new_lines[-1].strip() or line:
                 new_lines.append(line)
 
