@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -282,6 +282,119 @@ def test_append_path_to_local_links_images_line():
         # Test case with no links
         markdown_line = "No links here"
         assert h.md.append_path_to_local_links_images_line(markdown_line, adding_path) == "No links here"
+
+
+def test_combine_markdown_files():
+    with TemporaryDirectory() as temp_dir:
+        # Create test files
+        folder_path = Path(temp_dir)
+
+        # Create a test markdown file
+        file1_content = """---
+title: Test File 1
+tags: [python, test]
+---
+# Test Content
+This is test content."""
+
+        (folder_path / "file1.md").write_text(file1_content, encoding="utf-8")
+
+        # Create a file that should be skipped due to published: false
+        file2_content = """---
+title: Test File 2
+published: false
+---
+# Should be skipped
+This content should not appear in the final file."""
+
+        (folder_path / "file2.md").write_text(file2_content, encoding="utf-8")
+
+        # Call the function
+        result = h.md.combine_markdown_files(folder_path)
+
+        # Check the result message
+        assert "✅ File" in result
+        assert ".g.md is created" in result
+
+        # Check the created file
+        output_file = folder_path / f"_{folder_path.name}.g.md"
+        assert output_file.exists()
+
+        # Read the content
+        content = output_file.read_text(encoding="utf-8")
+
+        # Check that YAML header was processed
+        assert "title: Test File 1" in content
+        assert "tags:" in content
+        assert "python" in content
+        assert "test" in content
+
+        # Check that update date was added
+        assert f"update: {date.today()}" in content
+
+        # Check that content was included
+        assert "# Test Content" in content or "## Test Content" in content
+        assert "This is test content" in content
+
+        # Check that the file with published: false was skipped
+        assert "Should be skipped" not in content
+
+
+def test_combine_markdown_files_recursively():
+    with TemporaryDirectory() as temp_dir:
+        root_path = Path(temp_dir)
+
+        # Create a test folder structure
+        # Root
+        # ├── folder1
+        # │   ├── file1.md
+        # │   └── file2.md
+        # ├── folder2
+        # │   ├── file3.md
+        # │   └── subfolder1
+        # │       └── file4.md
+        # ├── folder3
+        # │   └── file5.md
+        # ├── .hidden_folder
+        # │   └── hidden_file.md
+        # └── existing.g.md
+
+        # Create folders
+        folder1 = root_path / "folder1"
+        folder2 = root_path / "folder2"
+        folder3 = root_path / "folder3"
+        subfolder1 = folder2 / "subfolder1"
+        hidden_folder = root_path / ".hidden_folder"
+
+        for folder in [folder1, folder2, folder3, subfolder1, hidden_folder]:
+            folder.mkdir()
+
+        # Create markdown files
+        (folder1 / "file1.md").write_text("# File 1")
+        (folder1 / "file2.md").write_text("# File 2")
+        (folder2 / "file3.md").write_text("# File 3")
+        (subfolder1 / "file4.md").write_text("# File 4")
+        (folder3 / "file5.md").write_text("# File 5")
+        (hidden_folder / "hidden_file.md").write_text("# Hidden File")
+
+        # Create an existing .g.md file that should be deleted
+        (root_path / "existing.g.md").write_text("# Existing Generated File")
+
+        # Call the function being tested
+        result = h.md.combine_markdown_files_recursively(root_path)
+
+        # Verify existing .g.md file was deleted
+        assert not (root_path / "existing.g.md").exists()
+
+        # Check which folders were processed (by checking for generated files)
+        assert (folder1 / f"_{folder1.name}.g.md").exists()  # folder1 has 2 files directly
+        assert (folder2 / f"_{folder2.name}.g.md").exists()  # folder2 has 1 file + 1 in subfolder
+
+        # folder3 should not be processed (only 1 file)
+        assert not (folder3 / f"_{folder3.name}.g.md").exists()
+
+        # .hidden_folder should be skipped
+        assert not (hidden_folder / f"_{hidden_folder.name}.g.md").exists()
 
 
 @pytest.mark.slow
