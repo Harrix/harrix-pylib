@@ -13,6 +13,8 @@ lang: en
 - [Function `add_diary_new_note`](#function-add_diary_new_note)
 - [Function `add_note`](#function-add_note)
 - [Function `append_path_to_local_links_images_line`](#function-append_path_to_local_links_images_line)
+- [Function `combine_markdown_files`](#function-combine_markdown_files)
+- [Function `combine_markdown_files_recursively`](#function-combine_markdown_files_recursively)
 - [Function `download_and_replace_images`](#function-download_and_replace_images)
 - [Function `download_and_replace_images_content`](#function-download_and_replace_images_content)
 - [Function `format_yaml`](#function-format_yaml)
@@ -305,6 +307,327 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
     if adding_path.endswith("/"):
         adding_path = adding_path[:-1]
     return re.sub(r"\[(.*?)\]\(((?!http).*?)\)", replace_path_in_links, markdown_line)
+```
+
+</details>
+
+## Function `combine_markdown_files`
+
+```python
+def combine_markdown_files(folder_path, recursive = False)
+```
+
+Combines multiple markdown files in a folder into a single file with intelligent YAML header merging.
+
+Args:
+
+- `folder_path` (`str` or `Path`): Path to the folder containing markdown files.
+- `recursive` (`bool`): Whether to include files from subfolders. Defaults to `False`.
+
+Returns:
+
+- `str`: A message indicating the result of the operation.
+
+Note:
+
+- Files with `.g.md` extension in the target folder will be deleted before processing.
+- Files with `published: false` in their YAML headers will be skipped.
+- Heading levels in the content will be increased by one level.
+- Local links and image paths will be adjusted to maintain proper references.
+- The combined file will be named `_foldername.g.md`.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+result = h.md.combine_markdown_files("C:/Notes", recursive=True)
+print(result)
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def combine_markdown_files(folder_path, recursive=False):
+
+    def merge_yaml_values(key, value, combined_dict):
+        if key not in combined_dict:
+            combined_dict[key] = value
+            return
+
+        # If current value and new value are the same, do nothing
+        if combined_dict[key] == value:
+            return
+
+        # Handling lists
+        if isinstance(combined_dict[key], list):
+            if isinstance(value, list):
+                # Merge two lists, removing duplicates
+                for item in value:
+                    if item not in combined_dict[key]:
+                        combined_dict[key].append(item)
+            else:
+                # Add new value to the list if it's not already there
+                if value not in combined_dict[key]:
+                    combined_dict[key].append(value)
+        else:
+            # Current value is not a list - convert it to a list and add the new value
+            current_value = combined_dict[key]
+            if isinstance(value, list):
+                combined_dict[key] = [current_value]
+                for item in value:
+                    if item != current_value and item not in combined_dict[key]:
+                        combined_dict[key].append(item)
+            else:
+                if current_value != value:
+                    combined_dict[key] = [current_value, value]
+
+    folder_path = Path(folder_path)
+
+    # Delete all files ending with .g.md
+    for path in folder_path.glob("*.g.md"):
+        if path.is_file():
+            path.unlink()
+
+    # Get all .md files based on the recursive flag
+    if recursive:
+        # For recursive mode, we will structure files by folders
+        md_files = []
+
+        # First add files from the current folder
+        current_folder_files = [
+            f for f in folder_path.glob("*.md") if f.is_file() and f.suffix == ".md" and not f.name.endswith(".g.md")
+        ]
+        md_files.extend(current_folder_files)
+
+        # Then process subfolders in alphabetical order
+        subfolders = sorted([d for d in folder_path.iterdir() if d.is_dir()])
+        for subfolder in subfolders:
+            subfolder_files = []
+            # Recursively collect files from each subfolder
+            for file_path in subfolder.rglob("*.md"):
+                if file_path.is_file() and file_path.suffix == ".md" and not file_path.name.endswith(".g.md"):
+                    subfolder_files.append(file_path)
+
+            # Sort files in the subfolder
+            subfolder_files.sort()
+            md_files.extend(subfolder_files)
+    else:
+        # Non-recursive - only get files in the current folder
+        md_files = sorted(
+            [f for f in folder_path.glob("*.md") if f.is_file() and f.suffix == ".md" and not f.name.endswith(".g.md")]
+        )
+
+    # If there are no markdown files in the folder at all, exit
+    if len(md_files) < 1:
+        return f"Skipped {folder_path}: no markdown files found."
+
+    data_yaml_headers = []
+    contents = []
+
+    for md_file in md_files:
+        markdown_text = md_file.read_text(encoding="utf-8")
+        yaml_md, content_md = split_yaml_content(markdown_text)
+
+        # Check published flag
+        if yaml_md:
+            data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+            published = data_yaml.get("published") if data_yaml and "published" in data_yaml else True
+            if not published:
+                continue
+
+        # Delete old TOC
+        content_md = remove_yaml_content(remove_toc_content(markdown_text))
+
+        # Parse YAML and collect headers
+        if yaml_md:
+            data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+            data_yaml_headers.append(data_yaml)
+        else:
+            data_yaml = {}
+
+        # Increase heading levels
+        content_md = increase_heading_level_content(content_md)
+
+        # Fix links in no-code lines
+        new_lines = []
+        lines = content_md.split("\n")
+        for line, is_code_block in identify_code_blocks(lines):
+            if is_code_block:
+                new_lines.append(line)
+                continue
+
+            # Check no-code line
+            new_parts = []
+            for part, is_code in identify_code_blocks_line(line):
+                if is_code:
+                    new_parts.append(part)
+                    continue
+
+                adding_path = "/".join(md_file.parent.parts[len(folder_path.parts) :])
+                if adding_path:
+                    part_new = append_path_to_local_links_images_line(part, adding_path)
+                else:
+                    part_new = part
+                new_parts.append(part_new)
+
+            line_new = "".join(new_parts)
+            new_lines.append(line_new)
+        content_md = "\n".join(new_lines)
+
+        contents.append(content_md.strip())
+
+    # Combine YAML headers intelligently
+    combined_yaml = {}
+
+    # Special processing for the attribution field
+    all_attributions = []
+
+    # Process all YAML headers
+    for yaml_header in data_yaml_headers:
+        for key, value in yaml_header.items():
+            if key == "attribution":
+                # Collect all attributions in a separate list
+                if isinstance(value, list):
+                    all_attributions.extend(value)
+                else:
+                    all_attributions.append(value)
+            else:
+                # For all other fields, use standard merging
+                merge_yaml_values(key, value, combined_yaml)
+
+    # Add collected attributions to the final YAML
+    if all_attributions:
+        combined_yaml["attribution"] = all_attributions
+
+    # Fix final YAML
+    if "related-id" in combined_yaml:
+        del combined_yaml["related-id"]
+    if "date" in combined_yaml:
+        del combined_yaml["date"]
+    if "permalink" in combined_yaml:
+        del combined_yaml["permalink"]
+    if "permalink-source" in combined_yaml:
+        del combined_yaml["permalink-source"]
+    if "lang" in combined_yaml and isinstance(combined_yaml["lang"], list):
+        combined_yaml["lang"] = "en" if "en" in combined_yaml["lang"] else combined_yaml["lang"][0]
+    combined_yaml["update"] = date.today()
+    adding_path = "/".join(md_file.parent.parts[len(folder_path.parts) :])
+    print(adding_path)
+
+    # Prepare the final content
+    folder_name = folder_path.name
+    output_file = folder_path / f"_{folder_name}.g.md"
+
+    # Dump combined YAML
+    yaml_md = yaml.safe_dump(combined_yaml, allow_unicode=True, sort_keys=False)
+    final_content = ""
+    if combined_yaml:
+        final_content += f"---\n{yaml_md}---\n\n"
+
+    final_content += f"# {folder_name}\n\n"
+    final_content += "\n\n".join(contents)
+
+    final_content = generate_toc_with_links_content(final_content)
+    final_content = generate_image_captions_content(final_content)
+
+    # Write to the output file
+    output_file.write_text(final_content, encoding="utf-8")
+
+    return f"✅ File {output_file} is created."
+```
+
+</details>
+
+## Function `combine_markdown_files_recursively`
+
+```python
+def combine_markdown_files_recursively(folder_path)
+```
+
+Recursively processes a folder structure and combines markdown files in each folder that meets specific criteria.
+
+Args:
+
+- `folder_path` (`str` or `Path`): Path to the root folder to process recursively.
+
+Returns:
+
+- `str`: A multi-line string with results of all combine operations.
+
+Note:
+
+- All `.g.md` files in the entire folder structure will be deleted before processing.
+- Hidden folders (starting with `.`) will be skipped.
+- Files will be combined in a folder if either:
+  1. The folder directly contains at least 2 markdown files, or
+  2. The folder and its subfolders together contain at least 2 markdown files.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+result = h.md.combine_markdown_files_recursively("C:/Notes")
+print(result)
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def combine_markdown_files_recursively(folder_path):
+    result_lines = []
+    folder_path = Path(folder_path)
+
+    # Remove all existing .g.md files
+    for file in filter(
+        lambda path: not any((part for part in path.parts if part.startswith("."))),
+        Path(folder_path).rglob("*.g.md"),
+    ):
+        if file.is_file():
+            file.unlink()
+
+    # Collect all folders, including the root folder
+    all_folders = [folder_path]  # Start with the root folder
+
+    # Add all subfolders
+    for subfolder in filter(
+        lambda path: not any((part for part in path.parts if part.startswith("."))),
+        Path(folder_path).rglob("*"),
+    ):
+        if subfolder.is_dir():
+            all_folders.append(subfolder)
+
+    # Process each folder
+    for folder in all_folders:
+        # Get all .md files in this folder (non-recursively)
+        md_files_in_folder = [f for f in folder.glob("*.md") if f.is_file() and not f.name.endswith(".g.md")]
+
+        # Get all .md files in this folder and its subfolders (recursively)
+        md_files_recursive = [f for f in folder.rglob("*.md") if f.is_file() and not f.name.endswith(".g.md")]
+
+        # Check if there are markdown files directly in subfolders
+        subfolders = [f for f in folder.iterdir() if f.is_dir()]
+        md_files_in_subfolders = []
+        for subfolder in subfolders:
+            md_files_in_subfolders.extend(
+                [f for f in subfolder.rglob("*.md") if f.is_file() and not f.name.endswith(".g.md")]
+            )
+
+        # Create a combined file if:
+        # 1. The folder directly contains at least 2 .md files
+        # 2. OR the folder and its subfolders contain at least 2 .md files (including cases where all files are in subfolders)
+        if len(md_files_in_folder) >= 2 or (
+            len(md_files_recursive) >= 2 and len(md_files_recursive) > len(md_files_in_folder)
+        ):
+            try:
+                result_lines.append(combine_markdown_files(folder, recursive=True))
+            except Exception as e:
+                result_lines.append(f"❌ Error processing {folder}: {e}")
+
+    return "\n".join(result_lines)
 ```
 
 </details>
