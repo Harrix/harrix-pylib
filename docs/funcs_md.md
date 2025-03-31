@@ -618,7 +618,8 @@ def combine_markdown_files_recursively(folder_path):
 
         # Create a combined file if:
         # 1. The folder directly contains at least 2 .md files
-        # 2. OR the folder and its subfolders contain at least 2 .md files (including cases where all files are in subfolders)
+        # 2. OR the folder and its subfolders contain at least 2 .md files
+        # (including cases where all files are in subfolders)
         if len(md_files_in_folder) >= 2 or (
             len(md_files_recursive) >= 2 and len(md_files_recursive) > len(md_files_in_folder)
         ):
