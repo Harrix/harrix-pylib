@@ -6,7 +6,10 @@ lang: en
 
 # File `funcs_py.py`
 
-## Table of contents
+<details>
+<summary>📖 Contents</summary>
+
+## Contents
 
 - [Function `create_uv_new_project`](#function-create_uv_new_project)
 - [Function `extract_functions_and_classes`](#function-extract_functions_and_classes)
@@ -14,6 +17,8 @@ lang: en
 - [Function `generate_md_docs_content`](#function-generate_md_docs_content)
 - [Function `lint_and_fix_python_code`](#function-lint_and_fix_python_code)
 - [Function `sort_py_code`](#function-sort_py_code)
+
+</details>
 
 ## Function `create_uv_new_project`
 
@@ -62,7 +67,7 @@ h.py.create_uv_new_project(project_name, path, "code")
 
 Structure "C:/projects/TestProject":
 
-```
+```text
 ├─ .git
 ├─ .gitignore
 ├─ .python-version

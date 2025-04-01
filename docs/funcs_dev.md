@@ -6,13 +6,18 @@ lang: en
 
 # File `funcs_dev.py`
 
-## Table of contents
+<details>
+<summary>📖 Contents</summary>
+
+## Contents
 
 - [Function `get_project_root`](#function-get_project_root)
 - [Function `load_config`](#function-load_config)
 - [Function `run_powershell_script`](#function-run_powershell_script)
 - [Function `run_powershell_script_as_admin`](#function-run_powershell_script_as_admin)
 - [Function `write_in_output_txt`](#function-write_in_output_txt)
+
+</details>
 
 ## Function `get_project_root`
 

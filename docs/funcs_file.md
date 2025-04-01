@@ -6,7 +6,10 @@ lang: en
 
 # File `funcs_file.py`
 
-## Table of contents
+<details>
+<summary>📖 Contents</summary>
+
+## Contents
 
 - [Function `all_to_parent_folder`](#function-all_to_parent_folder)
 - [Function `apply_func`](#function-apply_func)
@@ -15,6 +18,8 @@ lang: en
 - [Function `find_max_folder_number`](#function-find_max_folder_number)
 - [Function `open_file_or_folder`](#function-open_file_or_folder)
 - [Function `tree_view_folder`](#function-tree_view_folder)
+
+</details>
 
 ## Function `all_to_parent_folder`
 

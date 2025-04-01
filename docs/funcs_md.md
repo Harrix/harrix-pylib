@@ -6,7 +6,10 @@ lang: en
 
 # File `funcs_md.py`
 
-## Table of contents
+<details>
+<summary>📖 Contents</summary>
+
+## Contents
 
 - [Function `add_diary_new_diary`](#function-add_diary_new_diary)
 - [Function `add_diary_new_dream`](#function-add_diary_new_dream)
@@ -37,6 +40,8 @@ lang: en
 - [Function `sort_sections_content`](#function-sort_sections_content)
 - [Function `split_toc_content`](#function-split_toc_content)
 - [Function `split_yaml_content`](#function-split_yaml_content)
+
+</details>
 
 ## Function `add_diary_new_diary`
 
@@ -1483,9 +1488,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     toc_lines = []
     for line in lines:
         if line.startswith("##"):
-            if (lang == "ru" and line.strip() == "## Содержание") or (
-                lang != "ru" and line.strip() == "## Table of contents"
-            ):
+            if (lang == "ru" and line.strip() == "## Содержание") or (lang != "ru" and line.strip() == "## Contents"):
                 continue
             # Determine the header level
             level = len(re.match(r"#+", line).group())
@@ -1498,7 +1501,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             # Form the table of contents entry
             toc_lines.append(f"{'  ' * (level - 2)}- [{title_text}]({link})")
     toc = "\n".join(toc_lines)
-    if toc == "ru":
+    if lang == "ru":
         toc = f"<details>\n<summary>📖 Содержание</summary>\n\n## Содержание\n\n{toc}\n\n</details>"
     else:
         toc = f"<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n{toc}\n\n</details>"
@@ -1818,7 +1821,7 @@ Returns:
 Note:
 
 - The function detects the document language from the YAML frontmatter's `lang` field.
-- TOC is identified as content between <details> and </details> tags containing TOC links.
+- TOC is identified as content between <details> and </details> tags containing "📖 Contents" or "📖 Содержание".
 - The function preserves the YAML frontmatter in the output.
 
 Example:
@@ -1844,15 +1847,19 @@ def remove_toc_content(markdown_text: str) -> str:
     in_toc_section = False
     toc_section_found = False
 
-    for line, is_code_block in identify_code_blocks(lines):
+    for i, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
         if is_code_block:
             new_lines.append(line)
             continue
 
         # Check for TOC opening tag
         if not toc_section_found and line.strip() == "<details>":
-            next_line_idx = lines.index(line) + 1
-            if next_line_idx < len(lines) and "<summary>" in lines[next_line_idx]:
+            next_line_idx = i + 1
+            if (
+                next_line_idx < len(lines)
+                and "<summary>" in lines[next_line_idx]
+                and ("📖 Contents" in lines[next_line_idx] or "📖 Содержание" in lines[next_line_idx])
+            ):
                 in_toc_section = True
                 toc_section_found = True
                 continue
