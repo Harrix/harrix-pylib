@@ -1569,7 +1569,7 @@ def remove_toc_content(markdown_text: str) -> str:
     Note:
 
     - The function detects the document language from the YAML frontmatter's `lang` field.
-    - TOC is identified as content between <details> and </details> tags containing TOC links.
+    - TOC is identified as content between <details> and </details> tags containing "📖 Contents" or "📖 Содержание".
     - The function preserves the YAML frontmatter in the output.
 
     Example:
@@ -1590,15 +1590,19 @@ def remove_toc_content(markdown_text: str) -> str:
     in_toc_section = False
     toc_section_found = False
 
-    for line, is_code_block in identify_code_blocks(lines):
+    for i, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
         if is_code_block:
             new_lines.append(line)
             continue
 
         # Check for TOC opening tag
         if not toc_section_found and line.strip() == "<details>":
-            next_line_idx = lines.index(line) + 1
-            if next_line_idx < len(lines) and "<summary>" in lines[next_line_idx]:
+            next_line_idx = i + 1
+            if (
+                next_line_idx < len(lines)
+                and "<summary>" in lines[next_line_idx]
+                and ("📖 Contents" in lines[next_line_idx] or "📖 Содержание" in lines[next_line_idx])
+            ):
                 in_toc_section = True
                 toc_section_found = True
                 continue
