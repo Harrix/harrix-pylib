@@ -54,7 +54,7 @@ def create_uv_new_project(project_name: str, path: str | Path, editor: str = "co
 
     Structure "C:/projects/TestProject":
 
-    ```
+    ```text
     ├─ .git
     ├─ .gitignore
     ├─ .python-version
