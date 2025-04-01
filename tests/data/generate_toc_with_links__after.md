@@ -6,10 +6,15 @@ lang: en
 
 # Installing VSCode
 
-## Table of contents
+<details>
+<summary>📖 Contents</summary>
+
+## Contents
 
 - [Section](#section)
 - [About](#about)
+
+</details>
 
 ## Section
 

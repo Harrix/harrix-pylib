@@ -1300,6 +1300,10 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             # Form the table of contents entry
             toc_lines.append(f"{'  ' * (level - 2)}- [{title_text}]({link})")
     toc = "\n".join(toc_lines)
+    if toc == "ru":
+        toc = f"<details>\n<summary>📖 Содержание</summary>\n\n## Содержание\n\n{toc}\n\n</details>"
+    else:
+        toc = f"<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n{toc}\n\n</details>"
 
     # Delete old TOC and its header
     content_without_yaml = remove_yaml_content(remove_toc_content(markdown_text))
@@ -1310,22 +1314,18 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     new_lines = []
     lines = content_without_yaml.splitlines()
 
-    # Create TOC header based on language
-    toc_header = "## Содержание" if lang == "ru" else "## Table of contents"
-    toc_with_header = toc_header + "\n\n" + toc  # Add header to the TOC
-
     for line, is_code_block in identify_code_blocks(lines):
         new_lines.append(line)
         if is_code_block:
             continue
         if line.startswith("##"):
             if not is_stop_searching_place_toc and len(toc_lines) > 1:
-                new_lines.insert(len(new_lines) - 1, toc_with_header + "\n")
+                new_lines.insert(len(new_lines) - 1, toc + "\n")
             is_stop_searching_place_toc = True
         if is_stop_searching_place_toc or line.startswith("# ") or line.startswith("![") or not line.strip():
             continue
         if line and not is_first_paragraph and len(toc_lines) > 1:
-            new_lines.append("\n" + toc_with_header)
+            new_lines.append("\n" + toc)
             is_first_paragraph = True
             is_stop_searching_place_toc = True
     content_without_yaml = "\n".join(new_lines)
@@ -1557,8 +1557,8 @@ def remove_toc_content(markdown_text: str) -> str:
     Removes the table of contents (TOC) section from a Markdown document.
 
     The function identifies the TOC based on the document language (from YAML frontmatter)
-    and removes both the TOC header and all TOC links. It preserves code blocks and
-    other content in the document.
+    and removes the entire TOC section, including the details/summary tags and all TOC links.
+    It preserves code blocks and other content in the document.
 
     Args:
 
@@ -1571,8 +1571,7 @@ def remove_toc_content(markdown_text: str) -> str:
     Note:
 
     - The function detects the document language from the YAML frontmatter's `lang` field.
-    - TOC headers are identified as "## Содержание" for Russian documents and "## Table of contents"
-      for other languages.
+    - TOC is identified as content between <details> and </details> tags containing TOC links.
     - The function preserves the YAML frontmatter in the output.
 
     Example:
@@ -1586,39 +1585,38 @@ def remove_toc_content(markdown_text: str) -> str:
     ```
     """
     yaml_md, _ = split_yaml_content(markdown_text)
-    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
-    lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
 
-    # Delete old TOC and its header
-    is_stop_searching_toc = False
+    # Delete TOC section enclosed in <details> tags
     new_lines = []
     lines = remove_yaml_content(markdown_text).splitlines()
-    toc_header_found = False
+    in_toc_section = False
+    toc_section_found = False
 
     for line, is_code_block in identify_code_blocks(lines):
         if is_code_block:
             new_lines.append(line)
             continue
 
-        # Check for TOC header and skip it
-        if not toc_header_found and not is_stop_searching_toc:
-            if (lang == "ru" and line.strip() == "## Содержание") or (
-                lang != "ru" and line.strip() == "## Table of contents"
-            ):
-                toc_header_found = True
+        # Check for TOC opening tag
+        if not toc_section_found and line.strip() == "<details>":
+            next_line_idx = lines.index(line) + 1
+            if next_line_idx < len(lines) and "<summary>" in lines[next_line_idx]:
+                in_toc_section = True
+                toc_section_found = True
                 continue
 
-        if line.startswith("##") and not toc_header_found:
-            is_stop_searching_toc = True
+        # Check for TOC closing tag
+        if in_toc_section and line.strip() == "</details>":
+            in_toc_section = False
+            continue
 
-        if is_stop_searching_toc:
-            new_lines.append(line)
-        elif not re.match(r"- \[(.*?)\]\(#(.*?)\)$", line.strip()):
-            if len(new_lines) == 0 or new_lines[-1].strip() or line:
+        if not in_toc_section:
+            # Only add the line if it's not an empty line after the TOC section
+            if not toc_section_found or len(new_lines) == 0 or new_lines[-1].strip() or line.strip():
                 new_lines.append(line)
 
     content_without_yaml = "\n".join(new_lines)
-    if content_without_yaml[-1] != "\n":
+    if content_without_yaml and content_without_yaml[-1] != "\n":
         content_without_yaml += "\n"
 
     return yaml_md + "\n\n" + content_without_yaml
