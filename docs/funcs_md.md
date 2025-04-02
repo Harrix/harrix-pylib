@@ -514,7 +514,6 @@ def combine_markdown_files(folder_path, recursive=False):
     combined_yaml.pop("permalink-source", None)
     if "lang" in combined_yaml and isinstance(combined_yaml["lang"], list):
         combined_yaml["lang"] = "en" if "en" in combined_yaml["lang"] else combined_yaml["lang"][0]
-    combined_yaml["update"] = date.today()
     adding_path = "/".join(md_file.parent.parts[len(folder_path.parts) :])
 
     # Prepare the final content
