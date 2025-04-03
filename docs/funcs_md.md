@@ -531,6 +531,7 @@ def combine_markdown_files(folder_path, recursive=False):
 
     final_content = generate_toc_with_links_content(final_content)
     final_content = generate_image_captions_content(final_content)
+    final_content = sort_sections_content(final_content)
 
     # Write to the output file
     output_file.write_text(final_content, encoding="utf-8")
