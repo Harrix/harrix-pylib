@@ -432,9 +432,9 @@ def combine_markdown_files(folder_path, recursive=False):
     final_content += f"# {folder_name}\n\n"
     final_content += "\n\n".join(contents)
 
+    final_content = sort_sections_content(final_content)
     final_content = generate_toc_with_links_content(final_content)
     final_content = generate_image_captions_content(final_content)
-    final_content = sort_sections_content(final_content)
 
     # Write to the output file
     output_file.write_text(final_content, encoding="utf-8")
@@ -1939,87 +1939,55 @@ def sort_sections(filename: Path | str) -> str:
 def sort_sections_content(markdown_text: str) -> str:
     """
     Sorts the sections of a markdown text by their headings, maintaining YAML front matter
-    and code blocks in their original order. Date-like section headers are sorted in
-    descending order (newest first), while other sections are sorted alphabetically.
+    and code blocks in their original order. Date-based headings are sorted in descending order.
+    Content/table of contents sections are preserved as is.
 
     Args:
-
-    - `markdown_text` (`str`): The Markdown text to sort sections from.
+        markdown_text (str): The Markdown text to sort sections from.
 
     Returns:
-
-    - `str`: The sorted Markdown text.
+        str: The sorted Markdown text.
 
     Notes:
-
-    - The function assumes that sections are marked by `##` at the beginning of a line,
-      and code blocks are delimited by triple backticks (```).
-    - If there's no YAML front matter, the entire document is considered content.
-    - Date-like headers (e.g., "## 2024-01-30" or "## 2024-02-01 21:47") are sorted in
-      descending order (newest first).
-    - Non-date headers are sorted alphabetically.
-    - The sorting ignores any code blocks or other formatting within the section.
-
-    Example:
-
-    ```python
-    import harrix_pylib as h
-    from pathlib import Path
-
-    text = Path('C:/Notes/note.md').read_text(encoding="utf8")
-    print(h.md.sort_sections("C:/Notes/note.md"))
-    ```
-
-    Before sorting:
-
-    ```markdown
-    ---
-    categories: [it, program]
-    tags: [VSCode, FAQ]
-    ---
-
-    # Installing VSCode
-
-    ## 2023-05-15
-
-    Example text.
-
-    ## 2023-06-20 14:30
-
-    Another text.
-
-    ## About
-
-    Documentation text.
-    ```
-
-    After sorting:
-
-    ```markdown
-    ---
-    categories: [it, program]
-    tags: [VSCode, FAQ]
-    ---
-
-    # Installing VSCode
-
-    ## 2023-06-20 14:30
-
-    Another text.
-
-    ## 2023-05-15
-
-    Example text.
-
-    ## About
-
-    Documentation text.
-    ```
+        - Sections marked by `##` at the beginning of a line are sorted.
+        - Date sections (format: ## YYYY-MM-DD or ## YYYY-MM-DD HH:MM) are sorted in descending order.
+        - Non-date sections are sorted alphabetically.
+        - Table of contents sections within <summary>📖 Содержание</summary> or <summary>📖 Contents</summary> are preserved.
+        - Code blocks and YAML front matter are maintained in their original form.
     """
-    import re
-    from datetime import datetime
+
+    def is_date_header(header_line):
+        # Match "## YYYY-MM-DD" or "## YYYY-MM-DD HH:MM"
+        date_pattern = r"^## \d{4}-\d{2}-\d{2}( \d{2}:\d{2})?"
+        return bool(re.match(date_pattern, header_line))
+
+    def parse_date_header(header_line):
+        # Extract just the date part after "## "
+        date_str = header_line[3:].strip()
+
+        # Try to parse with time
+        try:
+            return datetime.strptime(date_str, "%Y-%m-%d %H:%M")
+        except ValueError:
+            # Try to parse without time
+            try:
+                return datetime.strptime(date_str, "%Y-%m-%d")
+            except ValueError:
+                # Return a minimal datetime as fallback (shouldn't happen with proper validation)
+                return datetime.min
 
     yaml_md, content_md = split_yaml_content(markdown_text)
+
+    # Find table of contents blocks and exclude them from sorting
+    toc_pattern = r"<details>[\s\S]*?<summary>📖 (Содержание|Contents)</summary>[\s\S]*?</details>"
+    toc_blocks = re.findall(toc_pattern, content_md)
+
+    # Replace TOC blocks with placeholders for preservation
+    toc_replacements = []
+    for i, match in enumerate(re.finditer(toc_pattern, content_md)):
+        placeholder = f"__TOC_PLACEHOLDER_{i}__"
+        toc_replacements.append((placeholder, match.group(0)))
+        content_md = content_md.replace(match.group(0), placeholder)
 
     is_main_section = True
     is_top_section = False
@@ -2027,9 +1995,6 @@ def sort_sections_content(markdown_text: str) -> str:
     date_sections = []
     regular_sections = []
     section = ""
-
-    # Pattern for matching date headers: ## YYYY-MM-DD or ## YYYY-MM-DD HH:MM
-    date_pattern = re.compile(r"^## (\d{4}-\d{2}-\d{2})(?: \d{2}:\d{2})?")
 
     lines = content_md.split("\n")
     for line, is_code_block in identify_code_blocks(lines):
@@ -2044,13 +2009,11 @@ def sort_sections_content(markdown_text: str) -> str:
             else:
                 if is_top_section:
                     top_sections.append(section)
+                # Check if section header is a date format
+                elif is_date_header(line):
+                    date_sections.append((parse_date_header(line), section))
                 else:
-                    # Check if the section header is a date
-                    date_match = date_pattern.match(section.split("\n")[0])
-                    if date_match:
-                        date_sections.append(section)
-                    else:
-                        regular_sections.append(section)
+                    regular_sections.append(section)
 
             if "" in line:
                 is_top_section = True
@@ -2061,59 +2024,41 @@ def sort_sections_content(markdown_text: str) -> str:
         else:
             section += line + "\n"
 
+    # Handle the last section
     if not is_main_section:
         if is_top_section:
             top_sections.append(section)
+        elif is_date_header(section.split("\n")[0]):
+            date_sections.append((parse_date_header(section.split("\n")[0]), section))
         else:
-            # Check if the last section header is a date
-            date_match = date_pattern.match(section.split("\n")[0])
-            if date_match:
-                date_sections.append(section)
-            else:
-                regular_sections.append(section)
+            regular_sections.append(section)
 
-        # Sort date sections in descending order (newest first)
-        if date_sections:
+    # Sort sections
+    if top_sections:
+        top_sections.sort()
 
-            def extract_date(section_text):
-                header = section_text.split("\n")[0]
-                # Try to extract full datetime if available
-                datetime_match = re.match(r"^## (\d{4}-\d{2}-\d{2} \d{2}:\d{2})", header)
-                if datetime_match:
-                    try:
-                        return datetime.strptime(datetime_match.group(1), "%Y-%m-%d %H:%M")
-                    except ValueError:
-                        pass
+    # Sort date sections in descending order (newest first)
+    date_sections.sort(reverse=True)
+    sorted_date_sections = [section for _, section in date_sections]
 
-                # Fall back to date only
-                date_match = re.match(r"^## (\d{4}-\d{2}-\d{2})", header)
-                if date_match:
-                    try:
-                        return datetime.strptime(date_match.group(1), "%Y-%m-%d")
-                    except ValueError:
-                        return datetime.min
-                return datetime.min
+    if regular_sections:
+        regular_sections.sort()
 
-            date_sections.sort(key=extract_date, reverse=True)
+    # Combine all sections
+    all_sections = top_sections + sorted_date_sections + regular_sections
 
-        # Sort regular sections alphabetically
-        if regular_sections:
-            regular_sections.sort()
+    if all_sections:
+        all_sections[-1] = all_sections[-1].rstrip()
 
-        # Sort top sections alphabetically
-        if top_sections:
-            top_sections.sort()
+    markdown_text = yaml_md + "\n\n" + main_section + "".join(all_sections)
 
-        # Remove trailing newline from last section if needed
-        all_sections = date_sections + regular_sections
-        if all_sections:
-            all_sections[-1] = all_sections[-1].rstrip() + "\n"
-        elif top_sections:
-            top_sections[-1] = top_sections[-1].rstrip() + "\n"
+    # Restore TOC blocks
+    for placeholder, original in toc_replacements:
+        markdown_text = markdown_text.replace(placeholder, original)
 
-        return yaml_md + "\n\n" + main_section + "".join(top_sections) + "".join(all_sections)
+    if markdown_text[-1] != "\n":
+        markdown_text += "\n"
 
-    # If there's only a main section, return the original text
     return markdown_text
 
 
@@ -2203,3 +2148,7 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     if len(parts) < 3:
         return "", markdown_text
     return f"---{parts[1]}---", parts[2].lstrip()
+
+
+import re
+from datetime import datetime

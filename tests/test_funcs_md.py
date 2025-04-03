@@ -840,3 +840,11 @@ def test_split_yaml_content():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)
     assert len(yaml.splitlines()) + len(content.splitlines()) == 5
+
+
+current_folder = h.dev.get_project_root()
+md = Path(current_folder / "tests/data/sort_sections__before.md").read_text(encoding="utf8")
+md_after = Path(current_folder / "tests/data/sort_sections__after.md").read_text(encoding="utf8")
+md_applied = h.md.sort_sections_content(md)
+print(h.md.sort_sections_content(md))
+assert md_after == md_applied
