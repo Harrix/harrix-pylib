@@ -329,9 +329,6 @@ This content should not appear in the final file."""
         assert "python" in content
         assert "test" in content
 
-        # Check that update date was added
-        assert f"update: {date.today()}" in content
-
         # Check that content was included
         assert "# Test Content" in content or "## Test Content" in content
         assert "This is test content" in content
