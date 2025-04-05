@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Iterator, List, Optional, Tuple
+from typing import Iterator, List, Optional
 from urllib.parse import urlparse
 
 import requests
@@ -2242,6 +2242,3 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
         return "", markdown_text
     return f"---{parts[1]}---", parts[2].lstrip()
 
-
-import re
-from datetime import datetime
