@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -378,7 +378,7 @@ def test_combine_markdown_files_recursively():
         (root_path / "existing.g.md").write_text("# Existing Generated File")
 
         # Call the function being tested
-        result = h.md.combine_markdown_files_recursively(root_path)
+        h.md.combine_markdown_files_recursively(root_path)
 
         # Verify existing .g.md file was deleted
         assert not (root_path / "existing.g.md").exists()

@@ -2241,4 +2241,3 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     if len(parts) < 3:
         return "", markdown_text
     return f"---{parts[1]}---", parts[2].lstrip()
-
