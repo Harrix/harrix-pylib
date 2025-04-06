@@ -2268,7 +2268,8 @@ def sort_sections(filename: Path | str) -> str:
 def sort_sections_content(markdown_text: str) -> str
 ```
 
-Sorts sections by their `##` headings: dates in descending order and regular headings alphabetically.
+Sorts sections by their `##` headings: top sections first, then dates in descending order,
+then regular headings alphabetically.
 
 Args:
 
@@ -2280,6 +2281,7 @@ Returns:
 
 Note:
 
+- Sections marked with `<!-- top-section -->` are sorted alphabetically and placed first.
 - Date headings (like `## 2024-01-01`) are sorted in descending order.
 - Regular headings are sorted alphabetically.
 - Preserves `<details>...</details>` blocks that contain `<summary>📖 Содержание</summary>` or `<summary>📖 Contents</summary>`.
@@ -2300,6 +2302,9 @@ Content for 2024
 
 ## Alpha Section
 Alpha content
+
+## Important Info <!-- top-section -->
+This will appear first
 '''
 
 sorted_markdown = h.md.sort_sections_content(markdown)
@@ -2320,6 +2325,9 @@ def sort_sections_content(markdown_text: str) -> str:
         first_line = section_text.split("\n", 1)[0].strip()  # should be ## 2024-...
         heading = first_line.replace("## ", "").strip()
 
+        # Remove top-section marker if present
+        heading = heading.replace("<!-- top-section -->", "").strip()
+
         patterns = [
             "%Y",
             "%Y-%m-%d",
@@ -2332,27 +2340,40 @@ def sort_sections_content(markdown_text: str) -> str:
                 pass
         return None
 
+    def is_top_section(section_text: str) -> bool:
+        """
+        Returns True if the section is marked as a top section.
+        """
+        first_line = section_text.split("\n", 1)[0].strip()
+        return "<!-- top-section -->" in first_line
+
     def sort_logic(sections_list: list[str]) -> list[str]:
-        # Split into 2 groups: date/not date
+        # Split into 3 groups: top sections, date sections, and regular sections
+        top_sections = []
         date_sections = []
-        not_date_sections = []
+        regular_sections = []
 
         for sec in sections_list:
-            dt = is_date_heading(sec)
-            if dt is None:
-                not_date_sections.append(sec)
+            if is_top_section(sec):
+                top_sections.append(sec)
             else:
-                date_sections.append((dt, sec))
+                dt = is_date_heading(sec)
+                if dt is None:
+                    regular_sections.append(sec)
+                else:
+                    date_sections.append((dt, sec))
+
+        # Sort top sections alphabetically
+        top_sections.sort(key=lambda sec: sec.split("\n", 1)[0].lower().replace("<!-- top-section -->", "").strip())
 
         # Sort dates by dt (descending)
         date_sections.sort(key=lambda x: x[0], reverse=True)
 
-        # Sort the rest using normal sorting by the first string heading (alphabetical)
-        not_date_sections.sort(key=lambda sec: sec.split("\n", 1)[0].lower())
+        # Sort the regular sections alphabetically
+        regular_sections.sort(key=lambda sec: sec.split("\n", 1)[0].lower())
 
-        # Combine: first "dates", then "regular" headings
-        # (If you want the opposite order - switch the order)
-        sorted_sections = [s for (_, s) in date_sections] + not_date_sections
+        # Combine: first top sections, then dates, then regular headings
+        sorted_sections = top_sections + [s for (_, s) in date_sections] + regular_sections
         return sorted_sections
 
     # 1) Split YAML and content
@@ -2361,15 +2382,10 @@ def sort_sections_content(markdown_text: str) -> str:
     # 2) Process content lines and "cut" into sections
     #    while ignoring (not splitting into sections) what's inside <details>...</details> with the required summary
     is_main_section = True
-    is_top_section = False
-
-    top_sections = []
     sections = []
-
     section_buffer = ""
 
     skip_block = False  # flag indicating we're inside <details>...</details> block that shouldn't be modified
-    # for simplicity: if we encounter <details>, look at summary in the following lines
 
     lines = content_md.split("\n")
     line_iter = iter(enumerate(identify_code_blocks(lines), start=0))
@@ -2432,20 +2448,10 @@ def sort_sections_content(markdown_text: str) -> str:
                 is_main_section = False
             else:
                 # store the completed section
-                if is_top_section:
-                    top_sections.append(section_buffer)
-                else:
-                    sections.append(section_buffer)
-
-            # Check the flag
-            if "" in line:
-                is_top_section = True
-            else:
-                is_top_section = False
+                sections.append(section_buffer)
 
             # Start a new section
             section_buffer = line + "\n"
-
         else:
             # Continue writing to the current section
             section_buffer += line + "\n"
@@ -2453,34 +2459,21 @@ def sort_sections_content(markdown_text: str) -> str:
     # If we didn't have any ## headings, then don't sort anything.
     # But if we did, close the last "hanging" section
     if not is_main_section:
-        if is_top_section:
-            top_sections.append(section_buffer)
-        else:
-            sections.append(section_buffer)
+        sections.append(section_buffer)
     else:
         # If there wasn't a single `## `, then all content is main_section
         main_section = section_buffer
-        top_sections = []
         sections = []
 
-    # 3) Sort top_sections and sections
-    #    "dates" - in reverse order, the rest - in lexicographic forward order
-
+    # 3) Sort sections
     if sections:
         sections = sort_logic(sections)
-        # Remove the last newline from the last section (as in the original code)
+        # Remove the last newline from the last section
         sections[-1] = sections[-1].rstrip("\n")
-
-    if top_sections:
-        top_sections = sort_logic(top_sections)
-        # If there are no sections, remove \n at the end of the last top_section
-        if not sections:
-            top_sections[-1] = top_sections[-1].rstrip("\n")
 
     # 4) Put everything back together
     if not is_main_section:
-        # main_section + "".join(top_sections) + "".join(sections)
-        markdown_text = yaml_md.strip() + "\n\n" + main_section + "".join(top_sections) + "".join(sections)
+        markdown_text = yaml_md.strip() + "\n\n" + main_section + "".join(sections)
     else:
         # No headings encountered at all, return as is
         markdown_text = yaml_md.strip() + "\n" + main_section
