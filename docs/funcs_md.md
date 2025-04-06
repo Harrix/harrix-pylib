@@ -340,6 +340,8 @@ Note:
 - Heading levels in the content will be increased by one level.
 - Local links and image paths will be adjusted to maintain proper references.
 - The combined file will be named `_foldername.g.md`.
+- If a subfolder contains a `.g.md` file, that file will be used instead of processing
+  individual markdown files in that subfolder.
 
 Example:
 
@@ -390,7 +392,7 @@ def combine_markdown_files(folder_path, recursive=False):
 
     folder_path = Path(folder_path)
 
-    # Delete all files ending with .g.md
+    # Delete all files ending with .g.md in the root folder
     for path in folder_path.glob("*.g.md"):
         if path.is_file():
             path.unlink()
@@ -409,15 +411,21 @@ def combine_markdown_files(folder_path, recursive=False):
         # Then process subfolders in alphabetical order
         subfolders = sorted([d for d in folder_path.iterdir() if d.is_dir()])
         for subfolder in subfolders:
-            subfolder_files = []
-            # Recursively collect files from each subfolder
-            for file_path in subfolder.rglob("*.md"):
-                if file_path.is_file() and file_path.suffix == ".md" and not file_path.name.endswith(".g.md"):
-                    subfolder_files.append(file_path)
+            # Check if there's a .g.md file in the subfolder
+            g_md_files = list(subfolder.glob("*.g.md"))
+            if g_md_files:
+                # Use the first .g.md file found
+                md_files.append(g_md_files[0])
+            else:
+                subfolder_files = []
+                # Recursively collect files from each subfolder
+                for file_path in subfolder.rglob("*.md"):
+                    if file_path.is_file() and file_path.suffix == ".md" and not file_path.name.endswith(".g.md"):
+                        subfolder_files.append(file_path)
 
-            # Sort files in the subfolder
-            subfolder_files.sort()
-            md_files.extend(subfolder_files)
+                # Sort files in the subfolder
+                subfolder_files.sort()
+                md_files.extend(subfolder_files)
     else:
         # Non-recursive - only get files in the current folder
         md_files = sorted(
@@ -433,6 +441,7 @@ def combine_markdown_files(folder_path, recursive=False):
 
     for md_file in md_files:
         markdown_text = md_file.read_text(encoding="utf-8")
+
         yaml_md, content_md = split_yaml_content(markdown_text)
 
         # Check published flag
@@ -548,6 +557,7 @@ def combine_markdown_files_recursively(folder_path)
 ```
 
 Recursively processes a folder structure and combines markdown files in each folder that meets specific criteria.
+Processes folders from the deepest level up to ensure hierarchical combination of notes.
 
 Args:
 
@@ -564,6 +574,8 @@ Note:
 - Files will be combined in a folder if either:
   1. The folder directly contains at least 2 markdown files, or
   2. The folder and its subfolders together contain at least 2 markdown files.
+- Folders are processed from the deepest level up, allowing parent folders to use
+  already combined .g.md files from subfolders.
 
 Example:
 
@@ -590,10 +602,8 @@ def combine_markdown_files_recursively(folder_path):
         if file.is_file():
             file.unlink()
 
-    # Collect all folders, including the root folder
-    all_folders = [folder_path]  # Start with the root folder
-
-    # Add all subfolders
+    # Collect all folders, excluding hidden ones
+    all_folders = []
     for subfolder in filter(
         lambda path: not any((part for part in path.parts if part.startswith("."))),
         Path(folder_path).rglob("*"),
@@ -601,7 +611,13 @@ def combine_markdown_files_recursively(folder_path):
         if subfolder.is_dir():
             all_folders.append(subfolder)
 
-    # Process each folder
+    # Add the root folder
+    all_folders.append(folder_path)
+
+    # Sort folders by depth (deepest first)
+    all_folders.sort(key=lambda x: len(x.parts), reverse=True)
+
+    # Process each folder from deepest to shallowest
     for folder in all_folders:
         # Get all .md files in this folder (non-recursively)
         md_files_in_folder = [f for f in folder.glob("*.md") if f.is_file() and not f.name.endswith(".g.md")]
@@ -609,20 +625,19 @@ def combine_markdown_files_recursively(folder_path):
         # Get all .md files in this folder and its subfolders (recursively)
         md_files_recursive = [f for f in folder.rglob("*.md") if f.is_file() and not f.name.endswith(".g.md")]
 
-        # Check if there are markdown files directly in subfolders
-        subfolders = [f for f in folder.iterdir() if f.is_dir()]
-        md_files_in_subfolders = []
-        for subfolder in subfolders:
-            md_files_in_subfolders.extend(
-                [f for f in subfolder.rglob("*.md") if f.is_file() and not f.name.endswith(".g.md")]
-            )
+        # Get .g.md files in direct subfolders (these were created in previous iterations)
+        g_md_files_in_subfolders = []
+        for subfolder in [f for f in folder.iterdir() if f.is_dir()]:
+            g_md_files_in_subfolders.extend([f for f in subfolder.glob("*.g.md") if f.is_file()])
 
         # Create a combined file if:
         # 1. The folder directly contains at least 2 .md files
         # 2. OR the folder and its subfolders contain at least 2 .md files
-        # (including cases where all files are in subfolders)
-        if len(md_files_in_folder) >= 2 or (
-            len(md_files_recursive) >= 2 and len(md_files_recursive) > len(md_files_in_folder)
+        # 3. OR the folder contains at least 1 .md file AND at least 1 subfolder with a .g.md file
+        if (
+            len(md_files_in_folder) >= 2
+            or (len(md_files_recursive) >= 2 and len(md_files_recursive) > len(md_files_in_folder))
+            or (len(md_files_in_folder) >= 1 and len(g_md_files_in_subfolders) >= 1)
         ):
             try:
                 result_lines.append(combine_markdown_files(folder, recursive=True))
