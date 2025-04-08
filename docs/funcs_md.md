@@ -319,7 +319,7 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
 ## Function `combine_markdown_files`
 
 ```python
-def combine_markdown_files(folder_path, recursive = False)
+def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> str
 ```
 
 Combines multiple markdown files in a folder into a single file with intelligent YAML header merging.
@@ -356,7 +356,7 @@ print(result)
 <summary>Code:</summary>
 
 ```python
-def combine_markdown_files(folder_path, recursive=False):
+def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> str:
 
     def merge_yaml_values(key, value, combined_dict):
         if key not in combined_dict:
@@ -553,7 +553,7 @@ def combine_markdown_files(folder_path, recursive=False):
 ## Function `combine_markdown_files_recursively`
 
 ```python
-def combine_markdown_files_recursively(folder_path)
+def combine_markdown_files_recursively(folder_path: str | Path) -> str
 ```
 
 Recursively processes a folder structure and combines markdown files in each folder that meets specific criteria.
@@ -590,7 +590,7 @@ print(result)
 <summary>Code:</summary>
 
 ```python
-def combine_markdown_files_recursively(folder_path):
+def combine_markdown_files_recursively(folder_path: str | Path) -> str:
     result_lines = []
     folder_path = Path(folder_path)
 

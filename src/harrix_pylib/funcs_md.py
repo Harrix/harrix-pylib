@@ -228,7 +228,7 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
     return re.sub(r"\[(.*?)\]\(((?!http).*?)\)", replace_path_in_links, markdown_line)
 
 
-def combine_markdown_files(folder_path, recursive=False):
+def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> str:
     """
     Combines multiple markdown files in a folder into a single file with intelligent YAML header merging.
 
@@ -451,7 +451,7 @@ def combine_markdown_files(folder_path, recursive=False):
     return f"✅ File {output_file} is created."
 
 
-def combine_markdown_files_recursively(folder_path):
+def combine_markdown_files_recursively(folder_path: str | Path) -> str:
     """
     Recursively processes a folder structure and combines markdown files in each folder that meets specific criteria.
     Processes folders from the deepest level up to ensure hierarchical combination of notes.
