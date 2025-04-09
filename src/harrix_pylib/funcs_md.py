@@ -184,7 +184,10 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
     with filename.open(mode="w", encoding="utf-8") as file:
         file.write(text)
 
-    return f"File {filename} created.", filename
+    if not filename.exists():
+        return f"❌ File {filename} not created.", filename
+
+    return f"✅ File {filename} created.", filename
 
 
 def append_path_to_local_links_images_line(markdown_line: str, adding_path: str) -> str:
