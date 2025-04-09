@@ -92,7 +92,7 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
 
     Args:
 
-    - `path` (Union[Path, str]): The directory path where the files will be searched.
+    - `path` (`Path | str`): The directory path where the files will be searched.
       If provided as a string, it will be converted to a Path object.
     - `ext` (`str`): The file extension to filter files. For example, ".txt".
     - `func` (`Callable`): A function that takes a single argument (the file path as a string)
@@ -141,7 +141,7 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
     return "\n".join(list_files)
 
 
-def check_featured_image(path: str) -> tuple[bool, str]:
+def check_featured_image(path: Path | str) -> tuple[bool, str]:
     """
     Checks for the presence of `featured_image.*` files in every child folder, not recursively.
 
@@ -151,7 +151,7 @@ def check_featured_image(path: str) -> tuple[bool, str]:
 
     Args:
 
-    - `path` (`str`): Path to the folder being checked. Can be either a string or a Path object.
+    - `path` (`Path | str`): Path to the folder being checked. Can be either a string or a Path object.
 
     Returns:
 
@@ -196,7 +196,7 @@ def clear_directory(path: Path | str) -> None:
 
     Args:
 
-    - `path` (Path | str): Path of directory.
+    - `path` (`Path | str`): Path of directory.
 
     Returns:
 

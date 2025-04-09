@@ -121,7 +121,7 @@ Recursively applies a function to all files with a specified extension in a dire
 
 Args:
 
-- `path` (Union[Path, str]): The directory path where the files will be searched.
+- `path` (`Path | str`): The directory path where the files will be searched.
   If provided as a string, it will be converted to a Path object.
 - `ext` (`str`): The file extension to filter files. For example, ".txt".
 - `func` (`Callable`): A function that takes a single argument (the file path as a string)
@@ -180,7 +180,7 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
 ## Function `check_featured_image`
 
 ```python
-def check_featured_image(path: str) -> tuple[bool, str]
+def check_featured_image(path: Path | str) -> tuple[bool, str]
 ```
 
 Checks for the presence of `featured_image.*` files in every child folder, not recursively.
@@ -191,7 +191,7 @@ in any folder, it logs this occurrence.
 
 Args:
 
-- `path` (`str`): Path to the folder being checked. Can be either a string or a Path object.
+- `path` (`Path | str`): Path to the folder being checked. Can be either a string or a Path object.
 
 Returns:
 
@@ -217,7 +217,7 @@ is_correct = h.file.check_featured_image("C:/articles/")
 <summary>Code:</summary>
 
 ```python
-def check_featured_image(path: str) -> tuple[bool, str]:
+def check_featured_image(path: Path | str) -> tuple[bool, str]:
     line_list: list[str] = []
     is_correct: bool = True
 
@@ -247,7 +247,7 @@ This function clears directory with sub-directories.
 
 Args:
 
-- `path` (Path | str): Path of directory.
+- `path` (`Path | str`): Path of directory.
 
 Returns:
 
