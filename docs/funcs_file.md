@@ -17,6 +17,7 @@ lang: en
 - [Function `clear_directory`](#function-clear_directory)
 - [Function `find_max_folder_number`](#function-find_max_folder_number)
 - [Function `open_file_or_folder`](#function-open_file_or_folder)
+- [Function `rename_largest_images_to_featured`](#function-rename_largest_images_to_featured)
 - [Function `tree_view_folder`](#function-tree_view_folder)
 
 </details>
@@ -383,6 +384,98 @@ def open_file_or_folder(path: Path | str) -> None:
     elif platform.system() == "Linux":
         subprocess.call(["xdg-open", str(path)])
     return
+```
+
+</details>
+
+## Function `rename_largest_images_to_featured`
+
+```python
+def rename_largest_images_to_featured(path: Path | str) -> str
+```
+
+Finds the largest image in each subdirectory of the given path and renames it to 'featured-image'.
+
+Args:
+
+- `path` (`Path | str`): The directory path to search for subdirectories containing images.
+
+Returns:
+
+- `str`: A string containing the log of operations performed, with each action on a new line.
+
+Note:
+
+- Only processes subdirectories, not the main directory itself.
+- Looks for image files with extensions: .jpg, .jpeg, .png, .avif, .svg
+- Will not overwrite existing 'featured-image' files.
+
+Example:
+
+```python
+import harrix_pylib as h
+from pathlib import Path
+
+result = h.rename_largest_images_to_featured("C:/articles/")
+print(result)
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def rename_largest_images_to_featured(path: Path | str) -> str:
+    result_lines = []
+    # Convert path to Path object if it's a string
+    if not isinstance(path, Path):
+        path = Path(path)
+
+    # Make sure path exists and is a directory
+    if not path.exists() or not path.is_dir():
+        raise ValueError(f"❌ Error: {path} is not a valid directory")
+
+    # Image extensions to look for
+    image_extensions = [".jpg", ".jpeg", ".png", ".avif", ".svg"]
+
+    # Get all subdirectories
+    subdirs = [d for d in path.iterdir() if d.is_dir()]
+
+    renamed_count = 0
+
+    for subdir in subdirs:
+        result_lines.append(f"Processing directory: {subdir}")
+
+        # Find all image files in this subdirectory
+        image_files = []
+        for ext in image_extensions:
+            image_files.extend(subdir.glob(f"*{ext}"))
+
+        if not image_files:
+            result_lines.append(f"❌ No image files found in {subdir}")
+            continue
+
+        # Find the largest file
+        largest_file = max(image_files, key=lambda f: f.stat().st_size)
+
+        # Create the new filename with the same extension
+        new_filename = subdir / f"featured-image{largest_file.suffix}"
+
+        # Rename the file
+        try:
+            # Check if the target file already exists
+            if new_filename.exists():
+                result_lines.append(f"⚠️ Warning: {new_filename} already exists. Skipping.")
+                continue
+
+            result_lines.append(f"✅ Renaming '{largest_file.name}' to '{new_filename.name}'")
+            largest_file.rename(new_filename)
+            renamed_count += 1
+
+        except Exception as e:
+            result_lines.append(f"❌ Error renaming file: {e}")
+
+    result_lines.append(f"Total files renamed: {renamed_count}")
+    return "\n".join(result_lines)
 ```
 
 </details>

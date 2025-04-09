@@ -63,15 +63,16 @@ Doc: [funcs_dev.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_
 
 Doc: [funcs_file.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_file.md)
 
-| Function/Class           | Description                                                                                 |
-| ------------------------ | ------------------------------------------------------------------------------------------- |
-| `all_to_parent_folder`   | Moves all files from subfolders within the given path to the parent folder and then         |
-| `apply_func`             | Recursively applies a function to all files with a specified extension in a directory.      |
-| `check_featured_image`   | Checks for the presence of `featured_image.*` files in every child folder, not recursively. |
-| `clear_directory`        | This function clears directory with sub-directories.                                        |
-| `find_max_folder_number` | Finds the highest folder number in a given folder based on a pattern.                       |
-| `open_file_or_folder`    | Opens a file or folder using the operating system's default application.                    |
-| `tree_view_folder`       | Generates a tree-like representation of folder contents.                                    |
+| Function/Class                      | Description                                                                                        |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `all_to_parent_folder`              | Moves all files from subfolders within the given path to the parent folder and then                |
+| `apply_func`                        | Recursively applies a function to all files with a specified extension in a directory.             |
+| `check_featured_image`              | Checks for the presence of `featured_image.*` files in every child folder, not recursively.        |
+| `clear_directory`                   | This function clears directory with sub-directories.                                               |
+| `find_max_folder_number`            | Finds the highest folder number in a given folder based on a pattern.                              |
+| `open_file_or_folder`               | Opens a file or folder using the operating system's default application.                           |
+| `rename_largest_images_to_featured` | Finds the largest image in each subdirectory of the given path and renames it to 'featured-image'. |
+| `tree_view_folder`                  | Generates a tree-like representation of folder contents.                                           |
 
 ### File `funcs_md.py`
 
