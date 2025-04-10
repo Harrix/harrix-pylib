@@ -74,8 +74,11 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 
 | Function/Class                           | Description                                                                                                       |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `add_diary_entry_in_year`                | Adds a new diary entry to the yearly markdown file.                                                               |
+| `add_diary_new_dairy_in_year`            | Adds a new diary entry to the yearly diary file.                                                                  |
 | `add_diary_new_diary`                    | Creates a new diary entry for the current day and time.                                                           |
 | `add_diary_new_dream`                    | Creates a new dream diary entry for the current day and time with placeholders for dream descriptions.            |
+| `add_diary_new_dream_in_year`            | Adds a new dream diary entry to the yearly dream file.                                                            |
 | `add_diary_new_note`                     | Adds a new note to the diary or dream diary for the given base path.                                              |
 | `add_note`                               | Adds a note to the specified base path.                                                                           |
 | `append_path_to_local_links_images_line` | Appends a path to local links and images within a Markdown line.                                                  |
