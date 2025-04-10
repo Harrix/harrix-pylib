@@ -152,7 +152,7 @@ def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = Fals
     text = f"{beginning_of_md}\n"
     text += f"# {datetime.now().strftime('%Y-%m-%d')}\n\n"
     text += f"## {datetime.now().strftime('%H:%M')}\n\n"
-    text += "`` — не помню.\n\n" * 15 + "`` — не помню.\n"
+    text += ("`` — I don't remember.\n\n" * 16)[:-1]
     return add_diary_new_note(path_dream, text, is_with_images)
 ```
 
