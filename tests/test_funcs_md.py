@@ -7,6 +7,78 @@ import pytest
 import harrix_pylib as h
 
 
+def test_add_diary_entry_in_year():
+    # Test setup
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        front_matter = "---\ntitle: Test Diary\n---\n"
+
+        # Test 1: Basic add_diary_entry_in_year with a new file
+        entry_content = "This is a test entry.\n\n"
+        message, file_path = h.md.add_diary_entry_in_year(temp_path, front_matter, entry_content)
+
+        # Assertions for Test 1
+        current_year = datetime.now().strftime("%Y")
+        expected_file_path = temp_path / f"{current_year}.md"
+        assert file_path == expected_file_path
+        assert expected_file_path.exists()
+        assert "created" in message
+
+        # Read the file content to verify structure
+        content = expected_file_path.read_text(encoding="utf-8")
+        assert front_matter in content
+        assert f"# {current_year}" in content
+        assert "<details>" in content
+        assert "<summary>📖 Contents</summary>" in content
+        assert "## Contents" in content
+        assert "</details>" in content
+
+        # Check entry format
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        current_time = datetime.now().strftime("%H:%M")
+        assert f"## {current_date}" in content
+        assert f"### {current_time}" in content
+        assert entry_content in content
+
+        # Test 2: Add another entry to the existing file
+        second_entry = "This is a second test entry.\n\n"
+        message2, file_path2 = h.md.add_diary_entry_in_year(temp_path, front_matter, second_entry)
+
+        # Assertions for Test 2
+        assert file_path2 == expected_file_path
+        assert "updated" in message2
+
+        # Read the updated content
+        updated_content = expected_file_path.read_text(encoding="utf-8")
+        assert second_entry in updated_content
+        assert updated_content.count(f"## {current_date}") == 2  # Two entries for the same date
+
+
+def test_add_diary_new_dairy_in_year():
+    # Test setup
+    with TemporaryDirectory() as temp_dir:
+        front_matter = "---\ntitle: Test Diary\n---\n"
+
+        # Assertions for Test 1
+        current_year = datetime.now().strftime("%Y")
+
+        # Test 1: Test add_diary_new_dairy_in_year
+        # Create a new temporary directory to test with a fresh file
+        with TemporaryDirectory() as temp_dir2:
+            temp_path2 = Path(temp_dir2)
+            dairy_message, dairy_file_path = h.md.add_diary_new_dairy_in_year(temp_path2, front_matter)
+
+            # Assertions for Test 4
+            expected_dairy_path = temp_path2 / f"{current_year}.md"
+            assert dairy_file_path == expected_dairy_path
+            assert expected_dairy_path.exists()
+            assert "created" in dairy_message
+
+            # Read the content
+            dairy_content = expected_dairy_path.read_text(encoding="utf-8")
+            assert "Text." in dairy_content
+
+
 def test_add_diary_new_diary():
     with TemporaryDirectory() as temp_dir:
         base_path = Path(temp_dir)
@@ -120,7 +192,7 @@ lang: ru
             assert beginning_of_md in content
             assert f"# {day}" in content
             assert f"## {datetime.now().strftime('%H:%M')}" in content
-            assert content.count("`` — не помню.\n") == 16
+            assert content.count("`` — I don't remember.\n") == 16
 
         # Test without images
         is_with_images = False
@@ -140,7 +212,45 @@ lang: ru
             assert beginning_of_md in content
             assert f"# {day}" in content
             assert f"## {datetime.now().strftime('%H:%M')}" in content
-            assert content.count("`` — не помню.\n") == 16
+            assert content.count("`` — I don't remember.\n") == 16
+
+
+def test_add_diary_new_dream_in_year():
+    # Test setup
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        front_matter = "---\ntitle: Test Diary\n---\n"
+
+        current_year = datetime.now().strftime("%Y")
+        expected_file_path = temp_path / f"{current_year}.md"
+
+        # Test 1: Test add_diary_new_dream_in_year
+        _, dream_file_path = h.md.add_diary_new_dream_in_year(temp_path, front_matter)
+
+        # Assertions for Test 3
+        assert dream_file_path == expected_file_path
+
+        # Read the updated content
+        dream_content = expected_file_path.read_text(encoding="utf-8")
+        assert "`` — I don't remember." in dream_content
+        # Check that it contains the placeholder text repeated 16 times
+        assert dream_content.count("`` — I don't remember.") == 16
+
+        # Test 2: Test add_diary_new_dairy_in_year
+        # Create a new temporary directory to test with a fresh file
+        with TemporaryDirectory() as temp_dir2:
+            temp_path2 = Path(temp_dir2)
+            dairy_message, dairy_file_path = h.md.add_diary_new_dairy_in_year(temp_path2, front_matter)
+
+            # Assertions for Test 4
+            expected_dairy_path = temp_path2 / f"{current_year}.md"
+            assert dairy_file_path == expected_dairy_path
+            assert expected_dairy_path.exists()
+            assert "created" in dairy_message
+
+            # Read the content
+            dairy_content = expected_dairy_path.read_text(encoding="utf-8")
+            assert "Text." in dairy_content
 
 
 def test_add_diary_new_note():
@@ -840,11 +950,3 @@ def test_split_yaml_content():
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)
     assert len(yaml.splitlines()) + len(content.splitlines()) == 5
-
-
-current_folder = h.dev.get_project_root()
-md = Path(current_folder / "tests/data/sort_sections__before.md").read_text(encoding="utf8")
-md_after = Path(current_folder / "tests/data/sort_sections__after.md").read_text(encoding="utf8")
-md_applied = h.md.sort_sections_content(md)
-print(h.md.sort_sections_content(md))
-assert md_after == md_applied
