@@ -56,27 +56,26 @@ def test_add_diary_entry_in_year():
 
 def test_add_diary_new_dairy_in_year():
     # Test setup
-    with TemporaryDirectory() as temp_dir:
-        front_matter = "---\ntitle: Test Diary\n---\n"
+    front_matter = "---\ntitle: Test Diary\n---\n"
 
-        # Assertions for Test 1
-        current_year = datetime.now().strftime("%Y")
+    # Assertions for Test 1
+    current_year = datetime.now().strftime("%Y")
 
-        # Test 1: Test add_diary_new_dairy_in_year
-        # Create a new temporary directory to test with a fresh file
-        with TemporaryDirectory() as temp_dir2:
-            temp_path2 = Path(temp_dir2)
-            dairy_message, dairy_file_path = h.md.add_diary_new_dairy_in_year(temp_path2, front_matter)
+    # Test 1: Test add_diary_new_dairy_in_year
+    # Create a new temporary directory to test with a fresh file
+    with TemporaryDirectory() as temp_dir2:
+        temp_path2 = Path(temp_dir2)
+        dairy_message, dairy_file_path = h.md.add_diary_new_dairy_in_year(temp_path2, front_matter)
 
-            # Assertions for Test 4
-            expected_dairy_path = temp_path2 / f"{current_year}.md"
-            assert dairy_file_path == expected_dairy_path
-            assert expected_dairy_path.exists()
-            assert "created" in dairy_message
+        # Assertions for Test 4
+        expected_dairy_path = temp_path2 / f"{current_year}.md"
+        assert dairy_file_path == expected_dairy_path
+        assert expected_dairy_path.exists()
+        assert "created" in dairy_message
 
-            # Read the content
-            dairy_content = expected_dairy_path.read_text(encoding="utf-8")
-            assert "Text." in dairy_content
+        # Read the content
+        dairy_content = expected_dairy_path.read_text(encoding="utf-8")
+        assert "Text." in dairy_content
 
 
 def test_add_diary_new_diary():
