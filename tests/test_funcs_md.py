@@ -83,8 +83,8 @@ def test_add_diary_new_diary():
         base_path = Path(temp_dir)
         # Define the YAML header for the Markdown note
         beginning_of_md = """---
-author: Anton Sergienko
-author-email: anton.b.sergienko@gmail.com
+author: Jane Doe
+author-email: jane.doe@example.com
 lang: ru
 ---
 """
@@ -150,8 +150,8 @@ def test_add_diary_new_dream():
         base_path = Path(temp_dir)
         # Define the YAML header for the Markdown note
         beginning_of_md = """---
-author: Anton Sergienko
-author-email: anton.b.sergienko@gmail.com
+author: Jane Doe
+author-email: jane.doe@example.com
 lang: ru
 ---
 """

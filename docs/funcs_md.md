@@ -202,8 +202,8 @@ Example of `beginning_of_md`:
 
 ```markdown
 ---
-author: Anton Sergienko
-author-email: anton.b.sergienko@gmail.com
+author: Jane Doe
+author-email: jane.doe@example.com
 lang: ru
 ---
 ```
@@ -259,8 +259,8 @@ Example of `beginning_of_md`:
 
 ```markdown
 ---
-author: Anton Sergienko
-author-email: anton.b.sergienko@gmail.com
+author: Jane Doe
+author-email: jane.doe@example.com
 lang: ru
 ---
 ```

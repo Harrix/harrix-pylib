@@ -128,8 +128,8 @@ def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: b
 
     ```markdown
     ---
-    author: Anton Sergienko
-    author-email: anton.b.sergienko@gmail.com
+    author: Jane Doe
+    author-email: jane.doe@example.com
     lang: ru
     ---
 
@@ -175,8 +175,8 @@ def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = Fals
 
     ```markdown
     ---
-    author: Anton Sergienko
-    author-email: anton.b.sergienko@gmail.com
+    author: Jane Doe
+    author-email: jane.doe@example.com
     lang: ru
     ---
 
