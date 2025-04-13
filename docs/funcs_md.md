@@ -53,39 +53,33 @@ lang: en
 def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_content: str) -> tuple[str, Path]
 ```
 
-    Adds a new diary entry to the yearly markdown file.
+Adds a new diary entry to the yearly markdown file.
 
-    If the yearly file doesn't exist, it creates one with the provided front matter.
-    If it exists, it adds a new entry after the year heading and the table of contents.
+If the yearly file doesn't exist, it creates one with the provided front matter.
+If it exists, it adds a new entry after the year heading and the table of contents.
 
-    Args:
+Args:
 
-    - `path_dream` (`str | Path`): The base path where the yearly file is stored.
-    - `beginning_of_md` (`str`): The YAML front matter to include if creating a new file.
-    - `entry_content` (`str`): The content to add after the date and time headers.
+- `path_dream` (`str | Path`): The base path where the yearly file is stored.
+- `beginning_of_md` (`str`): The YAML front matter to include if creating a new file.
+- `entry_content` (`str`): The content to add after the date and time headers.
 
-    Returns:
+Returns:
 
-    - `tuple[str, Path]`: A message indicating success/failure and the path to the yearly file.
+- `tuple[str, Path]`: A message indicating success/failure and the path to the yearly file.
 
-    Example:
+Example:
 
-    ```python
-    import harrix_pylib as h
+```python
+import harrix_pylib as h
 
-    path = "diary"
-    front_matter = "---
+path = "diary"
+front_matter = "---\ntitle: Diary 2024\n---\n"
+content = "Today I learned something new.\n\n"
 
-## title: Diary 2024
-
-"
-content = "Today I learned something new.
-
-"
-
-    message, file_path = h.md.add_diary_entry_in_year(path, front_matter, content)
-    print(message)
-    ```
+message, file_path = h.md.add_diary_entry_in_year(path, front_matter, content)
+print(message)
+```
 
 <details>
 <summary>Code:</summary>
@@ -147,32 +141,28 @@ def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_
 def add_diary_new_dairy_in_year(path_dream: str | Path, beginning_of_md: str) -> tuple[str, Path]
 ```
 
-    Adds a new diary entry to the yearly diary file.
+Adds a new diary entry to the yearly diary file.
 
-    Args:
+Args:
 
-    - `path_dream` (`str | Path`): The base path where the yearly diary file is stored.
-    - `beginning_of_md` (`str`): The YAML front matter to include if creating a new file.
+- `path_dream` (`str | Path`): The base path where the yearly diary file is stored.
+- `beginning_of_md` (`str`): The YAML front matter to include if creating a new file.
 
-    Returns:
+Returns:
 
-    - `tuple[str, Path]`: A message indicating success/failure and the path to the yearly diary file.
+- `tuple[str, Path]`: A message indicating success/failure and the path to the yearly diary file.
 
-    Example:
+Example:
 
-    ```python
-    import harrix_pylib as h
+```python
+import harrix_pylib as h
 
-    path = "diary"
-    front_matter = "---
+path = "diary"
+front_matter = "---\ntitle: Personal Journal 2024\n---\n"
 
-## title: Personal Journal 2024
-
-"
-
-    message, file_path = h.md.add_diary_new_dairy_in_year(path, front_matter)
-    print(message)
-    ```
+message, file_path = h.md.add_diary_new_dairy_in_year(path, front_matter)
+print(message)
+```
 
 <details>
 <summary>Code:</summary>
@@ -306,32 +296,28 @@ def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = Fals
 def add_diary_new_dream_in_year(path_dream: str | Path, beginning_of_md: str) -> tuple[str, Path]
 ```
 
-    Adds a new dream diary entry to the yearly dream file.
+Adds a new dream diary entry to the yearly dream file.
 
-    Args:
+Args:
 
-    - `path_dream` (`str | Path`): The base path where the yearly dream file is stored.
-    - `beginning_of_md` (`str`): The YAML front matter to include if creating a new file.
+- `path_dream` (`str | Path`): The base path where the yearly dream file is stored.
+- `beginning_of_md` (`str`): The YAML front matter to include if creating a new file.
 
-    Returns:
+Returns:
 
-    - `tuple[str, Path]`: A message indicating success/failure and the path to the yearly dream file.
+- `tuple[str, Path]`: A message indicating success/failure and the path to the yearly dream file.
 
-    Example:
+Example:
 
-    ```python
-    import harrix_pylib as h
+```python
+import harrix_pylib as h
 
-    path = "dreams"
-    front_matter = "---
+path = "dreams"
+front_matter = "---\ntitle: Dream Journal 2024\n---\n"
 
-## title: Dream Journal 2024
-
-"
-
-    message, file_path = h.md.add_diary_new_dream_in_year(path, front_matter)
-    print(message)
-    ```
+message, file_path = h.md.add_diary_new_dream_in_year(path, front_matter)
+print(message)
+```
 
 <details>
 <summary>Code:</summary>

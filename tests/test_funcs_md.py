@@ -592,7 +592,6 @@ Author Name"""
 > -- _Author Name, Book Title_"""
 
     result_multiline = h.md.format_quotes_as_markdown_content(multiline_text)
-    compare_side_by_side(expected_multiline, result_multiline)
     assert result_multiline == expected_multiline
 
     # Test with a temporary file using pathlib

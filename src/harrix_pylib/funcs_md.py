@@ -31,8 +31,8 @@ def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_
     import harrix_pylib as h
 
     path = "diary"
-    front_matter = "---\ntitle: Diary 2024\n---\n"
-    content = "Today I learned something new.\n\n"
+    front_matter = "---\\ntitle: Diary 2024\\n---\\n"
+    content = "Today I learned something new.\\n\\n"
 
     message, file_path = h.md.add_diary_entry_in_year(path, front_matter, content)
     print(message)
@@ -104,7 +104,7 @@ def add_diary_new_dairy_in_year(path_dream: str | Path, beginning_of_md: str) ->
     import harrix_pylib as h
 
     path = "diary"
-    front_matter = "---\ntitle: Personal Journal 2024\n---\n"
+    front_matter = "---\\ntitle: Personal Journal 2024\\n---\\n"
 
     message, file_path = h.md.add_diary_new_dairy_in_year(path, front_matter)
     print(message)
@@ -228,7 +228,7 @@ def add_diary_new_dream_in_year(path_dream: str | Path, beginning_of_md: str) ->
     import harrix_pylib as h
 
     path = "dreams"
-    front_matter = "---\ntitle: Dream Journal 2024\n---\n"
+    front_matter = "---\\ntitle: Dream Journal 2024\\n---\\n"
 
     message, file_path = h.md.add_diary_new_dream_in_year(path, front_matter)
     print(message)
