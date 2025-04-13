@@ -86,6 +86,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `combine_markdown_files_recursively`     | Recursively processes a folder structure and combines markdown files in each folder that meets specific criteria. |
 | `download_and_replace_images`            | Downloads remote images in Markdown text and replaces their URLs with local paths.                                |
 | `download_and_replace_images_content`    | Downloads remote images in Markdown text and replaces their URLs with local paths.                                |
+| `format_quotes_as_markdown_content`      | Converts raw text with quotes into Markdown format.                                                               |
 | `format_yaml`                            | Formats YAML content in a file, ensuring proper indentation and structure.                                        |
 | `format_yaml_content`                    | Formats the YAML front matter within the given markdown text.                                                     |
 | `generate_author_book`                   | Adds the author and the title of the book to the quotes and formats them as Markdown quotes.                      |

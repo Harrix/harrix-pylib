@@ -23,6 +23,7 @@ lang: en
 - [Function `combine_markdown_files_recursively`](#function-combine_markdown_files_recursively)
 - [Function `download_and_replace_images`](#function-download_and_replace_images)
 - [Function `download_and_replace_images_content`](#function-download_and_replace_images_content)
+- [Function `format_quotes_as_markdown_content`](#function-format_quotes_as_markdown_content)
 - [Function `format_yaml`](#function-format_yaml)
 - [Function `format_yaml_content`](#function-format_yaml_content)
 - [Function `generate_author_book`](#function-generate_author_book)
@@ -1006,6 +1007,88 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
     content_md = "\n".join(new_lines)
 
     return yaml_md + "\n\n" + content_md
+```
+
+</details>
+
+## Function `format_quotes_as_markdown_content`
+
+```python
+def format_quotes_as_markdown_content(markdown_text: str) -> str
+```
+
+Converts raw text with quotes into Markdown format.
+
+Args:
+
+- `markdown_text` (`str`): Raw text with quotes.
+
+Returns:
+
+- `str`: Formatted Markdown text.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+markdown_text = '''They can get a big bang out of buying a blanket.
+
+The Catcher in the Rye
+J.D. Salinger
+
+
+I just mean that I used to think about old Spencer quite a lot
+
+The Catcher in the Rye
+J.D. Salinger'''
+
+# > They can get a big bang out of buying a blanket.
+# >
+# > -- _J.D. Salinger, The Catcher in the Rye_
+#
+# ---
+#
+# > I just mean that I used to think about old Spencer quite a lot
+# >
+# > -- _J.D. Salinger, The Catcher in the Rye_
+
+markdown_text = h.md.convert_to_markdown(markdown_text)
+print(markdown_text)
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def format_quotes_as_markdown_content(markdown_text: str) -> str:
+    raw_quotes = markdown_text.strip().split("\n\n\n")
+
+    formatted_quotes: list[str] = []
+    book_title: str | None = None
+
+    for quote in raw_quotes:
+        parts = quote.strip().split("\n\n")
+
+        if len(parts) >= 2:
+            quote_text = parts[0]
+            source_info = parts[-1].split("\n")
+
+            if len(source_info) >= 2:
+                title = source_info[0].strip()
+                author = source_info[1].strip()
+
+                if book_title is None:
+                    book_title = title
+
+                formatted_quote_text = quote_text.replace("\n", "\n>\n> ")
+
+                formatted_quote = f"> {formatted_quote_text}\n>\n> -- _{author}, {title}_"
+                formatted_quotes.append(formatted_quote)
+
+    result = f"# {book_title}\n\n" + "\n\n---\n\n".join(formatted_quotes)
+
+    return result
 ```
 
 </details>

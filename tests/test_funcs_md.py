@@ -523,6 +523,105 @@ def test_download_and_replace_images_content():
         assert "![Test Image](300.png)" not in updated_text
 
 
+def test_format_quotes_as_markdown_content():
+    # Test input
+    markdown_text = """They can get a big bang out of buying a blanket.
+
+    The Catcher in the Rye
+    J.D. Salinger
+
+
+    I just mean that I used to think about old Spencer quite a lot
+
+    The Catcher in the Rye
+    J.D. Salinger"""
+
+    # Expected output
+    expected_output = """# The Catcher in the Rye
+
+> They can get a big bang out of buying a blanket.
+>
+> -- _J.D. Salinger, The Catcher in the Rye_
+
+---
+
+> I just mean that I used to think about old Spencer quite a lot
+>
+> -- _J.D. Salinger, The Catcher in the Rye_"""
+
+    # Call the function
+    result = h.md.format_quotes_as_markdown_content(markdown_text)
+
+    # Assert the result matches expected output
+    assert result == expected_output
+
+    # Test with multi-line quote
+    multiline_text = """This is a quote
+that spans multiple lines
+in the text.
+
+Book Title
+Author Name
+
+
+Another quote
+with multiple lines
+here.
+
+Book Title
+Author Name"""
+
+    expected_multiline = """# Book Title
+
+> This is a quote
+>
+> that spans multiple lines
+>
+> in the text.
+>
+> -- _Author Name, Book Title_
+
+---
+
+> Another quote
+>
+> with multiple lines
+>
+> here.
+>
+> -- _Author Name, Book Title_"""
+
+    result_multiline = h.md.format_quotes_as_markdown_content(multiline_text)
+    compare_side_by_side(expected_multiline, result_multiline)
+    assert result_multiline == expected_multiline
+
+    # Test with a temporary file using pathlib
+    with TemporaryDirectory() as temp_dir:
+        file_path = Path(temp_dir) / "test_quotes.txt"
+
+        # Write to file using pathlib
+        file_path.write_text(markdown_text, encoding="utf-8")
+
+        # Read from file using pathlib
+        file_content = file_path.read_text(encoding="utf-8")
+
+        # Process file content
+        file_result = h.md.format_quotes_as_markdown_content(file_content)
+        assert file_result == expected_output
+
+    # Test with empty input
+    empty_result = h.md.format_quotes_as_markdown_content("")
+    assert empty_result == "# None\n\n"
+
+    # Test with malformed input (missing author or title)
+    malformed_text = """This is a quote without proper formatting.
+
+    Only Title"""
+
+    malformed_result = h.md.format_quotes_as_markdown_content(malformed_text)
+    assert malformed_result == "# None\n\n"
+
+
 def test_format_yaml():
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/format_yaml__before.md").read_text(encoding="utf8")

@@ -828,6 +828,77 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
     return yaml_md + "\n\n" + content_md
 
 
+def format_quotes_as_markdown_content(markdown_text: str) -> str:
+    """
+    Converts raw text with quotes into Markdown format.
+
+    Args:
+
+    - `markdown_text` (`str`): Raw text with quotes.
+
+    Returns:
+
+    - `str`: Formatted Markdown text.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    markdown_text = '''They can get a big bang out of buying a blanket.
+
+    The Catcher in the Rye
+    J.D. Salinger
+
+
+    I just mean that I used to think about old Spencer quite a lot
+
+    The Catcher in the Rye
+    J.D. Salinger'''
+
+    # > They can get a big bang out of buying a blanket.
+    # >
+    # > -- _J.D. Salinger, The Catcher in the Rye_
+    #
+    # ---
+    #
+    # > I just mean that I used to think about old Spencer quite a lot
+    # >
+    # > -- _J.D. Salinger, The Catcher in the Rye_
+
+    markdown_text = h.md.convert_to_markdown(markdown_text)
+    print(markdown_text)
+    ```
+    """
+    raw_quotes = markdown_text.strip().split("\n\n\n")
+
+    formatted_quotes: list[str] = []
+    book_title: str | None = None
+
+    for quote in raw_quotes:
+        parts = quote.strip().split("\n\n")
+
+        if len(parts) >= 2:
+            quote_text = parts[0]
+            source_info = parts[-1].split("\n")
+
+            if len(source_info) >= 2:
+                title = source_info[0].strip()
+                author = source_info[1].strip()
+
+                if book_title is None:
+                    book_title = title
+
+                formatted_quote_text = quote_text.replace("\n", "\n>\n> ")
+
+                formatted_quote = f"> {formatted_quote_text}\n>\n> -- _{author}, {title}_"
+                formatted_quotes.append(formatted_quote)
+
+    result = f"# {book_title}\n\n" + "\n\n---\n\n".join(formatted_quotes)
+
+    return result
+
+
 def format_yaml(filename: Path | str) -> str:
     """
     Formats YAML content in a file, ensuring proper indentation and structure.
