@@ -679,6 +679,46 @@ def test_generate_image_captions_content():
     assert md_after == h.md.generate_image_captions_content(md)
 
 
+def test_generate_short_note_toc_with_links():
+    current_folder = h.dev.get_project_root()
+
+    md_before = Path(current_folder / "tests/data/generate_short_note_toc_with_links_content__before.md").read_text(
+        encoding="utf8"
+    )
+    md_after = Path(current_folder / "tests/data/generate_short_note_toc_with_links_content__after.md").read_text(
+        encoding="utf8"
+    )
+
+    with TemporaryDirectory() as temp_folder:
+        temp_filename = Path(temp_folder) / "test_document.md"
+        temp_filename.write_text(md_before, encoding="utf-8")
+
+        result = h.md.generate_short_note_toc_with_links(temp_filename)
+
+        assert "✅ Short TOC file created:" in result
+        assert str(temp_filename.with_suffix(".short.g.md")) in result
+
+        generated_file = temp_filename.with_suffix(".short.g.md")
+        assert generated_file.exists()
+
+        generated_file_content = generated_file.read_text(encoding="utf-8")
+        assert md_after == generated_file_content
+
+
+def test_generate_short_note_toc_with_links_content():
+    current_folder = h.dev.get_project_root()
+
+    md_before = Path(current_folder / "tests/data/generate_short_note_toc_with_links_content__before.md").read_text(
+        encoding="utf8"
+    )
+    md_after = Path(current_folder / "tests/data/generate_short_note_toc_with_links_content__after.md").read_text(
+        encoding="utf8"
+    )
+
+    generated_content = h.md.generate_short_note_toc_with_links_content(md_before)
+    assert md_after == generated_content
+
+
 def test_generate_toc_with_links():
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/generate_toc_with_links__before.md").read_text(encoding="utf8")

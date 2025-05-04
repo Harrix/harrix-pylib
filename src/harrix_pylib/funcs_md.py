@@ -1400,6 +1400,132 @@ def generate_image_captions_content(markdown_text: str) -> str:
     return yaml_md + "\n\n" + content_md
 
 
+def generate_short_note_toc_with_links(filename: Path | str) -> str:
+    """
+    Generates a separate markdown file with only the Table of Contents (TOC) from a given Markdown file.
+
+    This function reads a Markdown file, processes its content to create a TOC, and writes
+    a new file with the ".short.g.md" extension containing only the TOC.
+
+    Args:
+
+    - `filename` (`Path` | `str`): The path to the Markdown file. Can be either a `Path` object or a string.
+
+    Returns:
+
+    - `str`: A string containing the status of the operation, including the path to the generated file.
+
+    Note:
+
+    - The function preserves YAML frontmatter if present in the original file.
+    - The generated TOC file will have ": short" appended to the original title.
+    - The TOC is presented as a hierarchical list of headers from the original document.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    result = h.md.generate_short_note_toc_with_links("C:/Notes/note.md")
+    print(result)  # Will print status and path to the new file C:/Notes/note.short.g.md
+    ```
+    """
+    # Convert to Path object if string
+    if isinstance(filename, str):
+        filename = Path(filename)
+
+    # Read the original file
+    with open(filename, "r", encoding="utf-8") as f:
+        document = f.read()
+
+    # Generate the short TOC content
+    short_toc_content = generate_short_note_toc_with_links_content(document)
+
+    # Create the new filename with .short.g.md extension
+    short_filename = filename.with_suffix(".short.g.md")
+
+    # Write the short TOC to the new file
+    with open(short_filename, "w", encoding="utf-8") as file:
+        file.write(short_toc_content)
+
+    return f"✅ Short TOC file created: {short_filename}"
+
+
+def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
+    """
+    Generates a markdown content with only the Table of Contents (TOC) from a given Markdown text.
+
+    Args:
+
+    - `markdown_text` (`str`): The markdown text from which to generate the TOC.
+
+    Returns:
+
+    - `str`: A new markdown content with only the title and TOC.
+
+    Note:
+
+    - The function preserves YAML frontmatter if present in the original text.
+    - The generated TOC content will have ": short" appended to the original title.
+    - The TOC is presented as a hierarchical list of headers from the original document.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+    from pathlib import Path
+
+    text = Path("C:/Notes/note.md").read_text(encoding="utf8")
+    short_toc = h.md.generate_short_note_toc_with_links_content(text)
+    Path("C:/Notes/note.short.g.md").write_text(short_toc, encoding="utf8")
+    ```
+    """
+    # Extract YAML frontmatter if present
+    yaml_md, _ = split_yaml_content(markdown_text)
+
+    # Extract the title from the markdown content
+    title = ""
+    for line in markdown_text.splitlines():
+        if line.startswith("# "):
+            title = line[2:].strip()
+            break
+
+    if not title:
+        title = "Document"
+
+    # Create the new title with ": short" suffix
+    new_title = f"# {title}: short"
+
+    # Parse the document to extract headers and create TOC
+    lines = remove_yaml_and_code_content(markdown_text).splitlines()
+    toc_structure = []
+    current_levels = [0] * 10  # Track header levels (h1-h9)
+
+    for line in lines:
+        if line.startswith("#"):
+            # Determine the header level
+            level = len(re.match(r"#+", line).group())
+            if level == 1:  # Skip the main title
+                continue
+
+            # Extract the header text
+            header_text = line[level:].strip()
+            header_text = header_text.replace("", "").strip()
+
+            # Reset lower levels when a higher level is encountered
+            for i in range(level, len(current_levels)):
+                current_levels[i] = 0
+
+            # Add to the TOC structure with proper indentation
+            indent = "  " * (level - 2)
+            toc_structure.append(f"{indent}- {header_text}")
+
+    # Combine all parts
+    result = yaml_md + "\n\n" + new_title + "\n\n" + "\n".join(toc_structure) + "\n"
+
+    return result
+
+
 def generate_toc_with_links(filename: Path | str) -> str:
     """
     Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes
