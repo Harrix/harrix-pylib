@@ -1684,7 +1684,14 @@ def generate_short_note_toc_with_links(filename: Path | str) -> str:
     short_toc_content = generate_short_note_toc_with_links_content(document)
 
     # Create the new filename with .short.g.md extension
-    short_filename = filename.with_suffix(".short.g.md")
+    # Check if the file already has a .g.md extension
+    if filename.suffix == ".md" and filename.stem.endswith(".g"):
+        # For files like '_Books-of-fiction.g.md', create '_Books-of-fiction.short.g.md'
+        base_name = filename.stem[:-2]  # Remove the '.g' part
+        short_filename = filename.with_name(f"{base_name}.short.g.md")
+    else:
+        # For normal files, just add .short.g.md
+        short_filename = filename.with_suffix(".short.g.md")
 
     # Write the short TOC to the new file
     with open(short_filename, "w", encoding="utf-8") as file:
