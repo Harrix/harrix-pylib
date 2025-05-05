@@ -1743,6 +1743,9 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
     # Extract YAML frontmatter if present
     yaml_md, _ = split_yaml_content(markdown_text)
 
+    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+    lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
+
     # Extract the title from the markdown content
     title = ""
     for line in markdown_text.splitlines():
@@ -1763,6 +1766,9 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
 
     for line in lines:
         if line.startswith("#"):
+            if (lang == "ru" and line.strip() == "## Содержание") or (lang != "ru" and line.strip() == "## Contents"):
+                continue
+
             # Determine the header level
             level = len(re.match(r"#+", line).group())
             if level == 1:  # Skip the main title
