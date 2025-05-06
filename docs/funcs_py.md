@@ -23,7 +23,7 @@ lang: en
 ## Function `create_uv_new_project`
 
 ```python
-def create_uv_new_project(project_name: str, path: str | Path, editor: str = "code", cli_commands: str = "") -> str
+def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "code", cli_commands: str = "") -> str
 ```
 
 Creates a new project using uv, initializes it, and sets up necessary files.
@@ -85,11 +85,11 @@ Structure "C:/projects/TestProject":
 <summary>Code:</summary>
 
 ```python
-def create_uv_new_project(project_name: str, path: str | Path, editor: str = "code", cli_commands: str = "") -> str:
+def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "code", cli_commands: str = "") -> str:
     project_name = project_name.replace("_", "-").replace(" ", "-")
     project_name_under = project_name.replace("-", "_")
     commands = f"""
-        cd {path}
+        cd {folder}
         uv init --package {project_name}
         cd {project_name}
         uv sync
@@ -100,11 +100,11 @@ def create_uv_new_project(project_name: str, path: str | Path, editor: str = "co
         New-Item -ItemType File -Path src/{project_name_under}/__init__.py -Force
         Add-Content -Path pyproject.toml -Value "`n[tool.ruff]"
         Add-Content -Path pyproject.toml -Value "line-length = 120"
-        {editor} {path}/{project_name}"""
+        {editor} {folder}/{project_name}"""
 
     res = h.dev.run_powershell_script(commands)
 
-    readme_path = Path(path) / project_name / "README.md"
+    readme_path = Path(folder) / project_name / "README.md"
     try:
         with readme_path.open("a", encoding="utf-8") as file:
             file.write(f"# {project_name}\n\n{cli_commands}")
