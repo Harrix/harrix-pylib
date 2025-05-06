@@ -604,7 +604,7 @@ def combine_markdown_files_recursively(folder_path: str | Path) -> str:
 
     Note:
 
-    - All `.g.md` files in the entire folder structure will be deleted before processing.
+    - All `.g.md` files in the entire folder structure will be deleted before processing except .short.g.md files.
     - Hidden folders (starting with `.`) will be skipped.
     - Files will be combined in a folder if either:
       1. The folder directly contains at least 2 markdown files, or
@@ -624,9 +624,13 @@ def combine_markdown_files_recursively(folder_path: str | Path) -> str:
     result_lines = []
     folder_path = Path(folder_path)
 
-    # Remove all existing .g.md files
+    # Remove .g.md files except .short.g.md files
     for file in filter(
-        lambda path: not any((part for part in path.parts if part.startswith("."))),
+        lambda path: (
+            not any(part.startswith(".") for part in path.parts)
+            and path.name.endswith(".g.md")
+            and not path.name.endswith(".short.g.md")
+        ),
         Path(folder_path).rglob("*.g.md"),
     ):
         if file.is_file():
