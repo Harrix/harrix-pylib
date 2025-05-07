@@ -1615,6 +1615,8 @@ def generate_summaries(folder: Path | str) -> str:
                 yaml_end = content.find("---", content.find("---") + 3) + 3
                 yaml_frontmatter = content[:yaml_end]
 
+            content = remove_yaml_and_code_content(content)
+
             # Find all second-level headings
             matches = heading_pattern.findall(content)
 
