@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -717,6 +718,148 @@ def test_generate_short_note_toc_with_links_content():
 
     generated_content = h.md.generate_short_note_toc_with_links_content(md_before)
     assert md_after == generated_content
+
+
+def test_generate_summaries():
+    """
+    Test the generate_summaries function by creating a temporary directory with year-based
+    Markdown files and validating the generated summary files.
+    """
+    # Get the current year for testing
+    current_year = datetime.now().year
+
+    # Create a temporary directory for testing
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Create sample year files with different formats and content
+
+        # File with YAML frontmatter and explicit ratings
+        yaml_content = """---
+author: Test Author
+date: 2024-06-15
+---
+
+# Books 2023
+
+## Содержание
+
+This should be ignored.
+
+## The Hobbit: 9
+
+This is a great book about a hobbit.
+
+## Lord of the Rings: 10
+
+Epic fantasy trilogy.
+"""
+        (temp_path / "2023.md").write_text(yaml_content, encoding="utf-8")
+
+        # File without YAML and with ratings in the heading line
+        content_2022 = """# Books 2022
+
+## Dune: 8
+
+Science fiction novel.
+
+## Foundation
+
+This book doesn't have an explicit rating in the heading,
+but has one in the line: 7
+
+## Contents
+
+This should be ignored.
+"""
+        (temp_path / "2022.md").write_text(content_2022, encoding="utf-8")
+
+        # File with ratings in different formats
+        content_2021 = """# Books 2021
+
+## Pride and Prejudice: 9
+
+Classic novel.
+
+## The Great Gatsby
+
+This has no rating.
+
+## Moby Dick: 6
+
+A long book about a whale.
+"""
+        (temp_path / "2021.md").write_text(content_2021, encoding="utf-8")
+
+        # Run the function
+        result = h.md.generate_summaries(temp_path)
+
+        # Verify the result message
+        assert "✅ File" in result
+        assert "Table.md is created" in result
+        assert f"_{temp_path.name}.short.g.md is created" in result
+
+        # Verify the generated files exist
+        table_file = temp_path / "Table.md"
+        short_file = temp_path / f"_{temp_path.name}.short.g.md"
+        assert table_file.exists()
+        assert short_file.exists()
+
+        # Read the generated files
+        table_content = table_file.read_text(encoding="utf-8")
+        short_content = short_file.read_text(encoding="utf-8")
+
+        # Verify the table content
+        assert "# Table " in table_content
+        assert "| Year | Count |" in table_content
+
+        # Verify the current year is included (without relying on the exact value)
+        current_year_pattern = re.compile(rf"\| {current_year} \| \d+ \|")
+        assert current_year_pattern.search(table_content) is not None
+
+        assert "| 2023 | 2 |" in table_content  # 2 valid entries (excluding "Содержание")
+        assert "| 2022 | 2 |" in table_content  # 2 valid entries (excluding "Contents")
+        assert "| 2021 | 3 |" in table_content  # 3 valid entries
+
+        # Verify the YAML frontmatter was copied
+        assert "author: Test Author" in table_content
+        assert "date: 2024-06-15" in table_content
+        assert "author: Test Author" in short_content
+        assert "date: 2024-06-15" in short_content
+
+        # Verify the short summary content
+        assert f"# {temp_path.name}: short" in short_content
+
+        # Verify years are in descending order
+        year_positions = {}
+        for year in [2023, 2022, 2021]:
+            year_pos = short_content.find(f"- {year}")
+            assert year_pos != -1
+            year_positions[year] = year_pos
+
+        # Check descending order
+        assert year_positions[2023] < year_positions[2022] < year_positions[2021]
+
+        # Verify book entries
+        assert "  - The Hobbit: 9" in short_content
+        assert "  - Lord of the Rings: 10" in short_content
+        assert "  - Dune: 8" in short_content
+        assert "  - Foundation" in short_content  # No rating found in the heading
+        assert "  - Pride and Prejudice: 9" in short_content
+        assert "  - The Great Gatsby" in short_content  # No rating
+        assert "  - Moby Dick: 6" in short_content
+
+        # Verify excluded entries don't appear
+        assert "  - Содержание" not in short_content
+        assert "  - Contents" not in short_content
+
+        # Verify the years are in descending order in the table too
+        # Extract all years from the table
+        table_years = re.findall(r"\| (\d{4}) \|", table_content)
+        # Convert to integers
+        table_years = [int(year) for year in table_years]
+        # Check they're in descending order
+        assert table_years == sorted(table_years, reverse=True)
 
 
 def test_generate_toc_with_links():

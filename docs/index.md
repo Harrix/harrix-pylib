@@ -100,6 +100,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `generate_image_captions_content`            | Generates image captions in the provided markdown text.                                                           |
 | `generate_short_note_toc_with_links`         | Generates a separate markdown file with only the Table of Contents (TOC) from a given Markdown file.              |
 | `generate_short_note_toc_with_links_content` | Generates a markdown content with only the Table of Contents (TOC) from a given Markdown text.                    |
+| `generate_summaries`                         | Create two summary files for a directory of year-based Markdown files.                                            |
 | `generate_toc_with_links`                    | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes       |
 | `generate_toc_with_links_content`            | Generates a Table of Contents (TOC) with links for the provided markdown content.                                 |
 | `get_yaml_content`                           | Function gets YAML from text of the Markdown file.                                                                |
