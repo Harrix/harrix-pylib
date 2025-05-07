@@ -570,11 +570,6 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
 
     folder_path = Path(folder_path)
 
-    # Delete all files ending with .g.md in the root folder
-    for path in folder_path.glob("*.g.md"):
-        if path.is_file():
-            path.unlink()
-
     # Get all .md files based on the recursive flag
     if recursive:
         # For recursive mode, we will structure files by folders
