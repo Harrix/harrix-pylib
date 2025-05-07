@@ -1549,7 +1549,7 @@ def generate_summaries(folder: Path | str) -> str:
 
     Args:
 
-    - `folder` (`Path | str`): Path to the directory containing Markdown files named after years
+    - `folder` (`Path | str`): Path to the directory containing Markdown files with years in their names
 
     Returns:
 
@@ -1557,7 +1557,7 @@ def generate_summaries(folder: Path | str) -> str:
 
     Notes:
 
-    - The function expects Markdown files named with 4-digit years (e.g., "2023.md")
+    - The function looks for Markdown files with years in their names (e.g., "2023.md", "До-2013-(Луч).md", "После_2024.md")
     - Book entries are identified by second-level headings (## Title)
     - Ratings are extracted from headings in format "## Title: N" where N is a number
     - YAML frontmatter from the first processed file will be copied to the summary files
@@ -1593,15 +1593,19 @@ def generate_summaries(folder: Path | str) -> str:
 
     # Regular expressions
     heading_pattern = re.compile(r"^## (.+?)(?:: (\d+))?$", re.MULTILINE)
+    year_pattern = re.compile(r"(\d{4})")  # Pattern to find 4-digit years in filenames
 
     # YAML frontmatter to use for both files
     yaml_frontmatter = ""
 
-    # Scan the directory for year-named Markdown files
+    # Scan the directory for Markdown files containing years
     for file_path in path.glob("*.md"):
-        # Check if the filename is a 4-digit year
-        if file_path.stem.isdigit() and len(file_path.stem) == 4:
-            year = int(file_path.stem)
+        # Check if the filename contains a 4-digit year
+        year_match = year_pattern.search(file_path.stem)
+
+        if year_match:
+            # Extract the year
+            year = int(year_match.group(1))
 
             # Read the file content
             content = file_path.read_text(encoding="utf-8")
@@ -1636,9 +1640,16 @@ def generate_summaries(folder: Path | str) -> str:
                     valid_entries.append((heading, rating if rating else ""))
 
             # Store count and entries
-            year_counts[year] = len(valid_entries)
+            if year in year_counts:
+                year_counts[year] += len(valid_entries)
+            else:
+                year_counts[year] = len(valid_entries)
+
             if valid_entries:
-                year_entries[year] = valid_entries
+                if year in year_entries:
+                    year_entries[year].extend(valid_entries)
+                else:
+                    year_entries[year] = valid_entries
 
     # If no year files were found, use the current year as min_year
     if not year_counts:
@@ -1648,14 +1659,13 @@ def generate_summaries(folder: Path | str) -> str:
         min_year = min(year_counts.keys())
 
     # --- Create Table.md ---
-    table_content = "\n# Table <!-- top-section -->\n\n"
+    table_content = "\n# Table \n\n"
     table_content += "| Year | Count |\n"
     table_content += "| ---- | ----- |\n"
 
     # Add rows for each year from current to min_year
     for year in range(current_year, min_year - 1, -1):
         count = year_counts.get(year, 0)
-        # For the current year, use a dash instead of 0
         display_count = str(count)
         table_content += f"| {year} | {display_count} |\n"
 
