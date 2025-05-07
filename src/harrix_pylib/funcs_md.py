@@ -1598,10 +1598,18 @@ def generate_summaries(folder: Path | str) -> str:
     # YAML frontmatter to use for both files
     yaml_frontmatter = ""
 
-    # Scan the directory for Markdown files containing years
+    # Scan the directory for Markdown files
     for file_path in path.glob("*.md"):
+        # Skip the Table.md and short summary files we're going to create
+        if file_path.name == "Table.md" or file_path.name.startswith(f"_{dir_name}"):
+            continue
+
         # Check if the filename contains a 4-digit year
         year_match = year_pattern.search(file_path.stem)
+
+        # Skip files that don't have a year reference
+        if not year_match:
+            continue
 
         # Read the file content
         content = file_path.read_text(encoding="utf-8")
@@ -1611,7 +1619,7 @@ def generate_summaries(folder: Path | str) -> str:
             yaml_end = content.find("---", content.find("---") + 3) + 3
             yaml_frontmatter = content[:yaml_end]
 
-        content = remove_yaml_and_code_content(content)
+        content = h.md.remove_yaml_and_code_content(content)
 
         # Find all second-level headings
         matches = heading_pattern.findall(content)
@@ -1637,11 +1645,14 @@ def generate_summaries(folder: Path | str) -> str:
 
                 valid_entries.append((heading, rating if rating else ""))
 
-        if year_match:
-            # Extract the year and process as a year-based file
-            year = int(year_match.group(1))
+        # Check if this is a pure year file (like "2023.md") or a special category file (like "До-2013-(Луч).md")
+        is_pure_year = file_path.stem.isdigit() and len(file_path.stem) == 4
 
-            # Store count and entries
+        if is_pure_year:
+            # This is a standard year file like "2023.md"
+            year = int(file_path.stem)
+
+            # Store count and entries as a year
             if year in year_counts:
                 year_counts[year] += len(valid_entries)
             else:
@@ -1660,7 +1671,7 @@ def generate_summaries(folder: Path | str) -> str:
                 category_name = h1_match.group(1).strip()
             else:
                 # If no first-level heading, use the filename without extension
-                category_name = file_path.stem
+                category_name = file_path.stem.replace("-", " ").replace("_", " ")
 
             # Store count and entries for this category
             if category_name in category_counts:
@@ -1682,7 +1693,7 @@ def generate_summaries(folder: Path | str) -> str:
         min_year = min(year_counts.keys())
 
     # --- Create Table.md ---
-    table_content = "\n# Table \n\n"
+    table_content = "\n# Table <!-- top-section -->\n\n"
     table_content += "| Year | Count |\n"
     table_content += "| ---- | ----- |\n"
 
