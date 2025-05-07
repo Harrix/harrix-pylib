@@ -1591,8 +1591,13 @@ def generate_summaries(folder: Path | str) -> str:
     year_counts = {}
     year_entries = {}
 
+    # Dictionary to store special categories (e.g., "До 2013 (Луч)")
+    category_counts = {}
+    category_entries = {}
+
     # Regular expressions
     heading_pattern = re.compile(r"^## (.+?)(?:: (\d+))?$", re.MULTILINE)
+    h1_pattern = re.compile(r"^# (.+?)$", re.MULTILINE)
     year_pattern = re.compile(r"(\d{4})")  # Pattern to find 4-digit years in filenames
 
     # YAML frontmatter to use for both files
@@ -1603,43 +1608,43 @@ def generate_summaries(folder: Path | str) -> str:
         # Check if the filename contains a 4-digit year
         year_match = year_pattern.search(file_path.stem)
 
+        # Read the file content
+        content = file_path.read_text(encoding="utf-8")
+
+        # If we haven't extracted the YAML frontmatter yet, extract it from this file
+        if not yaml_frontmatter and "---" in content:
+            yaml_end = content.find("---", content.find("---") + 3) + 3
+            yaml_frontmatter = content[:yaml_end]
+
+        content = remove_yaml_and_code_content(content)
+
+        # Find all second-level headings
+        matches = heading_pattern.findall(content)
+
+        # Process valid entries (exclude "Содержание" and "Contents")
+        valid_entries = []
+        for heading, rating in matches:
+            if heading.strip() not in ["Содержание", "Contents"]:
+                # If there's no explicit rating in the heading, look for a rating in the section
+                if not rating:
+                    # Try to find a rating in the book entry text
+                    section_start = content.find(f"## {heading}")
+                    if section_start != -1:
+                        section_end = content.find("##", section_start + 1)
+                        if section_end == -1:  # Last section
+                            section_end = len(content)
+                        section_text = content[section_start:section_end]
+
+                        # Look for rating in format ": N" at the end of the heading
+                        rating_match = re.search(r": (\d+)$", section_text.split("\n")[0])
+                        if rating_match:
+                            rating = rating_match.group(1)
+
+                valid_entries.append((heading, rating if rating else ""))
+
         if year_match:
-            # Extract the year
+            # Extract the year and process as a year-based file
             year = int(year_match.group(1))
-
-            # Read the file content
-            content = file_path.read_text(encoding="utf-8")
-
-            # If we haven't extracted the YAML frontmatter yet, extract it from this file
-            if not yaml_frontmatter and "---" in content:
-                yaml_end = content.find("---", content.find("---") + 3) + 3
-                yaml_frontmatter = content[:yaml_end]
-
-            content = remove_yaml_and_code_content(content)
-
-            # Find all second-level headings
-            matches = heading_pattern.findall(content)
-
-            # Process valid entries (exclude "Содержание" and "Contents")
-            valid_entries = []
-            for heading, rating in matches:
-                if heading.strip() not in ["Содержание", "Contents"]:
-                    # If there's no explicit rating in the heading, look for a rating in the section
-                    if not rating:
-                        # Try to find a rating in the book entry text
-                        section_start = content.find(f"## {heading}")
-                        if section_start != -1:
-                            section_end = content.find("##", section_start + 1)
-                            if section_end == -1:  # Last section
-                                section_end = len(content)
-                            section_text = content[section_start:section_end]
-
-                            # Look for rating in format ": N" at the end of the heading
-                            rating_match = re.search(r": (\d+)$", section_text.split("\n")[0])
-                            if rating_match:
-                                rating = rating_match.group(1)
-
-                    valid_entries.append((heading, rating if rating else ""))
 
             # Store count and entries
             if year in year_counts:
@@ -1652,6 +1657,27 @@ def generate_summaries(folder: Path | str) -> str:
                     year_entries[year].extend(valid_entries)
                 else:
                     year_entries[year] = valid_entries
+        else:
+            # This is a special category file (e.g., "До-2013-(Луч).md")
+            # Try to extract the category name from the first-level heading
+            h1_match = h1_pattern.search(content)
+            if h1_match:
+                category_name = h1_match.group(1).strip()
+            else:
+                # If no first-level heading, use the filename without extension
+                category_name = file_path.stem
+
+            # Store count and entries for this category
+            if category_name in category_counts:
+                category_counts[category_name] += len(valid_entries)
+            else:
+                category_counts[category_name] = len(valid_entries)
+
+            if valid_entries:
+                if category_name in category_entries:
+                    category_entries[category_name].extend(valid_entries)
+                else:
+                    category_entries[category_name] = valid_entries
 
     # If no year files were found, use the current year as min_year
     if not year_counts:
@@ -1671,6 +1697,12 @@ def generate_summaries(folder: Path | str) -> str:
         display_count = str(count)
         table_content += f"| {year} | {display_count} |\n"
 
+    # Add rows for special categories
+    for category in category_counts:
+        count = category_counts[category]
+        display_count = str(count)
+        table_content += f"| {category} | {display_count} |\n"
+
     # Write the table to Table.md
     table_file = path / "Table.md"
     table_content_with_yaml = f"{yaml_frontmatter}\n{table_content}" if yaml_frontmatter else table_content
@@ -1683,6 +1715,13 @@ def generate_summaries(folder: Path | str) -> str:
     for year in sorted(year_entries.keys(), reverse=True):
         summary_content += f"- {year}\n"
         for heading, rating in year_entries[year]:
+            rating_text = f": {rating}" if rating else ""
+            summary_content += f"  - {heading}{rating_text}\n"
+
+    # Add entries for special categories
+    for category in category_entries:
+        summary_content += f"- {category}\n"
+        for heading, rating in category_entries[category]:
             rating_text = f": {rating}" if rating else ""
             summary_content += f"  - {heading}{rating_text}\n"
 
