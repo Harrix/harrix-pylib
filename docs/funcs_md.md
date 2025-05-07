@@ -1802,7 +1802,7 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
 def generate_summaries(folder: Path | str) -> str
 ```
 
-Create two summary files for a directory of year-based Markdown files.
+Generate two summary files for a directory of year-based Markdown files.
 
 1. Table.md - A statistical table showing the count of book entries by year
 2. \_[directory_name].short.g.md - A hierarchical list of all book entries organized by year
@@ -1830,8 +1830,8 @@ from pathlib import Path
 
 result = h.create_markdown_summaries(Path("C:/Notes/books"))
 print(result)
-# Output: ✅ File ./books/Table.md is created.
-#         ✅ File ./books/_books.short.g.md is created.
+# Output: ✅ File C:/Notes/books/Table.md is created.
+#         ✅ File C:/Notes/books/_books.short.g.md is created.
 ```
 
 <details>
