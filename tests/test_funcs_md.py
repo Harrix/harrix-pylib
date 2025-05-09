@@ -1,3 +1,5 @@
+"""Tests for the functions in the md module of harrix_pylib."""
+
 import re
 from datetime import datetime
 from pathlib import Path
@@ -725,9 +727,6 @@ def test_generate_short_note_toc_with_links_content() -> None:
 
 
 def test_generate_summaries() -> None:
-    """Test the generate_summaries function by creating a temporary directory with year-based
-    Markdown files and validating the generated summary files.
-    """
     # Get the current year for testing
     current_year = datetime.now(tz=datetime.now().astimezone().tzinfo).year
 

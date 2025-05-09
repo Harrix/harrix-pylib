@@ -1,3 +1,5 @@
+"""Tests for the functions in the file module of harrix_pylib."""
+
 import os
 import shutil
 from pathlib import Path

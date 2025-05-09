@@ -1,3 +1,5 @@
+"""Tests for the functions in the dev module of harrix_pylib."""
+
 import shutil
 import subprocess
 
@@ -46,7 +48,7 @@ def test_run_powershell_script_as_admin() -> None:
 
 def test_write_in_output_txt() -> None:
     @h.dev.write_in_output_txt(is_show_output=False)
-    def test_func():
+    def test_func() -> None:
         test_func.add_line("Test")
 
     test_func()
