@@ -29,7 +29,7 @@ dev = [
 
 [tool.ruff]
 select = ["ALL"]
-ignore = ["D407"]
+ignore = ["D412"]
 line-length = 120
 
 [tool.pytest.ini_options]
