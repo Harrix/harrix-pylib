@@ -101,26 +101,26 @@ def test_rename_largest_images_to_featured() -> None:
 
         # Create test image files with different sizes
         # Subdir1 - small.jpg (1KB), medium.png (2KB), large.jpg (3KB)
-        with open(subdir1 / "small.jpg", "wb") as f:
+        with Path.open(subdir1 / "small.jpg", "wb") as f:
             f.write(b"0" * 1024)
-        with open(subdir1 / "medium.png", "wb") as f:
+        with Path.open(subdir1 / "medium.png", "wb") as f:
             f.write(b"0" * 2048)
-        with open(subdir1 / "large.jpg", "wb") as f:
+        with Path.open(subdir1 / "large.jpg", "wb") as f:
             f.write(b"0" * 3072)
 
         # Subdir2 - only one image
-        with open(subdir2 / "only_image.png", "wb") as f:
+        with Path.open(subdir2 / "only_image.png", "wb") as f:
             f.write(b"0" * 1024)
 
         # Subdir4 - with existing featured-image.jpg
-        with open(subdir4 / "image1.jpg", "wb") as f:
+        with Path.open(subdir4 / "image1.jpg", "wb") as f:
             f.write(b"0" * 1024)
-        with open(subdir4 / "featured-image.jpg", "wb") as f:
+        with Path.open(subdir4 / "featured-image.jpg", "wb") as f:
             f.write(b"0" * 512)
 
         # Create a test file to test file path handling
         test_file = temp_path / "test_file.txt"
-        with open(test_file, "w") as f:
+        with Path.open(test_file, "w") as f:
             f.write("test")
 
         # Test 1: Run the function with the temp directory
@@ -152,7 +152,7 @@ def test_rename_largest_images_to_featured() -> None:
         # Create a new subdirectory with an image for this test
         string_test_dir = temp_path / "string_test"
         string_test_dir.mkdir()
-        with open(string_test_dir / "image.jpg", "wb") as f:
+        with Path.open(string_test_dir / "image.jpg", "wb") as f:
             f.write(b"0" * 1024)
 
         # Use string path

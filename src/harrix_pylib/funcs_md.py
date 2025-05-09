@@ -38,7 +38,7 @@ def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_
     ```
 
     """
-    current_date = datetime.now()
+    current_date = datetime.now(tz=datetime.now().astimezone().tzinfo)
     year = current_date.strftime("%Y")
 
     path_dream = Path(path_dream)
@@ -155,8 +155,8 @@ def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: b
 
     """
     text = f"{beginning_of_md}\n\n"
-    text += f"# {datetime.now().strftime('%Y-%m-%d')}\n\n"
-    text += f"## {datetime.now().strftime('%H:%M')}\n\n"
+    text += f"# {datetime.now(tz=datetime.now().astimezone().tzinfo).strftime('%Y-%m-%d')}\n\n"
+    text += f"## {datetime.now(tz=datetime.now().astimezone().tzinfo).strftime('%H:%M')}\n\n"
     return add_diary_new_note(path_diary, text, is_with_images)
 
 
@@ -202,8 +202,8 @@ def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = Fals
 
     """
     text = f"{beginning_of_md}\n"
-    text += f"# {datetime.now().strftime('%Y-%m-%d')}\n\n"
-    text += f"## {datetime.now().strftime('%H:%M')}\n\n"
+    text += f"# {datetime.now(tz=datetime.now().astimezone().tzinfo).strftime('%Y-%m-%d')}\n\n"
+    text += f"## {datetime.now(tz=datetime.now().astimezone().tzinfo).strftime('%H:%M')}\n\n"
     text += ("`` — I don't remember.\n\n" * 16)[:-1]
     return add_diary_new_note(path_dream, text, is_with_images)
 
@@ -263,7 +263,7 @@ def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -
     ```
 
     """
-    current_date = datetime.now()
+    current_date = datetime.now(tz=datetime.now().astimezone().tzinfo)
     year = current_date.strftime("%Y")
     month = current_date.strftime("%m")
     day = current_date.strftime("%Y-%m-%d")
@@ -703,13 +703,13 @@ def download_and_replace_images(filename: Path | str) -> str:
 
     """
     filename = Path(filename)
-    with open(filename, encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = download_and_replace_images_content(document, filename.parent)
 
     if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
+        with Path.open(filename, "w", encoding="utf-8") as file:
             file.write(document_new)
         return f"✅ File {filename} applied."
     return "File is not changed."
@@ -918,13 +918,13 @@ def format_yaml(filename: Path | str) -> str:
     ```
 
     """
-    with open(filename, encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = format_yaml_content(document)
 
     if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
+        with Path.open(filename, "w", encoding="utf-8") as file:
             file.write(document_new)
         return f"✅ File {filename} applied."
     return "File is not changed."
@@ -1213,12 +1213,12 @@ def generate_image_captions(filename: Path | str) -> str:
     ````
 
     """
-    with open(filename, encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = generate_image_captions_content(document)
     if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
+        with Path.open(filename, "w", encoding="utf-8") as file:
             file.write(document_new)
         return f"✅ File {filename} applied."
     return "File is not changed."
@@ -1427,7 +1427,7 @@ def generate_short_note_toc_with_links(filename: Path | str) -> str:
         filename = Path(filename)
 
     # Read the original file
-    with open(filename, encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     # Generate the short TOC content
@@ -1444,7 +1444,7 @@ def generate_short_note_toc_with_links(filename: Path | str) -> str:
         short_filename = filename.with_suffix(".short.g.md")
 
     # Write the short TOC to the new file
-    with open(short_filename, "w", encoding="utf-8") as file:
+    with Path.open(short_filename, "w", encoding="utf-8") as file:
         file.write(short_toc_content)
 
     return f"✅ Short TOC file created: {short_filename}"
@@ -1576,7 +1576,7 @@ def generate_summaries(folder: Path | str) -> str:
     dir_name = path.name
 
     # Get the current year
-    current_year = datetime.now().year
+    current_year = datetime.now(tz=datetime.now().astimezone().tzinfo).year
 
     # Dictionary to store counts and entries by year
     year_counts = {}
@@ -1772,12 +1772,12 @@ def generate_toc_with_links(filename: Path | str) -> str:
     ```
 
     """
-    with open(filename, encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = generate_toc_with_links_content(document)
     if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
+        with Path.open(filename, "w", encoding="utf-8") as file:
             file.write(document_new)
         return f"✅ TOC is added or refreshed in {filename}."
     return "File is not changed."
@@ -2311,12 +2311,12 @@ def replace_section(filename: Path | str, replace_content, title_section: str = 
     ```
 
     """
-    with open(filename, encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = replace_section_content(document, replace_content, title_section)
     if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
+        with Path.open(filename, "w", encoding="utf-8") as file:
             file.write(document_new)
         return f"✅ File {filename} is changed."
     return "File is not changed."
@@ -2488,13 +2488,13 @@ def sort_sections(filename: Path | str) -> str:
     ```
 
     """
-    with open(filename, encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = sort_sections_content(document)
 
     if document != document_new:
-        with open(filename, "w", encoding="utf-8") as file:
+        with Path.open(filename, "w", encoding="utf-8") as file:
             file.write(document_new)
         return f"✅ File {filename} applied."
     return "File is not changed."

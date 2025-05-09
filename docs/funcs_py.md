@@ -173,7 +173,7 @@ md = h.py.extract_functions_and_classes(filename, True, domain)
 ```python
 def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool = True, domain: str = "") -> str:
     filename = Path(filename)
-    with open(filename, "r", encoding="utf-8") as f:
+    with Path.open(filename, "r", encoding="utf-8") as f:
         code = f.read()
 
     # Parse the code into an Abstract Syntax Tree (AST)
@@ -413,7 +413,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
         return "".join(node_lines)
 
     file_path = Path(file_path)
-    with open(file_path, "r", encoding="utf-8") as f:
+    with Path.open(file_path, "r", encoding="utf-8") as f:
         source = f.read()
     source_lines = source.splitlines(keepends=True)
     tree = ast.parse(source)
@@ -555,7 +555,7 @@ def lint_and_fix_python_code(py_content: str) -> str:
         subprocess.run(["ruff", "format", temp_file_path], capture_output=True, text=True)
 
         # Read the fixed code from the temporary file
-        with open(temp_file_path, "r", encoding="utf-8") as file:
+        with Path.open(temp_file_path, "r", encoding="utf-8") as file:
             fixed_content = file.read()
 
         return fixed_content
@@ -678,7 +678,7 @@ def subtract(a, b):
 
 ```python
 def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
-    with open(filename, "r", encoding="utf-8") as f:
+    with Path.open(filename, "r", encoding="utf-8") as f:
         code: str = f.read()
 
     module: cst.Module = cst.parse_module(code)
@@ -793,7 +793,7 @@ def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
         new_code = lint_and_fix_python_code(new_code)
 
     # Write the sorted code back to the file
-    with open(filename, "w", encoding="utf-8") as f:
+    with Path.open(filename, "w", encoding="utf-8") as f:
         f.write(new_code)
 ```
 
