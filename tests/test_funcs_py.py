@@ -8,7 +8,7 @@ import harrix_pylib as h
 
 
 @pytest.mark.slow
-def test_create_uv_new_project():
+def test_create_uv_new_project() -> None:
     with TemporaryDirectory() as temp_dir:
         project_name = "TestProject"
         path = Path(temp_dir)
@@ -57,16 +57,16 @@ CLI commands after installation.
             shutil.rmtree(project_path)
 
 
-def test_extract_functions_and_classes():
+def test_extract_functions_and_classes() -> None:
     current_folder = h.dev.get_project_root()
     filename = Path(current_folder / "tests/data/extract_functions_and_classes__before.txt")
     md_after = Path(current_folder / "tests/data/extract_functions_and_classes__after.txt").read_text(encoding="utf8")
 
-    md = h.py.extract_functions_and_classes(filename, False)
+    md = h.py.extract_functions_and_classes(filename, is_add_link_demo=False)
     assert md == md_after
 
 
-def test_generate_md_docs():
+def test_generate_md_docs() -> None:
     # Setup
     with TemporaryDirectory() as temp_folder:
         temp_path = Path(temp_folder)
@@ -130,7 +130,7 @@ class ExampleClass:
         assert "File index.md is created." in result, "Result should indicate creation of index.md."
 
 
-def test_generate_md_docs_content():
+def test_generate_md_docs_content() -> None:
     # Setup
     content = '''
 def example_function(a: int, b: int) -> int:
@@ -182,7 +182,7 @@ class ExampleClass:
         assert "A method that does nothing" in md_content, "Method docstring should be included."
 
 
-def test_lint_and_fix_python_code():
+def test_lint_and_fix_python_code() -> None:
     python_code = "def greet(name):\n    print('Hello, ' +    name)"
     expected_formatted_code = 'def greet(name):\n    print("Hello, " + name)\n'
 
@@ -196,7 +196,7 @@ def test_lint_and_fix_python_code():
     assert h.py.lint_and_fix_python_code(well_formatted_code) == well_formatted_code
 
 
-def test_sort_py_code():
+def test_sort_py_code() -> None:
     current_folder = h.dev.get_project_root()
     py = Path(current_folder / "tests/data/sort_py_code__before.txt").read_text(encoding="utf8")
     py_after = Path(current_folder / "tests/data/sort_py_code__after.txt").read_text(encoding="utf8")
@@ -204,7 +204,7 @@ def test_sort_py_code():
     with TemporaryDirectory() as temp_folder:
         temp_filename = Path(temp_folder) / "temp.py"
         temp_filename.write_text(py, encoding="utf-8")
-        h.py.sort_py_code(temp_filename, True)
+        h.py.sort_py_code(temp_filename, is_use_ruff_format=True)
         py_applied = temp_filename.read_text(encoding="utf8")
 
     assert py_after == py_applied

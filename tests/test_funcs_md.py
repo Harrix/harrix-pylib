@@ -8,7 +8,7 @@ import pytest
 import harrix_pylib as h
 
 
-def test_add_diary_entry_in_year():
+def test_add_diary_entry_in_year() -> None:
     # Test setup
     with TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
@@ -55,7 +55,7 @@ def test_add_diary_entry_in_year():
         assert updated_content.count(f"## {current_date}") == 2  # Two entries for the same date
 
 
-def test_add_diary_new_dairy_in_year():
+def test_add_diary_new_dairy_in_year() -> None:
     # Test setup
     front_matter = "---\ntitle: Test Diary\n---\n"
 
@@ -79,7 +79,7 @@ def test_add_diary_new_dairy_in_year():
         assert "Text." in dairy_content
 
 
-def test_add_diary_new_diary():
+def test_add_diary_new_diary() -> None:
     with TemporaryDirectory() as temp_dir:
         base_path = Path(temp_dir)
         # Define the YAML header for the Markdown note
@@ -146,7 +146,7 @@ lang: ru
             assert f"## {datetime.now().strftime('%H:%M')}\n\n" in content
 
 
-def test_add_diary_new_dream():
+def test_add_diary_new_dream() -> None:
     with TemporaryDirectory() as temp_dir:
         base_path = Path(temp_dir)
         # Define the YAML header for the Markdown note
@@ -215,7 +215,7 @@ lang: ru
             assert content.count("`` — I don't remember.\n") == 16
 
 
-def test_add_diary_new_dream_in_year():
+def test_add_diary_new_dream_in_year() -> None:
     # Test setup
     with TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
@@ -234,7 +234,8 @@ def test_add_diary_new_dream_in_year():
         dream_content = expected_file_path.read_text(encoding="utf-8")
         assert "`` — I don't remember." in dream_content
         # Check that it contains the placeholder text repeated 16 times
-        assert dream_content.count("`` — I don't remember.") == 16
+        count_i_dnt_remember = 16
+        assert dream_content.count("`` — I don't remember.") == count_i_dnt_remember
 
         # Test 2: Test add_diary_new_dairy_in_year
         # Create a new temporary directory to test with a fresh file
@@ -253,7 +254,7 @@ def test_add_diary_new_dream_in_year():
             assert "Text." in dairy_content
 
 
-def test_add_diary_new_note():
+def test_add_diary_new_note() -> None:
     with TemporaryDirectory() as temp_dir:
         base_path = Path(temp_dir)
         # Test without images
@@ -266,7 +267,7 @@ def test_add_diary_new_note():
         assert "File" in result_msg
 
         # Extract the date components from the result path for testing
-        current_date = datetime.now()
+        current_date = datetime.now(tz=datetime.now().astimezone().tzinfo)
         year = current_date.strftime("%Y")
         month = current_date.strftime("%m")
         day = current_date.strftime("%Y-%m-%d")
@@ -290,7 +291,7 @@ def test_add_diary_new_note():
         text = "# Diary Entry\nThis is a diary test entry with images."
         is_with_images = True
 
-        result_msg, result_path = h.md.add_diary_new_note(base_path, text, is_with_images)
+        result_msg, _ = h.md.add_diary_new_note(base_path, text, is_with_images)
 
         # Check if the message indicates file creation
         assert "File" in result_msg
@@ -307,7 +308,7 @@ def test_add_diary_new_note():
         assert (diary_month_path / f"{day}/img").exists()
 
 
-def test_add_note():
+def test_add_note() -> None:
     with TemporaryDirectory() as temp_dir:
         base_path = Path(temp_dir)
         # Test with images
@@ -337,7 +338,7 @@ def test_add_note():
         text = "# Simple Note\nThis note has no images."
         is_with_images = False
 
-        result_msg, result_path = h.md.add_note(base_path, name, text, is_with_images)
+        result_msg, _ = h.md.add_note(base_path, name, text, is_with_images)
 
         # Check if the message indicates file creation
         assert "File" in result_msg
@@ -354,7 +355,7 @@ def test_add_note():
         assert not (base_path / f"{name}/img").exists()
 
 
-def test_append_path_to_local_links_images_line():
+def test_append_path_to_local_links_images_line() -> None:
     with TemporaryDirectory() as temp_dir:
         adding_path = temp_dir.replace("\\", "/")
 
@@ -394,7 +395,7 @@ def test_append_path_to_local_links_images_line():
         assert h.md.append_path_to_local_links_images_line(markdown_line, adding_path) == "No links here"
 
 
-def test_combine_markdown_files():
+def test_combine_markdown_files() -> None:
     with TemporaryDirectory() as temp_dir:
         # Create test files
         folder_path = Path(temp_dir)
@@ -447,7 +448,7 @@ This content should not appear in the final file."""
         assert "Should be skipped" not in content
 
 
-def test_combine_markdown_files_recursively():
+def test_combine_markdown_files_recursively() -> None:
     with TemporaryDirectory() as temp_dir:
         root_path = Path(temp_dir)
 
@@ -505,7 +506,7 @@ def test_combine_markdown_files_recursively():
 
 
 @pytest.mark.slow
-def test_download_and_replace_images():
+def test_download_and_replace_images() -> None:
     with TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
         md_file = temp_path / "test.md"
@@ -515,7 +516,7 @@ def test_download_and_replace_images():
 
 
 @pytest.mark.slow
-def test_download_and_replace_images_content():
+def test_download_and_replace_images_content() -> None:
     with TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
         md_file = temp_path / "test.md"
@@ -524,7 +525,7 @@ def test_download_and_replace_images_content():
         assert "![Test Image](300.png)" not in updated_text
 
 
-def test_format_quotes_as_markdown_content():
+def test_format_quotes_as_markdown_content() -> None:
     # Test input
     markdown_text = """They can get a big bang out of buying a blanket.
 
@@ -622,7 +623,7 @@ Author Name"""
     assert malformed_result == "# None\n\n"
 
 
-def test_format_yaml():
+def test_format_yaml() -> None:
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/format_yaml__before.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/format_yaml__after.md").read_text(encoding="utf8")
@@ -636,7 +637,7 @@ def test_format_yaml():
     assert md_after == md_applied
 
 
-def test_format_yaml_content():
+def test_format_yaml_content() -> None:
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/format_yaml__before.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/format_yaml__after.md").read_text(encoding="utf8")
@@ -644,7 +645,7 @@ def test_format_yaml_content():
     assert md_after == h.md.format_yaml_content(md)
 
 
-def test_generate_author_book():
+def test_generate_author_book() -> None:
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/generate_author_book__before.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/generate_author_book__after.md").read_text(encoding="utf8")
@@ -659,7 +660,7 @@ def test_generate_author_book():
     assert md_after == md_applied
 
 
-def test_generate_image_captions():
+def test_generate_image_captions() -> None:
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/generate_image_captions__before.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/generate_image_captions__after.md").read_text(encoding="utf8")
@@ -673,14 +674,14 @@ def test_generate_image_captions():
     assert md_after == md_applied
 
 
-def test_generate_image_captions_content():
+def test_generate_image_captions_content() -> None:
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/generate_image_captions__before.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/generate_image_captions__after.md").read_text(encoding="utf8")
     assert md_after == h.md.generate_image_captions_content(md)
 
 
-def test_generate_short_note_toc_with_links():
+def test_generate_short_note_toc_with_links() -> None:
     current_folder = h.dev.get_project_root()
 
     md_before = Path(current_folder / "tests/data/generate_short_note_toc_with_links_content__before.md").read_text(
@@ -706,7 +707,7 @@ def test_generate_short_note_toc_with_links():
         assert md_after == generated_file_content
 
 
-def test_generate_short_note_toc_with_links_content():
+def test_generate_short_note_toc_with_links_content() -> None:
     current_folder = h.dev.get_project_root()
 
     md_before = Path(current_folder / "tests/data/generate_short_note_toc_with_links_content__before.md").read_text(
@@ -720,12 +721,12 @@ def test_generate_short_note_toc_with_links_content():
     assert md_after == generated_content
 
 
-def test_generate_summaries():
+def test_generate_summaries() -> None:
     """Test the generate_summaries function by creating a temporary directory with year-based
     Markdown files and validating the generated summary files.
     """
     # Get the current year for testing
-    current_year = datetime.now().year
+    current_year = datetime.now(tz=datetime.now().astimezone().tzinfo).year
 
     # Create a temporary directory for testing
     with TemporaryDirectory() as temp_dir:
@@ -861,7 +862,7 @@ A long book about a whale.
         assert table_years == sorted(table_years, reverse=True)
 
 
-def test_generate_toc_with_links():
+def test_generate_toc_with_links() -> None:
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/generate_toc_with_links__before.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/generate_toc_with_links__after.md").read_text(encoding="utf8")
@@ -875,20 +876,21 @@ def test_generate_toc_with_links():
     assert md_after == md_applied
 
 
-def test_generate_toc_with_links_content():
+def test_generate_toc_with_links_content() -> None:
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/generate_toc_with_links__before.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/generate_toc_with_links__after.md").read_text(encoding="utf8")
     assert md_after == h.md.generate_toc_with_links_content(md)
 
 
-def test_get_yaml_content():
+def test_get_yaml_content() -> None:
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     yaml = h.md.get_yaml_content(md)
-    assert len(yaml.splitlines()) == 4
+    correct_count_lines = 4
+    assert len(yaml.splitlines()) == correct_count_lines
 
 
-def test_identify_code_blocks():
+def test_identify_code_blocks() -> None:
     md = Path(h.dev.get_project_root() / "tests/data/generate_image_captions__before.md").read_text(encoding="utf8")
     _, content = h.md.split_yaml_content(md)
     count_lines_content = 0
@@ -898,11 +900,13 @@ def test_identify_code_blocks():
             count_lines_code += 1
         else:
             count_lines_content += 1
-    assert count_lines_code == 9
-    assert count_lines_content == 22
+    correct_count_lines_code = 9
+    assert count_lines_code == correct_count_lines_code
+    correct_count_lines_content = 22
+    assert count_lines_content == correct_count_lines_content
 
 
-def test_identify_code_blocks_line():
+def test_identify_code_blocks_line() -> None:
     test_cases = [
         ("No code here", [("No code here", False)]),
         ("`code` within text", [("`code`", True), (" within text", False)]),
@@ -918,7 +922,7 @@ def test_identify_code_blocks_line():
         assert result == expected, f"Failed for: {markdown_line}"
 
 
-def test_increase_heading_level_content():
+def test_increase_heading_level_content() -> None:
     md_text = """# Heading
 This is some text.
 
@@ -933,26 +937,28 @@ More text here."""
     assert h.md.increase_heading_level_content(md_text) == expected
 
 
-def test_remove_toc_content():
+def test_remove_toc_content() -> None:
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/generate_toc_with_links__after.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/generate_toc_with_links__before.md").read_text(encoding="utf8")
     assert md_after == h.md.remove_toc_content(md)
 
 
-def test_remove_yaml_and_code_content():
+def test_remove_yaml_and_code_content() -> None:
     md = Path(h.dev.get_project_root() / "tests/data/remove_yaml_and_code_content.md").read_text(encoding="utf8")
     md_clean = h.md.remove_yaml_and_code_content(md)
-    assert len(md_clean.splitlines()) == 26
+    correct_count_lines = 26
+    assert len(md_clean.splitlines()) == correct_count_lines
 
 
-def test_remove_yaml_content():
+def test_remove_yaml_content() -> None:
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     md_clean = h.md.remove_yaml_content(md)
-    assert len(md_clean.splitlines()) == 1
+    correct_count_lines = 1
+    assert len(md_clean.splitlines()) == correct_count_lines
 
 
-def test_replace_section():
+def test_replace_section() -> None:
     with TemporaryDirectory() as temp_dir:
         # Create a test file with some content
         test_file_path = Path(temp_dir) / "testfile.md"
@@ -972,7 +978,7 @@ Some content here
 
 More content here
 """
-        with open(test_file_path, "w", encoding="utf-8") as file:
+        with Path.open(test_file_path, "w", encoding="utf-8") as file:
             file.write(original_content)
 
         # New content to replace the section
@@ -982,7 +988,7 @@ More content here
         h.md.replace_section(test_file_path, new_content)
 
         # Read the modified file content
-        with open(test_file_path, encoding="utf-8") as file:
+        with Path.open(test_file_path, encoding="utf-8") as file:
             updated_content = file.read()
 
         # Expected content after replacement
@@ -1025,7 +1031,7 @@ More content here
 
 Text.
 """
-        with open(test_file_path, "w", encoding="utf-8") as file:
+        with Path.open(test_file_path, "w", encoding="utf-8") as file:
             file.write(original_content)
 
         # New content to replace the section
@@ -1035,7 +1041,7 @@ Text.
         h.md.replace_section(test_file_path, new_content, "### Footer")
 
         # Read the modified file content
-        with open(test_file_path, encoding="utf-8") as file:
+        with Path.open(test_file_path, encoding="utf-8") as file:
             updated_content = file.read()
 
         # Expected content after replacement
@@ -1064,7 +1070,7 @@ New list of commands:
         assert updated_content == expected_content, "The file content was not updated correctly"
 
 
-def test_replace_section_content():
+def test_replace_section_content() -> None:
     original_content = """# Header
 
 Some content here
@@ -1161,7 +1167,7 @@ New list of commands:
     assert updated_content == expected_content, "The file content was not updated correctly"
 
 
-def test_sort_sections():
+def test_sort_sections() -> None:
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/sort_sections__before.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/sort_sections__after.md").read_text(encoding="utf8")
@@ -1175,7 +1181,7 @@ def test_sort_sections():
     assert md_after == md_applied
 
 
-def test_sort_sections_content():
+def test_sort_sections_content() -> None:
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/sort_sections__before.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/sort_sections__after.md").read_text(encoding="utf8")
@@ -1183,7 +1189,7 @@ def test_sort_sections_content():
     assert md_after == md_applied
 
 
-def test_split_toc_content_basic():
+def test_split_toc_content_basic() -> None:
     markdown = (
         "# Title\n\n"
         "- [Introduction](#introduction)\n"
@@ -1225,7 +1231,8 @@ def test_split_toc_content_basic():
     assert content == expected_content
 
 
-def test_split_yaml_content():
+def test_split_yaml_content() -> None:
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)
-    assert len(yaml.splitlines()) + len(content.splitlines()) == 5
+    correct_count_lines = 5
+    assert len(yaml.splitlines()) + len(content.splitlines()) == correct_count_lines

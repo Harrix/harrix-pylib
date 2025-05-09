@@ -8,7 +8,7 @@ import pytest
 import harrix_pylib as h
 
 
-def test_all_to_parent_folder():
+def test_all_to_parent_folder() -> None:
     with TemporaryDirectory() as temp_dir:
         base_path = Path(temp_dir)
         folder1 = base_path / "folder1"
@@ -42,7 +42,7 @@ def test_all_to_parent_folder():
         assert "folder2" in result
 
 
-def test_apply_func():
+def test_apply_func() -> None:
     def test_func(filename):
         content = Path(filename).read_text(encoding="utf8")
         content = content.upper()
@@ -59,14 +59,14 @@ def test_apply_func():
     assert result == "TEXT OTHER"
 
 
-def test_check_featured_image():
+def test_check_featured_image() -> None:
     folder = h.dev.get_project_root() / "tests/data/check_featured_image/folder_correct"
     assert h.file.check_featured_image(folder)[0]
     folder = h.dev.get_project_root() / "tests/data/check_featured_image/folder_wrong"
     assert not h.file.check_featured_image(folder)[0]
 
 
-def test_clear_directory():
+def test_clear_directory() -> None:
     folder = h.dev.get_project_root() / "tests/data/temp"
     folder.mkdir(parents=True, exist_ok=True)
     Path(folder / "temp.txt").write_text("Hello, world!", encoding="utf8")
@@ -80,12 +80,12 @@ def test_find_max_folder_number():
     assert h.file.find_max_folder_number(folder, "folder") == 2
 
 
-def test_open_file_or_folder():
+def test_open_file_or_folder() -> None:
     with pytest.raises(FileNotFoundError):
         h.file.open_file_or_folder("this_path_does_not_exist")
 
 
-def test_rename_largest_images_to_featured():
+def test_rename_largest_images_to_featured() -> None:
     # Test with a temporary directory structure
     with TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
@@ -172,7 +172,7 @@ def test_rename_largest_images_to_featured():
             h.file.rename_largest_images_to_featured(test_file)
 
 
-def test_tree_view_folder():
+def test_tree_view_folder() -> None:
     current_folder = h.dev.get_project_root()
     tree_check = (current_folder / "tests/data/tree_view_folder__01.txt").read_text(encoding="utf8")
     folder_path = current_folder / "tests/data/tree_view_folder"

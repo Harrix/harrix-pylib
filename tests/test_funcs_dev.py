@@ -6,13 +6,13 @@ import pytest
 import harrix_pylib as h
 
 
-def test_get_project_root():
+def test_get_project_root() -> None:
     path = h.dev.get_project_root()
     assert "harrix-pylib" in str(path)
     assert (path / "tests").is_dir()
 
 
-def test_load_config():
+def test_load_config() -> None:
     config = h.dev.load_config(h.dev.get_project_root() / "tests/data/config.json")
     assert config["path_github"] == "C:/GitHub"
 
@@ -21,7 +21,7 @@ def test_load_config():
     not subprocess.run(["powershell", "-Command", "echo test"], capture_output=True, text=True, check=False).returncode == 0,
     reason="PowerShell is not available",
 )
-def test_run_powershell_script():
+def test_run_powershell_script() -> None:
     test_commands = "Write-Output 'Hello, World!'"
     expected_output = "Hello, World!\n"
 
@@ -35,14 +35,14 @@ def test_run_powershell_script():
     not subprocess.run(["powershell", "-Command", "echo test"], capture_output=True, text=True, check=False).returncode == 0,
     reason="PowerShell is not available",
 )
-def test_run_powershell_script_as_admin():
+def test_run_powershell_script_as_admin() -> None:
     test_commands = "Write-Output 'Hello, World!'"
     expected_output = "Hello, World!\n"
     output = h.dev.run_powershell_script_as_admin(test_commands)
     assert output.strip() == "\ufeff" + expected_output.strip()
 
 
-def test_write_in_output_txt():
+def test_write_in_output_txt() -> None:
     @h.dev.write_in_output_txt(is_show_output=False)
     def test_func():
         test_func.add_line("Test")
