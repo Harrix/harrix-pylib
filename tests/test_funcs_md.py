@@ -684,10 +684,10 @@ def test_generate_short_note_toc_with_links():
     current_folder = h.dev.get_project_root()
 
     md_before = Path(current_folder / "tests/data/generate_short_note_toc_with_links_content__before.md").read_text(
-        encoding="utf8",
+        encoding="utf8"
     )
     md_after = Path(current_folder / "tests/data/generate_short_note_toc_with_links_content__after.md").read_text(
-        encoding="utf8",
+        encoding="utf8"
     )
 
     with TemporaryDirectory() as temp_folder:
@@ -710,10 +710,10 @@ def test_generate_short_note_toc_with_links_content():
     current_folder = h.dev.get_project_root()
 
     md_before = Path(current_folder / "tests/data/generate_short_note_toc_with_links_content__before.md").read_text(
-        encoding="utf8",
+        encoding="utf8"
     )
     md_after = Path(current_folder / "tests/data/generate_short_note_toc_with_links_content__after.md").read_text(
-        encoding="utf8",
+        encoding="utf8"
     )
 
     generated_content = h.md.generate_short_note_toc_with_links_content(md_before)
@@ -721,7 +721,8 @@ def test_generate_short_note_toc_with_links_content():
 
 
 def test_generate_summaries():
-    """Test the generate_summaries function by creating a temporary directory with year-based
+    """
+    Test the generate_summaries function by creating a temporary directory with year-based
     Markdown files and validating the generated summary files.
     """
     # Get the current year for testing
@@ -982,7 +983,7 @@ More content here
         h.md.replace_section(test_file_path, new_content)
 
         # Read the modified file content
-        with open(test_file_path, encoding="utf-8") as file:
+        with open(test_file_path, "r", encoding="utf-8") as file:
             updated_content = file.read()
 
         # Expected content after replacement
@@ -1035,7 +1036,7 @@ Text.
         h.md.replace_section(test_file_path, new_content, "### Footer")
 
         # Read the modified file content
-        with open(test_file_path, encoding="utf-8") as file:
+        with open(test_file_path, "r", encoding="utf-8") as file:
             updated_content = file.read()
 
         # Expected content after replacement

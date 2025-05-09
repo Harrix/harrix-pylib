@@ -3,6 +3,7 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import List, Optional
 
 import libcst as cst
 
@@ -10,9 +11,11 @@ import harrix_pylib as h
 
 
 def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "code", cli_commands: str = "") -> str:
-    """Creates a new project using uv, initializes it, and sets up necessary files.
+    """
+    Creates a new project using uv, initializes it, and sets up necessary files.
 
     Args:
+
     - `name_project` (`str`): The name of the new project.
     - `path` (`str` | `Path`): The folder path where the project will be created.
     - `editor` (`str`): The name of the text editor for opening the project. Example: `code`
@@ -35,9 +38,11 @@ def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "
     ```
 
     Returns:
+
     - `str`: A string containing the result of the operations performed.
 
     Example:
+
     ```python
     import harrix_pylib as h
     from pathlib import Path
@@ -62,7 +67,6 @@ def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "
     │     └─ __init__.py
     └─ uv.lock
     ```
-
     """
     project_name = project_name.replace("_", "-").replace(" ", "-")
     project_name_under = project_name.replace("-", "_")
@@ -89,7 +93,7 @@ def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "
         res += f"Content successfully added to {readme_path}"
     except FileNotFoundError:
         res += f"File not found: {readme_path}"
-    except OSError as e:
+    except IOError as e:
         res += f"I/O error: {e}"
     except Exception as e:
         res += f"An unexpected error occurred: {e}"
@@ -98,14 +102,17 @@ def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "
 
 
 def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool = True, domain: str = "") -> str:
-    """Extracts all classes and functions from a Python file and formats them into a markdown list.
+    """
+    Extracts all classes and functions from a Python file and formats them into a markdown list.
 
     Args:
+
     - `filename` (Path | str): The path to the Python file to be parsed.
     - `is_add_link_demo` (`bool`): Whether to add a link to the documentation demo. Defaults to `True`.
     - `domain` (`str`): The domain for the documentation link. Defaults to an empty string.
 
     Returns:
+
     - `str`: Returns the markdown-formatted list of classes and functions.
 
     Example output:
@@ -121,6 +128,7 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
     ```
 
     Examples:
+
     ```python
     import harrix_pylib as h
 
@@ -134,10 +142,9 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
     domain = "https://github.com/Harrix/harrix-pylib"
     md = h.py.extract_functions_and_classes(filename, True, domain)
     ```
-
     """
     filename = Path(filename)
-    with open(filename, encoding="utf-8") as f:
+    with open(filename, "r", encoding="utf-8") as f:
         code = f.read()
 
     # Parse the code into an Abstract Syntax Tree (AST)
@@ -202,9 +209,11 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
 
 
 def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> str:
-    """Generates documentation for all Python files within a given project folder.
+    """
+    Generates documentation for all Python files within a given project folder.
 
     Args:
+
     - `folder` (`Path | str`): The path to the project folder, can be either a `Path` object or a string. Defaults to
       the current directory if not specified.
     - `beginning_of_md` (`str`): The content to prepend to each documentation file. This could include headers
@@ -213,10 +222,12 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
       documentation is generated or formatted.
 
     Returns:
+
     - `str`: A string containing a summary of the operations performed, with each line indicating which file
       was processed or created.
 
     Example:
+
     ```python
     import harrix_pylib as h
 
@@ -224,7 +235,6 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
     domain = "https://github.com/Harrix/harrix-pylib"
     result = h.py.generate_md_docs(path, "---\\nlang: en\\n---\\n", domain)
     ```
-
     """
     result_lines = []
     folder = Path(folder)
@@ -267,31 +277,34 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
 
 
 def generate_md_docs_content(file_path: Path | str) -> str:
-    """Generates Markdown documentation for a single Python file.
+    """
+    Generates Markdown documentation for a single Python file.
 
     Args:
+
     - `file_path` (`Path | str`): The path to the Python file to be documented, can be either
       a `Path` object or a string.
 
     Returns:
+
     - `str`: A Markdown string containing documentation for the file, including its classes, methods,
       and functions with their signatures, docstrings, and implementation details.
 
     Example:
+
     ```python
     import harrix_pylib as h
 
     filename = "C:/projects/project/main.py"
     result = h.py.generate_md_docs_content(filename)
     ```
-
     """
 
     def get_function_signature(node: ast.FunctionDef) -> str:
         args = []
         defaults = [None] * (len(node.args.args) - len(node.args.defaults)) + node.args.defaults
 
-        for arg, default in zip(node.args.args, defaults, strict=False):
+        for arg, default in zip(node.args.args, defaults):
             arg_str = arg.arg
             if arg.annotation:
                 arg_str += f": {ast.unparse(arg.annotation)}"
@@ -349,7 +362,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
         return "".join(node_lines)
 
     file_path = Path(file_path)
-    with open(file_path, encoding="utf-8") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         source = f.read()
     source_lines = source.splitlines(keepends=True)
     tree = ast.parse(source)
@@ -430,7 +443,8 @@ def generate_md_docs_content(file_path: Path | str) -> str:
 
 
 def lint_and_fix_python_code(py_content: str) -> str:
-    """Lints and fixes the provided Python code using the `ruff` formatter.
+    """
+    Lints and fixes the provided Python code using the `ruff` formatter.
 
     This function formats the given Python code content by:
 
@@ -440,20 +454,25 @@ def lint_and_fix_python_code(py_content: str) -> str:
     4. Cleaning up by removing the temporary file.
 
     Args:
+
     - `py_content` (`str`): The Python code content to be linted and fixed.
 
     Returns:
+
     - `str`: The formatted and fixed Python code.
 
     Raises:
+
     - `subprocess.CalledProcessError`: If `ruff` command fails to execute or returns an error status.
     - `OSError`: If there are issues with file operations (e.g., creating or deleting the temporary file).
 
     Note:
+
     - This function assumes `ruff` is installed and accessible in the system's PATH.
     - Any exceptions from `ruff` or file operations are not caught within this function and will propagate up.
 
     Example:
+
     ```python
     import harrix_pylib as h
 
@@ -463,7 +482,6 @@ def lint_and_fix_python_code(py_content: str) -> str:
     # def greet(name):
     #     print("Hello, " + name)
     ```
-
     """
     # Create a temporary file with the content of py_content
     with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as temp_file:
@@ -471,10 +489,10 @@ def lint_and_fix_python_code(py_content: str) -> str:
         temp_file_path = temp_file.name
 
     try:
-        subprocess.run(["ruff", "format", temp_file_path], capture_output=True, text=True, check=False)
+        subprocess.run(["ruff", "format", temp_file_path], capture_output=True, text=True)
 
         # Read the fixed code from the temporary file
-        with open(temp_file_path, encoding="utf-8") as file:
+        with open(temp_file_path, "r", encoding="utf-8") as file:
             fixed_content = file.read()
 
         return fixed_content
@@ -485,20 +503,24 @@ def lint_and_fix_python_code(py_content: str) -> str:
 
 
 def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
-    """Sorts the Python code in the given file by organizing classes, functions, and statements.
+    """
+    Sorts the Python code in the given file by organizing classes, functions, and statements.
 
     This function reads a Python file, parses it, sorts classes and functions alphabetically,
     and ensures that class attributes, methods, and other statements within classes are ordered
     in a structured manner. The sorted code is then written back to the file.
 
     Args:
+
     - `filename` (`str`): The path to the Python file that needs sorting.
     - `is_use_ruff_format` (`bool`, optional): If True, use Ruff to format the sorted code. Defaults to `True`.
 
     Returns:
+
     - `None`: This function does not return a value, it modifies the file in place.
 
     Note:
+
     - This function uses `libcst` for parsing and manipulating Python ASTs.
     - Sorting prioritizes initial non-class, non-function statements, followed by sorted classes,
       then sorted functions, and finally any trailing statements.
@@ -506,6 +528,7 @@ def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
       sorted alphabetically.
 
     Example:
+
     ```python
         import harrix_pylib as h
 
@@ -580,18 +603,17 @@ def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
         \"\"\"Returns the difference between two numbers.\"\"\"
         return a - b
     ```
-
     """
-    with open(filename, encoding="utf-8") as f:
+    with open(filename, "r", encoding="utf-8") as f:
         code: str = f.read()
 
     module: cst.Module = cst.parse_module(code)
 
     # Split the module content into initial statements, final statements, classes, and functions
-    initial_statements: list[cst.BaseStatement] = []
-    final_statements: list[cst.BaseStatement] = []
-    class_defs: list[cst.ClassDef] = []
-    func_defs: list[cst.FunctionDef] = []
+    initial_statements: List[cst.BaseStatement] = []
+    final_statements: List[cst.BaseStatement] = []
+    class_defs: List[cst.ClassDef] = []
+    func_defs: List[cst.FunctionDef] = []
 
     state: str = "initial"
 
@@ -602,23 +624,24 @@ def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
         elif isinstance(stmt, cst.FunctionDef):
             state = "collecting"
             func_defs.append(stmt)
-        elif state == "initial":
-            initial_statements.append(stmt)
         else:
-            final_statements.append(stmt)
+            if state == "initial":
+                initial_statements.append(stmt)
+            else:
+                final_statements.append(stmt)
 
     # Sort classes alphabetically and process each class
-    class_defs_sorted: list[cst.ClassDef] = sorted(class_defs, key=lambda cls: cls.name.value)
+    class_defs_sorted: List[cst.ClassDef] = sorted(class_defs, key=lambda cls: cls.name.value)
 
-    sorted_class_defs: list[cst.ClassDef] = []
+    sorted_class_defs: List[cst.ClassDef] = []
     for class_def in class_defs_sorted:
         class_body_statements = class_def.body.body
 
         # Initialize containers
-        docstring: cst.SimpleStatementLine | None = None
-        class_attributes: list[cst.SimpleStatementLine] = []
-        methods: list[cst.FunctionDef] = []
-        other_statements: list[cst.BaseStatement] = []
+        docstring: Optional[cst.SimpleStatementLine] = None
+        class_attributes: List[cst.SimpleStatementLine] = []
+        methods: List[cst.FunctionDef] = []
+        other_statements: List[cst.BaseStatement] = []
 
         idx: int = 0
         total_statements: int = len(class_body_statements)
@@ -649,8 +672,8 @@ def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
                 other_statements.append(stmt)
 
         # Process methods: __init__ and other methods
-        init_method: cst.FunctionDef | None = None
-        other_methods: list[cst.FunctionDef] = []
+        init_method: Optional[cst.FunctionDef] = None
+        other_methods: List[cst.FunctionDef] = []
 
         for method in methods:
             if method.name.value == "__init__":
@@ -658,15 +681,15 @@ def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
             else:
                 other_methods.append(method)
 
-        other_methods_sorted: list[cst.FunctionDef] = sorted(other_methods, key=lambda m: m.name.value)
+        other_methods_sorted: List[cst.FunctionDef] = sorted(other_methods, key=lambda m: m.name.value)
 
         if init_method is not None:
-            methods_sorted: list[cst.FunctionDef] = [init_method] + other_methods_sorted
+            methods_sorted: List[cst.FunctionDef] = [init_method] + other_methods_sorted
         else:
             methods_sorted = other_methods_sorted
 
         # Assemble the new class body
-        new_body: list[cst.BaseStatement] = []
+        new_body: List[cst.BaseStatement] = []
         if docstring:
             new_body.append(docstring)
         new_body.extend(class_attributes)  # Class attributes remain at the top in original order
@@ -680,10 +703,10 @@ def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
         sorted_class_defs.append(new_class_def)
 
     # Sort functions alphabetically
-    func_defs_sorted: list[cst.FunctionDef] = sorted(func_defs, key=lambda func: func.name.value)
+    func_defs_sorted: List[cst.FunctionDef] = sorted(func_defs, key=lambda func: func.name.value)
 
     # Assemble the new module body
-    new_module_body: list[cst.BaseStatement] = (
+    new_module_body: List[cst.BaseStatement] = (
         initial_statements + sorted_class_defs + func_defs_sorted + final_statements
     )
 

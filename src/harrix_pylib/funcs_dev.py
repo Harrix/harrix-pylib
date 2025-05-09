@@ -2,22 +2,25 @@ import json
 import subprocess
 import tempfile
 import time
-from collections.abc import Callable
 from pathlib import Path
+from typing import Callable
 
 import harrix_pylib as h
 
 
 def get_project_root() -> Path:
-    """Finds the root folder of the current project.
+    """
+    Finds the root folder of the current project.
 
     This function traverses up the folder tree from the current file looking for a folder containing
     a `.venv` folder, which is assumed to indicate the project root.
 
     Returns:
+
     - `Path`: The path to the project's root folder.
 
     Examples:
+
     ```python
     import harrix_pylib as h
 
@@ -32,7 +35,6 @@ def get_project_root() -> Path:
     root_path = h.dev.get_project_root()
     Path(root_path / "1.txt").write_text("Test", encoding="utf8")
     ```
-
     """
     current_file: Path = Path(__file__).resolve()
     for parent in current_file.parents:
@@ -42,15 +44,19 @@ def get_project_root() -> Path:
 
 
 def load_config(filename: str) -> dict:
-    """Loads configuration from a JSON file.
+    """
+    Loads configuration from a JSON file.
 
     Args:
+
     - `filename` (`str`): Path to the JSON configuration file. Defaults to `None`.
 
     Returns:
+
     - `dict`: Configuration loaded from the file.
 
     Examples:
+
     ```python
     import harrix-pylib as h
 
@@ -68,7 +74,6 @@ def load_config(filename: str) -> dict:
     config = h.dev.load_config("config.json")
     print(config["pi"])  # 3.14
     ```
-
     """
     config_file = Path(get_project_root()) / filename
     with config_file.open("r", encoding="utf-8") as file:
@@ -91,18 +96,22 @@ def load_config(filename: str) -> dict:
 
 
 def run_powershell_script(commands: str) -> str:
-    """Runs a PowerShell script with the given commands.
+    """
+    Runs a PowerShell script with the given commands.
 
     This function executes a PowerShell script by concatenating multiple commands into a single command string,
     which is then run through the `subprocess` module. It ensures that the output encoding is set to UTF-8.
 
     Args:
+
     - `commands` (`str`): A string containing PowerShell commands to execute.
 
     Returns:
+
     - `str`: Combined output and error messages from the PowerShell execution.
 
     Examples:
+
     ```python
     import harrix_pylib as h
 
@@ -116,7 +125,6 @@ def run_powershell_script(commands: str) -> str:
     result_output = h.dev.run_powershell_script("python --version\\npip --version")
     print(result_output)
     ```
-
     """
     command = ";".join(map(str.strip, commands.strip().splitlines()))
 
@@ -132,28 +140,34 @@ def run_powershell_script(commands: str) -> str:
         ],
         capture_output=True,
         text=True,
-        encoding="utf-8", check=False,
+        encoding="utf-8",
     )
     return "\n".join(filter(None, [process.stdout, process.stderr]))
 
 
 def run_powershell_script_as_admin(commands: str) -> str:
-    """Executes a PowerShell script with administrator privileges and captures the output.
+    """
+    Executes a PowerShell script with administrator privileges and captures the output.
 
     Args:
+
     - `commands` (`str`): A string containing the PowerShell commands to execute.
 
     Returns:
+
     - `str`: The output from running the PowerShell script.
 
     Raises:
+
     - `subprocess.CalledProcessError`: If the PowerShell script execution fails.
 
     Note:
+
     - This function creates temporary files to store the script and its output, which are deleted after execution.
     - The function waits for the script to finish and ensures the output file exists before reading from it.
 
     Examples:
+
     ```python
     import harrix_pylib as h
 
@@ -167,7 +181,6 @@ def run_powershell_script_as_admin(commands: str) -> str:
     result_output = h.dev.run_powershell_script_as_admin("python --version\\npip --version")
     print(result_output)
     ```
-
     """
     res_output = []
     command = ";".join(map(str.strip, commands.strip().splitlines()))
@@ -228,7 +241,8 @@ def run_powershell_script_as_admin(commands: str) -> str:
 
 
 def write_in_output_txt(is_show_output: bool = True) -> Callable:
-    """Decorator to write function output to a temporary file and optionally display it.
+    """
+    Decorator to write function output to a temporary file and optionally display it.
 
     This decorator captures all output of the decorated function into a list,
     measures execution time, and writes this information into an `output.txt` file
@@ -236,10 +250,12 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
     to automatically open this file after writing.
 
     Args:
+
     - `is_show_output` (`bool`): If `True`, automatically open the output file
       after writing. Defaults to `True`.
 
     Returns:
+
     - `Callable`: A decorator function that wraps another function.
 
     The decorator adds the following methods to the wrapped function:
@@ -248,12 +264,14 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
       will be written to the file.
 
     Note:
+
     - This decorator changes the behavior of the decorated function by capturing
       its output and timing its execution.
     - The `output.txt` file is created in a `temp` folder under the project root.
       If the folder does not exist, it will be created.
 
     Examples:
+
     ```python
     import harrix_pylib as h
 
@@ -288,7 +306,6 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
         def execute(self, *args, **kwargs):
             raise NotImplementedError("The execute method must be implemented in subclasses")
     ```
-
     """
 
     def decorator(func: Callable) -> Callable:
