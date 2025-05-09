@@ -562,7 +562,7 @@ def lint_and_fix_python_code(py_content: str) -> str:
 ## Function `sort_py_code`
 
 ```python
-def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None
+def sort_py_code(filename: str) -> None
 ```
 
 Sorts the Python code in the given file by organizing classes, functions, and statements.
@@ -593,7 +593,7 @@ Example:
 ```python
     import harrix_pylib as h
 
-    h.py.sort_py_code("C:/projects/project/main.py", True)
+    h.py.sort_py_code("C:/projects/project/main.py", is_use_ruff_format=True)
 
 ```
 
@@ -669,7 +669,7 @@ def subtract(a, b):
 <summary>Code:</summary>
 
 ```python
-def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
+def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
     with Path.open(filename, encoding="utf-8") as f:
         code: str = f.read()
 
