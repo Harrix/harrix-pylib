@@ -326,8 +326,7 @@ def find_max_folder_number(base_path: str, start_pattern: str) -> int:
             match = pattern.match(item.name)
             if match:
                 number = int(match.group(1))
-                if number > max_number:
-                    max_number = number
+                max_number = max(max_number, number)
 
     return max_number
 ```
@@ -383,7 +382,6 @@ def open_file_or_folder(path: Path | str) -> None:
         subprocess.call(["open", str(path)])
     elif platform.system() == "Linux":
         subprocess.call(["xdg-open", str(path)])
-    return
 ```
 
 </details>
@@ -539,7 +537,7 @@ def tree_view_folder(path: str | Path, is_ignore_hidden_folders: bool = False) -
             except PermissionError:
                 contents = []
         pointers = ["├─ "] * (len(contents) - 1) + ["└─ "]
-        for pointer, path in zip(pointers, contents):
+        for pointer, path in zip(pointers, contents, strict=False):
             yield prefix + pointer + path.name
             if path.is_dir():
                 extension = "│  " if pointer == "├─ " else "   "

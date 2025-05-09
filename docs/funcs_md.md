@@ -107,33 +107,32 @@ def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_
         content = f"{beginning_of_md}\n# {year}\n\n{toc_section}{new_entry}"
         year_file.write_text(content, encoding="utf-8")
         return f"✅ File {year_file} created.", year_file
+    # File exists, read its content
+    content = year_file.read_text(encoding="utf-8")
+
+    # Find the year heading
+    year_match = re.search(r"^# \d{4}", content, re.MULTILINE)
+    if not year_match:
+        # If no year heading, add it with TOC and the new entry
+        toc_section = "<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n</details>\n\n"
+        updated_content = f"{content}\n\n# {year}\n\n{toc_section}{new_entry}"
     else:
-        # File exists, read its content
-        content = year_file.read_text(encoding="utf-8")
+        # Find the table of contents section
+        toc_match = re.search(r"<details>[\s\S]*?<\/details>", content)
 
-        # Find the year heading
-        year_match = re.search(r"^# \d{4}", content, re.MULTILINE)
-        if not year_match:
-            # If no year heading, add it with TOC and the new entry
-            toc_section = "<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n</details>\n\n"
-            updated_content = f"{content}\n\n# {year}\n\n{toc_section}{new_entry}"
+        if toc_match:
+            # Insert new entry right after the TOC
+            toc_end_pos = toc_match.end()
+            updated_content = content[:toc_end_pos] + "\n\n" + new_entry + content[toc_end_pos:].lstrip()
         else:
-            # Find the table of contents section
-            toc_match = re.search(r"<details>[\s\S]*?<\/details>", content)
+            # No TOC found, create one and add new entry after it
+            year_pos = year_match.end()
+            toc_section = "\n\n<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n</details>\n\n"
+            updated_content = content[:year_pos] + toc_section + new_entry + content[year_pos:].lstrip()
 
-            if toc_match:
-                # Insert new entry right after the TOC
-                toc_end_pos = toc_match.end()
-                updated_content = content[:toc_end_pos] + "\n\n" + new_entry + content[toc_end_pos:].lstrip()
-            else:
-                # No TOC found, create one and add new entry after it
-                year_pos = year_match.end()
-                toc_section = "\n\n<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n</details>\n\n"
-                updated_content = content[:year_pos] + toc_section + new_entry + content[year_pos:].lstrip()
-
-        # Write the updated content back to the file
-        year_file.write_text(updated_content, encoding="utf-8")
-        return f"✅ File {year_file} updated.", year_file
+    # Write the updated content back to the file
+    year_file.write_text(updated_content, encoding="utf-8")
+    return f"✅ File {year_file} updated.", year_file
 ```
 
 </details>
@@ -487,8 +486,7 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
         return f"[{link_text}]({adding_path}/{file_path})"
 
     adding_path = adding_path.replace("\\", "/")
-    if adding_path.endswith("/"):
-        adding_path = adding_path[:-1]
+    adding_path = adding_path.removesuffix("/")
     return re.sub(r"\[(.*?)\]\(((?!http).*?)\)", replace_path_in_links, markdown_line)
 ```
 
@@ -552,10 +550,9 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
                 for item in value:
                     if item not in combined_dict[key]:
                         combined_dict[key].append(item)
-            else:
-                # Add new value to the list if it's not already there
-                if value not in combined_dict[key]:
-                    combined_dict[key].append(value)
+            # Add new value to the list if it's not already there
+            elif value not in combined_dict[key]:
+                combined_dict[key].append(value)
         else:
             # Current value is not a list - convert it to a list and add the new value
             current_value = combined_dict[key]
@@ -564,9 +561,8 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
                 for item in value:
                     if item != current_value and item not in combined_dict[key]:
                         combined_dict[key].append(item)
-            else:
-                if current_value != value:
-                    combined_dict[key] = [current_value, value]
+            elif current_value != value:
+                combined_dict[key] = [current_value, value]
 
     folder_path = Path(folder_path)
 
@@ -602,7 +598,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
     else:
         # Non-recursive - only get files in the current folder
         md_files = sorted(
-            [f for f in folder_path.glob("*.md") if f.is_file() and f.suffix == ".md" and not f.name.endswith(".g.md")]
+            [f for f in folder_path.glob("*.md") if f.is_file() and f.suffix == ".md" and not f.name.endswith(".g.md")],
         )
 
     # If there are no markdown files in the folder at all, exit
@@ -779,7 +775,7 @@ def combine_markdown_files_recursively(folder_path: str | Path) -> str:
     # Collect all folders, excluding hidden ones
     all_folders = []
     for subfolder in filter(
-        lambda path: not any((part for part in path.parts if part.startswith("."))),
+        lambda path: not any(part for part in path.parts if part.startswith(".")),
         Path(folder_path).rglob("*"),
     ):
         if subfolder.is_dir():
@@ -866,7 +862,7 @@ print(result)
 ```python
 def download_and_replace_images(filename: Path | str) -> str:
     filename = Path(filename)
-    with Path.open(filename, "r", encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = download_and_replace_images_content(document, filename.parent)
@@ -1114,7 +1110,7 @@ print(h.md.format_yaml(path))
 
 ```python
 def format_yaml(filename: Path | str) -> str:
-    with Path.open(filename, "r", encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = format_yaml_content(document)
@@ -1270,9 +1266,9 @@ def generate_author_book(filename: Path | str) -> str:
     lines_list = []
     file = Path(filename)
     if not file.is_file():
-        return
+        return None
     if file.suffix.lower() != ".md":
-        return
+        return None
     markdown_text = file.read_text(encoding="utf8")
 
     yaml_md, content_md = split_yaml_content(markdown_text)
@@ -1439,7 +1435,7 @@ _Figure 3: Alt text_
 
 ```python
 def generate_image_captions(filename: Path | str) -> str:
-    with Path.open(filename, "r", encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = generate_image_captions_content(document)
@@ -1674,7 +1670,7 @@ def generate_short_note_toc_with_links(filename: Path | str) -> str:
         filename = Path(filename)
 
     # Read the original file
-    with Path.open(filename, "r", encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     # Generate the short TOC content
@@ -2052,7 +2048,7 @@ print(result)
 
 ```python
 def generate_toc_with_links(filename: Path | str) -> str:
-    with Path.open(filename, "r", encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = generate_toc_with_links_content(document)
@@ -2256,7 +2252,7 @@ def get_yaml_content(markdown_text: str) -> str:
 ## Function `identify_code_blocks`
 
 ```python
-def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]
+def identify_code_blocks(lines: list[str]) -> Iterator[tuple[str, bool]]
 ```
 
 Processes a list of text lines to identify code blocks and yield each line with a boolean flag.
@@ -2298,7 +2294,7 @@ for _, state in h.md.identify_code_blocks(content.splitlines()):
 <summary>Code:</summary>
 
 ```python
-def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
+def identify_code_blocks(lines: list[str]) -> Iterator[tuple[str, bool]]:
     code_block_delimiter = None
     for line in lines:
         match = re.match(r"^(`{3,})(.*)", line)
@@ -2688,7 +2684,7 @@ result_message = h.md.replace_section("C:/Notes/note.md", new_content, "## List 
 
 ```python
 def replace_section(filename: Path | str, replace_content, title_section: str = "## List of commands") -> str:
-    with Path.open(filename, "r", encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = replace_section_content(document, replace_content, title_section)
@@ -2885,7 +2881,7 @@ Example text.
 
 ```python
 def sort_sections(filename: Path | str) -> str:
-    with Path.open(filename, "r", encoding="utf-8") as f:
+    with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = sort_sections_content(document)
@@ -2954,9 +2950,8 @@ print(sorted_markdown)
 ```python
 def sort_sections_content(markdown_text: str) -> str:
 
-    def is_date_heading(section_text: str) -> Optional[datetime]:
-        """
-        Returns datetime if the first line of the section (## XXX) is a date,
+    def is_date_heading(section_text: str) -> datetime | None:
+        """Returns datetime if the first line of the section (## XXX) is a date,
         otherwise None.
         """
         first_line = section_text.split("\n", 1)[0].strip()  # should be ## 2024-...
@@ -2978,9 +2973,7 @@ def sort_sections_content(markdown_text: str) -> str:
         return None
 
     def is_top_section(section_text: str) -> bool:
-        """
-        Returns True if the section is marked as a top section.
-        """
+        """Returns True if the section is marked as a top section."""
         first_line = section_text.split("\n", 1)[0].strip()
         return "<!-- top-section -->" in first_line
 

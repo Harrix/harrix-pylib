@@ -2569,8 +2569,7 @@ def sort_sections_content(markdown_text: str) -> str:
         return None
 
     def is_top_section(section_text: str) -> bool:
-        """Returns True if the section is marked as a top section.
-        """
+        """Returns True if the section is marked as a top section."""
         first_line = section_text.split("\n", 1)[0].strip()
         return "<!-- top-section -->" in first_line
 

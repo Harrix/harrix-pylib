@@ -140,7 +140,8 @@ def run_powershell_script(commands: str) -> str:
         ],
         capture_output=True,
         text=True,
-        encoding="utf-8", check=False,
+        encoding="utf-8",
+        check=False,
     )
     return "\n".join(filter(None, [process.stdout, process.stderr]))
 
