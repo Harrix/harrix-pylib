@@ -2,15 +2,14 @@ import json
 import subprocess
 import tempfile
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import harrix_pylib as h
 
 
 def get_project_root() -> Path:
-    """
-    Finds the root folder of the current project.
+    """Finds the root folder of the current project.
 
     This function traverses up the folder tree from the current file looking for a folder containing
     a `.venv` folder, which is assumed to indicate the project root.
@@ -35,6 +34,7 @@ def get_project_root() -> Path:
     root_path = h.dev.get_project_root()
     Path(root_path / "1.txt").write_text("Test", encoding="utf8")
     ```
+
     """
     current_file: Path = Path(__file__).resolve()
     for parent in current_file.parents:
@@ -44,8 +44,7 @@ def get_project_root() -> Path:
 
 
 def load_config(filename: str) -> dict:
-    """
-    Loads configuration from a JSON file.
+    """Loads configuration from a JSON file.
 
     Args:
 
@@ -74,6 +73,7 @@ def load_config(filename: str) -> dict:
     config = h.dev.load_config("config.json")
     print(config["pi"])  # 3.14
     ```
+
     """
     config_file = Path(get_project_root()) / filename
     with config_file.open("r", encoding="utf-8") as file:
@@ -96,8 +96,7 @@ def load_config(filename: str) -> dict:
 
 
 def run_powershell_script(commands: str) -> str:
-    """
-    Runs a PowerShell script with the given commands.
+    """Runs a PowerShell script with the given commands.
 
     This function executes a PowerShell script by concatenating multiple commands into a single command string,
     which is then run through the `subprocess` module. It ensures that the output encoding is set to UTF-8.
@@ -125,6 +124,7 @@ def run_powershell_script(commands: str) -> str:
     result_output = h.dev.run_powershell_script("python --version\\npip --version")
     print(result_output)
     ```
+
     """
     command = ";".join(map(str.strip, commands.strip().splitlines()))
 
@@ -140,14 +140,13 @@ def run_powershell_script(commands: str) -> str:
         ],
         capture_output=True,
         text=True,
-        encoding="utf-8",
+        encoding="utf-8", check=False,
     )
     return "\n".join(filter(None, [process.stdout, process.stderr]))
 
 
 def run_powershell_script_as_admin(commands: str) -> str:
-    """
-    Executes a PowerShell script with administrator privileges and captures the output.
+    """Executes a PowerShell script with administrator privileges and captures the output.
 
     Args:
 
@@ -181,6 +180,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
     result_output = h.dev.run_powershell_script_as_admin("python --version\\npip --version")
     print(result_output)
     ```
+
     """
     res_output = []
     command = ";".join(map(str.strip, commands.strip().splitlines()))
@@ -241,8 +241,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
 
 
 def write_in_output_txt(is_show_output: bool = True) -> Callable:
-    """
-    Decorator to write function output to a temporary file and optionally display it.
+    """Decorator to write function output to a temporary file and optionally display it.
 
     This decorator captures all output of the decorated function into a list,
     measures execution time, and writes this information into an `output.txt` file
@@ -306,6 +305,7 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
         def execute(self, *args, **kwargs):
             raise NotImplementedError("The execute method must be implemented in subclasses")
     ```
+
     """
 
     def decorator(func: Callable) -> Callable:

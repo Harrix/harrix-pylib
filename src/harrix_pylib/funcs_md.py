@@ -1,7 +1,7 @@
 import re
+from collections.abc import Iterator
 from datetime import datetime
 from pathlib import Path
-from typing import Iterator, List, Optional
 from urllib.parse import urlparse
 
 import requests
@@ -9,8 +9,7 @@ import yaml
 
 
 def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_content: str) -> tuple[str, Path]:
-    """
-    Adds a new diary entry to the yearly markdown file.
+    """Adds a new diary entry to the yearly markdown file.
 
     If the yearly file doesn't exist, it creates one with the provided front matter.
     If it exists, it adds a new entry after the year heading and the table of contents.
@@ -37,6 +36,7 @@ def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_
     message, file_path = h.md.add_diary_entry_in_year(path, front_matter, content)
     print(message)
     ```
+
     """
     current_date = datetime.now()
     year = current_date.strftime("%Y")
@@ -56,38 +56,36 @@ def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_
         content = f"{beginning_of_md}\n# {year}\n\n{toc_section}{new_entry}"
         year_file.write_text(content, encoding="utf-8")
         return f"✅ File {year_file} created.", year_file
+    # File exists, read its content
+    content = year_file.read_text(encoding="utf-8")
+
+    # Find the year heading
+    year_match = re.search(r"^# \d{4}", content, re.MULTILINE)
+    if not year_match:
+        # If no year heading, add it with TOC and the new entry
+        toc_section = "<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n</details>\n\n"
+        updated_content = f"{content}\n\n# {year}\n\n{toc_section}{new_entry}"
     else:
-        # File exists, read its content
-        content = year_file.read_text(encoding="utf-8")
+        # Find the table of contents section
+        toc_match = re.search(r"<details>[\s\S]*?<\/details>", content)
 
-        # Find the year heading
-        year_match = re.search(r"^# \d{4}", content, re.MULTILINE)
-        if not year_match:
-            # If no year heading, add it with TOC and the new entry
-            toc_section = "<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n</details>\n\n"
-            updated_content = f"{content}\n\n# {year}\n\n{toc_section}{new_entry}"
+        if toc_match:
+            # Insert new entry right after the TOC
+            toc_end_pos = toc_match.end()
+            updated_content = content[:toc_end_pos] + "\n\n" + new_entry + content[toc_end_pos:].lstrip()
         else:
-            # Find the table of contents section
-            toc_match = re.search(r"<details>[\s\S]*?<\/details>", content)
+            # No TOC found, create one and add new entry after it
+            year_pos = year_match.end()
+            toc_section = "\n\n<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n</details>\n\n"
+            updated_content = content[:year_pos] + toc_section + new_entry + content[year_pos:].lstrip()
 
-            if toc_match:
-                # Insert new entry right after the TOC
-                toc_end_pos = toc_match.end()
-                updated_content = content[:toc_end_pos] + "\n\n" + new_entry + content[toc_end_pos:].lstrip()
-            else:
-                # No TOC found, create one and add new entry after it
-                year_pos = year_match.end()
-                toc_section = "\n\n<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n</details>\n\n"
-                updated_content = content[:year_pos] + toc_section + new_entry + content[year_pos:].lstrip()
-
-        # Write the updated content back to the file
-        year_file.write_text(updated_content, encoding="utf-8")
-        return f"✅ File {year_file} updated.", year_file
+    # Write the updated content back to the file
+    year_file.write_text(updated_content, encoding="utf-8")
+    return f"✅ File {year_file} updated.", year_file
 
 
 def add_diary_new_dairy_in_year(path_dream: str | Path, beginning_of_md: str) -> tuple[str, Path]:
-    """
-    Adds a new diary entry to the yearly diary file.
+    """Adds a new diary entry to the yearly diary file.
 
     Args:
 
@@ -109,14 +107,14 @@ def add_diary_new_dairy_in_year(path_dream: str | Path, beginning_of_md: str) ->
     message, file_path = h.md.add_diary_new_dairy_in_year(path, front_matter)
     print(message)
     ```
+
     """
     diary_content = "Text. \n\n"
     return add_diary_entry_in_year(path_dream, beginning_of_md, diary_content)
 
 
 def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: bool = False) -> str | Path:
-    """
-    Creates a new diary entry for the current day and time.
+    """Creates a new diary entry for the current day and time.
 
     Args:
 
@@ -154,6 +152,7 @@ def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: b
     new_entry_path = h.md.add_diary_new_diary("C:/Diary/", yaml_front_matter, is_with_images=True)
     print(new_entry_path)
     ```
+
     """
     text = f"{beginning_of_md}\n\n"
     text += f"# {datetime.now().strftime('%Y-%m-%d')}\n\n"
@@ -162,8 +161,7 @@ def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: b
 
 
 def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = False) -> str | Path:
-    """
-    Creates a new dream diary entry for the current day and time with placeholders for dream descriptions.
+    """Creates a new dream diary entry for the current day and time with placeholders for dream descriptions.
 
     Args:
 
@@ -201,6 +199,7 @@ def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = Fals
     new_entry_path = h.md.add_diary_new_dream("C:/Dreams/", yaml_front_matter, is_with_images=True)
     print(new_entry_path)
     ```
+
     """
     text = f"{beginning_of_md}\n"
     text += f"# {datetime.now().strftime('%Y-%m-%d')}\n\n"
@@ -210,8 +209,7 @@ def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = Fals
 
 
 def add_diary_new_dream_in_year(path_dream: str | Path, beginning_of_md: str) -> tuple[str, Path]:
-    """
-    Adds a new dream diary entry to the yearly dream file.
+    """Adds a new dream diary entry to the yearly dream file.
 
     Args:
 
@@ -233,14 +231,14 @@ def add_diary_new_dream_in_year(path_dream: str | Path, beginning_of_md: str) ->
     message, file_path = h.md.add_diary_new_dream_in_year(path, front_matter)
     print(message)
     ```
+
     """
     dream_content = "`` — I don't remember.\n\n" * 16
     return add_diary_entry_in_year(path_dream, beginning_of_md, dream_content)
 
 
 def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -> str | Path:
-    """
-    Adds a new note to the diary or dream diary for the given base path.
+    """Adds a new note to the diary or dream diary for the given base path.
 
     Args:
 
@@ -263,6 +261,7 @@ def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -
     result_msg, result_path = h.md.add_diary_new_note("C:/Diary/", text, is_with_images)
     # File C:\\Diary\\2025\\01\\2025-01-21.md is created
     ```
+
     """
     current_date = datetime.now()
     year = current_date.strftime("%Y")
@@ -281,8 +280,7 @@ def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -
 
 
 def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) -> str | Path:
-    """
-    Adds a note to the specified base path.
+    """Adds a note to the specified base path.
 
     Args:
 
@@ -306,6 +304,7 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
     is_with_images = True
     result_msg, result_path = h.md.add_note("C:/Notes/", name, text, is_with_images)
     ```
+
     """
     base_path = Path(base_path)
 
@@ -326,8 +325,7 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
 
 
 def append_path_to_local_links_images_line(markdown_line: str, adding_path: str) -> str:
-    """
-    Appends a path to local links and images within a Markdown line.
+    """Appends a path to local links and images within a Markdown line.
 
     Args:
 
@@ -353,6 +351,7 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
     result = h.md.append_path_to_local_links_images_line(markdown_line, adding_path)
     print(result)
     ```
+
     """
 
     def replace_path_in_links(match):
@@ -361,14 +360,12 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
         return f"[{link_text}]({adding_path}/{file_path})"
 
     adding_path = adding_path.replace("\\", "/")
-    if adding_path.endswith("/"):
-        adding_path = adding_path[:-1]
+    adding_path = adding_path.removesuffix("/")
     return re.sub(r"\[(.*?)\]\(((?!http).*?)\)", replace_path_in_links, markdown_line)
 
 
 def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> str:
-    """
-    Combines multiple markdown files in a folder into a single file with intelligent YAML header merging.
+    """Combines multiple markdown files in a folder into a single file with intelligent YAML header merging.
 
     Args:
 
@@ -397,6 +394,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
     result = h.md.combine_markdown_files("C:/Notes", recursive=True)
     print(result)
     ```
+
     """
 
     def merge_yaml_values(key, value, combined_dict):
@@ -415,10 +413,9 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
                 for item in value:
                     if item not in combined_dict[key]:
                         combined_dict[key].append(item)
-            else:
-                # Add new value to the list if it's not already there
-                if value not in combined_dict[key]:
-                    combined_dict[key].append(value)
+            # Add new value to the list if it's not already there
+            elif value not in combined_dict[key]:
+                combined_dict[key].append(value)
         else:
             # Current value is not a list - convert it to a list and add the new value
             current_value = combined_dict[key]
@@ -427,9 +424,8 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
                 for item in value:
                     if item != current_value and item not in combined_dict[key]:
                         combined_dict[key].append(item)
-            else:
-                if current_value != value:
-                    combined_dict[key] = [current_value, value]
+            elif current_value != value:
+                combined_dict[key] = [current_value, value]
 
     folder_path = Path(folder_path)
 
@@ -465,7 +461,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
     else:
         # Non-recursive - only get files in the current folder
         md_files = sorted(
-            [f for f in folder_path.glob("*.md") if f.is_file() and f.suffix == ".md" and not f.name.endswith(".g.md")]
+            [f for f in folder_path.glob("*.md") if f.is_file() and f.suffix == ".md" and not f.name.endswith(".g.md")],
         )
 
     # If there are no markdown files in the folder at all, exit
@@ -585,8 +581,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
 
 
 def combine_markdown_files_recursively(folder_path: str | Path) -> str:
-    """
-    Recursively processes a folder structure and combines markdown files in each folder that meets specific criteria.
+    """Recursively processes a folder structure and combines markdown files in each folder that meets specific criteria.
     Processes folders from the deepest level up to ensure hierarchical combination of notes.
 
     Args:
@@ -615,6 +610,7 @@ def combine_markdown_files_recursively(folder_path: str | Path) -> str:
     result = h.md.combine_markdown_files_recursively("C:/Notes")
     print(result)
     ```
+
     """
     result_lines = []
     folder_path = Path(folder_path)
@@ -631,7 +627,7 @@ def combine_markdown_files_recursively(folder_path: str | Path) -> str:
     # Collect all folders, excluding hidden ones
     all_folders = []
     for subfolder in filter(
-        lambda path: not any((part for part in path.parts if part.startswith("."))),
+        lambda path: not any(part for part in path.parts if part.startswith(".")),
         Path(folder_path).rglob("*"),
     ):
         if subfolder.is_dir():
@@ -674,8 +670,7 @@ def combine_markdown_files_recursively(folder_path: str | Path) -> str:
 
 
 def download_and_replace_images(filename: Path | str) -> str:
-    """
-    Downloads remote images in Markdown text and replaces their URLs with local paths.
+    """Downloads remote images in Markdown text and replaces their URLs with local paths.
 
     Args:
 
@@ -705,9 +700,10 @@ def download_and_replace_images(filename: Path | str) -> str:
     result = h.md.download_and_replace_images("C:/Notes/note.md")
     print(result)
     ```
+
     """
     filename = Path(filename)
-    with open(filename, "r", encoding="utf-8") as f:
+    with open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = download_and_replace_images_content(document, filename.parent)
@@ -720,8 +716,7 @@ def download_and_replace_images(filename: Path | str) -> str:
 
 
 def download_and_replace_images_content(markdown_text: str, path_md: Path | str, image_folder: str = "img") -> str:
-    """
-    Downloads remote images in Markdown text and replaces their URLs with local paths.
+    """Downloads remote images in Markdown text and replaces their URLs with local paths.
 
     Args:
 
@@ -756,6 +751,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
     updated_md_text = h.md.download_and_replace_images_content(md_text, md_path)
     print(updated_md_text)
     ```
+
     """
 
     def download_and_replace_image_line(markdown_line, path_md, image_folder="img"):
@@ -825,8 +821,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
 
 
 def format_quotes_as_markdown_content(markdown_text: str) -> str:
-    """
-    Converts raw text with quotes into Markdown format.
+    """Converts raw text with quotes into Markdown format.
 
     Args:
 
@@ -865,6 +860,7 @@ def format_quotes_as_markdown_content(markdown_text: str) -> str:
     markdown_text = h.md.convert_to_markdown(markdown_text)
     print(markdown_text)
     ```
+
     """
     raw_quotes = markdown_text.strip().split("\n\n\n")
 
@@ -896,8 +892,7 @@ def format_quotes_as_markdown_content(markdown_text: str) -> str:
 
 
 def format_yaml(filename: Path | str) -> str:
-    """
-    Formats YAML content in a file, ensuring proper indentation and structure.
+    """Formats YAML content in a file, ensuring proper indentation and structure.
 
     Args:
 
@@ -921,8 +916,9 @@ def format_yaml(filename: Path | str) -> str:
     path = Path('example.md')
     print(h.md.format_yaml(path))
     ```
+
     """
-    with open(filename, "r", encoding="utf-8") as f:
+    with open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = format_yaml_content(document)
@@ -935,8 +931,7 @@ def format_yaml(filename: Path | str) -> str:
 
 
 def format_yaml_content(markdown_text: str) -> str:
-    """
-    Formats the YAML front matter within the given markdown text.
+    """Formats the YAML front matter within the given markdown text.
 
     Args:
 
@@ -959,6 +954,7 @@ def format_yaml_content(markdown_text: str) -> str:
     text = Path('example.md').read_text(encoding="utf8")
     print(h.md.format_yaml(text))
     ```
+
     """
     yaml_md, content_md = split_yaml_content(markdown_text)
 
@@ -984,8 +980,7 @@ def format_yaml_content(markdown_text: str) -> str:
 
 
 def generate_author_book(filename: Path | str) -> str:
-    """
-    Adds the author and the title of the book to the quotes and formats them as Markdown quotes.
+    """Adds the author and the title of the book to the quotes and formats them as Markdown quotes.
 
     Args:
 
@@ -1054,13 +1049,14 @@ def generate_author_book(filename: Path | str) -> str:
     result = h.md.generate_author_book(filename)
     print(result)
     ```
+
     """
     lines_list = []
     file = Path(filename)
     if not file.is_file():
-        return
+        return None
     if file.suffix.lower() != ".md":
-        return
+        return None
     markdown_text = file.read_text(encoding="utf8")
 
     yaml_md, content_md = split_yaml_content(markdown_text)
@@ -1097,8 +1093,7 @@ def generate_author_book(filename: Path | str) -> str:
 
 
 def generate_image_captions(filename: Path | str) -> str:
-    """
-    Processes a markdown file to add captions to images based on their alt text.
+    """Processes a markdown file to add captions to images based on their alt text.
 
     This function reads a markdown file, processes its content to:
 
@@ -1216,8 +1211,9 @@ def generate_image_captions(filename: Path | str) -> str:
 
     _Figure 3: Alt text_
     ````
+
     """
-    with open(filename, "r", encoding="utf-8") as f:
+    with open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = generate_image_captions_content(document)
@@ -1229,8 +1225,7 @@ def generate_image_captions(filename: Path | str) -> str:
 
 
 def generate_image_captions_content(markdown_text: str) -> str:
-    """
-    Generates image captions in the provided markdown text.
+    """Generates image captions in the provided markdown text.
 
     This function reads a markdown file, processes its content to:
 
@@ -1344,6 +1339,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
 
     _Figure 3: Alt text_
     ````
+
     """
     yaml_md, content_md = split_yaml_content(markdown_text)
 
@@ -1397,8 +1393,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
 
 
 def generate_short_note_toc_with_links(filename: Path | str) -> str:
-    """
-    Generates a separate markdown file with only the Table of Contents (TOC) from a given Markdown file.
+    """Generates a separate markdown file with only the Table of Contents (TOC) from a given Markdown file.
 
     This function reads a Markdown file, processes its content to create a TOC, and writes
     a new file with the ".short.g.md" extension containing only the TOC.
@@ -1425,13 +1420,14 @@ def generate_short_note_toc_with_links(filename: Path | str) -> str:
     result = h.md.generate_short_note_toc_with_links("C:/Notes/note.md")
     print(result)  # Will print status and path to the new file C:/Notes/note.short.g.md
     ```
+
     """
     # Convert to Path object if string
     if isinstance(filename, str):
         filename = Path(filename)
 
     # Read the original file
-    with open(filename, "r", encoding="utf-8") as f:
+    with open(filename, encoding="utf-8") as f:
         document = f.read()
 
     # Generate the short TOC content
@@ -1455,8 +1451,7 @@ def generate_short_note_toc_with_links(filename: Path | str) -> str:
 
 
 def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
-    """
-    Generates a markdown content with only the Table of Contents (TOC) from a given Markdown text.
+    """Generates a markdown content with only the Table of Contents (TOC) from a given Markdown text.
 
     Args:
 
@@ -1482,6 +1477,7 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
     short_toc = h.md.generate_short_note_toc_with_links_content(text)
     Path("C:/Notes/note.short.g.md").write_text(short_toc, encoding="utf8")
     ```
+
     """
     # Extract YAML frontmatter if present
     yaml_md, _ = split_yaml_content(markdown_text)
@@ -1536,8 +1532,7 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
 
 
 def generate_summaries(folder: Path | str) -> str:
-    """
-    Generate two summary files for a directory of year-based Markdown files.
+    """Generate two summary files for a directory of year-based Markdown files.
 
     1. Table.md - A statistical table showing the count of book entries by year
     2. _[directory_name].short.g.md - A hierarchical list of all book entries organized by year
@@ -1568,6 +1563,7 @@ def generate_summaries(folder: Path | str) -> str:
     # Output: ✅ File C:/Notes/books/Table.md is created.
     #         ✅ File C:/Notes/books/_books.short.g.md is created.
     ```
+
     """
     # Convert input to Path object if it's a string
     path = Path(folder) if isinstance(folder, str) else folder
@@ -1745,8 +1741,7 @@ def generate_summaries(folder: Path | str) -> str:
 
 
 def generate_toc_with_links(filename: Path | str) -> str:
-    """
-    Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes
+    """Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes
     the TOC in the document.
 
     This function reads a Markdown file, processes its content to create or update a TOC, and writes
@@ -1775,8 +1770,9 @@ def generate_toc_with_links(filename: Path | str) -> str:
     result = h.md.generate_toc_with_links_content("C:/Notes/note.md")
     print(result)
     ```
+
     """
-    with open(filename, "r", encoding="utf-8") as f:
+    with open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = generate_toc_with_links_content(document)
@@ -1788,8 +1784,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
 
 
 def generate_toc_with_links_content(markdown_text: str) -> str:
-    """
-    Generates a Table of Contents (TOC) with links for the provided markdown content.
+    """Generates a Table of Contents (TOC) with links for the provided markdown content.
 
     Args:
 
@@ -1814,6 +1809,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     text = Path("C:/Notes/note.md").read_text(encoding="utf8")
     print(h.md.generate_toc_with_links_content(text))
     ```
+
     """
 
     def generate_id(text: str, existing_ids: set) -> str:
@@ -1898,8 +1894,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
 
 
 def get_yaml_content(markdown_text: str) -> str:
-    """
-    Function gets YAML from text of the Markdown file.
+    """Function gets YAML from text of the Markdown file.
 
     Markdown before processing:
 
@@ -1947,6 +1942,7 @@ def get_yaml_content(markdown_text: str) -> str:
     yaml_content = h.md.get_yaml_content(md)
     print(yaml_content)
     ```
+
     """
     find = re.search(r"^---(.|\n)*?---\n", markdown_text.lstrip(), re.DOTALL)
     if find:
@@ -1954,9 +1950,8 @@ def get_yaml_content(markdown_text: str) -> str:
     return ""
 
 
-def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
-    """
-    Processes a list of text lines to identify code blocks and yield each line with a boolean flag.
+def identify_code_blocks(lines: list[str]) -> Iterator[tuple[str, bool]]:
+    """Processes a list of text lines to identify code blocks and yield each line with a boolean flag.
 
     Args:
 
@@ -1990,6 +1985,7 @@ def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
         else:
             count_lines_content += 1
     ```
+
     """
     code_block_delimiter = None
     for line in lines:
@@ -2009,8 +2005,7 @@ def identify_code_blocks(lines: List[str]) -> Iterator[tuple[str, bool]]:
 
 
 def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
-    """
-    Parses a single line of Markdown to identify inline code blocks.
+    """Parses a single line of Markdown to identify inline code blocks.
 
     This function scans through a markdown line, identifying sequences of backticks (`) to determine where code
     blocks start and end.
@@ -2033,6 +2028,7 @@ def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
     for segment, in_code in h.md.identify_code_blocks_line(line):
         print(f"{'Code' if in_code else 'Text'}: {segment}")
     ```
+
     """
     current_text = ""
     in_code = False
@@ -2074,8 +2070,7 @@ def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
 
 
 def increase_heading_level_content(markdown_text: str) -> str:
-    """
-    Increases the heading level of Markdown content.
+    """Increases the heading level of Markdown content.
 
     This function processes a Markdown text and increases the level of all headings
     (lines starting with '#') outside of code blocks by prepending an additional '#'.
@@ -2103,6 +2098,7 @@ def increase_heading_level_content(markdown_text: str) -> str:
     md = "# Title\\n\\nText## Subtitle\\n\\nText"
     print(h.md.increase_heading_level_content(md))
     ```
+
     """
     new_lines = []
     lines = markdown_text.split("\n")
@@ -2115,8 +2111,7 @@ def increase_heading_level_content(markdown_text: str) -> str:
 
 
 def remove_toc_content(markdown_text: str) -> str:
-    """
-    Removes the table of contents (TOC) section from a Markdown document.
+    """Removes the table of contents (TOC) section from a Markdown document.
 
     The function identifies the TOC based on the document language (from YAML frontmatter)
     and removes the entire TOC section, including the details/summary tags and all TOC links.
@@ -2145,6 +2140,7 @@ def remove_toc_content(markdown_text: str) -> str:
     text = Path("C:/Notes/note.md").read_text(encoding="utf8")
     print(h.md.remove_toc_content(text))
     ```
+
     """
     yaml_md, _ = split_yaml_content(markdown_text)
 
@@ -2189,8 +2185,7 @@ def remove_toc_content(markdown_text: str) -> str:
 
 
 def remove_yaml_and_code_content(markdown_text: str) -> str:
-    """
-    Removes YAML front matter and code blocks, and returns the remaining content.
+    """Removes YAML front matter and code blocks, and returns the remaining content.
 
     Args:
 
@@ -2217,6 +2212,7 @@ def remove_yaml_and_code_content(markdown_text: str) -> str:
     md_clean = h.md.remove_yaml_and_code_content(md)
     print(md_clean)
     ```
+
     """
     _, content_md = split_yaml_content(markdown_text)
 
@@ -2231,8 +2227,7 @@ def remove_yaml_and_code_content(markdown_text: str) -> str:
 
 
 def remove_yaml_content(markdown_text: str) -> str:
-    """
-    Function removes YAML from text of the Markdown file.
+    """Function removes YAML from text of the Markdown file.
 
     Markdown before processing:
 
@@ -2277,13 +2272,13 @@ def remove_yaml_content(markdown_text: str) -> str:
     md_clean = h.md.remove_yaml_content(md)
     print(md_clean)
     ```
+
     """
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
 
 
 def replace_section(filename: Path | str, replace_content, title_section: str = "## List of commands") -> str:
-    """
-    Replaces a section in a file defined by `title_section` with the provided `replace_content`.
+    """Replaces a section in a file defined by `title_section` with the provided `replace_content`.
 
     This function searches for a section in a text file starting with `title_section` and
     ending at the next line starting with a '#'. It then replaces the content of that section
@@ -2314,8 +2309,9 @@ def replace_section(filename: Path | str, replace_content, title_section: str = 
     new_content = "New list of commands:\\n\\n- new command1\\n- new command2"
     result_message = h.md.replace_section("C:/Notes/note.md", new_content, "## List of commands")
     ```
+
     """
-    with open(filename, "r", encoding="utf-8") as f:
+    with open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = replace_section_content(document, replace_content, title_section)
@@ -2327,8 +2323,7 @@ def replace_section(filename: Path | str, replace_content, title_section: str = 
 
 
 def replace_section_content(markdown_text: str, replace_content, title_section: str = "## List of commands") -> str:
-    """
-    Replaces a section in the markdown text defined by `title_section` with the provided `replace_content`.
+    """Replaces a section in the markdown text defined by `title_section` with the provided `replace_content`.
 
     This function searches for a section in the markdown text starting with `title_section` and
     ending at the next line starting with a '#'. It then replaces the content of that section
@@ -2360,6 +2355,7 @@ def replace_section_content(markdown_text: str, replace_content, title_section: 
     text = Path('C:/Notes/note.md').read_text(encoding="utf8")
     print(h.md.replace_section_content(text, new_content, "## List of commands"))
     ```
+
     """
     ends_with_newline = markdown_text.endswith("\n")
     lines = markdown_text.splitlines()
@@ -2411,8 +2407,7 @@ def replace_section_content(markdown_text: str, replace_content, title_section: 
 
 
 def sort_sections(filename: Path | str) -> str:
-    """
-    Sorts the sections of a markdown file by their headings, maintaining YAML front matter
+    """Sorts the sections of a markdown file by their headings, maintaining YAML front matter
     and code blocks in their original order.
 
     This function reads a markdown file, splits it into a YAML front matter (if present) and content,
@@ -2491,8 +2486,9 @@ def sort_sections(filename: Path | str) -> str:
     Example text.
 
     ```
+
     """
-    with open(filename, "r", encoding="utf-8") as f:
+    with open(filename, encoding="utf-8") as f:
         document = f.read()
 
     document_new = sort_sections_content(document)
@@ -2505,8 +2501,7 @@ def sort_sections(filename: Path | str) -> str:
 
 
 def sort_sections_content(markdown_text: str) -> str:
-    """
-    Sorts sections by their `##` headings: top sections first, then dates in descending order,
+    """Sorts sections by their `##` headings: top sections first, then dates in descending order,
     then regular headings alphabetically.
 
     Args:
@@ -2548,11 +2543,11 @@ def sort_sections_content(markdown_text: str) -> str:
     sorted_markdown = h.md.sort_sections_content(markdown)
     print(sorted_markdown)
     ```
+
     """
 
-    def is_date_heading(section_text: str) -> Optional[datetime]:
-        """
-        Returns datetime if the first line of the section (## XXX) is a date,
+    def is_date_heading(section_text: str) -> datetime | None:
+        """Returns datetime if the first line of the section (## XXX) is a date,
         otherwise None.
         """
         first_line = section_text.split("\n", 1)[0].strip()  # should be ## 2024-...
@@ -2574,8 +2569,7 @@ def sort_sections_content(markdown_text: str) -> str:
         return None
 
     def is_top_section(section_text: str) -> bool:
-        """
-        Returns True if the section is marked as a top section.
+        """Returns True if the section is marked as a top section.
         """
         first_line = section_text.split("\n", 1)[0].strip()
         return "<!-- top-section -->" in first_line
@@ -2717,8 +2711,7 @@ def sort_sections_content(markdown_text: str) -> str:
 
 
 def split_toc_content(markdown_text: str) -> tuple[str, str]:
-    """
-    Separates the Table of Contents (TOC) from the rest of the Markdown content.
+    """Separates the Table of Contents (TOC) from the rest of the Markdown content.
 
     Args:
 
@@ -2743,6 +2736,7 @@ def split_toc_content(markdown_text: str) -> tuple[str, str]:
     print(toc)
     print(content)
     ```
+
     """
     is_stop_searching_toc = False
     new_lines = []
@@ -2766,8 +2760,7 @@ def split_toc_content(markdown_text: str) -> tuple[str, str]:
 
 
 def split_yaml_content(markdown_text: str) -> tuple[str, str]:
-    """
-    Splits a markdown note into YAML front matter and the main content.
+    """Splits a markdown note into YAML front matter and the main content.
 
     This function assumes that the note starts with YAML front matter separated by '---' from the rest of the content.
 
@@ -2795,6 +2788,7 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     md = Path('C:/Notes/note.md').read_text(encoding="utf8")
     yaml, content = h.md.split_yaml_content(md)
     ```
+
     """
     if not markdown_text.startswith("---"):
         return "", markdown_text

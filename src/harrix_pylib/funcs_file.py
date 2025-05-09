@@ -3,13 +3,12 @@ import platform
 import re
 import shutil
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 
 def all_to_parent_folder(path: Path | str) -> str:
-    """
-    Moves all files from subfolders within the given path to the parent folder and then
+    """Moves all files from subfolders within the given path to the parent folder and then
     removes empty folders.
 
     Args:
@@ -67,6 +66,7 @@ def all_to_parent_folder(path: Path | str) -> str:
 
     h.file.all_to_parent_folder("C:/test")
     ```
+
     """
     list_lines = []
     for child_folder in Path(path).iterdir():
@@ -87,8 +87,7 @@ def all_to_parent_folder(path: Path | str) -> str:
 
 
 def apply_func(path: Path | str, ext: str, func: Callable) -> str:
-    """
-    Recursively applies a function to all files with a specified extension in a directory.
+    """Recursively applies a function to all files with a specified extension in a directory.
 
     Args:
 
@@ -122,6 +121,7 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
 
     h.file.apply_func("C:/Notes/", ".txt", test_func)
     ```
+
     """
     list_files = []
     folder_path = Path(path)
@@ -142,8 +142,7 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
 
 
 def check_featured_image(path: Path | str) -> tuple[bool, str]:
-    """
-    Checks for the presence of `featured_image.*` files in every child folder, not recursively.
+    """Checks for the presence of `featured_image.*` files in every child folder, not recursively.
 
     This function goes through each immediate subfolder of the given path and checks if there
     is at least one file with the name starting with "featured-image". If such a file is missing
@@ -172,6 +171,7 @@ def check_featured_image(path: Path | str) -> tuple[bool, str]:
 
     is_correct = h.file.check_featured_image("C:/articles/")
     ```
+
     """
     line_list: list[str] = []
     is_correct: bool = True
@@ -191,8 +191,7 @@ def check_featured_image(path: Path | str) -> tuple[bool, str]:
 
 
 def clear_directory(path: Path | str) -> None:
-    """
-    This function clears directory with sub-directories.
+    """This function clears directory with sub-directories.
 
     Args:
 
@@ -220,6 +219,7 @@ def clear_directory(path: Path | str) -> None:
     ...
     h.file.clear_directory(folder)
     ```
+
     """
     path = Path(path)
     if path.is_dir():
@@ -228,8 +228,7 @@ def clear_directory(path: Path | str) -> None:
 
 
 def find_max_folder_number(base_path: str, start_pattern: str) -> int:
-    """
-    Finds the highest folder number in a given folder based on a pattern.
+    """Finds the highest folder number in a given folder based on a pattern.
 
     Args:
 
@@ -248,6 +247,7 @@ def find_max_folder_number(base_path: str, start_pattern: str) -> int:
 
     number = h.file.find_max_folder_number("C:/projects/", "python_project_")
     ```
+
     """
     pattern = re.compile(start_pattern + r"(\d+)$")
     max_number: int = 0
@@ -258,15 +258,13 @@ def find_max_folder_number(base_path: str, start_pattern: str) -> int:
             match = pattern.match(item.name)
             if match:
                 number = int(match.group(1))
-                if number > max_number:
-                    max_number = number
+                max_number = max(max_number, number)
 
     return max_number
 
 
 def open_file_or_folder(path: Path | str) -> None:
-    """
-    Opens a file or folder using the operating system's default application.
+    """Opens a file or folder using the operating system's default application.
 
     This function checks the operating system and uses the appropriate method to open
     the given path:
@@ -297,6 +295,7 @@ def open_file_or_folder(path: Path | str) -> None:
 
     h.file.open_file_or_folder("C:/Notes/note.md")
     ```
+
     """
     if platform.system() == "Windows":
         os.startfile(path)
@@ -304,12 +303,10 @@ def open_file_or_folder(path: Path | str) -> None:
         subprocess.call(["open", str(path)])
     elif platform.system() == "Linux":
         subprocess.call(["xdg-open", str(path)])
-    return
 
 
 def rename_largest_images_to_featured(path: Path | str) -> str:
-    """
-    Finds the largest image in each subdirectory of the given path and renames it to 'featured-image'.
+    """Finds the largest image in each subdirectory of the given path and renames it to 'featured-image'.
 
     Args:
 
@@ -334,6 +331,7 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
     result = h.rename_largest_images_to_featured("C:/articles/")
     print(result)
     ```
+
     """
     result_lines = []
     # Convert path to Path object if it's a string
@@ -389,8 +387,7 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
 
 
 def tree_view_folder(path: str | Path, is_ignore_hidden_folders: bool = False) -> str:
-    """
-    Generates a tree-like representation of folder contents.
+    """Generates a tree-like representation of folder contents.
 
     Example output:
 
@@ -427,6 +424,7 @@ def tree_view_folder(path: str | Path, is_ignore_hidden_folders: bool = False) -
     tree = h.file.tree_view_folder("C:/Notes")
     print(tree)
     ```
+
     """
 
     def __tree(path: str | Path, is_ignore_hidden_folders: bool = False, prefix: str = ""):
@@ -438,7 +436,7 @@ def tree_view_folder(path: str | Path, is_ignore_hidden_folders: bool = False) -
             except PermissionError:
                 contents = []
         pointers = ["├─ "] * (len(contents) - 1) + ["└─ "]
-        for pointer, path in zip(pointers, contents):
+        for pointer, path in zip(pointers, contents, strict=False):
             yield prefix + pointer + path.name
             if path.is_dir():
                 extension = "│  " if pointer == "├─ " else "   "
