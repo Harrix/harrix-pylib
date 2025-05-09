@@ -20,7 +20,9 @@ def test_load_config() -> None:
 
 
 @pytest.mark.skipif(
-    subprocess.run(["powershell", "-Command", "echo test"], capture_output=True, text=True, check=False).returncode
+    subprocess.run(
+        [shutil.which("powershell"), "-Command", "echo test"], capture_output=True, text=True, check=False
+    ).returncode
     != 0,
     reason="PowerShell is not available",
 )
@@ -35,7 +37,10 @@ def test_run_powershell_script() -> None:
 
 @pytest.mark.slow
 @pytest.mark.skipif(
-    subprocess.run(["powershell", "-Command", "echo test"], capture_output=True, text=True, check=False).returncode
+    shutil.which("powershell") is None
+    or subprocess.run(
+        [shutil.which("powershell"), "-Command", "echo test"], capture_output=True, text=True, check=False
+    ).returncode
     != 0,
     reason="PowerShell is not available",
 )
