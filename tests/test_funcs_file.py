@@ -43,7 +43,7 @@ def test_all_to_parent_folder() -> None:
 
 
 def test_apply_func() -> None:
-    def test_func(filename):
+    def test_func(filename: Path | str) -> None:
         content = Path(filename).read_text(encoding="utf8")
         content = content.upper()
         Path(filename).write_text(content, encoding="utf8")
@@ -75,9 +75,10 @@ def test_clear_directory() -> None:
     shutil.rmtree(folder)
 
 
-def test_find_max_folder_number():
+def test_find_max_folder_number() -> None:
     folder = h.dev.get_project_root() / "tests/data/check_featured_image/folder_correct"
-    assert h.file.find_max_folder_number(folder, "folder") == 2
+    correct_max_folder_number = 2
+    assert h.file.find_max_folder_number(folder, "folder") == correct_max_folder_number
 
 
 def test_open_file_or_folder() -> None:
@@ -178,4 +179,4 @@ def test_tree_view_folder() -> None:
     folder_path = current_folder / "tests/data/tree_view_folder"
     assert h.file.tree_view_folder(folder_path) == tree_check
     tree_check = (current_folder / "tests/data/tree_view_folder__02.txt").read_text(encoding="utf8")
-    assert h.file.tree_view_folder(folder_path, True) == tree_check
+    assert h.file.tree_view_folder(folder_path, is_ignore_hidden_folders=True) == tree_check
