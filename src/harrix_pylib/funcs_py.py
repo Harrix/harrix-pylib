@@ -174,10 +174,7 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
         docstring = ast.get_docstring(class_node)
         summary = docstring.splitlines()[0] if docstring else ""
         # Format the class entry
-        if base_classes_str:
-            name = f"Class `{class_name} ({base_classes_str})`"
-        else:
-            name = f"Class `{class_name}`"
+        name = f"Class `{class_name} ({base_classes_str})`" if base_classes_str else f"Class `{class_name}`"
         description = summary
         entries.append((name, description))
 
@@ -203,12 +200,11 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
         output_lines.append(f"| {name} | {description} |")
 
     # Combine all lines and return the result
-    result = "\n".join(output_lines)
-    return result
+    return "\n".join(output_lines)
 
 
 def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> str:
-    """Generates documentation for all Python files within a given project folder.
+    r"""Generates documentation for all Python files within a given project folder.
 
     Args:
 
@@ -437,12 +433,11 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             markdown_lines.append("```\n")
             markdown_lines.append("</details>\n")
     # Join all lines
-    markdown_doc = "\n".join(markdown_lines)
-    return markdown_doc
+    return "\n".join(markdown_lines)
 
 
 def lint_and_fix_python_code(py_content: str) -> str:
-    """Lints and fixes the provided Python code using the `ruff` formatter.
+    r"""Lints and fixes the provided Python code using the `ruff` formatter.
 
     This function formats the given Python code content by:
 
@@ -492,9 +487,7 @@ def lint_and_fix_python_code(py_content: str) -> str:
 
         # Read the fixed code from the temporary file
         with Path.open(temp_file_path, encoding="utf-8") as file:
-            fixed_content = file.read()
-
-        return fixed_content
+            return file.read()
 
     finally:
         # Delete the temporary file
@@ -502,7 +495,7 @@ def lint_and_fix_python_code(py_content: str) -> str:
 
 
 def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
-    """Sorts the Python code in the given file by organizing classes, functions, and statements.
+    r"""Sorts the Python code in the given file by organizing classes, functions, and statements.
 
     This function reads a Python file, parses it, sorts classes and functions alphabetically,
     and ensures that class attributes, methods, and other statements within classes are ordered
@@ -682,7 +675,7 @@ def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
         other_methods_sorted: list[cst.FunctionDef] = sorted(other_methods, key=lambda m: m.name.value)
 
         if init_method is not None:
-            methods_sorted: list[cst.FunctionDef] = [init_method] + other_methods_sorted
+            methods_sorted: list[cst.FunctionDef] = [init_method, *other_methods_sorted]
         else:
             methods_sorted = other_methods_sorted
 

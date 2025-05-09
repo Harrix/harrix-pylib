@@ -9,7 +9,7 @@ import yaml
 
 
 def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_content: str) -> tuple[str, Path]:
-    """Adds a new diary entry to the yearly markdown file.
+    r"""Adds a new diary entry to the yearly markdown file.
 
     If the yearly file doesn't exist, it creates one with the provided front matter.
     If it exists, it adds a new entry after the year heading and the table of contents.
@@ -85,7 +85,7 @@ def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_
 
 
 def add_diary_new_dairy_in_year(path_dream: str | Path, beginning_of_md: str) -> tuple[str, Path]:
-    """Adds a new diary entry to the yearly diary file.
+    r"""Adds a new diary entry to the yearly diary file.
 
     Args:
 
@@ -209,7 +209,7 @@ def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = Fals
 
 
 def add_diary_new_dream_in_year(path_dream: str | Path, beginning_of_md: str) -> tuple[str, Path]:
-    """Adds a new dream diary entry to the yearly dream file.
+    r"""Adds a new dream diary entry to the yearly dream file.
 
     Args:
 
@@ -238,7 +238,7 @@ def add_diary_new_dream_in_year(path_dream: str | Path, beginning_of_md: str) ->
 
 
 def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -> str | Path:
-    """Adds a new note to the diary or dream diary for the given base path.
+    r"""Adds a new note to the diary or dream diary for the given base path.
 
     Args:
 
@@ -280,7 +280,7 @@ def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -
 
 
 def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) -> str | Path:
-    """Adds a note to the specified base path.
+    r"""Adds a note to the specified base path.
 
     Args:
 
@@ -354,7 +354,7 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
 
     """
 
-    def replace_path_in_links(match):
+    def replace_path_in_links(match) -> str:
         link_text = match.group(1)
         file_path = match.group(2).replace("\\", "/")
         return f"[{link_text}]({adding_path}/{file_path})"
@@ -397,7 +397,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
 
     """
 
-    def merge_yaml_values(key, value, combined_dict):
+    def merge_yaml_values(key, value, combined_dict) -> None:
         if key not in combined_dict:
             combined_dict[key] = value
             return
@@ -512,10 +512,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
                     continue
 
                 adding_path = "/".join(md_file.parent.parts[len(folder_path.parts) :])
-                if adding_path:
-                    part_new = append_path_to_local_links_images_line(part, adding_path)
-                else:
-                    part_new = part
+                part_new = append_path_to_local_links_images_line(part, adding_path) if adding_path else part
                 new_parts.append(part_new)
 
             line_new = "".join(new_parts)
@@ -801,8 +798,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
             return markdown_line
 
         # Replace the remote URL with the local relative path (img/candidate_file.name)
-        new_line = markdown_line.replace(remote_url, f"{image_folder}/{candidate_file.name}")
-        return new_line
+        return markdown_line.replace(remote_url, f"{image_folder}/{candidate_file.name}")
 
     yaml_md, content_md = split_yaml_content(markdown_text)
 
@@ -886,9 +882,7 @@ def format_quotes_as_markdown_content(markdown_text: str) -> str:
                 formatted_quote = f"> {formatted_quote_text}\n>\n> -- _{author}, {title}_"
                 formatted_quotes.append(formatted_quote)
 
-    result = f"# {book_title}\n\n" + "\n\n---\n\n".join(formatted_quotes)
-
-    return result
+    return f"# {book_title}\n\n" + "\n\n---\n\n".join(formatted_quotes)
 
 
 def format_yaml(filename: Path | str) -> str:
@@ -962,7 +956,7 @@ def format_yaml_content(markdown_text: str) -> str:
 
     class IndentDumper(yaml.Dumper):
         def increase_indent(self, flow=False, indentless=False):
-            return super(IndentDumper, self).increase_indent(flow, False)
+            return super().increase_indent(flow, False)
 
     yaml_md = (
         yaml.dump(
@@ -1358,11 +1352,10 @@ def generate_image_captions_content(markdown_text: str) -> str:
             is_caption = False
             if line.strip() == "":
                 continue
-        if re.match(r"^_.*_$", line):
-            if i > 0 and lines[i - 1].strip() == "":
-                if i > 1 and re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip()):
-                    is_caption = True
-                    continue
+        if re.match(r"^_.*_$", line) and i > 0 and lines[i - 1].strip() == "":
+            if i > 1 and re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip()):
+                is_caption = True
+                continue
         new_lines.append(line)
     content_md = "\n".join(new_lines)
 
@@ -1526,9 +1519,7 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
             toc_structure.append(f"{indent}- {header_text}")
 
     # Combine all parts
-    result = yaml_md + "\n\n" + new_title + "\n\n" + "\n".join(toc_structure) + "\n"
-
-    return result
+    return yaml_md + "\n\n" + new_title + "\n\n" + "\n".join(toc_structure) + "\n"
 
 
 def generate_summaries(folder: Path | str) -> str:
@@ -1880,7 +1871,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             if not is_stop_searching_place_toc and len(toc_lines) > 1:
                 new_lines.insert(len(new_lines) - 1, toc + "\n")
             is_stop_searching_place_toc = True
-        if is_stop_searching_place_toc or line.startswith("# ") or line.startswith("![") or not line.strip():
+        if is_stop_searching_place_toc or line.startswith(("# ", "![")) or not line.strip():
             continue
         if line and not is_first_paragraph and len(toc_lines) > 1:
             new_lines.append("\n" + toc)
@@ -1894,7 +1885,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
 
 
 def get_yaml_content(markdown_text: str) -> str:
-    """Function gets YAML from text of the Markdown file.
+    r"""Function gets YAML from text of the Markdown file.
 
     Markdown before processing:
 
@@ -2070,7 +2061,7 @@ def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
 
 
 def increase_heading_level_content(markdown_text: str) -> str:
-    """Increases the heading level of Markdown content.
+    r"""Increases the heading level of Markdown content.
 
     This function processes a Markdown text and increases the level of all headings
     (lines starting with '#') outside of code blocks by prepending an additional '#'.
@@ -2185,7 +2176,7 @@ def remove_toc_content(markdown_text: str) -> str:
 
 
 def remove_yaml_and_code_content(markdown_text: str) -> str:
-    """Removes YAML front matter and code blocks, and returns the remaining content.
+    r"""Removes YAML front matter and code blocks, and returns the remaining content.
 
     Args:
 
@@ -2227,7 +2218,7 @@ def remove_yaml_and_code_content(markdown_text: str) -> str:
 
 
 def remove_yaml_content(markdown_text: str) -> str:
-    """Function removes YAML from text of the Markdown file.
+    r"""Function removes YAML from text of the Markdown file.
 
     Markdown before processing:
 
@@ -2278,7 +2269,7 @@ def remove_yaml_content(markdown_text: str) -> str:
 
 
 def replace_section(filename: Path | str, replace_content, title_section: str = "## List of commands") -> str:
-    """Replaces a section in a file defined by `title_section` with the provided `replace_content`.
+    r"""Replaces a section in a file defined by `title_section` with the provided `replace_content`.
 
     This function searches for a section in a text file starting with `title_section` and
     ending at the next line starting with a '#'. It then replaces the content of that section
@@ -2323,7 +2314,7 @@ def replace_section(filename: Path | str, replace_content, title_section: str = 
 
 
 def replace_section_content(markdown_text: str, replace_content, title_section: str = "## List of commands") -> str:
-    """Replaces a section in the markdown text defined by `title_section` with the provided `replace_content`.
+    r"""Replaces a section in the markdown text defined by `title_section` with the provided `replace_content`.
 
     This function searches for a section in the markdown text starting with `title_section` and
     ending at the next line starting with a '#'. It then replaces the content of that section
@@ -2368,12 +2359,14 @@ def replace_section_content(markdown_text: str, replace_content, title_section: 
             break
 
     if start_index is None:
-        raise ValueError(f"Section '{title_section}' not found in the file.")
+        msg = f"Section '{title_section}' not found in the file."
+        raise ValueError(msg)
 
     # Determine the heading level of the section to replace
     heading_match = re.match(r"^(#+)", title_section.strip())
     if not heading_match:
-        raise ValueError(f"The section title '{title_section}' is not a valid Markdown heading.")
+        msg = f"The section title '{title_section}' is not a valid Markdown heading."
+        raise ValueError(msg)
     title_level = len(heading_match.group(1))  # Number of '#' characters
 
     # Find the end index of the section to replace
@@ -2599,8 +2592,7 @@ def sort_sections_content(markdown_text: str) -> str:
         regular_sections.sort(key=lambda sec: sec.split("\n", 1)[0].lower())
 
         # Combine: first top sections, then dates, then regular headings
-        sorted_sections = top_sections + [s for (_, s) in date_sections] + regular_sections
-        return sorted_sections
+        return top_sections + [s for (_, s) in date_sections] + regular_sections
 
     # 1) Split YAML and content
     yaml_md, content_md = split_yaml_content(markdown_text)
@@ -2710,7 +2702,7 @@ def sort_sections_content(markdown_text: str) -> str:
 
 
 def split_toc_content(markdown_text: str) -> tuple[str, str]:
-    """Separates the Table of Contents (TOC) from the rest of the Markdown content.
+    r"""Separates the Table of Contents (TOC) from the rest of the Markdown content.
 
     Args:
 

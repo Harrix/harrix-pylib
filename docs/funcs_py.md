@@ -204,10 +204,7 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
         docstring = ast.get_docstring(class_node)
         summary = docstring.splitlines()[0] if docstring else ""
         # Format the class entry
-        if base_classes_str:
-            name = f"Class `{class_name} ({base_classes_str})`"
-        else:
-            name = f"Class `{class_name}`"
+        name = f"Class `{class_name} ({base_classes_str})`" if base_classes_str else f"Class `{class_name}`"
         description = summary
         entries.append((name, description))
 
@@ -233,8 +230,7 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
         output_lines.append(f"| {name} | {description} |")
 
     # Combine all lines and return the result
-    result = "\n".join(output_lines)
-    return result
+    return "\n".join(output_lines)
 ```
 
 </details>
@@ -268,7 +264,7 @@ import harrix_pylib as h
 
 path = "C:/projects/project"
 domain = "https://github.com/Harrix/harrix-pylib"
-result = h.py.generate_md_docs(path, "---\nlang: en\n---\n", domain)
+result = h.py.generate_md_docs(path, "---\\nlang: en\\n---\\n", domain)
 ```
 
 <details>
@@ -489,8 +485,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             markdown_lines.append("```\n")
             markdown_lines.append("</details>\n")
     # Join all lines
-    markdown_doc = "\n".join(markdown_lines)
-    return markdown_doc
+    return "\n".join(markdown_lines)
 ````
 
 </details>
@@ -533,8 +528,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-python_code = "def greet(name):
-print('Hello, ' +    name)"
+python_code = "def greet(name):\n    print('Hello, ' +    name)"
 formatted_code = h.py.lint_and_fix_python_code(python_code)
 print(formatted_code)
 # def greet(name):
@@ -556,9 +550,7 @@ def lint_and_fix_python_code(py_content: str) -> str:
 
         # Read the fixed code from the temporary file
         with Path.open(temp_file_path, encoding="utf-8") as file:
-            fixed_content = file.read()
-
-        return fixed_content
+            return file.read()
 
     finally:
         # Delete the temporary file
@@ -609,33 +601,33 @@ Before sorting:
 
 ```python
 def multiply(a, b):
-    """Returns the product of two numbers."""
+    \"\"\"Returns the product of two numbers.\"\"\"
     return a * b
 
 
 def subtract(a, b):
-    """Returns the difference between two numbers."""
+    \"\"\"Returns the difference between two numbers.\"\"\"
     return a - b
 
 
 def add(a, b):
-    """Returns the sum of two numbers."""
+    \"\"\"Returns the sum of two numbers.\"\"\"
     return a + b
 
 
 class Point:
     def move(self, dx, dy):
-        """Moves the point by a given distance along x and y axes."""
+        \"\""Moves the point by a given distance along x and y axes.\"\"\"
         self.x += dx
         self.y += dy
 
     def __init__(self, x=0, y=0):
-        """Initializes a point with coordinates (x, y)."""
+        \"\"\"Initializes a point with coordinates (x, y).\"\"\"
         self.x = x
         self.y = y
 
     def distance_to_origin(self):
-        """Returns the distance from the point to the origin."""
+        \"\"\"Returns the distance from the point to the origin.\"\"\"
         return (self.x**2 + self.y**2) ** 0.5
 ```
 
@@ -644,32 +636,32 @@ After sorting:
 ```python
 class Point:
     def __init__(self, x=0, y=0):
-        """Initializes a point with coordinates (x, y)."""
+        \"\"\"Initializes a point with coordinates (x, y).\"\"\"
         self.x = x
         self.y = y
 
     def distance_to_origin(self):
-        """Returns the distance from the point to the origin."""
+        \"\"\"Returns the distance from the point to the origin.\"\"\"
         return (self.x**2 + self.y**2) ** 0.5
 
     def move(self, dx, dy):
-        """Moves the point by a given distance along x and y axes."""
+        \"\"\"Moves the point by a given distance along x and y axes.\"\"\"
         self.x += dx
         self.y += dy
 
 
 def add(a, b):
-    """Returns the sum of two numbers."""
+    \"\"\"Returns the sum of two numbers.\"\"\"
     return a + b
 
 
 def multiply(a, b):
-    """Returns the product of two numbers."""
+    \"\"\"Returns the product of two numbers.\"\"\"
     return a * b
 
 
 def subtract(a, b):
-    """Returns the difference between two numbers."""
+    \"\"\"Returns the difference between two numbers.\"\"\"
     return a - b
 ```
 
@@ -757,7 +749,7 @@ def sort_py_code(filename: str, is_use_ruff_format: bool = True) -> None:
         other_methods_sorted: list[cst.FunctionDef] = sorted(other_methods, key=lambda m: m.name.value)
 
         if init_method is not None:
-            methods_sorted: list[cst.FunctionDef] = [init_method] + other_methods_sorted
+            methods_sorted: list[cst.FunctionDef] = [init_method, *other_methods_sorted]
         else:
             methods_sorted = other_methods_sorted
 

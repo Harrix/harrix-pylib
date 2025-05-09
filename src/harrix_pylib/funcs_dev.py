@@ -96,7 +96,7 @@ def load_config(filename: str) -> dict:
 
 
 def run_powershell_script(commands: str) -> str:
-    """Runs a PowerShell script with the given commands.
+    r"""Runs a PowerShell script with the given commands.
 
     This function executes a PowerShell script by concatenating multiple commands into a single command string,
     which is then run through the `subprocess` module. It ensures that the output encoding is set to UTF-8.
@@ -147,7 +147,7 @@ def run_powershell_script(commands: str) -> str:
 
 
 def run_powershell_script_as_admin(commands: str) -> str:
-    """Executes a PowerShell script with administrator privileges and captures the output.
+    r"""Executes a PowerShell script with administrator privileges and captures the output.
 
     Args:
 
@@ -312,7 +312,7 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
     def decorator(func: Callable) -> Callable:
         output_lines = []
 
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> None:
             output_lines.clear()
             start_time = time.time()
             func(*args, **kwargs)
@@ -329,7 +329,7 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
             if is_show_output:
                 h.file.open_file_or_folder(file)
 
-        def add_line(line: str):
+        def add_line(line: str) -> None:
             output_lines.append(line)
             print(line)
 

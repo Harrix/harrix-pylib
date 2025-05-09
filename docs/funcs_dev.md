@@ -159,7 +159,7 @@ print(result_output)  # Python 3.13.1
 ```python
 import harrix_pylib as h
 
-result_output = h.dev.run_powershell_script("python --version\npip --version")
+result_output = h.dev.run_powershell_script("python --version\\npip --version")
 print(result_output)
 ```
 
@@ -227,7 +227,7 @@ print(result_output)  # ﻿Python 3.11.9
 ```python
 import harrix_pylib as h
 
-result_output = h.dev.run_powershell_script_as_admin("python --version\npip --version")
+result_output = h.dev.run_powershell_script_as_admin("python --version\\npip --version")
 print(result_output)
 ```
 
@@ -376,7 +376,7 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
     def decorator(func: Callable) -> Callable:
         output_lines = []
 
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> None:
             output_lines.clear()
             start_time = time.time()
             func(*args, **kwargs)
@@ -393,7 +393,7 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
             if is_show_output:
                 h.file.open_file_or_folder(file)
 
-        def add_line(line: str):
+        def add_line(line: str) -> None:
             output_lines.append(line)
             print(line)
 

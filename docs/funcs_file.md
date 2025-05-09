@@ -96,16 +96,12 @@ def all_to_parent_folder(path: Path | str) -> str:
     for child_folder in Path(path).iterdir():
         for file in Path(child_folder).glob("**/*"):
             if file.is_file():
-                try:
+                with contextlib.suppress(Exception):
                     file.replace(child_folder / file.name)
-                except Exception as exception:
-                    print(exception)
         for file in Path(child_folder).glob("**/*"):
             if file.is_dir():
-                try:
+                with contextlib.suppress(Exception):
                     shutil.rmtree(file)
-                except Exception as exception:
-                    print(exception)
         list_lines.append(f"Fix {child_folder}")
     return "\n".join(list_lines)
 ```
@@ -430,7 +426,8 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
 
     # Make sure path exists and is a directory
     if not path.exists() or not path.is_dir():
-        raise ValueError(f"❌ Error: {path} is not a valid directory")
+        msg = f"❌ Error: {path} is not a valid directory"
+        raise ValueError(msg)
 
     # Image extensions to look for
     image_extensions = [".jpg", ".jpeg", ".png", ".avif", ".svg"]
@@ -543,7 +540,7 @@ def tree_view_folder(path: str | Path, is_ignore_hidden_folders: bool = False) -
                 extension = "│  " if pointer == "├─ " else "   "
                 yield from __tree(path, is_ignore_hidden_folders, prefix=prefix + extension)
 
-    return "\n".join([line for line in __tree(Path(path), is_ignore_hidden_folders)])
+    return "\n".join(list(__tree(Path(path), is_ignore_hidden_folders)))
 ```
 
 </details>

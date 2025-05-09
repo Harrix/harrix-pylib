@@ -77,8 +77,8 @@ Example:
 import harrix_pylib as h
 
 path = "diary"
-front_matter = "---\ntitle: Diary 2024\n---\n"
-content = "Today I learned something new.\n\n"
+front_matter = "---\\ntitle: Diary 2024\\n---\\n"
+content = "Today I learned something new.\\n\\n"
 
 message, file_path = h.md.add_diary_entry_in_year(path, front_matter, content)
 print(message)
@@ -160,7 +160,7 @@ Example:
 import harrix_pylib as h
 
 path = "diary"
-front_matter = "---\ntitle: Personal Journal 2024\n---\n"
+front_matter = "---\\ntitle: Personal Journal 2024\\n---\\n"
 
 message, file_path = h.md.add_diary_new_dairy_in_year(path, front_matter)
 print(message)
@@ -315,7 +315,7 @@ Example:
 import harrix_pylib as h
 
 path = "dreams"
-front_matter = "---\ntitle: Dream Journal 2024\n---\n"
+front_matter = "---\\ntitle: Dream Journal 2024\\n---\\n"
 
 message, file_path = h.md.add_diary_new_dream_in_year(path, front_matter)
 print(message)
@@ -355,11 +355,11 @@ Example:
 ```python
 import harrix_pylib as h
 
-text = "# Diary Entry\nThis is a diary test entry without images.\n"
+text = "# Diary Entry\\nThis is a diary test entry without images.\\n"
 is_with_images = False
 
 result_msg, result_path = h.md.add_diary_new_note("C:/Diary/", text, is_with_images)
-# File C:\Diary\2025\01\2025-01-21.md is created
+# File C:\\Diary\\2025\\01\\2025-01-21.md is created
 ```
 
 <details>
@@ -411,7 +411,7 @@ import harrix_pylib as h
 
 
 name = "test_note"
-text = "# Test Note\nThis is a test note with images."
+text = "# Test Note\\nThis is a test note with images."
 is_with_images = True
 result_msg, result_path = h.md.add_note("C:/Notes/", name, text, is_with_images)
 ```
@@ -480,7 +480,7 @@ print(result)
 ```python
 def append_path_to_local_links_images_line(markdown_line: str, adding_path: str) -> str:
 
-    def replace_path_in_links(match):
+    def replace_path_in_links(match) -> str:
         link_text = match.group(1)
         file_path = match.group(2).replace("\\", "/")
         return f"[{link_text}]({adding_path}/{file_path})"
@@ -534,7 +534,7 @@ print(result)
 ```python
 def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> str:
 
-    def merge_yaml_values(key, value, combined_dict):
+    def merge_yaml_values(key, value, combined_dict) -> None:
         if key not in combined_dict:
             combined_dict[key] = value
             return
@@ -649,10 +649,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
                     continue
 
                 adding_path = "/".join(md_file.parent.parts[len(folder_path.parts) :])
-                if adding_path:
-                    part_new = append_path_to_local_links_images_line(part, adding_path)
-                else:
-                    part_new = part
+                part_new = append_path_to_local_links_images_line(part, adding_path) if adding_path else part
                 new_parts.append(part_new)
 
             line_new = "".join(new_parts)
@@ -971,8 +968,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
             return markdown_line
 
         # Replace the remote URL with the local relative path (img/candidate_file.name)
-        new_line = markdown_line.replace(remote_url, f"{image_folder}/{candidate_file.name}")
-        return new_line
+        return markdown_line.replace(remote_url, f"{image_folder}/{candidate_file.name}")
 
     yaml_md, content_md = split_yaml_content(markdown_text)
 
@@ -1067,9 +1063,7 @@ def format_quotes_as_markdown_content(markdown_text: str) -> str:
                 formatted_quote = f"> {formatted_quote_text}\n>\n> -- _{author}, {title}_"
                 formatted_quotes.append(formatted_quote)
 
-    result = f"# {book_title}\n\n" + "\n\n---\n\n".join(formatted_quotes)
-
-    return result
+    return f"# {book_title}\n\n" + "\n\n---\n\n".join(formatted_quotes)
 ```
 
 </details>
@@ -1165,7 +1159,7 @@ def format_yaml_content(markdown_text: str) -> str:
 
     class IndentDumper(yaml.Dumper):
         def increase_indent(self, flow=False, indentless=False):
-            return super(IndentDumper, self).increase_indent(flow, False)
+            return super().increase_indent(flow, False)
 
     yaml_md = (
         yaml.dump(
@@ -1590,11 +1584,10 @@ def generate_image_captions_content(markdown_text: str) -> str:
             is_caption = False
             if line.strip() == "":
                 continue
-        if re.match(r"^_.*_$", line):
-            if i > 0 and lines[i - 1].strip() == "":
-                if i > 1 and re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip()):
-                    is_caption = True
-                    continue
+        if re.match(r"^_.*_$", line) and i > 0 and lines[i - 1].strip() == "":
+            if i > 1 and re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip()):
+                is_caption = True
+                continue
         new_lines.append(line)
     content_md = "\n".join(new_lines)
 
@@ -1780,9 +1773,7 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
             toc_structure.append(f"{indent}- {header_text}")
 
     # Combine all parts
-    result = yaml_md + "\n\n" + new_title + "\n\n" + "\n".join(toc_structure) + "\n"
-
-    return result
+    return yaml_md + "\n\n" + new_title + "\n\n" + "\n".join(toc_structure) + "\n"
 ```
 
 </details>
@@ -2167,7 +2158,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             if not is_stop_searching_place_toc and len(toc_lines) > 1:
                 new_lines.insert(len(new_lines) - 1, toc + "\n")
             is_stop_searching_place_toc = True
-        if is_stop_searching_place_toc or line.startswith("# ") or line.startswith("![") or not line.strip():
+        if is_stop_searching_place_toc or line.startswith(("# ", "![")) or not line.strip():
             continue
         if line and not is_first_paragraph and len(toc_lines) > 1:
             new_lines.append("\n" + toc)
@@ -2223,7 +2214,7 @@ Examples:
 ```python
 import harrix-pylib as h
 
-yaml_content = h.md.get_yaml_content("---\ncategories: [it]\n---\n\nText")
+yaml_content = h.md.get_yaml_content("---\\ncategories: [it]\\n---\\n\\nText")
 print(yaml_content)  # Text
 ```
 
@@ -2421,7 +2412,7 @@ from pathlib import Path
 
 import harrix_pylib as h
 
-md = "# Title\n\nText## Subtitle\n\nText"
+md = "# Title\\n\\nText## Subtitle\\n\\nText"
 print(h.md.increase_heading_level_content(md))
 ```
 
@@ -2548,7 +2539,7 @@ Examples:
 ```python
 import harrix-pylib as h
 
-md_clean = h.md.remove_yaml_and_code_content("---\ncategories: [it]\n---\n\nText")
+md_clean = h.md.remove_yaml_and_code_content("---\\ncategories: [it]\\n---\\n\\nText")
 print(md_clean)  # Text
 ```
 
@@ -2618,7 +2609,7 @@ Examples:
 ```python
 import harrix-pylib as h
 
-md_clean = h.md.remove_yaml_content("---\ncategories: [it]\n---\n\nText")
+md_clean = h.md.remove_yaml_content("---\\ncategories: [it]\\n---\\n\\nText")
 print(md_clean)  # Text
 ```
 
@@ -2675,7 +2666,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-new_content = "New list of commands:\n\n- new command1\n- new command2"
+new_content = "New list of commands:\\n\\n- new command1\\n- new command2"
 result_message = h.md.replace_section("C:/Notes/note.md", new_content, "## List of commands")
 ```
 
@@ -2731,7 +2722,7 @@ Example:
 import harrix_pylib as h
 from pathlib import Path
 
-new_content = "New list of commands:\n\n- new command1\n- new command2"
+new_content = "New list of commands:\\n\\n- new command1\\n- new command2"
 text = Path('C:/Notes/note.md').read_text(encoding="utf8")
 print(h.md.replace_section_content(text, new_content, "## List of commands"))
 ```
@@ -2752,12 +2743,14 @@ def replace_section_content(markdown_text: str, replace_content, title_section: 
             break
 
     if start_index is None:
-        raise ValueError(f"Section '{title_section}' not found in the file.")
+        msg = f"Section '{title_section}' not found in the file."
+        raise ValueError(msg)
 
     # Determine the heading level of the section to replace
     heading_match = re.match(r"^(#+)", title_section.strip())
     if not heading_match:
-        raise ValueError(f"The section title '{title_section}' is not a valid Markdown heading.")
+        msg = f"The section title '{title_section}' is not a valid Markdown heading."
+        raise ValueError(msg)
     title_level = len(heading_match.group(1))  # Number of '#' characters
 
     # Find the end index of the section to replace
@@ -3003,8 +2996,7 @@ def sort_sections_content(markdown_text: str) -> str:
         regular_sections.sort(key=lambda sec: sec.split("\n", 1)[0].lower())
 
         # Combine: first top sections, then dates, then regular headings
-        sorted_sections = top_sections + [s for (_, s) in date_sections] + regular_sections
-        return sorted_sections
+        return top_sections + [s for (_, s) in date_sections] + regular_sections
 
     # 1) Split YAML and content
     yaml_md, content_md = split_yaml_content(markdown_text)
@@ -3139,8 +3131,8 @@ Example:
 import harrix_pylib as h
 import re
 
-markdown = "# Title\n\n- [Introduction](#introduction)\n- [Content](#content)\n\n"
-markdown += "## Introduction\n\nThis is the start.\n\n"
+markdown = "# Title\\n\\n- [Introduction](#introduction)\\n- [Content](#content)\\n\\n"
+markdown += "## Introduction\\n\\nThis is the start.\\n\\n"
 
 toc, content = h.md.split_toc_content(markdown)
 print(toc)
