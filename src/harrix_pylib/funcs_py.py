@@ -503,7 +503,7 @@ def lint_and_fix_python_code(py_content: str) -> str:
 
 
 def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
-    r"""Sorts the Python code in the given file by organizing classes, functions, and statements.
+    r'''Sorts the Python code in the given file by organizing classes, functions, and statements.
 
     This function reads a Python file, parses it, sorts classes and functions alphabetically,
     and ensures that class attributes, methods, and other statements within classes are ordered
@@ -539,33 +539,33 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
 
     ```python
     def multiply(a, b):
-        \"\"\"Returns the product of two numbers.\"\"\"
+        """Returns the product of two numbers."""
         return a * b
 
 
     def subtract(a, b):
-        \"\"\"Returns the difference between two numbers.\"\"\"
+        """Returns the difference between two numbers."""
         return a - b
 
 
     def add(a, b):
-        \"\"\"Returns the sum of two numbers.\"\"\"
+        """Returns the sum of two numbers."""
         return a + b
 
 
     class Point:
         def move(self, dx, dy):
-            \"\""Moves the point by a given distance along x and y axes.\"\"\"
+            """Moves the point by a given distance along x and y axes."""
             self.x += dx
             self.y += dy
 
         def __init__(self, x=0, y=0):
-            \"\"\"Initializes a point with coordinates (x, y).\"\"\"
+            """Initializes a point with coordinates (x, y)."""
             self.x = x
             self.y = y
 
         def distance_to_origin(self):
-            \"\"\"Returns the distance from the point to the origin.\"\"\"
+            """Returns the distance from the point to the origin."""
             return (self.x**2 + self.y**2) ** 0.5
     ```
 
@@ -574,36 +574,36 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
     ```python
     class Point:
         def __init__(self, x=0, y=0):
-            \"\"\"Initializes a point with coordinates (x, y).\"\"\"
+            """Initializes a point with coordinates (x, y)."""
             self.x = x
             self.y = y
 
         def distance_to_origin(self):
-            \"\"\"Returns the distance from the point to the origin.\"\"\"
+            """Returns the distance from the point to the origin."""
             return (self.x**2 + self.y**2) ** 0.5
 
         def move(self, dx, dy):
-            \"\"\"Moves the point by a given distance along x and y axes.\"\"\"
+            """Moves the point by a given distance along x and y axes."""
             self.x += dx
             self.y += dy
 
 
     def add(a, b):
-        \"\"\"Returns the sum of two numbers.\"\"\"
+        """Returns the sum of two numbers."""
         return a + b
 
 
     def multiply(a, b):
-        \"\"\"Returns the product of two numbers.\"\"\"
+        """Returns the product of two numbers."""
         return a * b
 
 
     def subtract(a, b):
-        \"\"\"Returns the difference between two numbers.\"\"\"
+        """Returns the difference between two numbers."""
         return a - b
     ```
 
-    """
+    '''
     with Path.open(filename, encoding="utf-8") as f:
         code: str = f.read()
 
