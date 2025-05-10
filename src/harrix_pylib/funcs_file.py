@@ -1,3 +1,5 @@
+"""Functions for working with files."""
+
 import contextlib
 import os
 import platform

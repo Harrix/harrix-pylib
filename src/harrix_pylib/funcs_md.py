@@ -1,3 +1,5 @@
+"""Functions for working with Markdown files."""
+
 import re
 from collections.abc import Iterator
 from datetime import datetime, timezone
@@ -1675,11 +1677,7 @@ def generate_summaries(folder: Path | str) -> str:
                     category_entries[category_name] = valid_entries
 
     # If no year files were found, use the current year as min_year
-    if not year_counts:
-        min_year = current_year
-    else:
-        # Find the minimum year that has a file
-        min_year = min(year_counts.keys())
+    min_year = current_year if not year_counts else min(year_counts.keys())
 
     # --- Create Table.md ---
     table_content = "\n# Table <!-- top-section -->\n\n"
@@ -1693,8 +1691,7 @@ def generate_summaries(folder: Path | str) -> str:
         table_content += f"| {year} | {display_count} |\n"
 
     # Add rows for special categories
-    for category in category_counts:
-        count = category_counts[category]
+    for category, count in category_counts.items():
         display_count = str(count)
         table_content += f"| {category} | {display_count} |\n"
 
@@ -1714,9 +1711,9 @@ def generate_summaries(folder: Path | str) -> str:
             summary_content += f"  - {heading}{rating_text}\n"
 
     # Add entries for special categories
-    for category in category_entries:
+    for category, entries in category_entries.items():
         summary_content += f"- {category}\n"
-        for heading, rating in category_entries[category]:
+        for heading, rating in entries:
             rating_text = f": {rating}" if rating else ""
             summary_content += f"  - {heading}{rating_text}\n"
 

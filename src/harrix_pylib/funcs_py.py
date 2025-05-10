@@ -1,3 +1,5 @@
+"""Functions for working with Python code."""
+
 import ast
 import shutil
 import subprocess
