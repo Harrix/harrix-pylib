@@ -124,10 +124,10 @@ def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "
 ## Function `extract_functions_and_classes`
 
 ```python
-def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool = True, domain: str = "") -> str
+def extract_functions_and_classes(filename: Path | str) -> str
 ```
 
-Extracts all classes and functions from a Python file and formats them into a markdown list.
+Extract all classes and functions from a Python file and formats them into a markdown list.
 
 Args:
 
@@ -156,7 +156,7 @@ Examples:
 ```python
 import harrix_pylib as h
 
-md = h.py.extract_functions_and_classes("C:/project/main.py", False)
+md = h.py.extract_functions_and_classes("C:/project/main.py", is_add_link_demo=False)
 ```
 
 ```python
@@ -164,14 +164,14 @@ import harrix_pylib as h
 
 filename = "C:/project/main.py"
 domain = "https://github.com/Harrix/harrix-pylib"
-md = h.py.extract_functions_and_classes(filename, True, domain)
+md = h.py.extract_functions_and_classes(filename, is_add_link_demo=True, domain=domain)
 ```
 
 <details>
 <summary>Code:</summary>
 
 ```python
-def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool = True, domain: str = "") -> str:
+def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: bool = True, domain: str = "") -> str:
     filename = Path(filename)
     with Path.open(filename, encoding="utf-8") as f:
         code = f.read()
@@ -241,7 +241,7 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
 def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> str
 ```
 
-Generates documentation for all Python files within a given project folder.
+Generate documentation for all Python files within a given project folder.
 
 Args:
 
@@ -284,7 +284,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
         if not (filename.is_file() and not filename.stem.startswith("__")):
             continue
 
-        list_funcs = h.py.extract_functions_and_classes(filename, True, domain)
+        list_funcs = h.py.extract_functions_and_classes(filename, is_add_link_demo=True, domain=domain)
         docs = generate_md_docs_content(filename)
 
         filename_docs = docs_folder / f"{filename.stem}.md"
@@ -298,12 +298,15 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
 
         result_lines.append(f"File {filename.name} is processed.")
 
-    if len(list_funcs_all.splitlines()) > 2:
+    min_count_lines = 2
+    if len(list_funcs_all.splitlines()) > min_count_lines:
         list_funcs_all = list_funcs_all[:-1]
 
     try:
         h.md.replace_section(folder / "README.md", list_funcs_all, "## List of functions")
-    except Exception:
+    except FileNotFoundError:
+        result_lines.append("Don't find `## List of functions`.")
+    except ValueError:
         result_lines.append("Don't find `## List of functions`.")
     index_content = beginning_of_md + "\n" + Path(folder / "README.md").read_text(encoding="utf8")
     Path(docs_folder / "index.md").write_text(index_content, encoding="utf8")
@@ -320,7 +323,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
 def generate_md_docs_content(file_path: Path | str) -> str
 ```
 
-Generates Markdown documentation for a single Python file.
+Generate Markdown documentation for a single Python file.
 
 Args:
 
@@ -546,7 +549,12 @@ def lint_and_fix_python_code(py_content: str) -> str:
         temp_file_path = temp_file.name
 
     try:
-        subprocess.run(["ruff", "format", temp_file_path], capture_output=True, text=True, check=False)
+        ruff_path = shutil.which("ruff")
+        if ruff_path:
+            subprocess.run([ruff_path, "format", temp_file_path], capture_output=True, text=True, check=False)
+        else:
+            # Обработка случая, когда ruff не найден
+            print("Ruff не найден в системе")
 
         # Read the fixed code from the temporary file
         with Path.open(temp_file_path, encoding="utf-8") as file:
@@ -554,7 +562,7 @@ def lint_and_fix_python_code(py_content: str) -> str:
 
     finally:
         # Delete the temporary file
-        os.remove(temp_file_path)
+        Path(temp_file_path).unlink()
 ```
 
 </details>

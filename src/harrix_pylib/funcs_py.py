@@ -101,8 +101,8 @@ def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "
     return res
 
 
-def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool = True, domain: str = "") -> str:
-    """Extracts all classes and functions from a Python file and formats them into a markdown list.
+def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: bool = True, domain: str = "") -> str:
+    """Extract all classes and functions from a Python file and formats them into a markdown list.
 
     Args:
 
@@ -131,7 +131,7 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
     ```python
     import harrix_pylib as h
 
-    md = h.py.extract_functions_and_classes("C:/project/main.py", False)
+    md = h.py.extract_functions_and_classes("C:/project/main.py", is_add_link_demo=False)
     ```
 
     ```python
@@ -139,7 +139,7 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
 
     filename = "C:/project/main.py"
     domain = "https://github.com/Harrix/harrix-pylib"
-    md = h.py.extract_functions_and_classes(filename, True, domain)
+    md = h.py.extract_functions_and_classes(filename, is_add_link_demo=True, domain=domain)
     ```
 
     """
@@ -205,7 +205,7 @@ def extract_functions_and_classes(filename: Path | str, is_add_link_demo: bool =
 
 
 def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> str:
-    r"""Generates documentation for all Python files within a given project folder.
+    r"""Generate documentation for all Python files within a given project folder.
 
     Args:
 
@@ -244,7 +244,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
         if not (filename.is_file() and not filename.stem.startswith("__")):
             continue
 
-        list_funcs = h.py.extract_functions_and_classes(filename, True, domain)
+        list_funcs = h.py.extract_functions_and_classes(filename, is_add_link_demo=True, domain=domain)
         docs = generate_md_docs_content(filename)
 
         filename_docs = docs_folder / f"{filename.stem}.md"
@@ -258,12 +258,15 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
 
         result_lines.append(f"File {filename.name} is processed.")
 
-    if len(list_funcs_all.splitlines()) > 2:
+    min_count_lines = 2
+    if len(list_funcs_all.splitlines()) > min_count_lines:
         list_funcs_all = list_funcs_all[:-1]
 
     try:
         h.md.replace_section(folder / "README.md", list_funcs_all, "## List of functions")
-    except Exception:
+    except FileNotFoundError:
+        result_lines.append("Don't find `## List of functions`.")
+    except ValueError:
         result_lines.append("Don't find `## List of functions`.")
     index_content = beginning_of_md + "\n" + Path(folder / "README.md").read_text(encoding="utf8")
     Path(docs_folder / "index.md").write_text(index_content, encoding="utf8")
@@ -273,7 +276,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
 
 
 def generate_md_docs_content(file_path: Path | str) -> str:
-    """Generates Markdown documentation for a single Python file.
+    """Generate Markdown documentation for a single Python file.
 
     Args:
 

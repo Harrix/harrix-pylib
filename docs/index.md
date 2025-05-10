@@ -121,14 +121,14 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 
 Doc: [funcs_py.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_py.md)
 
-| Function/Class                  | Description                                                                                  |
-| ------------------------------- | -------------------------------------------------------------------------------------------- |
-| `create_uv_new_project`         | Creates a new project using uv, initializes it, and sets up necessary files.                 |
-| `extract_functions_and_classes` | Extracts all classes and functions from a Python file and formats them into a markdown list. |
-| `generate_md_docs`              | Generates documentation for all Python files within a given project folder.                  |
-| `generate_md_docs_content`      | Generates Markdown documentation for a single Python file.                                   |
-| `lint_and_fix_python_code`      | Lints and fixes the provided Python code using the `ruff` formatter.                         |
-| `sort_py_code`                  | Sorts the Python code in the given file by organizing classes, functions, and statements.    |
+| Function/Class                  | Description                                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------------------------- |
+| `create_uv_new_project`         | Creates a new project using uv, initializes it, and sets up necessary files.                |
+| `extract_functions_and_classes` | Extract all classes and functions from a Python file and formats them into a markdown list. |
+| `generate_md_docs`              | Generate documentation for all Python files within a given project folder.                  |
+| `generate_md_docs_content`      | Generate Markdown documentation for a single Python file.                                   |
+| `lint_and_fix_python_code`      | Lints and fixes the provided Python code using the `ruff` formatter.                        |
+| `sort_py_code`                  | Sorts the Python code in the given file by organizing classes, functions, and statements.   |
 
 ## Development
 
