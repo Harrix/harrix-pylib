@@ -2944,29 +2944,39 @@ print(sorted_markdown)
 def sort_sections_content(markdown_text: str) -> str:
 
     def is_date_heading(section_text: str) -> datetime | None:
-        """Return datetime if the first line of the section (## XXX) is a date,
-        otherwise None.
-        """
+        """Return datetime if the first line of the section (## XXX) is a date, otherwise None."""
+
+        def _try_parse_date(date_str: str, pattern: str) -> datetime | None:
+            """Try to parse a date string with a given pattern, return None if it fails."""
+
+            try:
+                return datetime.strptime(date_str, pattern)
+            except ValueError:
+                return None
+
         first_line = section_text.split("\n", 1)[0].strip()  # should be ## 2024-...
         heading = first_line.replace("## ", "").strip()
 
         # Remove top-section marker if present
-        heading = heading.replace("<!-- top-section -->", "").strip()
+        heading = heading.replace("", "").strip()
 
+        # Try each pattern in sequence without nesting try-except in the loop
         patterns = [
             "%Y",
             "%Y-%m-%d",
             "%Y-%m-%d %H:%M",
         ]
+
         for pattern in patterns:
-            try:
-                return datetime.strptime(heading, pattern)
-            except ValueError:
-                pass
+            # Use a helper function to avoid try-except in the loop
+            dt = _try_parse_date(heading, pattern)
+            if dt:
+                return dt
+
         return None
 
     def is_top_section(section_text: str) -> bool:
-        """Returns True if the section is marked as a top section."""
+        """Return True if the section is marked as a top section."""
         first_line = section_text.split("\n", 1)[0].strip()
         return "<!-- top-section -->" in first_line
 
