@@ -51,71 +51,71 @@ print(md_clean)  # Installing VSCode
 
 Doc: [funcs_dev.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_dev.md)
 
-| Function/Class                   | Description                                                                         |
-| -------------------------------- | ----------------------------------------------------------------------------------- |
-| `get_project_root`               | Finds the root folder of the current project.                                       |
-| `load_config`                    | Loads configuration from a JSON file.                                               |
-| `run_powershell_script`          | Runs a PowerShell script with the given commands.                                   |
-| `run_powershell_script_as_admin` | Executes a PowerShell script with administrator privileges and captures the output. |
-| `write_in_output_txt`            | Decorator to write function output to a temporary file and optionally display it.   |
+| Function/Class                   | Description                                                                        |
+| -------------------------------- | ---------------------------------------------------------------------------------- |
+| `get_project_root`               | Find the root folder of the current project.                                       |
+| `load_config`                    | Load configuration from a JSON file.                                               |
+| `run_powershell_script`          | Run a PowerShell script with the given commands.                                   |
+| `run_powershell_script_as_admin` | Execute a PowerShell script with administrator privileges and captures the output. |
+| `write_in_output_txt`            | Decorator to write function output to a temporary file and optionally display it.  |
 
 ### File `funcs_file.py`
 
 Doc: [funcs_file.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_file.md)
 
-| Function/Class                      | Description                                                                                        |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `all_to_parent_folder`              | Moves all files from subfolders within the given path to the parent folder and then                |
-| `apply_func`                        | Recursively applies a function to all files with a specified extension in a directory.             |
-| `check_featured_image`              | Checks for the presence of `featured_image.*` files in every child folder, not recursively.        |
-| `clear_directory`                   | This function clears directory with sub-directories.                                               |
-| `find_max_folder_number`            | Finds the highest folder number in a given folder based on a pattern.                              |
-| `open_file_or_folder`               | Opens a file or folder using the operating system's default application.                           |
-| `rename_largest_images_to_featured` | Finds the largest image in each subdirectory of the given path and renames it to 'featured-image'. |
-| `tree_view_folder`                  | Generates a tree-like representation of folder contents.                                           |
+| Function/Class                      | Description                                                                                       |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `all_to_parent_folder`              | Move all files from subfolders within the given path to the parent folder and then                |
+| `apply_func`                        | Recursively apply a function to all files with a specified extension in a directory.              |
+| `check_featured_image`              | Check for the presence of `featured_image.*` files in every child folder, not recursively.        |
+| `clear_directory`                   | Clear directory with sub-directories.                                                             |
+| `find_max_folder_number`            | Find the highest folder number in a given folder based on a pattern.                              |
+| `open_file_or_folder`               | Open a file or folder using the operating system's default application.                           |
+| `rename_largest_images_to_featured` | Find the largest image in each subdirectory of the given path and renames it to 'featured-image'. |
+| `tree_view_folder`                  | Generate a tree-like representation of folder contents.                                           |
 
 ### File `funcs_md.py`
 
 Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_md.md)
 
-| Function/Class                               | Description                                                                                                       |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `add_diary_entry_in_year`                    | Adds a new diary entry to the yearly markdown file.                                                               |
-| `add_diary_new_dairy_in_year`                | Adds a new diary entry to the yearly diary file.                                                                  |
-| `add_diary_new_diary`                        | Creates a new diary entry for the current day and time.                                                           |
-| `add_diary_new_dream`                        | Creates a new dream diary entry for the current day and time with placeholders for dream descriptions.            |
-| `add_diary_new_dream_in_year`                | Adds a new dream diary entry to the yearly dream file.                                                            |
-| `add_diary_new_note`                         | Adds a new note to the diary or dream diary for the given base path.                                              |
-| `add_note`                                   | Adds a note to the specified base path.                                                                           |
-| `append_path_to_local_links_images_line`     | Appends a path to local links and images within a Markdown line.                                                  |
-| `combine_markdown_files`                     | Combines multiple markdown files in a folder into a single file with intelligent YAML header merging.             |
-| `combine_markdown_files_recursively`         | Recursively processes a folder structure and combines markdown files in each folder that meets specific criteria. |
-| `download_and_replace_images`                | Downloads remote images in Markdown text and replaces their URLs with local paths.                                |
-| `download_and_replace_images_content`        | Downloads remote images in Markdown text and replaces their URLs with local paths.                                |
-| `format_quotes_as_markdown_content`          | Converts raw text with quotes into Markdown format.                                                               |
-| `format_yaml`                                | Formats YAML content in a file, ensuring proper indentation and structure.                                        |
-| `format_yaml_content`                        | Formats the YAML front matter within the given markdown text.                                                     |
-| `generate_author_book`                       | Adds the author and the title of the book to the quotes and formats them as Markdown quotes.                      |
-| `generate_image_captions`                    | Processes a markdown file to add captions to images based on their alt text.                                      |
-| `generate_image_captions_content`            | Generates image captions in the provided markdown text.                                                           |
-| `generate_short_note_toc_with_links`         | Generates a separate markdown file with only the Table of Contents (TOC) from a given Markdown file.              |
-| `generate_short_note_toc_with_links_content` | Generate a markdown content with only the Table of Contents (TOC) from a given Markdown text.                     |
-| `generate_summaries`                         | Generate two summary files for a directory of year-based Markdown files.                                          |
-| `generate_toc_with_links`                    | Generate a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes        |
-| `generate_toc_with_links_content`            | Generate a Table of Contents (TOC) with links for the provided markdown content.                                  |
-| `get_yaml_content`                           | Get YAML from text of the Markdown file.                                                                          |
-| `identify_code_blocks`                       | Process a list of text lines to identify code blocks and yield each line with a boolean flag.                     |
-| `identify_code_blocks_line`                  | Parse a single line of Markdown to identify inline code blocks.                                                   |
-| `increase_heading_level_content`             | Increase the heading level of Markdown content.                                                                   |
-| `remove_toc_content`                         | Remove the table of contents (TOC) section from a Markdown document.                                              |
-| `remove_yaml_and_code_content`               | Remove YAML front matter and code blocks, and returns the remaining content.                                      |
-| `remove_yaml_content`                        | Function removes YAML from text of the Markdown file.                                                             |
-| `replace_section`                            | Replace a section in a file defined by `title_section` with the provided `replace_content`.                       |
-| `replace_section_content`                    | Replace a section in the markdown text defined by `title_section` with the provided `replace_content`.            |
-| `sort_sections`                              | Sort the sections of a markdown file by their headings, maintaining YAML front matter                             |
-| `sort_sections_content`                      | Sort sections by their `##` headings: top sections first, then dates in descending order,                         |
-| `split_toc_content`                          | Separate the Table of Contents (TOC) from the rest of the Markdown content.                                       |
-| `split_yaml_content`                         | Split a markdown note into YAML front matter and the main content.                                                |
+| Function/Class                               | Description                                                                                                     |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `add_diary_entry_in_year`                    | Add a new diary entry to the yearly markdown file.                                                              |
+| `add_diary_new_dairy_in_year`                | Add a new diary entry to the yearly diary file.                                                                 |
+| `add_diary_new_diary`                        | Create a new diary entry for the current day and time.                                                          |
+| `add_diary_new_dream`                        | Create a new dream diary entry for the current day and time with placeholders for dream descriptions.           |
+| `add_diary_new_dream_in_year`                | Add a new dream diary entry to the yearly dream file.                                                           |
+| `add_diary_new_note`                         | Add a new note to the diary or dream diary for the given base path.                                             |
+| `add_note`                                   | Add a note to the specified base path.                                                                          |
+| `append_path_to_local_links_images_line`     | Append a path to local links and images within a Markdown line.                                                 |
+| `combine_markdown_files`                     | Combine multiple markdown files in a folder into a single file with intelligent YAML header merging.            |
+| `combine_markdown_files_recursively`         | Recursively process a folder structure and combines markdown files in each folder that meets specific criteria. |
+| `download_and_replace_images`                | Download remote images in Markdown text and replaces their URLs with local paths.                               |
+| `download_and_replace_images_content`        | Download remote images in Markdown text and replaces their URLs with local paths.                               |
+| `format_quotes_as_markdown_content`          | Convert raw text with quotes into Markdown format.                                                              |
+| `format_yaml`                                | Format YAML content in a file, ensuring proper indentation and structure.                                       |
+| `format_yaml_content`                        | Format the YAML front matter within the given markdown text.                                                    |
+| `generate_author_book`                       | Add the author and the title of the book to the quotes and formats them as Markdown quotes.                     |
+| `generate_image_captions`                    | Process a markdown file to add captions to images based on their alt text.                                      |
+| `generate_image_captions_content`            | Generate image captions in the provided markdown text.                                                          |
+| `generate_short_note_toc_with_links`         | Generate a separate markdown file with only the Table of Contents (TOC) from a given Markdown file.             |
+| `generate_short_note_toc_with_links_content` | Generate a markdown content with only the Table of Contents (TOC) from a given Markdown text.                   |
+| `generate_summaries`                         | Generate two summary files for a directory of year-based Markdown files.                                        |
+| `generate_toc_with_links`                    | Generate a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes      |
+| `generate_toc_with_links_content`            | Generate a Table of Contents (TOC) with links for the provided markdown content.                                |
+| `get_yaml_content`                           | Get YAML from text of the Markdown file.                                                                        |
+| `identify_code_blocks`                       | Process a list of text lines to identify code blocks and yield each line with a boolean flag.                   |
+| `identify_code_blocks_line`                  | Parse a single line of Markdown to identify inline code blocks.                                                 |
+| `increase_heading_level_content`             | Increase the heading level of Markdown content.                                                                 |
+| `remove_toc_content`                         | Remove the table of contents (TOC) section from a Markdown document.                                            |
+| `remove_yaml_and_code_content`               | Remove YAML front matter and code blocks, and returns the remaining content.                                    |
+| `remove_yaml_content`                        | Remove YAML from text of the Markdown file.                                                                     |
+| `replace_section`                            | Replace a section in a file defined by `title_section` with the provided `replace_content`.                     |
+| `replace_section_content`                    | Replace a section in the markdown text defined by `title_section` with the provided `replace_content`.          |
+| `sort_sections`                              | Sort the sections of a markdown file by their headings, maintaining YAML front matter                           |
+| `sort_sections_content`                      | Sort sections by their `##` headings: top sections first, then dates in descending order,                       |
+| `split_toc_content`                          | Separate the Table of Contents (TOC) from the rest of the Markdown content.                                     |
+| `split_yaml_content`                         | Split a markdown note into YAML front matter and the main content.                                              |
 
 ### File `funcs_py.py`
 

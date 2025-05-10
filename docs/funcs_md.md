@@ -56,7 +56,7 @@ lang: en
 def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_content: str) -> tuple[str, Path]
 ```
 
-Adds a new diary entry to the yearly markdown file.
+Add a new diary entry to the yearly markdown file.
 
 If the yearly file doesn't exist, it creates one with the provided front matter.
 If it exists, it adds a new entry after the year heading and the table of contents.
@@ -143,7 +143,7 @@ def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_
 def add_diary_new_dairy_in_year(path_dream: str | Path, beginning_of_md: str) -> tuple[str, Path]
 ```
 
-Adds a new diary entry to the yearly diary file.
+Add a new diary entry to the yearly diary file.
 
 Args:
 
@@ -183,7 +183,7 @@ def add_diary_new_dairy_in_year(path_dream: str | Path, beginning_of_md: str) ->
 def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: bool = False) -> str | Path
 ```
 
-Creates a new diary entry for the current day and time.
+Create a new diary entry for the current day and time.
 
 Args:
 
@@ -240,7 +240,7 @@ def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: b
 def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = False) -> str | Path
 ```
 
-Creates a new dream diary entry for the current day and time with placeholders for dream descriptions.
+Create a new dream diary entry for the current day and time with placeholders for dream descriptions.
 
 Args:
 
@@ -298,7 +298,7 @@ def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = Fals
 def add_diary_new_dream_in_year(path_dream: str | Path, beginning_of_md: str) -> tuple[str, Path]
 ```
 
-Adds a new dream diary entry to the yearly dream file.
+Add a new dream diary entry to the yearly dream file.
 
 Args:
 
@@ -338,7 +338,7 @@ def add_diary_new_dream_in_year(path_dream: str | Path, beginning_of_md: str) ->
 def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -> str | Path
 ```
 
-Adds a new note to the diary or dream diary for the given base path.
+Add a new note to the diary or dream diary for the given base path.
 
 Args:
 
@@ -391,7 +391,7 @@ def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -
 def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) -> str | Path
 ```
 
-Adds a note to the specified base path.
+Add a note to the specified base path.
 
 Args:
 
@@ -447,7 +447,7 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
 def append_path_to_local_links_images_line(markdown_line: str, adding_path: str) -> str
 ```
 
-Appends a path to local links and images within a Markdown line.
+Append a path to local links and images within a Markdown line.
 
 Args:
 
@@ -498,7 +498,7 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
 def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> str
 ```
 
-Combines multiple markdown files in a folder into a single file with intelligent YAML header merging.
+Combine multiple markdown files in a folder into a single file with intelligent YAML header merging.
 
 Args:
 
@@ -722,8 +722,8 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
 def combine_markdown_files_recursively(folder_path: str | Path) -> str
 ```
 
-Recursively processes a folder structure and combines markdown files in each folder that meets specific criteria.
-Processes folders from the deepest level up to ensure hierarchical combination of notes.
+Recursively process a folder structure and combines markdown files in each folder that meets specific criteria.
+Process folders from the deepest level up to ensure hierarchical combination of notes.
 
 Args:
 
@@ -822,7 +822,7 @@ def combine_markdown_files_recursively(folder_path: str | Path) -> str:
 def download_and_replace_images(filename: Path | str) -> str
 ```
 
-Downloads remote images in Markdown text and replaces their URLs with local paths.
+Download remote images in Markdown text and replaces their URLs with local paths.
 
 Args:
 
@@ -879,7 +879,7 @@ def download_and_replace_images(filename: Path | str) -> str:
 def download_and_replace_images_content(markdown_text: str, path_md: Path | str, image_folder: str = "img") -> str
 ```
 
-Downloads remote images in Markdown text and replaces their URLs with local paths.
+Download remote images in Markdown text and replaces their URLs with local paths.
 
 Args:
 
@@ -994,7 +994,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
 def format_quotes_as_markdown_content(markdown_text: str) -> str
 ```
 
-Converts raw text with quotes into Markdown format.
+Convert raw text with quotes into Markdown format.
 
 Args:
 
@@ -1074,7 +1074,7 @@ def format_quotes_as_markdown_content(markdown_text: str) -> str:
 def format_yaml(filename: Path | str) -> str
 ```
 
-Formats YAML content in a file, ensuring proper indentation and structure.
+Format YAML content in a file, ensuring proper indentation and structure.
 
 Args:
 
@@ -1124,7 +1124,7 @@ def format_yaml(filename: Path | str) -> str:
 def format_yaml_content(markdown_text: str) -> str
 ```
 
-Formats the YAML front matter within the given markdown text.
+Format the YAML front matter within the given markdown text.
 
 Args:
 
@@ -1184,7 +1184,7 @@ def format_yaml_content(markdown_text: str) -> str:
 def generate_author_book(filename: Path | str) -> str
 ```
 
-Adds the author and the title of the book to the quotes and formats them as Markdown quotes.
+Add the author and the title of the book to the quotes and formats them as Markdown quotes.
 
 Args:
 
@@ -1306,7 +1306,7 @@ def generate_author_book(filename: Path | str) -> str:
 def generate_image_captions(filename: Path | str) -> str
 ```
 
-Processes a markdown file to add captions to images based on their alt text.
+Process a markdown file to add captions to images based on their alt text.
 
 This function reads a markdown file, processes its content to:
 
@@ -1448,7 +1448,7 @@ def generate_image_captions(filename: Path | str) -> str:
 def generate_image_captions_content(markdown_text: str) -> str
 ```
 
-Generates image captions in the provided markdown text.
+Generate image captions in the provided markdown text.
 
 This function reads a markdown file, processes its content to:
 
@@ -1625,7 +1625,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
 def generate_short_note_toc_with_links(filename: Path | str) -> str
 ```
 
-Generates a separate markdown file with only the Table of Contents (TOC) from a given Markdown file.
+Generate a separate markdown file with only the Table of Contents (TOC) from a given Markdown file.
 
 This function reads a Markdown file, processes its content to create a TOC, and writes
 a new file with the ".short.g.md" extension containing only the TOC.
@@ -1799,7 +1799,8 @@ Returns:
 
 Notes:
 
-- The function looks for Markdown files with years in their names (e.g., "2023.md", "До-2013-(Луч).md", "После_2024.md")
+- The function looks for Markdown files with years in their names (e.g., "2023.md",
+  "До-2013-(Луч).md", "После_2024.md")
 - Book entries are identified by second-level headings (## Title)
 - Ratings are extracted from headings in format "## Title: N" where N is a number
 - YAML frontmatter from the first processed file will be copied to the summary files
@@ -1898,7 +1899,8 @@ def generate_summaries(folder: Path | str) -> str:
                 valid_entries.append((heading, rating if rating else ""))
 
         # Check if this is a pure year file (like "2023.md") or a special category file (like "До-2013-(Луч).md")
-        is_pure_year = file_path.stem.isdigit() and len(file_path.stem) == 4
+        length_str_year = 4
+        is_pure_year = file_path.stem.isdigit() and len(file_path.stem) == length_str_year
 
         if is_pure_year:
             # This is a standard year file like "2023.md"
@@ -2504,10 +2506,10 @@ def remove_toc_content(markdown_text: str) -> str:
             in_toc_section = False
             continue
 
-        if not in_toc_section:
-            # Only add the line if it's not an empty line after the TOC section
-            if not toc_section_found or len(new_lines) == 0 or new_lines[-1].strip() or line.strip():
-                new_lines.append(line)
+        if not in_toc_section and (
+            not toc_section_found or len(new_lines) == 0 or new_lines[-1].strip() or line.strip()
+        ):
+            new_lines.append(line)
 
     content_without_yaml = "\n".join(new_lines)
     if content_without_yaml and content_without_yaml[-1] != "\n":
@@ -2577,7 +2579,7 @@ def remove_yaml_and_code_content(markdown_text: str) -> str:
 def remove_yaml_content(markdown_text: str) -> str
 ```
 
-Function removes YAML from text of the Markdown file.
+Remove YAML from text of the Markdown file.
 
 Markdown before processing:
 
@@ -2635,7 +2637,7 @@ def remove_yaml_content(markdown_text: str) -> str:
 ## Function `replace_section`
 
 ```python
-def replace_section(filename: Path | str, replace_content, title_section: str = "## List of commands") -> str
+def replace_section(filename: Path | str, replace_content: str, title_section: str = "## List of commands") -> str
 ```
 
 Replace a section in a file defined by `title_section` with the provided `replace_content`.
@@ -2674,7 +2676,7 @@ result_message = h.md.replace_section("C:/Notes/note.md", new_content, "## List 
 <summary>Code:</summary>
 
 ```python
-def replace_section(filename: Path | str, replace_content, title_section: str = "## List of commands") -> str:
+def replace_section(filename: Path | str, replace_content: str, title_section: str = "## List of commands") -> str:
     with Path.open(filename, encoding="utf-8") as f:
         document = f.read()
 
@@ -2691,7 +2693,7 @@ def replace_section(filename: Path | str, replace_content, title_section: str = 
 ## Function `replace_section_content`
 
 ```python
-def replace_section_content(markdown_text: str, replace_content, title_section: str = "## List of commands") -> str
+def replace_section_content(markdown_text: str, replace_content: str, title_section: str = "## List of commands") -> str
 ```
 
 Replace a section in the markdown text defined by `title_section` with the provided `replace_content`.
@@ -2731,7 +2733,11 @@ print(h.md.replace_section_content(text, new_content, "## List of commands"))
 <summary>Code:</summary>
 
 ```python
-def replace_section_content(markdown_text: str, replace_content, title_section: str = "## List of commands") -> str:
+def replace_section_content(
+    markdown_text: str,
+    replace_content: str,
+    title_section: str = "## List of commands",
+) -> str:
     ends_with_newline = markdown_text.endswith("\n")
     lines = markdown_text.splitlines()
 

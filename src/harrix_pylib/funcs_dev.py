@@ -9,7 +9,7 @@ import harrix_pylib as h
 
 
 def get_project_root() -> Path:
-    """Finds the root folder of the current project.
+    """Find the root folder of the current project.
 
     This function traverses up the folder tree from the current file looking for a folder containing
     a `.venv` folder, which is assumed to indicate the project root.
@@ -44,7 +44,7 @@ def get_project_root() -> Path:
 
 
 def load_config(filename: str) -> dict:
-    """Loads configuration from a JSON file.
+    """Load configuration from a JSON file.
 
     Args:
 
@@ -96,7 +96,7 @@ def load_config(filename: str) -> dict:
 
 
 def run_powershell_script(commands: str) -> str:
-    r"""Runs a PowerShell script with the given commands.
+    r"""Run a PowerShell script with the given commands.
 
     This function executes a PowerShell script by concatenating multiple commands into a single command string,
     which is then run through the `subprocess` module. It ensures that the output encoding is set to UTF-8.
@@ -147,7 +147,7 @@ def run_powershell_script(commands: str) -> str:
 
 
 def run_powershell_script_as_admin(commands: str) -> str:
-    r"""Executes a PowerShell script with administrator privileges and captures the output.
+    r"""Execute a PowerShell script with administrator privileges and captures the output.
 
     Args:
 
