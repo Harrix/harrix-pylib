@@ -2910,7 +2910,8 @@ Note:
 - Sections marked with `<!-- top-section -->` are sorted alphabetically and placed first.
 - Date headings (like `## 2024-01-01`) are sorted in descending order.
 - Regular headings are sorted alphabetically.
-- Preserves `<details>...</details>` blocks that contain `<summary>📖 Содержание</summary>` or `<summary>📖 Contents</summary>`.
+- Preserves `<details>...</details>` blocks that contain
+  `<summary>📖 Содержание</summary>` or `<summary>📖 Contents</summary>`.
 
 Example:
 
@@ -2948,9 +2949,9 @@ def sort_sections_content(markdown_text: str) -> str:
 
         def _try_parse_date(date_str: str, pattern: str) -> datetime | None:
             """Try to parse a date string with a given pattern, return None if it fails."""
-
             try:
-                return datetime.strptime(date_str, pattern)
+                # Directly return the timezone-aware datetime in one line
+                return datetime.strptime(date_str, pattern).replace(tzinfo=timezone.utc)
             except ValueError:
                 return None
 
