@@ -26,7 +26,7 @@ lang: en
 def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "code", cli_commands: str = "") -> str
 ```
 
-Creates a new project using uv, initializes it, and sets up necessary files.
+Create a new project using uv, initializes it, and sets up necessary files.
 
 Args:
 
@@ -113,8 +113,6 @@ def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "
         res += f"File not found: {readme_path}"
     except OSError as e:
         res += f"I/O error: {e}"
-    except Exception as e:
-        res += f"An unexpected error occurred: {e}"
 
     return res
 ```

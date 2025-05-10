@@ -1694,7 +1694,7 @@ def generate_short_note_toc_with_links(filename: Path | str) -> str:
 def generate_short_note_toc_with_links_content(markdown_text: str) -> str
 ```
 
-Generates a markdown content with only the Table of Contents (TOC) from a given Markdown text.
+Generate a markdown content with only the Table of Contents (TOC) from a given Markdown text.
 
 Args:
 
@@ -2004,7 +2004,7 @@ def generate_summaries(folder: Path | str) -> str:
 def generate_toc_with_links(filename: Path | str) -> str
 ```
 
-Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes
+Generate a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes
 the TOC in the document.
 
 This function reads a Markdown file, processes its content to create or update a TOC, and writes
@@ -2058,7 +2058,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
 def generate_toc_with_links_content(markdown_text: str) -> str
 ```
 
-Generates a Table of Contents (TOC) with links for the provided markdown content.
+Generate a Table of Contents (TOC) with links for the provided markdown content.
 
 Args:
 
@@ -2179,7 +2179,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
 def get_yaml_content(markdown_text: str) -> str
 ```
 
-Function gets YAML from text of the Markdown file.
+Get YAML from text of the Markdown file.
 
 Markdown before processing:
 
@@ -2246,7 +2246,7 @@ def get_yaml_content(markdown_text: str) -> str:
 def identify_code_blocks(lines: list[str]) -> Iterator[tuple[str, bool]]
 ```
 
-Processes a list of text lines to identify code blocks and yield each line with a boolean flag.
+Process a list of text lines to identify code blocks and yield each line with a boolean flag.
 
 Args:
 
@@ -2311,7 +2311,7 @@ def identify_code_blocks(lines: list[str]) -> Iterator[tuple[str, bool]]:
 def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]
 ```
 
-Parses a single line of Markdown to identify inline code blocks.
+Parse a single line of Markdown to identify inline code blocks.
 
 This function scans through a markdown line, identifying sequences of backticks (`) to determine where code
 blocks start and end.
@@ -2387,7 +2387,7 @@ def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
 def increase_heading_level_content(markdown_text: str) -> str
 ```
 
-Increases the heading level of Markdown content.
+Increase the heading level of Markdown content.
 
 This function processes a Markdown text and increases the level of all headings
 (lines starting with '#') outside of code blocks by prepending an additional '#'.
@@ -2439,7 +2439,7 @@ def increase_heading_level_content(markdown_text: str) -> str:
 def remove_toc_content(markdown_text: str) -> str
 ```
 
-Removes the table of contents (TOC) section from a Markdown document.
+Remove the table of contents (TOC) section from a Markdown document.
 
 The function identifies the TOC based on the document language (from YAML frontmatter)
 and removes the entire TOC section, including the details/summary tags and all TOC links.
@@ -2524,7 +2524,7 @@ def remove_toc_content(markdown_text: str) -> str:
 def remove_yaml_and_code_content(markdown_text: str) -> str
 ```
 
-Removes YAML front matter and code blocks, and returns the remaining content.
+Remove YAML front matter and code blocks, and returns the remaining content.
 
 Args:
 
@@ -2638,7 +2638,7 @@ def remove_yaml_content(markdown_text: str) -> str:
 def replace_section(filename: Path | str, replace_content, title_section: str = "## List of commands") -> str
 ```
 
-Replaces a section in a file defined by `title_section` with the provided `replace_content`.
+Replace a section in a file defined by `title_section` with the provided `replace_content`.
 
 This function searches for a section in a text file starting with `title_section` and
 ending at the next line starting with a '#'. It then replaces the content of that section
@@ -2694,7 +2694,7 @@ def replace_section(filename: Path | str, replace_content, title_section: str = 
 def replace_section_content(markdown_text: str, replace_content, title_section: str = "## List of commands") -> str
 ```
 
-Replaces a section in the markdown text defined by `title_section` with the provided `replace_content`.
+Replace a section in the markdown text defined by `title_section` with the provided `replace_content`.
 
 This function searches for a section in the markdown text starting with `title_section` and
 ending at the next line starting with a '#'. It then replaces the content of that section
@@ -2791,7 +2791,7 @@ def replace_section_content(markdown_text: str, replace_content, title_section: 
 def sort_sections(filename: Path | str) -> str
 ```
 
-Sorts the sections of a markdown file by their headings, maintaining YAML front matter
+Sort the sections of a markdown file by their headings, maintaining YAML front matter
 and code blocks in their original order.
 
 This function reads a markdown file, splits it into a YAML front matter (if present) and content,
@@ -2894,7 +2894,7 @@ def sort_sections(filename: Path | str) -> str:
 def sort_sections_content(markdown_text: str) -> str
 ```
 
-Sorts sections by their `##` headings: top sections first, then dates in descending order,
+Sort sections by their `##` headings: top sections first, then dates in descending order,
 then regular headings alphabetically.
 
 Args:
@@ -2944,7 +2944,7 @@ print(sorted_markdown)
 def sort_sections_content(markdown_text: str) -> str:
 
     def is_date_heading(section_text: str) -> datetime | None:
-        """Returns datetime if the first line of the section (## XXX) is a date,
+        """Return datetime if the first line of the section (## XXX) is a date,
         otherwise None.
         """
         first_line = section_text.split("\n", 1)[0].strip()  # should be ## 2024-...
@@ -3113,7 +3113,7 @@ def sort_sections_content(markdown_text: str) -> str:
 def split_toc_content(markdown_text: str) -> tuple[str, str]
 ```
 
-Separates the Table of Contents (TOC) from the rest of the Markdown content.
+Separate the Table of Contents (TOC) from the rest of the Markdown content.
 
 Args:
 
@@ -3173,7 +3173,7 @@ def split_toc_content(markdown_text: str) -> tuple[str, str]:
 def split_yaml_content(markdown_text: str) -> tuple[str, str]
 ```
 
-Splits a markdown note into YAML front matter and the main content.
+Split a markdown note into YAML front matter and the main content.
 
 This function assumes that the note starts with YAML front matter separated by '---' from the rest of the content.
 
@@ -3210,7 +3210,8 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     if not markdown_text.startswith("---"):
         return "", markdown_text
     parts = markdown_text.split("---", 2)
-    if len(parts) < 3:
+    min_count_parts = 3
+    if len(parts) < min_count_parts:
         return "", markdown_text
     return f"---{parts[1]}---", parts[2].lstrip()
 ```

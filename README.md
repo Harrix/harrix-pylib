@@ -93,23 +93,23 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `generate_image_captions`                    | Processes a markdown file to add captions to images based on their alt text.                                      |
 | `generate_image_captions_content`            | Generates image captions in the provided markdown text.                                                           |
 | `generate_short_note_toc_with_links`         | Generates a separate markdown file with only the Table of Contents (TOC) from a given Markdown file.              |
-| `generate_short_note_toc_with_links_content` | Generates a markdown content with only the Table of Contents (TOC) from a given Markdown text.                    |
+| `generate_short_note_toc_with_links_content` | Generate a markdown content with only the Table of Contents (TOC) from a given Markdown text.                     |
 | `generate_summaries`                         | Generate two summary files for a directory of year-based Markdown files.                                          |
-| `generate_toc_with_links`                    | Generates a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes       |
-| `generate_toc_with_links_content`            | Generates a Table of Contents (TOC) with links for the provided markdown content.                                 |
-| `get_yaml_content`                           | Function gets YAML from text of the Markdown file.                                                                |
-| `identify_code_blocks`                       | Processes a list of text lines to identify code blocks and yield each line with a boolean flag.                   |
-| `identify_code_blocks_line`                  | Parses a single line of Markdown to identify inline code blocks.                                                  |
-| `increase_heading_level_content`             | Increases the heading level of Markdown content.                                                                  |
-| `remove_toc_content`                         | Removes the table of contents (TOC) section from a Markdown document.                                             |
-| `remove_yaml_and_code_content`               | Removes YAML front matter and code blocks, and returns the remaining content.                                     |
+| `generate_toc_with_links`                    | Generate a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes        |
+| `generate_toc_with_links_content`            | Generate a Table of Contents (TOC) with links for the provided markdown content.                                  |
+| `get_yaml_content`                           | Get YAML from text of the Markdown file.                                                                          |
+| `identify_code_blocks`                       | Process a list of text lines to identify code blocks and yield each line with a boolean flag.                     |
+| `identify_code_blocks_line`                  | Parse a single line of Markdown to identify inline code blocks.                                                   |
+| `increase_heading_level_content`             | Increase the heading level of Markdown content.                                                                   |
+| `remove_toc_content`                         | Remove the table of contents (TOC) section from a Markdown document.                                              |
+| `remove_yaml_and_code_content`               | Remove YAML front matter and code blocks, and returns the remaining content.                                      |
 | `remove_yaml_content`                        | Function removes YAML from text of the Markdown file.                                                             |
-| `replace_section`                            | Replaces a section in a file defined by `title_section` with the provided `replace_content`.                      |
-| `replace_section_content`                    | Replaces a section in the markdown text defined by `title_section` with the provided `replace_content`.           |
-| `sort_sections`                              | Sorts the sections of a markdown file by their headings, maintaining YAML front matter                            |
-| `sort_sections_content`                      | Sorts sections by their `##` headings: top sections first, then dates in descending order,                        |
-| `split_toc_content`                          | Separates the Table of Contents (TOC) from the rest of the Markdown content.                                      |
-| `split_yaml_content`                         | Splits a markdown note into YAML front matter and the main content.                                               |
+| `replace_section`                            | Replace a section in a file defined by `title_section` with the provided `replace_content`.                       |
+| `replace_section_content`                    | Replace a section in the markdown text defined by `title_section` with the provided `replace_content`.            |
+| `sort_sections`                              | Sort the sections of a markdown file by their headings, maintaining YAML front matter                             |
+| `sort_sections_content`                      | Sort sections by their `##` headings: top sections first, then dates in descending order,                         |
+| `split_toc_content`                          | Separate the Table of Contents (TOC) from the rest of the Markdown content.                                       |
+| `split_yaml_content`                         | Split a markdown note into YAML front matter and the main content.                                                |
 
 ### File `funcs_py.py`
 
@@ -117,7 +117,7 @@ Doc: [funcs_py.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_p
 
 | Function/Class                  | Description                                                                                 |
 | ------------------------------- | ------------------------------------------------------------------------------------------- |
-| `create_uv_new_project`         | Creates a new project using uv, initializes it, and sets up necessary files.                |
+| `create_uv_new_project`         | Create a new project using uv, initializes it, and sets up necessary files.                 |
 | `extract_functions_and_classes` | Extract all classes and functions from a Python file and formats them into a markdown list. |
 | `generate_md_docs`              | Generate documentation for all Python files within a given project folder.                  |
 | `generate_md_docs_content`      | Generate Markdown documentation for a single Python file.                                   |
