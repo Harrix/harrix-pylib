@@ -262,7 +262,7 @@ import harrix_pylib as h
 
 path = "C:/projects/project"
 domain = "https://github.com/Harrix/harrix-pylib"
-result = h.py.generate_md_docs(path, "---\\nlang: en\\n---\\n", domain)
+result = h.py.generate_md_docs(path, "---\nlang: en\n---\n", domain)
 ```
 
 <details>

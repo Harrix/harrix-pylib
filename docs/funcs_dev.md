@@ -159,7 +159,7 @@ print(result_output)  # Python 3.13.1
 ```python
 import harrix_pylib as h
 
-result_output = h.dev.run_powershell_script("python --version\\npip --version")
+result_output = h.dev.run_powershell_script("python --version\npip --version")
 print(result_output)
 ```
 
@@ -227,7 +227,7 @@ print(result_output)  # ﻿Python 3.11.9
 ```python
 import harrix_pylib as h
 
-result_output = h.dev.run_powershell_script_as_admin("python --version\\npip --version")
+result_output = h.dev.run_powershell_script_as_admin("python --version\npip --version")
 print(result_output)
 ```
 

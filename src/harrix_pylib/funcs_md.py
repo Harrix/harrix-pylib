@@ -32,8 +32,8 @@ def add_diary_entry_in_year(path_dream: str | Path, beginning_of_md: str, entry_
     import harrix_pylib as h
 
     path = "diary"
-    front_matter = "---\\ntitle: Diary 2024\\n---\\n"
-    content = "Today I learned something new.\\n\\n"
+    front_matter = "---\ntitle: Diary 2024\n---\n"
+    content = "Today I learned something new.\n\n"
 
     message, file_path = h.md.add_diary_entry_in_year(path, front_matter, content)
     print(message)
@@ -104,7 +104,7 @@ def add_diary_new_dairy_in_year(path_dream: str | Path, beginning_of_md: str) ->
     import harrix_pylib as h
 
     path = "diary"
-    front_matter = "---\\ntitle: Personal Journal 2024\\n---\\n"
+    front_matter = "---\ntitle: Personal Journal 2024\n---\n"
 
     message, file_path = h.md.add_diary_new_dairy_in_year(path, front_matter)
     print(message)
@@ -228,7 +228,7 @@ def add_diary_new_dream_in_year(path_dream: str | Path, beginning_of_md: str) ->
     import harrix_pylib as h
 
     path = "dreams"
-    front_matter = "---\\ntitle: Dream Journal 2024\\n---\\n"
+    front_matter = "---\ntitle: Dream Journal 2024\n---\n"
 
     message, file_path = h.md.add_diary_new_dream_in_year(path, front_matter)
     print(message)
@@ -257,11 +257,11 @@ def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -
     ```python
     import harrix_pylib as h
 
-    text = "# Diary Entry\\nThis is a diary test entry without images.\\n"
+    text = "# Diary Entry\nThis is a diary test entry without images.\n"
     is_with_images = False
 
     result_msg, result_path = h.md.add_diary_new_note("C:/Diary/", text, is_with_images)
-    # File C:\\Diary\\2025\\01\\2025-01-21.md is created
+    # File C:\Diary\2025\01\2025-01-21.md is created
     ```
 
     """
@@ -302,7 +302,7 @@ def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) 
 
 
     name = "test_note"
-    text = "# Test Note\\nThis is a test note with images."
+    text = "# Test Note\nThis is a test note with images."
     is_with_images = True
     result_msg, result_path = h.md.add_note("C:/Notes/", name, text, is_with_images)
     ```
@@ -1554,8 +1554,6 @@ def generate_summaries(folder: Path | str) -> str:
 
     result = h.create_markdown_summaries(Path("C:/Notes/books"))
     print(result)
-    # Output: ✅ File C:/Notes/books/Table.md is created.
-    #         ✅ File C:/Notes/books/_books.short.g.md is created.
     ```
 
     """
@@ -1920,7 +1918,7 @@ def get_yaml_content(markdown_text: str) -> str:
     ```python
     import harrix-pylib as h
 
-    yaml_content = h.md.get_yaml_content("---\\ncategories: [it]\\n---\\n\\nText")
+    yaml_content = h.md.get_yaml_content("---\ncategories: [it]\n---\n\nText")
     print(yaml_content)  # Text
     ```
 
@@ -2085,7 +2083,7 @@ def increase_heading_level_content(markdown_text: str) -> str:
 
     import harrix_pylib as h
 
-    md = "# Title\\n\\nText## Subtitle\\n\\nText"
+    md = "# Title\n\nText## Subtitle\n\nText"
     print(h.md.increase_heading_level_content(md))
     ```
 
@@ -2190,7 +2188,7 @@ def remove_yaml_and_code_content(markdown_text: str) -> str:
     ```python
     import harrix-pylib as h
 
-    md_clean = h.md.remove_yaml_and_code_content("---\\ncategories: [it]\\n---\\n\\nText")
+    md_clean = h.md.remove_yaml_and_code_content("---\ncategories: [it]\n---\n\nText")
     print(md_clean)  # Text
     ```
 
@@ -2250,7 +2248,7 @@ def remove_yaml_content(markdown_text: str) -> str:
     ```python
     import harrix-pylib as h
 
-    md_clean = h.md.remove_yaml_content("---\\ncategories: [it]\\n---\\n\\nText")
+    md_clean = h.md.remove_yaml_content("---\ncategories: [it]\n---\n\nText")
     print(md_clean)  # Text
     ```
 
@@ -2296,7 +2294,7 @@ def replace_section(filename: Path | str, replace_content: str, title_section: s
     ```python
     import harrix_pylib as h
 
-    new_content = "New list of commands:\\n\\n- new command1\\n- new command2"
+    new_content = "New list of commands:\n\n- new command1\n- new command2"
     result_message = h.md.replace_section("C:/Notes/note.md", new_content, "## List of commands")
     ```
 
@@ -2345,7 +2343,7 @@ def replace_section_content(
     import harrix_pylib as h
     from pathlib import Path
 
-    new_content = "New list of commands:\\n\\n- new command1\\n- new command2"
+    new_content = "New list of commands:\n\n- new command1\n- new command2"
     text = Path('C:/Notes/note.md').read_text(encoding="utf8")
     print(h.md.replace_section_content(text, new_content, "## List of commands"))
     ```
@@ -2730,12 +2728,12 @@ def split_toc_content(markdown_text: str) -> tuple[str, str]:
 
     Example:
 
-    ```python\\n
+    ```python
     import harrix_pylib as h
     import re
 
-    markdown = "# Title\\n\\n- [Introduction](#introduction)\\n- [Content](#content)\\n\\n"
-    markdown += "## Introduction\\n\\nThis is the start.\\n\\n"
+    markdown = "# Title\n\n- [Introduction](#introduction)\n- [Content](#content)\n\n"
+    markdown += "## Introduction\n\nThis is the start.\n\n"
 
     toc, content = h.md.split_toc_content(markdown)
     print(toc)

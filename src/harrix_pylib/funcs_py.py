@@ -227,7 +227,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
 
     path = "C:/projects/project"
     domain = "https://github.com/Harrix/harrix-pylib"
-    result = h.py.generate_md_docs(path, "---\\nlang: en\\n---\\n", domain)
+    result = h.py.generate_md_docs(path, "---\nlang: en\n---\n", domain)
     ```
 
     """

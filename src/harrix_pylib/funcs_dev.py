@@ -121,7 +121,7 @@ def run_powershell_script(commands: str) -> str:
     ```python
     import harrix_pylib as h
 
-    result_output = h.dev.run_powershell_script("python --version\\npip --version")
+    result_output = h.dev.run_powershell_script("python --version\npip --version")
     print(result_output)
     ```
 
@@ -178,7 +178,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
     ```python
     import harrix_pylib as h
 
-    result_output = h.dev.run_powershell_script_as_admin("python --version\\npip --version")
+    result_output = h.dev.run_powershell_script_as_admin("python --version\npip --version")
     print(result_output)
     ```
 
