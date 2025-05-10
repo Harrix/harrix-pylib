@@ -1,5 +1,6 @@
 import ast
 import os
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -483,7 +484,12 @@ def lint_and_fix_python_code(py_content: str) -> str:
         temp_file_path = temp_file.name
 
     try:
-        subprocess.run(["ruff", "format", temp_file_path], capture_output=True, text=True, check=False)
+        ruff_path = shutil.which("ruff")
+        if ruff_path:
+            subprocess.run([ruff_path, "format", temp_file_path], capture_output=True, text=True, check=False)
+        else:
+            # Обработка случая, когда ruff не найден
+            print("Ruff не найден в системе")
 
         # Read the fixed code from the temporary file
         with Path.open(temp_file_path, encoding="utf-8") as file:
@@ -491,7 +497,7 @@ def lint_and_fix_python_code(py_content: str) -> str:
 
     finally:
         # Delete the temporary file
-        os.remove(temp_file_path)
+        Path(temp_file_path).unlink()
 
 
 def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
