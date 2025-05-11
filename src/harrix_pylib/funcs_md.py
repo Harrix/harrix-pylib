@@ -4,6 +4,7 @@ import re
 from collections.abc import Iterator
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
 import requests
@@ -116,13 +117,13 @@ def add_diary_new_dairy_in_year(path_dream: str | Path, beginning_of_md: str) ->
     return add_diary_entry_in_year(path_dream, beginning_of_md, diary_content)
 
 
-def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: bool = False) -> str | Path:
+def add_diary_new_diary(path_diary: str | Path, beginning_of_md: str, is_with_images: bool = False) -> str | Path:
     """Create a new diary entry for the current day and time.
 
     Args:
 
+    - `path_diary` (`str | Path`): The path to the folder for diary notes.
     - `is_with_images` (`bool`): Whether to create folders for images. Defaults to `False`.
-    - `path_diary` (`str`): The path to the folder for diary notes.
     - `beginning_of_md` (`str`): The section of YAML for a Markdown note.
 
     Example of `beginning_of_md`:
@@ -163,13 +164,13 @@ def add_diary_new_diary(path_diary: str, beginning_of_md: str, is_with_images: b
     return add_diary_new_note(path_diary, text, is_with_images)
 
 
-def add_diary_new_dream(path_dream, beginning_of_md, is_with_images: bool = False) -> str | Path:
+def add_diary_new_dream(path_dream: str | Path, beginning_of_md: str, is_with_images: bool = False) -> str | Path:
     """Create a new dream diary entry for the current day and time with placeholders for dream descriptions.
 
     Args:
 
     - `is_with_images` (`bool`): Whether to create folders for images. Defaults to `False`.
-    - `path_dream` (`str`): The path to the folder for dream notes.
+    - `path_dream` (`str | Path`): The path to the folder for dream notes.
     - `beginning_of_md` (`str`): The section of YAML for a Markdown note.
 
     Example of `beginning_of_md`:
@@ -357,7 +358,7 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
 
     """
 
-    def replace_path_in_links(match) -> str:
+    def replace_path_in_links(match: re.Match) -> str:
         link_text = match.group(1)
         file_path = match.group(2).replace("\\", "/")
         return f"[{link_text}]({adding_path}/{file_path})"
@@ -400,7 +401,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
 
     """
 
-    def merge_yaml_values(key, value, combined_dict) -> None:
+    def merge_yaml_values(key: str, value: Any, combined_dict: dict[str, Any]) -> None:
         if key not in combined_dict:
             combined_dict[key] = value
             return
