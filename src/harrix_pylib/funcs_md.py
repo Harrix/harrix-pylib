@@ -957,8 +957,12 @@ def format_yaml_content(markdown_text: str) -> str:
     data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
 
     class IndentDumper(yaml.Dumper):
-        def increase_indent(self, flow=False, indentless=False):
-            return super().increase_indent(flow, False)
+        def increase_indent(
+            self,
+            flow: bool = False,  # noqa: FBT001, FBT002
+            indentless: bool = False,  # noqa: FBT001, FBT002, ARG002
+        ) -> None:
+            return super().increase_indent(flow=flow, indentless=False)
 
     yaml_md = (
         yaml.dump(
