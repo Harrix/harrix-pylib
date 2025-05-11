@@ -302,7 +302,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
 def write_in_output_txt(is_show_output: bool = True) -> Callable
 ```
 
-Decorator to write function output to a temporary file and optionally display it.
+Decorate to write function output to a temporary file and optionally display it.
 
 This decorator captures all output of the decorated function into a list,
 measures execution time, and writes this information into an `output.txt` file
