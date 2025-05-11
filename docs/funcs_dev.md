@@ -172,7 +172,7 @@ def run_powershell_script(commands: str) -> str:
 
     process = subprocess.run(
         [
-            "powershell",
+            shutil.which("powershell"),
             "-Command",
             (
                 "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
@@ -264,7 +264,11 @@ def run_powershell_script_as_admin(commands: str) -> str:
             "-ExecutionPolicy",
             "Bypass",
             "-Command",
-            f"Start-Process powershell.exe -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File \"{tmp_wrapper_path}\"' -Verb RunAs",
+            (
+                f"Start-Process powershell.exe -ArgumentList "
+                f"'-NoProfile -ExecutionPolicy Bypass -File \"{tmp_wrapper_path}\"' "
+                f"-Verb RunAs"
+            ),
         ]
 
         # Start the process
