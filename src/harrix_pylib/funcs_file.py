@@ -8,6 +8,7 @@ import shutil
 import subprocess
 from collections.abc import Callable
 from pathlib import Path
+from typing import Iterator
 
 
 def all_to_parent_folder(path: Path | str) -> str:
@@ -386,7 +387,7 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
     return "\n".join(result_lines)
 
 
-def tree_view_folder(path: str | Path, is_ignore_hidden_folders: bool = False) -> str:
+def tree_view_folder(path: str | Path, *, is_ignore_hidden_folders: bool = False) -> str:
     """Generate a tree-like representation of folder contents.
 
     Example output:
@@ -427,7 +428,7 @@ def tree_view_folder(path: str | Path, is_ignore_hidden_folders: bool = False) -
 
     """
 
-    def __tree(path: str | Path, is_ignore_hidden_folders: bool = False, prefix: str = ""):
+    def __tree(path: str | Path, *, is_ignore_hidden_folders: bool = False, prefix: str = "") -> Iterator[str]:
         if is_ignore_hidden_folders and path.name.startswith("."):
             contents = []
         else:
@@ -436,10 +437,10 @@ def tree_view_folder(path: str | Path, is_ignore_hidden_folders: bool = False) -
             except PermissionError:
                 contents = []
         pointers = ["├─ "] * (len(contents) - 1) + ["└─ "]
-        for pointer, path in zip(pointers, contents, strict=False):
-            yield prefix + pointer + path.name
-            if path.is_dir():
+        for pointer, item in zip(pointers, contents, strict=False):
+            yield prefix + pointer + item.name
+            if item.is_dir():
                 extension = "│  " if pointer == "├─ " else "   "
-                yield from __tree(path, is_ignore_hidden_folders, prefix=prefix + extension)
+                yield from __tree(item, is_ignore_hidden_folders=is_ignore_hidden_folders, prefix=prefix + extension)
 
-    return "\n".join(list(__tree(Path(path), is_ignore_hidden_folders)))
+    return "\n".join(list(__tree(Path(path), is_ignore_hidden_folders=is_ignore_hidden_folders)))
