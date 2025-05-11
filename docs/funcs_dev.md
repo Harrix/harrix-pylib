@@ -299,7 +299,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
 ## Function `write_in_output_txt`
 
 ```python
-def write_in_output_txt(is_show_output: bool = True) -> Callable
+def write_in_output_txt() -> Callable
 ```
 
 Decorate to write function output to a temporary file and optionally display it.
@@ -371,7 +371,7 @@ class ActionBase:
 <summary>Code:</summary>
 
 ```python
-def write_in_output_txt(is_show_output: bool = True) -> Callable:
+def write_in_output_txt(*, is_show_output: bool = True) -> Callable:
 
     def decorator(func: Callable) -> Callable:
         output_lines = []

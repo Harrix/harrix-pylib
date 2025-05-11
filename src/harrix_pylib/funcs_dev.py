@@ -242,7 +242,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
     return "\n".join(filter(None, res_output))
 
 
-def write_in_output_txt(is_show_output: bool = True) -> Callable:
+def write_in_output_txt(*, is_show_output: bool = True) -> Callable:
     """Decorate to write function output to a temporary file and optionally display it.
 
     This decorator captures all output of the decorated function into a list,
