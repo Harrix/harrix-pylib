@@ -1354,10 +1354,14 @@ def generate_image_captions_content(markdown_text: str) -> str:
             is_caption = False
             if line.strip() == "":
                 continue
-        if re.match(r"^_.*_$", line) and i > 0 and lines[i - 1].strip() == "":
-            if i > 1 and re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip()):
-                is_caption = True
-                continue
+        if (
+            re.match(r"^_.*_$", line)
+            and lines[i - 1].strip() == ""
+            and i > 1
+            and re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip())
+        ):
+            is_caption = True
+            continue
         new_lines.append(line)
     content_md = "\n".join(new_lines)
 
