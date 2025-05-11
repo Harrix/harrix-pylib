@@ -110,7 +110,7 @@ def load_config(filename: str) -> dict:
     with config_file.open("r", encoding="utf-8") as file:
         config = json.load(file)
 
-    def process_snippet(value):
+    def process_snippet(value: object) -> object:
         if isinstance(value, str) and value.startswith("snippet:"):
             snippet_path = Path(get_project_root()) / value.split("snippet:", 1)[1].strip()
             with snippet_path.open("r", encoding="utf-8") as snippet_file:
