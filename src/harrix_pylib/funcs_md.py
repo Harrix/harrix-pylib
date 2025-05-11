@@ -811,8 +811,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
             new_lines.append(line)
             continue
 
-        line = download_and_replace_image_line(line, path_md, image_folder)
-        new_lines.append(line)
+        new_lines.append(download_and_replace_image_line(line, path_md, image_folder))
     content_md = "\n".join(new_lines)
 
     return yaml_md + "\n\n" + content_md
