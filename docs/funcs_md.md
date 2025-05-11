@@ -1596,26 +1596,37 @@ def generate_image_captions_content(markdown_text: str) -> str:
     content_md = "\n".join(new_lines)
 
     # Add captions
+    image_re = re.compile(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$")
+    forbidden_substrings = ("![Featured image](featured-image", "img.shields.io", "<!-- no-caption -->")
+
     image_count = 0
     new_lines = []
+
     lines = content_md.split("\n")
-    for line, is_code_block in identify_code_blocks(lines):
-        if is_code_block:
-            new_lines.append(line)
+    for current_line, inside_code in identify_code_blocks(lines):
+        if inside_code:
+            new_lines.append(current_line)
             continue
-        match = re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", line)
-        lst_forbidden = ["![Featured image](featured-image", "img.shields.io", "<!-- no-caption -->"]
-        if match and not any(forbidden_word in line for forbidden_word in lst_forbidden):
+
+        match = image_re.match(current_line)
+        if match and not any(fw in current_line for fw in forbidden_substrings):
             image_count += 1
+
             alt_text = match.group(1)
+            modified_line = current_line
             if not alt_text:
-                alt_text = match.group(2).split("/")[-1].replace("_", " ").replace("-", " ").title()
-                line = line.replace("![](", f"![{alt_text}](", 1)
-            new_lines.append(line)
+                filename_no_ext = match.group(2).split("/")[-1]
+                alt_text = filename_no_ext.replace("_", " ").replace("-", " ").title()
+                modified_line = current_line.replace("![](", f"![{alt_text}](", 1)
+
+            new_lines.append(modified_line)
+
             caption = f"_Рисунок {image_count} — {alt_text}_" if lang == "ru" else f"_Figure {image_count}: {alt_text}_"
-            new_lines.append("\n" + caption)
+            new_lines.append("")
+            new_lines.append(caption)
         else:
-            new_lines.append(line)
+            new_lines.append(current_line)
+
     content_md = "\n".join(new_lines)
 
     return yaml_md + "\n\n" + content_md
