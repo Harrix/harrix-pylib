@@ -480,7 +480,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
 
         # Check published flag
         if yaml_md:
-            data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+            data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
             published = data_yaml.get("published") if data_yaml and "published" in data_yaml else True
             if not published:
                 continue
@@ -490,7 +490,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
 
         # Parse YAML and collect headers
         if yaml_md:
-            data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+            data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
             data_yaml_headers.append(data_yaml)
         else:
             data_yaml = {}
@@ -954,7 +954,7 @@ def format_yaml_content(markdown_text: str) -> str:
     """
     yaml_md, content_md = split_yaml_content(markdown_text)
 
-    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+    data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
 
     class IndentDumper(yaml.Dumper):
         def increase_indent(self, flow=False, indentless=False):
@@ -1339,7 +1339,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
     """
     yaml_md, content_md = split_yaml_content(markdown_text)
 
-    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+    data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
     lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
 
     # Remove captions
@@ -1477,7 +1477,7 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
     # Extract YAML frontmatter if present
     yaml_md, _ = split_yaml_content(markdown_text)
 
-    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+    data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
     lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
 
     # Extract the title from the markdown content
@@ -1824,7 +1824,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
         return text
 
     yaml_md, _ = split_yaml_content(markdown_text)
-    data_yaml = yaml.safe_load(yaml_md.strip("---\n"))
+    data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
     lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
 
     # Generate TOC
