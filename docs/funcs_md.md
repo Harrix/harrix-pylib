@@ -770,13 +770,11 @@ def combine_markdown_files_recursively(folder_path: str | Path) -> str:
             file.unlink()
 
     # Collect all folders, excluding hidden ones
-    all_folders = []
-    for subfolder in filter(
-        lambda path: not any(part for part in path.parts if part.startswith(".")),
-        Path(folder_path).rglob("*"),
-    ):
-        if subfolder.is_dir():
-            all_folders.append(subfolder)
+    all_folders = [
+        subfolder
+        for subfolder in Path(folder_path).rglob("*")
+        if subfolder.is_dir() and not any(part.startswith(".") for part in subfolder.parts)
+    ]
 
     # Add the root folder
     all_folders.append(folder_path)
@@ -801,15 +799,27 @@ def combine_markdown_files_recursively(folder_path: str | Path) -> str:
         # 1. The folder directly contains at least 2 .md files
         # 2. OR the folder and its subfolders contain at least 2 .md files
         # 3. OR the folder contains at least 1 .md file AND at least 1 subfolder with a .g.md file
+        min_count_md_files_in_folder = 2
+        min_count_md_files_recursive = 2
         if (
-            len(md_files_in_folder) >= 2
-            or (len(md_files_recursive) >= 2 and len(md_files_recursive) > len(md_files_in_folder))
+            len(md_files_in_folder) >= min_count_md_files_in_folder
+            or (
+                len(md_files_recursive) >= min_count_md_files_recursive
+                and len(md_files_recursive) > len(md_files_in_folder)
+            )
             or (len(md_files_in_folder) >= 1 and len(g_md_files_in_subfolders) >= 1)
         ):
             try:
                 result_lines.append(combine_markdown_files(folder, recursive=True))
-            except Exception as e:
+            except (FileNotFoundError, PermissionError, OSError) as e:
+                # File system related errors
                 result_lines.append(f"❌ Error processing {folder}: {e}")
+            except ValueError as e:
+                # In case combine_markdown_files has validation that fails
+                result_lines.append(f"❌ Error processing {folder} (invalid data): {e}")
+            except KeyError as e:
+                # If the function tries to access missing dictionary keys
+                result_lines.append(f"❌ Error processing {folder} (missing key): {e}")
 
     return "\n".join(result_lines)
 ```
