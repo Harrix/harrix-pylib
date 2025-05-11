@@ -1047,11 +1047,13 @@ def format_quotes_as_markdown_content(markdown_text: str) -> str:
     for quote in raw_quotes:
         parts = quote.strip().split("\n\n")
 
-        if len(parts) >= 2:
+        min_count_parts = 2
+        if len(parts) >= min_count_parts:
             quote_text = parts[0]
             source_info = parts[-1].split("\n")
 
-            if len(source_info) >= 2:
+            min_count_source_info = 2
+            if len(source_info) >= min_count_source_info:
                 title = source_info[0].strip()
                 author = source_info[1].strip()
 
