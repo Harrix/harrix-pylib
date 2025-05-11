@@ -372,12 +372,24 @@ h.file.open_file_or_folder("C:/Notes/note.md")
 
 ```python
 def open_file_or_folder(path: Path | str) -> None:
-    if platform.system() == "Windows":
-        os.startfile(path)
-    elif platform.system() == "Darwin":  # macOS
-        subprocess.call(["open", str(path)])
-    elif platform.system() == "Linux":
-        subprocess.call(["xdg-open", str(path)])
+    target = Path(path).expanduser().resolve(strict=True)
+
+    system = platform.system()
+    if system == "Windows":
+        opener = shutil.which("explorer.exe")
+    elif system == "Darwin":  # macOS
+        opener = shutil.which("open")
+    elif system == "Linux":
+        opener = shutil.which("xdg-open")
+    else:
+        msg = f"Unsupported operating system: {system}"
+        raise RuntimeError(msg)
+
+    if opener is None:
+        msg = "Could not locate the system open helper."
+        raise RuntimeError(msg)
+
+    subprocess.run([opener, str(target)], check=False, shell=False)
 ```
 
 </details>
