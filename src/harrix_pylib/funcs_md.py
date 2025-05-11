@@ -1614,10 +1614,11 @@ def generate_summaries(folder: Path | str) -> str:
 
         # Process valid entries (exclude "Содержание" and "Contents")
         valid_entries = []
-        for heading, rating in matches:
+        for heading, rating_from_heading in matches:
             if heading.strip() not in ["Содержание", "Contents"]:
                 # If there's no explicit rating in the heading, look for a rating in the section
-                if not rating:
+                extracted_rating = rating_from_heading
+                if not extracted_rating:
                     # Try to find a rating in the book entry text
                     section_start = content.find(f"## {heading}")
                     if section_start != -1:
@@ -1629,9 +1630,9 @@ def generate_summaries(folder: Path | str) -> str:
                         # Look for rating in format ": N" at the end of the heading
                         rating_match = re.search(r": (\d+)$", section_text.split("\n")[0])
                         if rating_match:
-                            rating = rating_match.group(1)
+                            extracted_rating = rating_match.group(1)
 
-                valid_entries.append((heading, rating if rating else ""))
+                valid_entries.append((heading, extracted_rating if extracted_rating else ""))
 
         # Check if this is a pure year file (like "2023.md") or a special category file (like "До-2013-(Луч).md")
         length_str_year = 4
