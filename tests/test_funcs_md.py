@@ -96,7 +96,7 @@ lang: ru
         # Test with images
         is_with_images = True
 
-        result_msg, result_path = h.md.add_diary_new_diary(base_path, beginning_of_md, is_with_images)
+        result_msg, result_path = h.md.add_diary_new_diary(base_path, beginning_of_md, is_with_images=is_with_images)
 
         # Check if the message indicates file creation
         assert "File" in result_msg
@@ -132,7 +132,7 @@ lang: ru
         # Test without images
         is_with_images = False
 
-        result_msg, result_path = h.md.add_diary_new_diary(base_path, beginning_of_md, is_with_images)
+        result_msg, result_path = h.md.add_diary_new_diary(base_path, beginning_of_md, is_with_images=is_with_images)
 
         # Check if the message indicates file creation
         assert "File" in result_msg
@@ -163,7 +163,7 @@ lang: ru
         # Test with images
         is_with_images = True
 
-        result_msg, result_path = h.md.add_diary_new_dream(base_path, beginning_of_md, is_with_images)
+        result_msg, result_path = h.md.add_diary_new_dream(base_path, beginning_of_md, is_with_images=is_with_images)
 
         # Check if the message indicates file creation
         assert "File" in result_msg
@@ -201,7 +201,7 @@ lang: ru
         # Test without images
         is_with_images = False
 
-        result_msg, result_path = h.md.add_diary_new_dream(base_path, beginning_of_md, is_with_images)
+        result_msg, result_path = h.md.add_diary_new_dream(base_path, beginning_of_md, is_with_images=is_with_images)
 
         # Check if the message indicates file creation
         assert "File" in result_msg
@@ -266,7 +266,7 @@ def test_add_diary_new_note() -> None:
         text = "# Diary Entry\nThis is a diary test entry without images."
         is_with_images = False
 
-        result_msg, result_path = h.md.add_diary_new_note(base_path, text, is_with_images)
+        result_msg, result_path = h.md.add_diary_new_note(base_path, text, is_with_images=is_with_images)
 
         # Check if the message indicates file creation
         assert "File" in result_msg
@@ -296,7 +296,7 @@ def test_add_diary_new_note() -> None:
         text = "# Diary Entry\nThis is a diary test entry with images."
         is_with_images = True
 
-        result_msg, _ = h.md.add_diary_new_note(base_path, text, is_with_images)
+        result_msg, _ = h.md.add_diary_new_note(base_path, text, is_with_images=is_with_images)
 
         # Check if the message indicates file creation
         assert "File" in result_msg
@@ -321,7 +321,7 @@ def test_add_note() -> None:
         text = "# Test Note\nThis is a test note with images."
         is_with_images = True
 
-        result_msg, result_path = h.md.add_note(base_path, name, text, is_with_images)
+        result_msg, result_path = h.md.add_note(base_path, name, text, is_with_images=is_with_images)
 
         # Check if the message indicates file creation
         assert "File" in result_msg
@@ -343,7 +343,7 @@ def test_add_note() -> None:
         text = "# Simple Note\nThis note has no images."
         is_with_images = False
 
-        result_msg, _ = h.md.add_note(base_path, name, text, is_with_images)
+        result_msg, _ = h.md.add_note(base_path, name, text, is_with_images=is_with_images)
 
         # Check if the message indicates file creation
         assert "File" in result_msg

@@ -180,7 +180,7 @@ def add_diary_new_dairy_in_year(path_dream: str | Path, beginning_of_md: str) ->
 ## Function `add_diary_new_diary`
 
 ```python
-def add_diary_new_diary(path_diary: str | Path, beginning_of_md: str, is_with_images: bool = False) -> str | Path
+def add_diary_new_diary(path_diary: str | Path, beginning_of_md: str) -> str | Path
 ```
 
 Create a new diary entry for the current day and time.
@@ -225,11 +225,11 @@ print(new_entry_path)
 <summary>Code:</summary>
 
 ```python
-def add_diary_new_diary(path_diary: str | Path, beginning_of_md: str, is_with_images: bool = False) -> str | Path:
+def add_diary_new_diary(path_diary: str | Path, beginning_of_md: str, *, is_with_images: bool = False) -> str | Path:
     text = f"{beginning_of_md}\n\n"
     text += f"# {datetime.now(tz=datetime.now().astimezone().tzinfo).strftime('%Y-%m-%d')}\n\n"
     text += f"## {datetime.now(tz=datetime.now().astimezone().tzinfo).strftime('%H:%M')}\n\n"
-    return add_diary_new_note(path_diary, text, is_with_images)
+    return add_diary_new_note(path_diary, text, is_with_images=is_with_images)
 ```
 
 </details>
@@ -237,7 +237,7 @@ def add_diary_new_diary(path_diary: str | Path, beginning_of_md: str, is_with_im
 ## Function `add_diary_new_dream`
 
 ```python
-def add_diary_new_dream(path_dream: str | Path, beginning_of_md: str, is_with_images: bool = False) -> str | Path
+def add_diary_new_dream(path_dream: str | Path, beginning_of_md: str) -> str | Path
 ```
 
 Create a new dream diary entry for the current day and time with placeholders for dream descriptions.
@@ -282,12 +282,12 @@ print(new_entry_path)
 <summary>Code:</summary>
 
 ```python
-def add_diary_new_dream(path_dream: str | Path, beginning_of_md: str, is_with_images: bool = False) -> str | Path:
+def add_diary_new_dream(path_dream: str | Path, beginning_of_md: str, *, is_with_images: bool = False) -> str | Path:
     text = f"{beginning_of_md}\n"
     text += f"# {datetime.now(tz=datetime.now().astimezone().tzinfo).strftime('%Y-%m-%d')}\n\n"
     text += f"## {datetime.now(tz=datetime.now().astimezone().tzinfo).strftime('%H:%M')}\n\n"
     text += ("`` — I don't remember.\n\n" * 16)[:-1]
-    return add_diary_new_note(path_dream, text, is_with_images)
+    return add_diary_new_note(path_dream, text, is_with_images=is_with_images)
 ```
 
 </details>
@@ -335,7 +335,7 @@ def add_diary_new_dream_in_year(path_dream: str | Path, beginning_of_md: str) ->
 ## Function `add_diary_new_note`
 
 ```python
-def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -> str | Path
+def add_diary_new_note(base_path: str | Path, text: str) -> str | Path
 ```
 
 Add a new note to the diary or dream diary for the given base path.
@@ -358,7 +358,7 @@ import harrix_pylib as h
 text = "# Diary Entry\nThis is a diary test entry without images.\n"
 is_with_images = False
 
-result_msg, result_path = h.md.add_diary_new_note("C:/Diary/", text, is_with_images)
+result_msg, result_path = h.md.add_diary_new_note("C:/Diary/", text, is_with_images=is_with_images)
 # File C:\Diary\2025\01\2025-01-21.md is created
 ```
 
@@ -366,7 +366,7 @@ result_msg, result_path = h.md.add_diary_new_note("C:/Diary/", text, is_with_ima
 <summary>Code:</summary>
 
 ```python
-def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -> str | Path:
+def add_diary_new_note(base_path: str | Path, text: str, *, is_with_images: bool) -> str | Path:
     current_date = datetime.now(tz=datetime.now().astimezone().tzinfo)
     year = current_date.strftime("%Y")
     month = current_date.strftime("%m")
@@ -380,7 +380,7 @@ def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -
     month_path = year_path / month
     month_path.mkdir(exist_ok=True)
 
-    return add_note(month_path, day, text, is_with_images)
+    return add_note(month_path, day, text, is_with_images=is_with_images)
 ```
 
 </details>
@@ -388,7 +388,7 @@ def add_diary_new_note(base_path: str | Path, text: str, is_with_images: bool) -
 ## Function `add_note`
 
 ```python
-def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) -> str | Path
+def add_note(base_path: str | Path, name: str, text: str) -> str | Path
 ```
 
 Add a note to the specified base path.
@@ -413,14 +413,14 @@ import harrix_pylib as h
 name = "test_note"
 text = "# Test Note\nThis is a test note with images."
 is_with_images = True
-result_msg, result_path = h.md.add_note("C:/Notes/", name, text, is_with_images)
+result_msg, result_path = h.md.add_note("C:/Notes/", name, text, is_with_images=is_with_images)
 ```
 
 <details>
 <summary>Code:</summary>
 
 ```python
-def add_note(base_path: str | Path, name: str, text: str, is_with_images: bool) -> str | Path:
+def add_note(base_path: str | Path, name: str, text: str, *, is_with_images: bool) -> str | Path:
     base_path = Path(base_path)
 
     if is_with_images:
