@@ -368,13 +368,13 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
     return re.sub(r"\[(.*?)\]\(((?!http).*?)\)", replace_path_in_links, markdown_line)
 
 
-def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> str:
+def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = False) -> str:
     """Combine multiple markdown files in a folder into a single file with intelligent YAML header merging.
 
     Args:
 
     - `folder_path` (`str` or `Path`): Path to the folder containing markdown files.
-    - `recursive` (`bool`): Whether to include files from subfolders. Defaults to `False`.
+    - `is_recursive` (`bool`): Whether to include files from subfolders. Defaults to `False`.
 
     Returns:
 
@@ -395,7 +395,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
     ```python
     import harrix_pylib as h
 
-    result = h.md.combine_markdown_files("C:/Notes", recursive=True)
+    result = h.md.combine_markdown_files("C:/Notes", is_recursive=True)
     print(result)
     ```
 
@@ -434,7 +434,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
     folder_path = Path(folder_path)
 
     # Get all .md files based on the recursive flag
-    if recursive:
+    if is_recursive:
         # For recursive mode, we will structure files by folders
         md_files = []
 
@@ -664,7 +664,7 @@ def combine_markdown_files_recursively(folder_path: str | Path) -> str:
             or (len(md_files_in_folder) >= 1 and len(g_md_files_in_subfolders) >= 1)
         ):
             try:
-                result_lines.append(combine_markdown_files(folder, recursive=True))
+                result_lines.append(combine_markdown_files(folder, is_recursive=True))
             except (FileNotFoundError, PermissionError, OSError) as e:
                 # File system related errors
                 result_lines.append(f"❌ Error processing {folder}: {e}")

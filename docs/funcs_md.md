@@ -495,7 +495,7 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
 ## Function `combine_markdown_files`
 
 ```python
-def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> str
+def combine_markdown_files(folder_path: Path | str) -> str
 ```
 
 Combine multiple markdown files in a folder into a single file with intelligent YAML header merging.
@@ -503,7 +503,7 @@ Combine multiple markdown files in a folder into a single file with intelligent 
 Args:
 
 - `folder_path` (`str` or `Path`): Path to the folder containing markdown files.
-- `recursive` (`bool`): Whether to include files from subfolders. Defaults to `False`.
+- `is_recursive` (`bool`): Whether to include files from subfolders. Defaults to `False`.
 
 Returns:
 
@@ -524,7 +524,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-result = h.md.combine_markdown_files("C:/Notes", recursive=True)
+result = h.md.combine_markdown_files("C:/Notes", is_recursive=True)
 print(result)
 ```
 
@@ -532,7 +532,7 @@ print(result)
 <summary>Code:</summary>
 
 ```python
-def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> str:
+def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = False) -> str:
 
     def merge_yaml_values(key: str, value: Any, combined_dict: dict[str, Any]) -> None:
         if key not in combined_dict:
@@ -567,7 +567,7 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
     folder_path = Path(folder_path)
 
     # Get all .md files based on the recursive flag
-    if recursive:
+    if is_recursive:
         # For recursive mode, we will structure files by folders
         md_files = []
 
@@ -808,7 +808,7 @@ def combine_markdown_files_recursively(folder_path: str | Path) -> str:
             or (len(md_files_in_folder) >= 1 and len(g_md_files_in_subfolders) >= 1)
         ):
             try:
-                result_lines.append(combine_markdown_files(folder, recursive=True))
+                result_lines.append(combine_markdown_files(folder, is_recursive=True))
             except (FileNotFoundError, PermissionError, OSError) as e:
                 # File system related errors
                 result_lines.append(f"❌ Error processing {folder}: {e}")
