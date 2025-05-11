@@ -466,7 +466,7 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
             largest_file.rename(new_filename)
             renamed_count += 1
 
-        except Exception as e:
+        except OSError as e:
             result_lines.append(f"❌ Error renaming file: {e}")
 
     result_lines.append(f"Total files renamed: {renamed_count}")
