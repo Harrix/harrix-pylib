@@ -921,7 +921,7 @@ print(updated_md_text)
 ```python
 def download_and_replace_images_content(markdown_text: str, path_md: Path | str, image_folder: str = "img") -> str:
 
-    def download_and_replace_image_line(markdown_line: str, path_md: Path | str, image_folder: str = "img"):
+    def download_and_replace_image_line(markdown_line: str, path_md: Path | str, image_folder: str = "img") -> str:
         # Regular expression to match markdown image with remote URL (http or https)
         pattern = r"\!\[(.*?)\]\((http.*?)\)$"
         match = re.search(pattern, markdown_line.strip())
@@ -957,13 +957,14 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
 
         # Attempt to download the image.
         try:
-            response = requests.get(remote_url)
-            if response.status_code != 200:
+            download_timeout = 10
+            response = requests.get(remote_url, timeout=download_timeout)
+            if response.status_code != codes.ok:
                 return markdown_line  # If download failed, return the original line.
             # Save the image content to the candidate file.
             with candidate_file.open("wb") as file:
                 file.write(response.content)
-        except Exception:
+        except (RequestException, OSError):
             # In case of any exception during downloading, return the original line.
             return markdown_line
 
