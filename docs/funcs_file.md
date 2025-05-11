@@ -157,17 +157,18 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
     list_files = []
     folder_path = Path(path)
 
-    for path in folder_path.rglob(f"*{ext}"):
+    for file_path in folder_path.rglob(f"*{ext}"):
         # Exclude all folders and files starting with a dot
-        if path.is_file() and not any(part.startswith(".") for part in path.parts):
+        if file_path.is_file() and not any(part.startswith(".") for part in file_path.parts):
             try:
-                result = func(str(path))
+                result = func(str(file_path))
                 if result is None:
-                    list_files.append(f"✅ File {path.name} is applied.")
+                    list_files.append(f"✅ File {file_path.name} is applied.")
                 else:
-                    list_files.append(f"✅ File {path.name} is applied: {result}")
-            except Exception:
-                list_files.append(f"❌ File {path.name} is not applied.")
+                    list_files.append(f"✅ File {file_path.name} is applied: {result}")
+            except OSError as e:
+                # Catching specific exceptions that are likely to occur
+                list_files.append(f"❌ File {file_path.name} is not applied: {e!s}")
 
     return "\n".join(list_files)
 ```
