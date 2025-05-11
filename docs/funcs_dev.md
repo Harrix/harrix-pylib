@@ -376,7 +376,7 @@ def write_in_output_txt(is_show_output: bool = True) -> Callable:
     def decorator(func: Callable) -> Callable:
         output_lines = []
 
-        def wrapper(*args, **kwargs) -> None:
+        def wrapper(*args: Any, **kwargs: Any) -> None:
             output_lines.clear()
             start_time = time.time()
             func(*args, **kwargs)

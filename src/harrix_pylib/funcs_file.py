@@ -1,14 +1,12 @@
 """Functions for working with files."""
 
 import contextlib
-import os
 import platform
 import re
 import shutil
 import subprocess
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Iterator
 
 
 def all_to_parent_folder(path: Path | str) -> str:
