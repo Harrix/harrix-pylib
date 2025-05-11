@@ -586,13 +586,11 @@ def combine_markdown_files(folder_path: Path | str, recursive: bool = False) -> 
                 # Use the first .g.md file found
                 md_files.append(g_md_files[0])
             else:
-                subfolder_files = []
-                # Recursively collect files from each subfolder
-                for file_path in subfolder.rglob("*.md"):
-                    if file_path.is_file() and file_path.suffix == ".md" and not file_path.name.endswith(".g.md"):
-                        subfolder_files.append(file_path)
-
-                # Sort files in the subfolder
+                subfolder_files = [
+                    file_path
+                    for file_path in subfolder.rglob("*.md")
+                    if file_path.is_file() and file_path.suffix == ".md" and not file_path.name.endswith(".g.md")
+                ]
                 subfolder_files.sort()
                 md_files.extend(subfolder_files)
     else:
