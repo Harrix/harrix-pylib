@@ -398,7 +398,7 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
     return "\n".join(result_lines)
 
 
-def tree_view_folder(path: str | Path, *, is_ignore_hidden_folders: bool = False) -> str:
+def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False) -> str:
     """Generate a tree-like representation of folder contents.
 
     Example output:
@@ -413,7 +413,7 @@ def tree_view_folder(path: str | Path, *, is_ignore_hidden_folders: bool = False
 
     Args:
 
-    - `path` (`str | Path`): The root folder path to start the tree from.
+    - `path` (`Path | str`): The root folder path to start the tree from.
     - `is_ignore_hidden_folders` (`bool`): If `True`, hidden folders (starting with a dot) are excluded from the tree.
       Defaults to `False`.
 
@@ -439,7 +439,7 @@ def tree_view_folder(path: str | Path, *, is_ignore_hidden_folders: bool = False
 
     """
 
-    def __tree(path: str | Path, *, is_ignore_hidden_folders: bool = False, prefix: str = "") -> Iterator[str]:
+    def __tree(path: Path | str, *, is_ignore_hidden_folders: bool = False, prefix: str = "") -> Iterator[str]:
         if is_ignore_hidden_folders and path.name.startswith("."):
             contents = []
         else:

@@ -23,7 +23,7 @@ lang: en
 ## Function `create_uv_new_project`
 
 ```python
-def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "code", cli_commands: str = "") -> str
+def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str
 ```
 
 Create a new project using uv, initializes it, and sets up necessary files.
@@ -31,9 +31,9 @@ Create a new project using uv, initializes it, and sets up necessary files.
 Args:
 
 - `name_project` (`str`): The name of the new project.
-- `path` (`str` | `Path`): The folder path where the project will be created.
+- `path` (`Path | str`): The folder path where the project will be created.
 - `editor` (`str`): The name of the text editor for opening the project. Example: `code`
-- `cli_commands` (`str` | `Path`): The section of CLI commands for `README.md`.
+- `cli_commands` (`Path | str`): The section of CLI commands for `README.md`.
 
 Example of `cli_commands`:
 
@@ -85,7 +85,7 @@ Structure "C:/projects/TestProject":
 <summary>Code:</summary>
 
 ```python
-def create_uv_new_project(project_name: str, folder: str | Path, editor: str = "code", cli_commands: str = "") -> str:
+def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str:
     project_name = project_name.replace("_", "-").replace(" ", "-")
     project_name_under = project_name.replace("-", "_")
     commands = f"""
