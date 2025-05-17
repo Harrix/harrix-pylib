@@ -665,15 +665,8 @@ def combine_markdown_files_recursively(folder_path: Path | str) -> str:
         ):
             try:
                 result_lines.append(combine_markdown_files(folder, is_recursive=True))
-            except (FileNotFoundError, PermissionError, OSError) as e:
-                # File system related errors
+            except Exception as e:  # noqa: BLE001
                 result_lines.append(f"❌ Error processing {folder}: {e}")
-            except ValueError as e:
-                # In case combine_markdown_files has validation that fails
-                result_lines.append(f"❌ Error processing {folder} (invalid data): {e}")
-            except KeyError as e:
-                # If the function tries to access missing dictionary keys
-                result_lines.append(f"❌ Error processing {folder} (missing key): {e}")
 
     return "\n".join(result_lines)
 
