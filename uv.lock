@@ -95,7 +95,7 @@ wheels = [
 
 [[package]]
 name = "harrix-pylib"
-version = "0.124"
+version = "0.125"
 source = { editable = "." }
 dependencies = [
     { name = "libcst" },
