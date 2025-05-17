@@ -664,6 +664,8 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
 
     # Process all YAML headers
     for yaml_header in data_yaml_headers:
+        if not yaml_header:
+            continue
         for key, value in yaml_header.items():
             if key == "attribution":
                 # Collect all attributions in a separate list
