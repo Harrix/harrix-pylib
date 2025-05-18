@@ -2546,7 +2546,7 @@ def sort_sections_content(markdown_text: str) -> str:
     ```python
     import harrix_pylib as h
 
-    Markdown = '''
+    markdown = '''
     # Main Title
 
     ## 2023-01-01
@@ -2759,8 +2759,8 @@ def split_toc_content(markdown_text: str) -> tuple[str, str]:
     import harrix_pylib as h
     import re
 
-    Markdown = "# Title\n\n- [Introduction](#introduction)\n- [Content](#content)\n\n"
-    Markdown += "## Introduction\n\nThis is the start.\n\n"
+    markdown = "# Title\n\n- [Introduction](#introduction)\n- [Content](#content)\n\n"
+    markdown += "## Introduction\n\nThis is the start.\n\n"
 
     toc, content = h.md.split_toc_content(markdown)
     print(toc)
