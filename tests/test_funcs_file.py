@@ -68,6 +68,71 @@ def test_check_featured_image() -> None:
     assert not h.file.check_featured_image(folder)[0]
 
 
+def test_check_func() -> None:
+    # Define a test checking function
+    def test_checker(file_path: Path | str) -> list[str]:
+        with Path.open(file_path, "r") as f:
+            content = f.read()
+        errors = []
+        if "error" in content.lower():
+            errors.append(f"Error found in {file_path.name}")
+        min_length_content = 5
+        if len(content) < min_length_content:
+            errors.append(f"Content too short in {file_path.name}")
+        return errors
+
+    # Create a temporary directory structure for testing
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Create test files with different extensions
+        files = {
+            "file1.txt": "This is a normal file",
+            "file2.txt": "Error in this file",
+            "file3.txt": "OK",
+            "file4.md": "This is not a txt file",
+            ".hidden.txt": "This is hidden",
+            "subdir/nested.txt": "Nested error file",
+            "subdir/.hidden_nested.txt": "Hidden nested",
+            "subdir/normal_nested.txt": "Normal nested file",
+            ".hidden_dir/hidden_file.txt": "File in hidden dir",
+        }
+
+        # Create the files in the temporary directory
+        for file_path, content in files.items():
+            full_path = temp_path / file_path
+            full_path.parent.mkdir(parents=True, exist_ok=True)
+            with Path.open(full_path, "w") as f:
+                f.write(content)
+
+        # Test the check_func with .txt extension
+        results = h.file.check_func(temp_path, ".txt", test_checker)
+
+        # Expected results based on our test files and checker function
+        expected_errors = [
+            "Error found in file2.txt",
+            "Content too short in file3.txt",
+            "Error found in nested.txt",
+        ]
+
+        # Sort both lists to ensure order doesn't affect comparison
+        results.sort()
+        expected_errors.sort()
+
+        # Assertions
+        count_errors = 3
+        assert len(results) == count_errors, f"Expected 3 errors, got {len(results)}: {results}"
+        assert results == expected_errors, f"Results don't match expected: {results} vs {expected_errors}"
+
+        # Test with a different extension
+        md_results = h.file.check_func(temp_path, ".md", test_checker)
+        assert len(md_results) == 0, f"Expected 0 errors for .md files, got {len(md_results)}: {md_results}"
+
+        # Test with a non-existent extension
+        no_results = h.file.check_func(temp_path, ".nonexistent", test_checker)
+        assert len(no_results) == 0, "Expected 0 errors for non-existent extension"
+
+
 def test_clear_directory() -> None:
     folder = h.dev.get_project_root() / "tests/data/temp"
     folder.mkdir(parents=True, exist_ok=True)

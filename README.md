@@ -62,6 +62,7 @@ Doc: [funcs_file.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs
 | `all_to_parent_folder`              | Move all files from subfolders within the given path to the parent folder and then                |
 | `apply_func`                        | Recursively apply a function to all files with a specified extension in a directory.              |
 | `check_featured_image`              | Check for the presence of `featured_image.*` files in every child folder, not recursively.        |
+| `check_func`                        | Recursively applies a checking function to all files with a specified extension in a directory.   |
 | `clear_directory`                   | Clear directory with sub-directories.                                                             |
 | `find_max_folder_number`            | Find the highest folder number in a given folder based on a pattern.                              |
 | `open_file_or_folder`               | Open a file or folder using the operating system's default application.                           |

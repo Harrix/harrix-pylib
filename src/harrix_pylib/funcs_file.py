@@ -204,6 +204,53 @@ def check_featured_image(path: Path | str) -> tuple[bool, str]:
     return is_correct, "\n".join(line_list)
 
 
+def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list[str]]) -> list:
+    """Recursively applies a checking function to all files with a specified extension in a directory.
+
+    Args:
+
+    - `path` (`Path | str`): The directory path where the files will be searched.
+      If provided as a string, it will be converted to a Path object.
+    - `ext` (`str`): The file extension to filter files. For example, ".md".
+    - `func` (`Callable[[Path | str], list[str]]`): A function that takes a file path and returns a list of strings
+      representing check results or errors.
+
+    Returns:
+
+    - `list`: A combined list of all check results from all processed files.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+    from pathlib import Path
+
+    def check_markdown(filepath):
+        errors = []
+        # Some checking logic
+        if some_condition:
+            errors.append(f"Error in {filepath.name}: something is wrong")
+        return errors
+
+    all_errors = h.file.check_func("docs/", ".md", check_markdown)
+    for error in all_errors:
+        print(error)
+    ```
+
+    """
+    list_checkers = []
+    folder_path = Path(path)
+
+    for file_path in folder_path.rglob(f"*{ext}"):
+        # Exclude all folders and files starting with a dot
+        if file_path.is_file() and not any(part.startswith(".") for part in file_path.parts):
+            result = func(file_path)
+            if result is not None and result:
+                list_checkers.extend(result)
+
+    return list_checkers
+
+
 def clear_directory(path: Path | str) -> None:
     """Clear directory with sub-directories.
 
