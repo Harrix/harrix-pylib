@@ -1192,7 +1192,7 @@ def test_sort_sections_content() -> None:
 
 
 def test_split_toc_content_basic() -> None:
-    Markdown = (
+    markdown = (
         "# Title\n\n"
         "- [Introduction](#introduction)\n"
         "- [Content](#content)\n\n"
