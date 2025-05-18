@@ -161,7 +161,7 @@ print(result)
 
 ```python
 def apply_func(path: Path | str, ext: str, func: Callable) -> str:
-    list_files = []
+    list_lines = []
     folder_path = Path(path)
 
     for file_path in folder_path.rglob(f"*{ext}"):
@@ -170,24 +170,24 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
             try:
                 result = func(str(file_path))
                 if result is None:
-                    list_files.append(f"✅ File {file_path.name} is applied.")
+                    list_lines.append(f"✅ File {file_path.name} is applied.")
                 else:
                     if isinstance(result, str):
-                        list_files.append(f"✅ File {file_path.name} is applied: {result}")
+                        list_lines.append(f"✅ File {file_path.name} is applied: {result}")
                     elif isinstance(result, list):
                         if not result:  # Empty list
-                            list_files.append(f"✅ File {file_path.name} is applied.")
+                            list_lines.append(f"✅ File {file_path.name} is applied.")
                         else:
-                            list_files.append(f"✅ File {file_path.name} is applied:")
+                            list_lines.append(f"✅ File {file_path.name} is applied:")
                             for item in result:
-                                list_files.append(f"  - {item}")
+                                list_lines.append(f"  - {item}")
                     else:
-                        list_files.append(f"✅ File {file_path.name} is applied: {result}")
+                        list_lines.append(f"✅ File {file_path.name} is applied: {result}")
             except OSError as e:
                 # Catching specific exceptions that are likely to occur
-                list_files.append(f"❌ File {file_path.name} is not applied: {e!s}")
+                list_lines.append(f"❌ File {file_path.name} is not applied: {e!s}")
 
-    return "\n".join(list_files)
+    return "\n".join(list_lines)
 ```
 
 </details>
