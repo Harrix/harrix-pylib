@@ -102,6 +102,11 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
     Note:
 
     - Hidden files and folders (those with names starting with a dot) are ignored during processing.
+    - The function handles different return types from the `func` parameter:
+      - If `None`: Shows a simple success message
+      - If `str`: Appends the string to the success message
+      - If `list`: Formats each item in the list as a bullet point
+      - For other types: Converts to string and appends to the success message
 
     Example:
 
@@ -115,9 +120,11 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
         content = Path(filename).read_text(encoding="utf8")
         content = content.upper()
         Path(filename).write_text(content, encoding="utf8")
+        return ["Changed to uppercase", "No errors found"]
 
 
-    h.file.apply_func("C:/Notes/", ".txt", test_func)
+    result = h.file.apply_func("C:/Notes/", ".txt", test_func)
+    print(result)
     ```
 
     """
@@ -132,7 +139,17 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
                 if result is None:
                     list_files.append(f"✅ File {file_path.name} is applied.")
                 else:
-                    list_files.append(f"✅ File {file_path.name} is applied: {result}")
+                    if isinstance(result, str):
+                        list_files.append(f"✅ File {file_path.name} is applied: {result}")
+                    elif isinstance(result, list):
+                        if not result:  # Empty list
+                            list_files.append(f"✅ File {file_path.name} is applied.")
+                        else:
+                            list_files.append(f"✅ File {file_path.name} is applied:")
+                            for item in result:
+                                list_files.append(f"  - {item}")
+                    else:
+                        list_files.append(f"✅ File {file_path.name} is applied: {result}")
             except OSError as e:
                 # Catching specific exceptions that are likely to occur
                 list_files.append(f"❌ File {file_path.name} is not applied: {e!s}")
