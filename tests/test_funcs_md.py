@@ -1210,7 +1210,7 @@ def test_split_toc_content_basic() -> None:
     assert toc == expected_toc
     assert content == expected_content
 
-    Markdown = (
+    markdown = (
         "---\n"
         "title: My Document\n"
         "author: John Doe\n"
