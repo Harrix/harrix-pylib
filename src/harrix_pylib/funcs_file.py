@@ -138,18 +138,16 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
                 result = func(str(file_path))
                 if result is None:
                     list_lines.append(f"✅ File {file_path.name} is applied.")
-                else:
-                    if isinstance(result, str):
-                        list_lines.append(f"✅ File {file_path.name} is applied: {result}")
-                    elif isinstance(result, list):
-                        if not result:  # Empty list
-                            list_lines.append(f"✅ File {file_path.name} is applied.")
-                        else:
-                            list_lines.append(f"✅ File {file_path.name} is applied:")
-                            for item in result:
-                                list_lines.append(f"  - {item}")
+                elif isinstance(result, str):
+                    list_lines.append(f"✅ File {file_path.name} is applied: {result}")
+                elif isinstance(result, list):
+                    if not result:  # Empty list
+                        list_lines.append(f"✅ File {file_path.name} is applied.")
                     else:
-                        list_lines.append(f"✅ File {file_path.name} is applied: {result}")
+                        list_lines.append(f"✅ File {file_path.name} is applied:")
+                        list_lines.append([f"  - {item}\n" for item in result])
+                else:
+                    list_lines.append(f"✅ File {file_path.name} is applied: {result}")
             except OSError as e:
                 # Catching specific exceptions that are likely to occur
                 list_lines.append(f"❌ File {file_path.name} is not applied: {e!s}")
