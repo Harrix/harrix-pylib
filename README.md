@@ -75,7 +75,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 
 | Function/Class                               | Description                                                                                                     |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `add_diary_entry_in_year`                    | Add a new diary entry to the yearly markdown file.                                                              |
+| `add_diary_entry_in_year`                    | Add a new diary entry to the yearly Markdown file.                                                              |
 | `add_diary_new_dairy_in_year`                | Add a new diary entry to the yearly diary file.                                                                 |
 | `add_diary_new_diary`                        | Create a new diary entry for the current day and time.                                                          |
 | `add_diary_new_dream`                        | Create a new dream diary entry for the current day and time with placeholders for dream descriptions.           |
@@ -83,21 +83,21 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `add_diary_new_note`                         | Add a new note to the diary or dream diary for the given base path.                                             |
 | `add_note`                                   | Add a note to the specified base path.                                                                          |
 | `append_path_to_local_links_images_line`     | Append a path to local links and images within a Markdown line.                                                 |
-| `combine_markdown_files`                     | Combine multiple markdown files in a folder into a single file with intelligent YAML header merging.            |
-| `combine_markdown_files_recursively`         | Recursively process a folder structure and combines markdown files in each folder that meets specific criteria. |
+| `combine_markdown_files`                     | Combine multiple Markdown files in a folder into a single file with intelligent YAML header merging.            |
+| `combine_markdown_files_recursively`         | Recursively process a folder structure and combines Markdown files in each folder that meets specific criteria. |
 | `download_and_replace_images`                | Download remote images in Markdown text and replaces their URLs with local paths.                               |
 | `download_and_replace_images_content`        | Download remote images in Markdown text and replaces their URLs with local paths.                               |
 | `format_quotes_as_markdown_content`          | Convert raw text with quotes into Markdown format.                                                              |
 | `format_yaml`                                | Format YAML content in a file, ensuring proper indentation and structure.                                       |
-| `format_yaml_content`                        | Format the YAML front matter within the given markdown text.                                                    |
+| `format_yaml_content`                        | Format the YAML front matter within the given Markdown text.                                                    |
 | `generate_author_book`                       | Add the author and the title of the book to the quotes and formats them as Markdown quotes.                     |
-| `generate_image_captions`                    | Process a markdown file to add captions to images based on their alt text.                                      |
-| `generate_image_captions_content`            | Generate image captions in the provided markdown text.                                                          |
-| `generate_short_note_toc_with_links`         | Generate a separate markdown file with only the Table of Contents (TOC) from a given Markdown file.             |
-| `generate_short_note_toc_with_links_content` | Generate a markdown content with only the Table of Contents (TOC) from a given Markdown text.                   |
+| `generate_image_captions`                    | Process a Markdown file to add captions to images based on their alt text.                                      |
+| `generate_image_captions_content`            | Generate image captions in the provided Markdown text.                                                          |
+| `generate_short_note_toc_with_links`         | Generate a separate Markdown file with only the Table of Contents (TOC) from a given Markdown file.             |
+| `generate_short_note_toc_with_links_content` | Generate a Markdown content with only the Table of Contents (TOC) from a given Markdown text.                   |
 | `generate_summaries`                         | Generate two summary files for a directory of year-based Markdown files.                                        |
 | `generate_toc_with_links`                    | Generate a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes      |
-| `generate_toc_with_links_content`            | Generate a Table of Contents (TOC) with links for the provided markdown content.                                |
+| `generate_toc_with_links_content`            | Generate a Table of Contents (TOC) with links for the provided Markdown content.                                |
 | `get_yaml_content`                           | Get YAML from text of the Markdown file.                                                                        |
 | `identify_code_blocks`                       | Process a list of text lines to identify code blocks and yield each line with a boolean flag.                   |
 | `identify_code_blocks_line`                  | Parse a single line of Markdown to identify inline code blocks.                                                 |
@@ -106,11 +106,11 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `remove_yaml_and_code_content`               | Remove YAML front matter and code blocks, and returns the remaining content.                                    |
 | `remove_yaml_content`                        | Remove YAML from text of the Markdown file.                                                                     |
 | `replace_section`                            | Replace a section in a file defined by `title_section` with the provided `replace_content`.                     |
-| `replace_section_content`                    | Replace a section in the markdown text defined by `title_section` with the provided `replace_content`.          |
-| `sort_sections`                              | Sort the sections of a markdown file by their headings, maintaining YAML front matter                           |
+| `replace_section_content`                    | Replace a section in the Markdown text defined by `title_section` with the provided `replace_content`.          |
+| `sort_sections`                              | Sort the sections of a Markdown file by their headings, maintaining YAML front matter                           |
 | `sort_sections_content`                      | Sort sections by their `##` headings: top sections first, then dates in descending order,                       |
 | `split_toc_content`                          | Separate the Table of Contents (TOC) from the rest of the Markdown content.                                     |
-| `split_yaml_content`                         | Split a markdown note into YAML front matter and the main content.                                              |
+| `split_yaml_content`                         | Split a Markdown note into YAML front matter and the main content.                                              |
 
 ### File `funcs_py.py`
 
@@ -119,7 +119,7 @@ Doc: [funcs_py.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_p
 | Function/Class                  | Description                                                                                 |
 | ------------------------------- | ------------------------------------------------------------------------------------------- |
 | `create_uv_new_project`         | Create a new project using uv, initializes it, and sets up necessary files.                 |
-| `extract_functions_and_classes` | Extract all classes and functions from a Python file and formats them into a markdown list. |
+| `extract_functions_and_classes` | Extract all classes and functions from a Python file and formats them into a Markdown list. |
 | `generate_md_docs`              | Generate documentation for all Python files within a given project folder.                  |
 | `generate_md_docs_content`      | Generate Markdown documentation for a single Python file.                                   |
 | `lint_and_fix_python_code`      | Lints and fixes the provided Python code using the `ruff` formatter.                        |

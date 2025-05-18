@@ -56,7 +56,7 @@ lang: en
 def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_content: str) -> tuple[str, Path]
 ```
 
-Add a new diary entry to the yearly markdown file.
+Add a new diary entry to the yearly Markdown file.
 
 If the yearly file doesn't exist, it creates one with the provided front matter.
 If it exists, it adds a new entry after the year heading and the table of contents.
@@ -498,11 +498,11 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
 def combine_markdown_files(folder_path: Path | str) -> str
 ```
 
-Combine multiple markdown files in a folder into a single file with intelligent YAML header merging.
+Combine multiple Markdown files in a folder into a single file with intelligent YAML header merging.
 
 Args:
 
-- `folder_path` (`str` or `Path`): Path to the folder containing markdown files.
+- `folder_path` (`str` or `Path`): Path to the folder containing Markdown files.
 - `is_recursive` (`bool`): Whether to include files from subfolders. Defaults to `False`.
 
 Returns:
@@ -517,7 +517,7 @@ Note:
 - Local links and image paths will be adjusted to maintain proper references.
 - The combined file will be named `_foldername.g.md`.
 - If a subfolder contains a `.g.md` file, that file will be used instead of processing
-  individual markdown files in that subfolder.
+  individual Markdown files in that subfolder.
 
 Example:
 
@@ -599,9 +599,9 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
             [f for f in folder_path.glob("*.md") if f.is_file() and f.suffix == ".md" and not f.name.endswith(".g.md")],
         )
 
-    # If there are no markdown files in the folder at all, exit
+    # If there are no Markdown files in the folder at all, exit
     if len(md_files) < 1:
-        return f"Skipped {folder_path}: no markdown files found."
+        return f"Skipped {folder_path}: no Markdown files found."
 
     data_yaml_headers = []
     contents = []
@@ -722,7 +722,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
 def combine_markdown_files_recursively(folder_path: Path | str) -> str
 ```
 
-Recursively process a folder structure and combines markdown files in each folder that meets specific criteria.
+Recursively process a folder structure and combines Markdown files in each folder that meets specific criteria.
 Process folders from the deepest level up to ensure hierarchical combination of notes.
 
 Args:
@@ -738,8 +738,8 @@ Note:
 - All `.g.md` files in the entire folder structure will be deleted before processing except .short.g.md files.
 - Hidden folders (starting with `.`) will be skipped.
 - Files will be combined in a folder if either:
-  1. The folder directly contains at least 2 markdown files, or
-  2. The folder and its subfolders together contain at least 2 markdown files.
+  1. The folder directly contains at least 2 Markdown files, or
+  2. The folder and its subfolders together contain at least 2 Markdown files.
 - Folders are processed from the deepest level up, allowing parent folders to use
   already combined .g.md files from subfolders.
 
@@ -886,13 +886,13 @@ Download remote images in Markdown text and replaces their URLs with local paths
 
 Args:
 
-- `markdown_text` (`str`): The markdown text containing image links.
-- `path_md` (`Path | str`): The path to the markdown file or its directory.
+- `markdown_text` (`str`): The Markdown text containing image links.
+- `path_md` (`Path | str`): The path to the Markdown file or its directory.
 - `image_folder` (`str`, Defaults to "img"): The folder where images will be stored locally.
 
 Returns:
 
-- `str`: The updated markdown text with remote image URLs replaced by local relative paths.
+- `str`: The updated Markdown text with remote image URLs replaced by local relative paths.
 
 For example, here is the Markdown text before:
 
@@ -925,7 +925,7 @@ print(updated_md_text)
 def download_and_replace_images_content(markdown_text: str, path_md: Path | str, image_folder: str = "img") -> str:
 
     def download_and_replace_image_line(markdown_line: str, path_md: Path | str, image_folder: str = "img") -> str:
-        # Regular expression to match markdown image with remote URL (http or https)
+        # Regular expression to match Markdown image with remote URL (http or https)
         pattern = r"\!\[(.*?)\]\((http.*?)\)$"
         match = re.search(pattern, markdown_line.strip())
 
@@ -1129,15 +1129,15 @@ def format_yaml(filename: Path | str) -> str:
 def format_yaml_content(markdown_text: str) -> str
 ```
 
-Format the YAML front matter within the given markdown text.
+Format the YAML front matter within the given Markdown text.
 
 Args:
 
-- `markdown_text` (`str`): The markdown text containing YAML front matter.
+- `markdown_text` (`str`): The Markdown text containing YAML front matter.
 
 Returns:
 
-- `str`: The formatted YAML content followed by the markdown content.
+- `str`: The formatted YAML content followed by the Markdown content.
 
 Note:
 
@@ -1315,18 +1315,18 @@ def generate_author_book(filename: Path | str) -> str:
 def generate_image_captions(filename: Path | str) -> str
 ```
 
-Process a markdown file to add captions to images based on their alt text.
+Process a Markdown file to add captions to images based on their alt text.
 
-This function reads a markdown file, processes its content to:
+This function reads a Markdown file, processes its content to:
 
-- Recognize images by their markdown syntax.
+- Recognize images by their Markdown syntax.
 - Add automatic captions with sequential numbering, localized for Russian or English.
 - Skip image captions that already exist in italic format.
 - Ensure proper handling within and outside of code blocks.
 
 Args:
 
-- `filename` (`Path | str`): The path to the markdown file to be processed.
+- `filename` (`Path | str`): The path to the Markdown file to be processed.
 
 Returns:
 
@@ -1457,22 +1457,22 @@ def generate_image_captions(filename: Path | str) -> str:
 def generate_image_captions_content(markdown_text: str) -> str
 ```
 
-Generate image captions in the provided markdown text.
+Generate image captions in the provided Markdown text.
 
-This function reads a markdown file, processes its content to:
+This function reads a Markdown file, processes its content to:
 
-- Recognize images by their markdown syntax.
+- Recognize images by their Markdown syntax.
 - Add automatic captions with sequential numbering, localized for Russian or English.
 - Skip image captions that already exist in italic format.
 - Ensure proper handling within and outside of code blocks.
 
 Args:
 
-- `markdown_text` (`str`): The markdown text to process.
+- `markdown_text` (`str`): The Markdown text to process.
 
 Returns:
 
-- `str`: The markdown text with image captions added.
+- `str`: The Markdown text with image captions added.
 
 Example:
 
@@ -1649,7 +1649,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
 def generate_short_note_toc_with_links(filename: Path | str) -> str
 ```
 
-Generate a separate markdown file with only the Table of Contents (TOC) from a given Markdown file.
+Generate a separate Markdown file with only the Table of Contents (TOC) from a given Markdown file.
 
 This function reads a Markdown file, processes its content to create a TOC, and writes
 a new file with the ".short.g.md" extension containing only the TOC.
@@ -1718,15 +1718,15 @@ def generate_short_note_toc_with_links(filename: Path | str) -> str:
 def generate_short_note_toc_with_links_content(markdown_text: str) -> str
 ```
 
-Generate a markdown content with only the Table of Contents (TOC) from a given Markdown text.
+Generate a Markdown content with only the Table of Contents (TOC) from a given Markdown text.
 
 Args:
 
-- `markdown_text` (`str`): The markdown text from which to generate the TOC.
+- `markdown_text` (`str`): The Markdown text from which to generate the TOC.
 
 Returns:
 
-- `str`: A new markdown content with only the title and TOC.
+- `str`: A new Markdown content with only the title and TOC.
 
 Note:
 
@@ -1756,7 +1756,7 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
     data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
     lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
 
-    # Extract the title from the markdown content
+    # Extract the title from the Markdown content
     title = ""
     for line in markdown_text.splitlines():
         if line.startswith("# "):
@@ -2078,15 +2078,15 @@ def generate_toc_with_links(filename: Path | str) -> str:
 def generate_toc_with_links_content(markdown_text: str) -> str
 ```
 
-Generate a Table of Contents (TOC) with links for the provided markdown content.
+Generate a Table of Contents (TOC) with links for the provided Markdown content.
 
 Args:
 
-- `markdown_text` (`str`): The markdown text from which to generate the TOC.
+- `markdown_text` (`str`): The Markdown text from which to generate the TOC.
 
 Returns:
 
-- `str`: The markdown content with the generated TOC inserted.
+- `str`: The Markdown content with the generated TOC inserted.
 
 Note:
 
@@ -2333,7 +2333,7 @@ def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]
 
 Parse a single line of Markdown to identify inline code blocks.
 
-This function scans through a markdown line, identifying sequences of backticks (`) to determine where code
+This function scans through a Markdown line, identifying sequences of backticks (`) to determine where code
 blocks start and end.
 
 Args:
@@ -2552,7 +2552,7 @@ Args:
 
 Returns:
 
-- `str`: A string containing the markdown content with YAML front matter and code blocks removed.
+- `str`: A string containing the Markdown content with YAML front matter and code blocks removed.
 
 Examples:
 
@@ -2714,21 +2714,21 @@ def replace_section(filename: Path | str, replace_content: str, title_section: s
 def replace_section_content(markdown_text: str, replace_content: str, title_section: str = "## List of commands") -> str
 ```
 
-Replace a section in the markdown text defined by `title_section` with the provided `replace_content`.
+Replace a section in the Markdown text defined by `title_section` with the provided `replace_content`.
 
-This function searches for a section in the markdown text starting with `title_section` and
+This function searches for a section in the Markdown text starting with `title_section` and
 ending at the next line starting with a '#'. It then replaces the content of that section
 with `replace_content`.
 
 Args:
 
-- `markdown_text` (`str`): The markdown text.
+- `markdown_text` (`str`): The Markdown text.
 - `replace_content` (`str`): The content to replace the section with.
 - `title_section` (`str`, Defaults to `"## List of commands"`): The title of the section to be replaced.
 
 Returns:
 
-- `str`: The markdown content with the replaced section.
+- `str`: The Markdown content with the replaced section.
 
 Notes:
 
@@ -2802,7 +2802,7 @@ def replace_section_content(
     )
 
     if ends_with_newline:
-        updated_lines.append("")  # Ensure the markdown ends with a newline
+        updated_lines.append("")  # Ensure the Markdown ends with a newline
 
     return "\n".join(updated_lines)
 ```
@@ -2815,16 +2815,16 @@ def replace_section_content(
 def sort_sections(filename: Path | str) -> str
 ```
 
-Sort the sections of a markdown file by their headings, maintaining YAML front matter
+Sort the sections of a Markdown file by their headings, maintaining YAML front matter
 and code blocks in their original order.
 
-This function reads a markdown file, splits it into a YAML front matter (if present) and content,
+This function reads a Markdown file, splits it into a YAML front matter (if present) and content,
 then processes the content to identify and sort sections based on their headings (starting with `##`).
 Code blocks are kept intact and not reordered.
 
 Args:
 
-- `filename` (`Path` | `str`): The path to the markdown file to be processed. Can be either a `Path`
+- `filename` (`Path` | `str`): The path to the Markdown file to be processed. Can be either a `Path`
   object or a string representing the file path.
 
 Returns:
@@ -2923,11 +2923,11 @@ then regular headings alphabetically.
 
 Args:
 
-- `markdown_text` (`str`): The markdown text to process.
+- `markdown_text` (`str`): The Markdown text to process.
 
 Returns:
 
-- `str`: Processed markdown with sorted sections.
+- `str`: Processed Markdown with sorted sections.
 
 Note:
 
@@ -3152,13 +3152,13 @@ Separate the Table of Contents (TOC) from the rest of the Markdown content.
 
 Args:
 
-- `markdown_text` (`str`): The string containing the markdown text which includes a TOC.
+- `markdown_text` (`str`): The string containing the Markdown text which includes a TOC.
 
 Returns:
 
 - `tuple[str, str]`: A tuple containing:
   - The extracted TOC lines as a string.
-  - The remaining markdown content without the TOC as a string.
+  - The remaining Markdown content without the TOC as a string.
 
 Example:
 
@@ -3208,19 +3208,19 @@ def split_toc_content(markdown_text: str) -> tuple[str, str]:
 def split_yaml_content(markdown_text: str) -> tuple[str, str]
 ```
 
-Split a markdown note into YAML front matter and the main content.
+Split a Markdown note into YAML front matter and the main content.
 
 This function assumes that the note starts with YAML front matter separated by '---' from the rest of the content.
 
 Args:
 
-- `markdown_text` (`str`): The markdown note string to be split.
+- `markdown_text` (`str`): The Markdown note string to be split.
 
 Returns:
 
 - `tuple[str, str]`: A tuple containing:
   - The YAML front matter as a string, prefixed and suffixed with '---'.
-  - The remaining markdown content after the YAML front matter, with leading whitespace removed.
+  - The remaining Markdown content after the YAML front matter, with leading whitespace removed.
 
 Note:
 

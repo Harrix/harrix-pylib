@@ -125,7 +125,7 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
 def extract_functions_and_classes(filename: Path | str) -> str
 ```
 
-Extract all classes and functions from a Python file and formats them into a markdown list.
+Extract all classes and functions from a Python file and formats them into a Markdown list.
 
 Args:
 
@@ -246,7 +246,7 @@ Args:
 - `folder` (`Path | str`): The path to the project folder, can be either a `Path` object or a string. Defaults to
   the current directory if not specified.
 - `beginning_of_md` (`str`): The content to prepend to each documentation file. This could include headers
-  or other markdown formatting.
+  or other Markdown formatting.
 - `domain` (`str`): The domain or context in which the project is used, which might influence how
   documentation is generated or formatted.
 

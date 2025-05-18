@@ -405,7 +405,7 @@ def test_combine_markdown_files() -> None:
         # Create test files
         folder_path = Path(temp_dir)
 
-        # Create a test markdown file
+        # Create a test Markdown file
         file1_content = """---
 title: Test File 1
 tags: [python, test]
@@ -482,7 +482,7 @@ def test_combine_markdown_files_recursively() -> None:
         for folder in [folder1, folder2, folder3, subfolder1, hidden_folder]:
             folder.mkdir()
 
-        # Create markdown files
+        # Create Markdown files
         (folder1 / "file1.md").write_text("# File 1")
         (folder1 / "file2.md").write_text("# File 2")
         (folder2 / "file3.md").write_text("# File 3")
@@ -1192,7 +1192,7 @@ def test_sort_sections_content() -> None:
 
 
 def test_split_toc_content_basic() -> None:
-    markdown = (
+    Markdown = (
         "# Title\n\n"
         "- [Introduction](#introduction)\n"
         "- [Content](#content)\n\n"
@@ -1210,7 +1210,7 @@ def test_split_toc_content_basic() -> None:
     assert toc == expected_toc
     assert content == expected_content
 
-    markdown = (
+    Markdown = (
         "---\n"
         "title: My Document\n"
         "author: John Doe\n"

@@ -113,7 +113,7 @@ class ExampleClass:
 
         # Check content of index.md
         index_content = index_file.read_text(encoding="utf8")
-        assert "# Test Documentation" in index_content, "Index file should contain the beginning markdown."
+        assert "# Test Documentation" in index_content, "Index file should contain the beginning Markdown."
         assert "## List of functions" in index_content, "Index should include a list of functions section."
 
         # Check content of test_file.md
