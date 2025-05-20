@@ -254,7 +254,7 @@ def check_featured_image(path: Path | str) -> tuple[bool, str]:
 ## Function `check_func`
 
 ```python
-def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list[str]]) -> list
+def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -> list
 ```
 
 Recursively applies a checking function to all files with a specified extension in a directory.
@@ -264,7 +264,7 @@ Args:
 - `path` (`Path | str`): The directory path where the files will be searched.
   If provided as a string, it will be converted to a Path object.
 - `ext` (`str`): The file extension to filter files. For example, ".md".
-- `func` (`Callable[[Path | str], list[str]]`): A function that takes a file path and returns a list of strings
+- `func` (`Callable[[Path | str], lis]`): A function that takes a file path and returns a list
   representing check results or errors.
 
 Returns:
@@ -293,7 +293,7 @@ for error in all_errors:
 <summary>Code:</summary>
 
 ```python
-def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list[str]]) -> list:
+def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -> list:
     list_checkers = []
     folder_path = Path(path)
 
