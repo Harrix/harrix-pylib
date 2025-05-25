@@ -131,6 +131,14 @@ Doc: [funcs_py.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_p
 | `lint_and_fix_python_code`      | Lints and fixes the provided Python code using the `ruff` formatter.                        |
 | `sort_py_code`                  | Sorts the Python code in the given file by organizing classes, functions, and statements.   |
 
+### File `markdown_checker.py`
+
+Doc: [markdown_checker.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/markdown_checker.md)
+
+| Function/Class          | Description                                                            |
+| ----------------------- | ---------------------------------------------------------------------- |
+| Class `MarkdownChecker` | Class for checking Markdown files for compliance with specified rules. |
+
 ## Development
 
 <details>
