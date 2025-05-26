@@ -728,8 +728,8 @@ Process folders from the deepest level up to ensure hierarchical combination of 
 Args:
 
 - `folder_path` (`str` or `Path`): Path to the root folder to process recursively.
-- `delete_g_md_files` (`bool`, optional): Whether to delete existing .g.md files before processing
-  (except .short.g.md files). Defaults to True.
+- `delete_g_md_files` (`bool`, optional): Whether to delete existing .g.md files before processing.
+  Defaults to True.
 
 Returns:
 
@@ -737,8 +737,7 @@ Returns:
 
 Note:
 
-- All `.g.md` files in the entire folder structure will be deleted before processing except .short.g.md files
-  (if delete_g_md_files is True).
+- All `.g.md` files in the entire folder structure will be deleted before processing (if delete_g_md_files is True).
 - Hidden folders (starting with `.`) will be skipped.
 - Files will be combined in a folder if either:
   1. The folder directly contains at least 2 Markdown files, or
@@ -767,11 +766,11 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, delete_g_md_f
     result_lines = []
     folder_path = Path(folder_path)
 
-    # Remove .g.md files except .short.g.md files (if enabled)
+    # Remove .g.md files (if enabled)
     if delete_g_md_files:
         for file in Path(folder_path).rglob("*.g.md"):
-            # Skip hidden folders and .short.g.md files
-            if any(part.startswith(".") for part in file.parts) or file.name.endswith(".short.g.md"):
+            # Skip hidden folders
+            if any(part.startswith(".") for part in file.parts):
                 continue
 
             if file.is_file():
