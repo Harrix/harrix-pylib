@@ -581,13 +581,15 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
     return f"✅ File {output_file} is created."
 
 
-def combine_markdown_files_recursively(folder_path: Path | str) -> str:
+def combine_markdown_files_recursively(folder_path: Path | str, *, delete_g_md_files: bool = True) -> str:
     """Recursively process a folder structure and combines Markdown files in each folder that meets specific criteria.
     Process folders from the deepest level up to ensure hierarchical combination of notes.
 
     Args:
 
     - `folder_path` (`str` or `Path`): Path to the root folder to process recursively.
+    - `delete_g_md_files` (`bool`, optional): Whether to delete existing .g.md files before processing
+      (except .short.g.md files). Defaults to True.
 
     Returns:
 
@@ -595,7 +597,8 @@ def combine_markdown_files_recursively(folder_path: Path | str) -> str:
 
     Note:
 
-    - All `.g.md` files in the entire folder structure will be deleted before processing except .short.g.md files.
+    - All `.g.md` files in the entire folder structure will be deleted before processing except .short.g.md files
+      (if delete_g_md_files is True).
     - Hidden folders (starting with `.`) will be skipped.
     - Files will be combined in a folder if either:
       1. The folder directly contains at least 2 Markdown files, or
@@ -610,20 +613,25 @@ def combine_markdown_files_recursively(folder_path: Path | str) -> str:
 
     result = h.md.combine_markdown_files_recursively("C:/Notes")
     print(result)
+
+    # Or without deleting existing .g.md files
+    result = h.md.combine_markdown_files_recursively("C:/Notes", delete_g_md_files=False)
+    print(result)
     ```
 
     """
     result_lines = []
     folder_path = Path(folder_path)
 
-    # Remove .g.md files except .short.g.md files
-    for file in Path(folder_path).rglob("*.g.md"):
-        # Skip hidden folders and .short.g.md files
-        if any(part.startswith(".") for part in file.parts) or file.name.endswith(".short.g.md"):
-            continue
+    # Remove .g.md files except .short.g.md files (if enabled)
+    if delete_g_md_files:
+        for file in Path(folder_path).rglob("*.g.md"):
+            # Skip hidden folders and .short.g.md files
+            if any(part.startswith(".") for part in file.parts) or file.name.endswith(".short.g.md"):
+                continue
 
-        if file.is_file():
-            file.unlink()
+            if file.is_file():
+                file.unlink()
 
     # Collect all folders, excluding hidden ones
     all_folders = [
