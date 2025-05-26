@@ -510,6 +510,65 @@ def test_combine_markdown_files_recursively() -> None:
         assert not (hidden_folder / f"_{hidden_folder.name}.g.md").exists()
 
 
+def test_delete_g_md_files_recursively():
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Create test directory structure
+        (temp_path / "subfolder1").mkdir()
+        (temp_path / "subfolder2").mkdir()
+        (temp_path / ".hidden_folder").mkdir()
+        (temp_path / "subfolder1" / "nested").mkdir()
+
+        # Create various files
+        (temp_path / "file1.g.md").write_text("content")
+        (temp_path / "file2.md").write_text("content")
+        (temp_path / "file3.txt").write_text("content")
+        (temp_path / "subfolder1" / "file4.g.md").write_text("content")
+        (temp_path / "subfolder1" / "file5.md").write_text("content")
+        (temp_path / "subfolder2" / "file6.g.md").write_text("content")
+        (temp_path / ".hidden_folder" / "file7.g.md").write_text("content")
+        (temp_path / "subfolder1" / "nested" / "file8.g.md").write_text("content")
+
+        # Verify initial state
+        assert (temp_path / "file1.g.md").exists()
+        assert (temp_path / "file2.md").exists()
+        assert (temp_path / "file3.txt").exists()
+        assert (temp_path / "subfolder1" / "file4.g.md").exists()
+        assert (temp_path / "subfolder1" / "file5.md").exists()
+        assert (temp_path / "subfolder2" / "file6.g.md").exists()
+        assert (temp_path / ".hidden_folder" / "file7.g.md").exists()
+        assert (temp_path / "subfolder1" / "nested" / "file8.g.md").exists()
+
+        # Run the function
+        result = h.md.delete_g_md_files_recursively(temp_path)
+
+        # Verify result message
+        assert result == "✅ Files `*.g.md` deleted"
+
+        # Verify that *.g.md files are deleted (except in hidden folders)
+        assert not (temp_path / "file1.g.md").exists()
+        assert not (temp_path / "subfolder1" / "file4.g.md").exists()
+        assert not (temp_path / "subfolder2" / "file6.g.md").exists()
+        assert not (temp_path / "subfolder1" / "nested" / "file8.g.md").exists()
+
+        # Verify that other files remain
+        assert (temp_path / "file2.md").exists()
+        assert (temp_path / "file3.txt").exists()
+        assert (temp_path / "subfolder1" / "file5.md").exists()
+
+        # Verify that files in hidden folders are not deleted
+        assert (temp_path / ".hidden_folder" / "file7.g.md").exists()
+
+        # Test with string path
+        (temp_path / "new_file.g.md").write_text("content")
+        assert (temp_path / "new_file.g.md").exists()
+
+        result = h.md.delete_g_md_files_recursively(str(temp_path))
+        assert result == "✅ Files `*.g.md` deleted"
+        assert not (temp_path / "new_file.g.md").exists()
+
+
 @pytest.mark.slow
 def test_download_and_replace_images() -> None:
     with TemporaryDirectory() as temp_dir:
@@ -1238,3 +1297,9 @@ def test_split_yaml_content() -> None:
     yaml, content = h.md.split_yaml_content(md)
     correct_count_lines = 5
     assert len(yaml.splitlines()) + len(content.splitlines()) == correct_count_lines
+
+
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+import harrix_pylib as h

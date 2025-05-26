@@ -91,6 +91,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `append_path_to_local_links_images_line`     | Append a path to local links and images within a Markdown line.                                                 |
 | `combine_markdown_files`                     | Combine multiple Markdown files in a folder into a single file with intelligent YAML header merging.            |
 | `combine_markdown_files_recursively`         | Recursively process a folder structure and combines Markdown files in each folder that meets specific criteria. |
+| `delete_g_md_files_recursively`              | Delete all `*.g.md` files recursively in the specified folder.                                                  |
 | `download_and_replace_images`                | Download remote images in Markdown text and replaces their URLs with local paths.                               |
 | `download_and_replace_images_content`        | Download remote images in Markdown text and replaces their URLs with local paths.                               |
 | `format_quotes_as_markdown_content`          | Convert raw text with quotes into Markdown format.                                                              |

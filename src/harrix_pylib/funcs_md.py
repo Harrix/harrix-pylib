@@ -680,6 +680,43 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, delete_g_md_f
     return "\n".join(result_lines)
 
 
+def delete_g_md_files_recursively(folder_path: Path | str) -> str:
+    """Delete all `*.g.md` files recursively in the specified folder.
+
+    Args:
+
+    - `folder_path` (`Path | str`): The path to the folder where `*.g.md` files should be deleted recursively.
+
+    Returns:
+
+    - `str`: Success message indicating that `*.g.md` files have been deleted.
+
+    Note:
+
+    - Hidden folders (those starting with a dot) are skipped during the search.
+    - Only files with the exact pattern `*.g.md` are deleted.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    result = h.md.delete_g_md_files_recursively("/path/to/folder")
+    print(result)
+    ```
+
+    """
+    for file in Path(folder_path).rglob("*.g.md"):
+        # Skip hidden folders
+        if any(part.startswith(".") for part in file.parts):
+            continue
+
+        if file.is_file():
+            file.unlink()
+
+    return "✅ Files `*.g.md` deleted"
+
+
 def download_and_replace_images(filename: Path | str) -> str:
     """Download remote images in Markdown text and replaces their URLs with local paths.
 
