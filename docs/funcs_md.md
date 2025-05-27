@@ -1880,7 +1880,7 @@ Returns:
 Notes:
 
 - The function looks for Markdown files with years in their names (e.g., "2023.md",
-  "До-2013-(Луч).md", "После_2024.md")
+  "Before-2013-(Cinema).md", "After_2024.md")
 - Book entries are identified by second-level headings (## Title)
 - Ratings are extracted from headings in format "## Title: N" where N is a number
 - YAML frontmatter from the first processed file will be copied to the summary files
