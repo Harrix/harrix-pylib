@@ -857,11 +857,11 @@ A long book about a whale.
 
         # Verify the result message
         assert "✅ File" in result
-        assert "Table.md is created" in result
+        assert "table.g.md is created" in result
         assert f"_{temp_path.name}.short.g.md is created" in result
 
         # Verify the generated files exist
-        table_file = temp_path / "Table.md"
+        table_file = temp_path / "table.g.md"
         short_file = temp_path / f"_{temp_path.name}.short.g.md"
         assert table_file.exists()
         assert short_file.exists()
