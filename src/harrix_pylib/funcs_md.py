@@ -1644,7 +1644,7 @@ def generate_summaries(folder: Path | str) -> str:
     year_counts = {}
     year_entries = {}
 
-    # Dictionary to store special categories (e.g., "До 2013 (Луч)")
+    # Dictionary to store special categories (e.g., "Before-2013")
     category_counts = {}
     category_entries = {}
 
@@ -1704,7 +1704,7 @@ def generate_summaries(folder: Path | str) -> str:
 
                 valid_entries.append((heading, extracted_rating if extracted_rating else ""))
 
-        # Check if this is a pure year file (like "2023.md") or a special category file (like "До-2013-(Луч).md")
+        # Check if this is a pure year file (like "2023.md") or a special category file (like "Before-2013.md")
         length_str_year = 4
         is_pure_year = file_path.stem.isdigit() and len(file_path.stem) == length_str_year
 
@@ -1724,7 +1724,7 @@ def generate_summaries(folder: Path | str) -> str:
                 else:
                     year_entries[year] = valid_entries
         else:
-            # This is a special category file (e.g., "До-2013-(Луч).md")
+            # This is a special category file (e.g., "Before-2013.md")
             # Try to extract the category name from the first-level heading
             h1_match = h1_pattern.search(content)
             if h1_match:
