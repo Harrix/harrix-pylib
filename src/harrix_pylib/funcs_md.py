@@ -1764,7 +1764,7 @@ def generate_summaries(folder: Path | str) -> str:
     min_year = current_year if not year_counts else min(year_counts.keys())
 
     # --- Create table.g.md ---
-    table_content = "\n# Table <!-- top-section -->\n\n"
+    table_content = "\n# Table<!-- top-section -->\n\n"
     table_content += "| Year | Count |\n"
     table_content += "| ---- | ----- |\n"
 
@@ -1925,7 +1925,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             level = len(re.match(r"#+", line).group())
             # Extract the header text
             title = line[level:].strip()
-            title = title.replace("<!-- top-section -->", "")
+            title = title.replace(" <!-- top-section -->", "").replace("<!-- top-section -->", "")
             text_link = generate_id(title, existing_ids)
             link = f"#{text_link}"
             title_text = title.strip()
@@ -2617,7 +2617,7 @@ def sort_sections_content(markdown_text: str) -> str:
     ## Alpha Section
     Alpha content
 
-    ## Important Info <!-- top-section -->
+    ## Important Info<!-- top-section -->
     This will appear first
     '''
 

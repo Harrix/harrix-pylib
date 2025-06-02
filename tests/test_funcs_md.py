@@ -871,7 +871,7 @@ A long book about a whale.
         short_content = short_file.read_text(encoding="utf-8")
 
         # Verify the table content
-        assert "# Table " in table_content
+        assert "# Table" in table_content
         assert "| Year | Count |" in table_content
 
         # Verify the current year is included (without relying on the exact value)
