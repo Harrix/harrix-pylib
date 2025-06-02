@@ -1612,7 +1612,7 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
 def generate_summaries(folder: Path | str) -> str:
     """Generate two summary files for a directory of year-based Markdown files.
 
-    1. table.g.md - A statistical table showing the count of book entries by year
+    1. table.include.g.md - A statistical table showing the count of book entries by year
     2. _[directory_name].short.g.md - A hierarchical list of all book entries organized by year
 
     Args:
@@ -1673,7 +1673,7 @@ def generate_summaries(folder: Path | str) -> str:
 
     # Scan the directory for Markdown files
     for file_path in path.glob("*.md"):
-        # Skip the table.g.md and short summary files we're going to create
+        # Skip the table.include.g.md and short summary files we're going to create
         if file_path.name == "table.include.g.md" or file_path.name.startswith(f"_{dir_name}"):
             continue
 
@@ -1763,7 +1763,7 @@ def generate_summaries(folder: Path | str) -> str:
     # If no year files were found, use the current year as min_year
     min_year = current_year if not year_counts else min(year_counts.keys())
 
-    # --- Create table.g.md ---
+    # --- Create table.include.g.md ---
     table_content = "\n# Table<!-- top-section -->\n\n"
     table_content += "| Year | Count |\n"
     table_content += "| ---- | ----- |\n"
@@ -1779,8 +1779,8 @@ def generate_summaries(folder: Path | str) -> str:
         display_count = str(count)
         table_content += f"| {category} | {display_count} |\n"
 
-    # Write the table to table.g.md
-    table_file = path / "table.g.md"
+    # Write the table to table.include.g.md
+    table_file = path / "table.include.g.md"
     table_content_with_yaml = f"{yaml_frontmatter}\n{table_content}" if yaml_frontmatter else table_content
     table_file.write_text(table_content_with_yaml, encoding="utf-8")
 
