@@ -512,7 +512,7 @@ Returns:
 
 Note:
 
-- Files with `.g.md` extension in the target folder will be deleted before processing.
+- Files with `.g.md` and `.include.g.md` extensions in the target folder will be deleted before processing.
 - Files with `published: false` in their YAML headers will be skipped.
 - Heading levels in the content will be increased by one level.
 - Local links and image paths will be adjusted to maintain proper references.
@@ -565,6 +565,10 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
             elif current_value != value:
                 combined_dict[key] = [current_value, value]
 
+    def is_generated_file(filename: str) -> bool:
+        """Check if file is a generated file (`.g.md` or `.include.g.md`)."""
+        return filename.endswith((".g.md", ".include.g.md"))
+
     folder_path = Path(folder_path)
 
     # Get all .md files based on the recursive flag
@@ -574,7 +578,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
 
         # First add files from the current folder
         current_folder_files = [
-            f for f in folder_path.glob("*.md") if f.is_file() and f.suffix == ".md" and not f.name.endswith(".g.md")
+            f for f in folder_path.glob("*.md") if f.is_file() and f.suffix == ".md" and not is_generated_file(f.name)
         ]
         md_files.extend(current_folder_files)
 
@@ -590,14 +594,18 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
                 subfolder_files = [
                     file_path
                     for file_path in subfolder.rglob("*.md")
-                    if file_path.is_file() and file_path.suffix == ".md" and not file_path.name.endswith(".g.md")
+                    if file_path.is_file() and file_path.suffix == ".md" and not is_generated_file(file_path.name)
                 ]
                 subfolder_files.sort()
                 md_files.extend(subfolder_files)
     else:
         # Non-recursive - only get files in the current folder
         md_files = sorted(
-            [f for f in folder_path.glob("*.md") if f.is_file() and f.suffix == ".md" and not f.name.endswith(".g.md")],
+            [
+                f
+                for f in folder_path.glob("*.md")
+                if f.is_file() and f.suffix == ".md" and not is_generated_file(f.name)
+            ],
         )
 
     # If there are no Markdown files in the folder at all, exit
@@ -729,8 +737,8 @@ Process folders from the deepest level up to ensure hierarchical combination of 
 Args:
 
 - `folder_path` (`str` or `Path`): Path to the root folder to process recursively.
-- `delete_g_md_files` (`bool`, optional): Whether to delete existing .g.md files before processing.
-  Defaults to True.
+- `delete_g_md_files` (`bool`, optional): Whether to delete existing .g.md and .include.g.md files
+  before processing. Defaults to True.
 
 Returns:
 
@@ -738,7 +746,8 @@ Returns:
 
 Note:
 
-- All `.g.md` files in the entire folder structure will be deleted before processing (if delete_g_md_files is True).
+- All `.g.md` and `.include.g.md` files in the entire folder structure will be deleted
+  before processing (if delete_g_md_files is True).
 - Hidden folders (starting with `.`) will be skipped.
 - Files will be combined in a folder if either:
   1. The folder directly contains at least 2 Markdown files, or
@@ -764,18 +773,24 @@ print(result)
 
 ```python
 def combine_markdown_files_recursively(folder_path: Path | str, *, delete_g_md_files: bool = True) -> str:
+
+    def is_generated_file(file_path: Path) -> bool:
+        """Check if file is a generated file (`.g.md` or `.include.g.md`)."""
+        return file_path.name.endswith(".g.md") or file_path.name.endswith(".include.g.md")
+
     result_lines = []
     folder_path = Path(folder_path)
 
-    # Remove .g.md files (if enabled)
+    # Remove .g.md and .include.g.md files (if enabled)
     if delete_g_md_files:
-        for file in Path(folder_path).rglob("*.g.md"):
-            # Skip hidden folders
-            if any(part.startswith(".") for part in file.parts):
-                continue
+        for pattern in ["*.g.md", "*.include.g.md"]:
+            for file in Path(folder_path).rglob(pattern):
+                # Skip hidden folders
+                if any(part.startswith(".") for part in file.parts):
+                    continue
 
-            if file.is_file():
-                file.unlink()
+                if file.is_file():
+                    file.unlink()
 
     # Collect all folders, excluding hidden ones
     all_folders = [
@@ -793,10 +808,10 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, delete_g_md_f
     # Process each folder from deepest to shallowest
     for folder in all_folders:
         # Get all .md files in this folder (non-recursively)
-        md_files_in_folder = [f for f in folder.glob("*.md") if f.is_file() and not f.name.endswith(".g.md")]
+        md_files_in_folder = [f for f in folder.glob("*.md") if f.is_file() and not is_generated_file(f)]
 
         # Get all .md files in this folder and its subfolders (recursively)
-        md_files_recursive = [f for f in folder.rglob("*.md") if f.is_file() and not f.name.endswith(".g.md")]
+        md_files_recursive = [f for f in folder.rglob("*.md") if f.is_file() and not is_generated_file(f)]
 
         # Get .g.md files in direct subfolders (these were created in previous iterations)
         g_md_files_in_subfolders = []
@@ -1932,7 +1947,7 @@ def generate_summaries(folder: Path | str) -> str:
     # Scan the directory for Markdown files
     for file_path in path.glob("*.md"):
         # Skip the table.g.md and short summary files we're going to create
-        if file_path.name == "table.g.md" or file_path.name.startswith(f"_{dir_name}"):
+        if file_path.name == "table.include.g.md" or file_path.name.startswith(f"_{dir_name}"):
             continue
 
         # Check if the filename contains a 4-digit year

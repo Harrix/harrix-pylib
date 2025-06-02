@@ -510,7 +510,7 @@ def test_combine_markdown_files_recursively() -> None:
         assert not (hidden_folder / f"_{hidden_folder.name}.g.md").exists()
 
 
-def test_delete_g_md_files_recursively():
+def test_delete_g_md_files_recursively() -> None:
     with TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
 
@@ -1297,9 +1297,3 @@ def test_split_yaml_content() -> None:
     yaml, content = h.md.split_yaml_content(md)
     correct_count_lines = 5
     assert len(yaml.splitlines()) + len(content.splitlines()) == correct_count_lines
-
-
-from pathlib import Path
-from tempfile import TemporaryDirectory
-
-import harrix_pylib as h
