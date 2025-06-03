@@ -128,7 +128,7 @@ class MarkdownChecker:
                     errors.append(f"❌ H004 The lang field is missing in YAML in {filename}.")
                 elif "H005" in rules and lang not in ["en", "ru"]:
                     errors.append(f"❌ H005 In YAML, lang is not set to en or ru in {filename}.")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             errors.append(f"❌ YAML {e} in {filename}.")
 
         return errors
@@ -165,7 +165,7 @@ class MarkdownChecker:
             # Check content
             errors.extend(self._check_content(filename, content_md, rules))
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             errors.append(f"❌ Error reading or processing file: {e} in {filename}.")
 
         return errors
@@ -308,7 +308,7 @@ def _check_yaml(self, filename: Path, yaml_md: str, rules: set) -> list:
                     errors.append(f"❌ H004 The lang field is missing in YAML in {filename}.")
                 elif "H005" in rules and lang not in ["en", "ru"]:
                     errors.append(f"❌ H005 In YAML, lang is not set to en or ru in {filename}.")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             errors.append(f"❌ YAML {e} in {filename}.")
 
         return errors
@@ -358,7 +358,7 @@ def check(self, filename: Path | str, exclude_rules: set | None = None) -> list:
             # Check content
             errors.extend(self._check_content(filename, content_md, rules))
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             errors.append(f"❌ Error reading or processing file: {e} in {filename}.")
 
         return errors

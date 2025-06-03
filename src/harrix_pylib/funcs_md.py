@@ -698,7 +698,7 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_m
         ):
             try:
                 result_lines.append(combine_markdown_files(folder, is_recursive=True))
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 result_lines.append(f"❌ Error processing {folder}: {e}")
 
     return "\n".join(result_lines)
