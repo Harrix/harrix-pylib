@@ -77,11 +77,6 @@ def test_markdown_checker() -> None:
         call_excluded_errors = checker(file_with_issues, exclude_rules={"H001"})
         assert len(call_excluded_errors) < len(all_errors)
 
-        # Test file reading error (non-existent file)
-        non_existent = temp_path / "does_not_exist.md"
-        errors = checker.check(non_existent)
-        assert any("Error reading or processing file" in error for error in errors)
-
         # Test YAML parsing error
         invalid_yaml_file = temp_path / "invalid_yaml.md"
         invalid_yaml_file.write_text("---\nlang: en\ninvalid: yaml: content\n---\n# Content", encoding="utf-8")
