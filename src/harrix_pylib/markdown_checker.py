@@ -5,8 +5,9 @@ from collections.abc import Generator
 from pathlib import Path
 from typing import ClassVar
 
-import harrix_pylib as h
 import yaml
+
+import harrix_pylib as h
 
 
 class MarkdownChecker:
