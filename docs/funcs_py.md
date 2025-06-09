@@ -303,9 +303,9 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
     try:
         h.md.replace_section(folder / "README.md", list_funcs_all, "## List of functions")
     except FileNotFoundError:
-        result_lines.append("⚠️ Don't find `## List of functions`.")
+        result_lines.append("❗ Don't find `## List of functions`.")
     except ValueError:
-        result_lines.append("⚠️ Don't find `## List of functions`.")
+        result_lines.append("❗ Don't find `## List of functions`.")
     index_content = beginning_of_md + "\n" + Path(folder / "README.md").read_text(encoding="utf8")
     Path(docs_folder / "index.md").write_text(index_content, encoding="utf8")
     result_lines.append("File index.md is created.")
