@@ -276,6 +276,11 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
     docs_folder = folder / "docs"
     docs_folder.mkdir(parents=True, exist_ok=True)
 
+    # Remove all existing .g.md files before generating new ones
+    for old_file in docs_folder.rglob("*.g.md"):
+        old_file.unlink()
+        result_lines.append(f"Removed old auto-generated file {old_file.name}")
+
     list_funcs_all = ""
     src_folder = folder / "src"
 
@@ -289,8 +294,15 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
         # Calculate relative path from src folder to preserve folder structure
         relative_path = filename.relative_to(src_folder)
 
-        # Create the corresponding path in docs folder
-        docs_relative_path = relative_path.with_suffix(".md")
+        # Skip the first part (project name folder) if it exists
+        if len(relative_path.parts) > 1:
+            # Remove the first directory (project name) from the path
+            relative_path_parts = relative_path.parts[1:]
+            docs_relative_path = Path(*relative_path_parts).with_suffix(".g.md")
+        else:
+            # If file is directly in src folder, keep original path
+            docs_relative_path = relative_path.with_suffix(".g.md")
+
         filename_docs = docs_folder / docs_relative_path
 
         # Create parent directories if they don't exist
