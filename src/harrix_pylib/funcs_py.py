@@ -238,20 +238,29 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
     docs_folder.mkdir(parents=True, exist_ok=True)
 
     list_funcs_all = ""
+    src_folder = folder / "src"
 
-    for filename in (Path(folder) / "src").rglob("*.py"):
+    for filename in src_folder.rglob("*.py"):
         if not (filename.is_file() and not filename.stem.startswith("__")):
             continue
 
         list_funcs = h.py.extract_functions_and_classes(filename, is_add_link_demo=True, domain=domain)
         docs = generate_md_docs_content(filename)
 
-        filename_docs = docs_folder / f"{filename.stem}.md"
+        # Calculate relative path from src folder to preserve folder structure
+        relative_path = filename.relative_to(src_folder)
+
+        # Create the corresponding path in docs folder
+        docs_relative_path = relative_path.with_suffix(".md")
+        filename_docs = docs_folder / docs_relative_path
+
+        # Create parent directories if they don't exist
+        filename_docs.parent.mkdir(parents=True, exist_ok=True)
 
         final_content = beginning_of_md + "\n" + docs
         final_content = h.md.generate_toc_with_links_content(final_content)
         final_content = h.md.generate_image_captions_content(final_content)
-        Path(filename_docs).write_text(final_content, encoding="utf8")
+        filename_docs.write_text(final_content, encoding="utf8")
 
         list_funcs_all += list_funcs + "\n\n"
 
@@ -267,6 +276,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
         result_lines.append("❗ Don't find `## List of functions`.")
     except ValueError:
         result_lines.append("❗ Don't find `## List of functions`.")
+
     index_content = beginning_of_md + "\n" + Path(folder / "README.md").read_text(encoding="utf8")
     Path(docs_folder / "index.md").write_text(index_content, encoding="utf8")
     result_lines.append("File index.md is created.")
