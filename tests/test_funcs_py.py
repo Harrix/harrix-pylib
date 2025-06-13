@@ -104,7 +104,7 @@ class ExampleClass:
         # Assertions
         docs_folder = temp_path / "docs"
         index_file = docs_folder / "index.md"
-        test_file_docs = docs_folder / "test_file.md"
+        test_file_docs = docs_folder / "test_file.g.md"
 
         # Check if documentation was generated
         assert docs_folder.exists(), "Docs folder should be created."
