@@ -206,7 +206,7 @@ def test_sort_py_code() -> None:
     with TemporaryDirectory() as temp_folder:
         temp_filename = Path(temp_folder) / "temp.py"
         temp_filename.write_text(py, encoding="utf-8")
-        h.py.sort_py_code(temp_filename, is_use_ruff_format=True)
+        h.py.sort_py_code(str(temp_filename), is_use_ruff_format=True)
         py_applied = temp_filename.read_text(encoding="utf8")
 
     assert py_after == py_applied

@@ -71,14 +71,15 @@ def test_check_featured_image() -> None:
 def test_check_func() -> None:
     # Define a test checking function
     def test_checker(file_path: Path | str) -> list[str]:
-        with Path.open(file_path, "r") as f:
+        path = Path(file_path)
+        with path.open("r") as f:
             content = f.read()
         errors = []
         if "error" in content.lower():
-            errors.append(f"Error found in {file_path.name}")
+            errors.append(f"Error found in {path.name}")
         min_length_content = 5
         if len(content) < min_length_content:
-            errors.append(f"Content too short in {file_path.name}")
+            errors.append(f"Content too short in {path.name}")
         return errors
 
     # Create a temporary directory structure for testing
@@ -145,7 +146,7 @@ def test_clear_directory() -> None:
 def test_find_max_folder_number() -> None:
     folder = h.dev.get_project_root() / "tests/data/check_featured_image/folder_correct"
     correct_max_folder_number = 2
-    assert h.file.find_max_folder_number(folder, "folder") == correct_max_folder_number
+    assert h.file.find_max_folder_number(str(folder), "folder") == correct_max_folder_number
 
 
 def test_open_file_or_folder() -> None:
