@@ -7,7 +7,7 @@ import tempfile
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import harrix_pylib as h
 
@@ -102,9 +102,9 @@ def load_config(filename: str) -> dict:
 def run_command(
     command: str,
     shell: bool = True,
-    cwd: Optional[str] = None,
-    env: Optional[Dict[str, str]] = None,
-    timeout: Optional[float] = None
+    cwd: str | None = None,
+    env: dict[str, str] | None = None,
+    timeout: float | None = None
 ) -> str:
     """Run a console command and return its output.
 
@@ -141,6 +141,7 @@ def run_command(
         result = h.dev.run_command("ping google.com", timeout=5)
         print(result)
         ```
+
     """
     try:
         process = subprocess.run(
@@ -162,7 +163,7 @@ def run_command(
     except subprocess.TimeoutExpired:
         return f"Command timed out after {timeout} seconds"
     except Exception as e:
-        return f"Error executing command: {str(e)}"
+        return f"Error executing command: {e!s}"
 
 
 def run_powershell_script(commands: str) -> str:
