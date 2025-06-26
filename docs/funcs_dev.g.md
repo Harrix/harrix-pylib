@@ -13,6 +13,7 @@ lang: en
 
 - [Function `get_project_root`](#function-get_project_root)
 - [Function `load_config`](#function-load_config)
+- [Function `run_command`](#function-run_command)
 - [Function `run_powershell_script`](#function-run_powershell_script)
 - [Function `run_powershell_script_as_admin`](#function-run_powershell_script_as_admin)
 - [Function `write_in_output_txt`](#function-write_in_output_txt)
@@ -124,6 +125,81 @@ def load_config(filename: str) -> dict:
             config[key] = process_snippet(value)
 
     return config
+```
+
+</details>
+
+## Function `run_command`
+
+```python
+def run_command(command: str) -> str
+```
+
+Run a console command and return its output.
+
+This function executes a console command using the system's default shell
+and returns the combined output (stdout + stderr).
+
+Args:
+
+- `command` (`str`): The command to execute.
+- `is_shell` (`bool`): Whether to run the command through the shell. Defaults to `True`.
+- `cwd` (`str | None`): Working directory for the command. Defaults to `None`.
+- `env` (`dict[str, str] | None`): Environment variables. Defaults to `None`.
+- `timeout` (`float | None`): Timeout in seconds. Defaults to `None`.
+
+Returns:
+
+- `str`: Combined output and error messages from the command execution.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+result = h.dev.run_command("python --version")
+print(result)
+
+result = h.dev.run_command("python --version && pip --version")
+print(result)
+
+result = h.dev.run_command("ping google.com", timeout=5)
+print(result)
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def run_command(
+    command: str,
+    *,
+    is_shell: bool = True,
+    cwd: str | None = None,
+    env: dict[str, str] | None = None,
+    timeout: float | None = None,
+) -> str:
+    try:
+        process = subprocess.run(
+            command,
+            shell=is_shell,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            cwd=cwd,
+            env=env,
+            timeout=timeout,
+            check=False,
+        )
+
+        # Combine stdout and stderr, filter out empty lines
+        output_parts = [process.stdout.strip(), process.stderr.strip()]
+        return "\n".join(filter(None, output_parts))
+
+    except subprocess.TimeoutExpired:
+        return f"Command timed out after {timeout} seconds"
+    except Exception as e:
+        return f"Error executing command: {e!s}"
 ```
 
 </details>

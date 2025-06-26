@@ -55,6 +55,7 @@ Doc: [funcs_dev.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_
 | -------------------------------- | ---------------------------------------------------------------------------------- |
 | `get_project_root`               | Find the root folder of the current project.                                       |
 | `load_config`                    | Load configuration from a JSON file.                                               |
+| `run_command`                    | Run a console command and return its output.                                       |
 | `run_powershell_script`          | Run a PowerShell script with the given commands.                                   |
 | `run_powershell_script_as_admin` | Execute a PowerShell script with administrator privileges and captures the output. |
 | `write_in_output_txt`            | Decorate to write function output to a temporary file and optionally display it.   |
