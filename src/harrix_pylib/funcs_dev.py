@@ -105,7 +105,7 @@ def run_command(
     is_shell: bool = True,
     cwd: str | None = None,
     env: dict[str, str] | None = None,
-    timeout: float | None = None
+    timeout: float | None = None,
 ) -> str:
     """Run a console command and return its output.
 
@@ -150,7 +150,7 @@ def run_command(
             cwd=cwd,
             env=env,
             timeout=timeout,
-            check=False
+            check=False,
         )
 
         # Combine stdout and stderr, filter out empty lines

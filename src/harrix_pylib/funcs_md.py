@@ -989,13 +989,14 @@ def format_yaml(filename: Path | str) -> str:
     ```
 
     """
-    with Path.open(filename, encoding="utf-8") as f:
+    filename = Path(filename)
+    with filename.open(encoding="utf-8") as f:
         document = f.read()
 
     document_new = format_yaml_content(document)
 
     if document != document_new:
-        with Path.open(filename, "w", encoding="utf-8") as file:
+        with filename.open("w", encoding="utf-8") as file:
             file.write(document_new)
         return f"✅ File {filename} applied."
     return "File is not changed."
@@ -1288,12 +1289,13 @@ def generate_image_captions(filename: Path | str) -> str:
     ````
 
     """
-    with Path.open(filename, encoding="utf-8") as f:
+    filename = Path(filename)
+    with filename.open(encoding="utf-8") as f:
         document = f.read()
 
     document_new = generate_image_captions_content(document)
     if document != document_new:
-        with Path.open(filename, "w", encoding="utf-8") as file:
+        with filename.open("w", encoding="utf-8") as file:
             file.write(document_new)
         return f"✅ File {filename} applied."
     return "File is not changed."
@@ -1598,7 +1600,10 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
                 continue
 
             # Determine the header level
-            level = len(re.match(r"#+", line).group())
+            match = re.match(r"#+", line)
+            if not match:
+                continue
+            level = len(match.group())
             if level == 1:  # Skip the main title
                 continue
 
@@ -1855,12 +1860,13 @@ def generate_toc_with_links(filename: Path | str) -> str:
     ```
 
     """
-    with Path.open(filename, encoding="utf-8") as f:
+    filename = Path(filename)
+    with filename.open(encoding="utf-8") as f:
         document = f.read()
 
     document_new = generate_toc_with_links_content(document)
     if document != document_new:
-        with Path.open(filename, "w", encoding="utf-8") as file:
+        with filename.open("w", encoding="utf-8") as file:
             file.write(document_new)
         return f"✅ TOC is added or refreshed in {filename}."
     return "File is not changed."
@@ -1931,7 +1937,12 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             if (lang == "ru" and line.strip() == "## Содержание") or (lang != "ru" and line.strip() == "## Contents"):
                 continue
             # Determine the header level
-            level = len(re.match(r"#+", line).group())
+            match = re.match(r"#+", line)
+            if not match:
+                continue
+            level = len(match.group())
+            if level == 1:  # Skip the main title
+                continue
             # Extract the header text
             title = line[level:].strip()
             title = title.replace(" <!-- top-section -->", "").replace("<!-- top-section -->", "")
@@ -2394,12 +2405,13 @@ def replace_section(filename: Path | str, replace_content: str, title_section: s
     ```
 
     """
-    with Path.open(filename, encoding="utf-8") as f:
+    filename = Path(filename)
+    with filename.open(encoding="utf-8") as f:
         document = f.read()
 
     document_new = replace_section_content(document, replace_content, title_section)
     if document != document_new:
-        with Path.open(filename, "w", encoding="utf-8") as file:
+        with filename.open("w", encoding="utf-8") as file:
             file.write(document_new)
         return f"✅ File {filename} is changed."
     return "File is not changed."
@@ -2577,13 +2589,14 @@ def sort_sections(filename: Path | str) -> str:
     ```
 
     """
-    with Path.open(filename, encoding="utf-8") as f:
+    filename = Path(filename)
+    with filename.open(encoding="utf-8") as f:
         document = f.read()
 
     document_new = sort_sections_content(document)
 
     if document != document_new:
-        with Path.open(filename, "w", encoding="utf-8") as file:
+        with filename.open("w", encoding="utf-8") as file:
             file.write(document_new)
         return f"✅ File {filename} applied."
     return "File is not changed."

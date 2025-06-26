@@ -21,6 +21,7 @@ def test_load_config() -> None:
     config = h.dev.load_config(str(h.dev.get_project_root() / "tests/data/config.json"))
     assert config["path_github"] == "C:/GitHub"
 
+
 @pytest.mark.skipif(
     (
         subprocess.run(
@@ -28,7 +29,8 @@ def test_load_config() -> None:
             capture_output=True,
             text=True,
             check=False,
-        ).returncode != 0
+        ).returncode
+        != 0
     ),
     reason="Shell commands are not available",
 )
@@ -44,13 +46,16 @@ def test_run_command() -> None:
 
     assert output.strip() == expected_output.strip()
 
+
 @pytest.mark.skipif(
-    powershell_path is None or subprocess.run(
+    powershell_path is None
+    or subprocess.run(
         [powershell_path, "-Command", "echo test"],
         capture_output=True,
         text=True,
         check=False,
-    ).returncode != 0,
+    ).returncode
+    != 0,
     reason="PowerShell is not available",
 )
 def test_run_powershell_script() -> None:
@@ -64,12 +69,14 @@ def test_run_powershell_script() -> None:
 
 @pytest.mark.slow
 @pytest.mark.skipif(
-    powershell_path is None or subprocess.run(
+    powershell_path is None
+    or subprocess.run(
         [powershell_path, "-Command", "echo test"],
         capture_output=True,
         text=True,
         check=False,
-    ).returncode != 0,
+    ).returncode
+    != 0,
     reason="PowerShell is not available",
 )
 def test_run_powershell_script_as_admin() -> None:
