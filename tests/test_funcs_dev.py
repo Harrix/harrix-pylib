@@ -18,6 +18,30 @@ def test_load_config() -> None:
     config = h.dev.load_config(h.dev.get_project_root() / "tests/data/config.json")
     assert config["path_github"] == "C:/GitHub"
 
+@pytest.mark.skipif(
+    subprocess.run(
+        "echo test",
+        shell=True,
+        capture_output=True,
+        text=True,
+        check=False,
+    ).returncode
+    != 0,
+    reason="Shell commands are not available",
+)
+def test_run_command() -> None:
+    import platform
+
+    if platform.system() == "Windows":
+        test_command = "echo Hello, World!"
+        expected_output = "Hello, World!"
+    else:
+        test_command = "echo 'Hello, World!'"
+        expected_output = "Hello, World!"
+
+    output = h.dev.run_command(test_command)
+
+    assert output.strip() == expected_output.strip()
 
 @pytest.mark.skipif(
     subprocess.run(

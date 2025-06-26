@@ -7,7 +7,7 @@ import tempfile
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, Optional
 
 import harrix_pylib as h
 
@@ -97,6 +97,72 @@ def load_config(filename: str) -> dict:
             config[key] = process_snippet(value)
 
     return config
+
+
+def run_command(
+    command: str,
+    shell: bool = True,
+    cwd: Optional[str] = None,
+    env: Optional[Dict[str, str]] = None,
+    timeout: Optional[float] = None
+) -> str:
+    """Run a console command and return its output.
+
+    This function executes a console command using the system's default shell
+    and returns the combined output (stdout + stderr).
+
+    Args:
+        command (str): The command to execute.
+        shell (bool): Whether to run the command through the shell. Defaults to True.
+        cwd (Optional[str]): Working directory for the command. Defaults to None.
+        env (Optional[Dict[str, str]]): Environment variables. Defaults to None.
+        timeout (Optional[float]): Timeout in seconds. Defaults to None.
+
+    Returns:
+        str: Combined output and error messages from the command execution.
+
+    Examples:
+        ```python
+        import harrix_pylib as h
+
+        # Simple command
+        result = h.dev.run_command("python --version")
+        print(result)  # Python 3.13.1
+
+        # Multiple commands (Windows)
+        result = h.dev.run_command("python --version && pip --version")
+        print(result)
+
+        # Multiple commands (Unix/Linux/Mac)
+        result = h.dev.run_command("python --version; pip --version")
+        print(result)
+
+        # With timeout
+        result = h.dev.run_command("ping google.com", timeout=5)
+        print(result)
+        ```
+    """
+    try:
+        process = subprocess.run(
+            command,
+            shell=shell,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            cwd=cwd,
+            env=env,
+            timeout=timeout,
+            check=False
+        )
+
+        # Combine stdout and stderr, filter out empty lines
+        output_parts = [process.stdout.strip(), process.stderr.strip()]
+        return "\n".join(filter(None, output_parts))
+
+    except subprocess.TimeoutExpired:
+        return f"Command timed out after {timeout} seconds"
+    except Exception as e:
+        return f"Error executing command: {str(e)}"
 
 
 def run_powershell_script(commands: str) -> str:
