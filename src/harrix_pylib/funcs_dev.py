@@ -101,7 +101,8 @@ def load_config(filename: str) -> dict:
 
 def run_command(
     command: str,
-    shell: bool = True,
+    *,
+    is_shell: bool = True,
     cwd: str | None = None,
     env: dict[str, str] | None = None,
     timeout: float | None = None
@@ -112,41 +113,37 @@ def run_command(
     and returns the combined output (stdout + stderr).
 
     Args:
-        command (str): The command to execute.
-        shell (bool): Whether to run the command through the shell. Defaults to True.
-        cwd (Optional[str]): Working directory for the command. Defaults to None.
-        env (Optional[Dict[str, str]]): Environment variables. Defaults to None.
-        timeout (Optional[float]): Timeout in seconds. Defaults to None.
+
+    - `command` (`str`): The command to execute.
+    - `is_shell` (`bool`): Whether to run the command through the shell. Defaults to `True`.
+    - `cwd` (`str | None`): Working directory for the command. Defaults to `None`.
+    - `env` (`dict[str, str] | None`): Environment variables. Defaults to `None`.
+    - `timeout` (`float | None`): Timeout in seconds. Defaults to `None`.
 
     Returns:
-        str: Combined output and error messages from the command execution.
 
-    Examples:
-        ```python
-        import harrix_pylib as h
+    - `str`: Combined output and error messages from the command execution.
 
-        # Simple command
-        result = h.dev.run_command("python --version")
-        print(result)  # Python 3.13.1
+    Example:
 
-        # Multiple commands (Windows)
-        result = h.dev.run_command("python --version && pip --version")
-        print(result)
+    ```python
+    import harrix_pylib as h
 
-        # Multiple commands (Unix/Linux/Mac)
-        result = h.dev.run_command("python --version; pip --version")
-        print(result)
+    result = h.dev.run_command("python --version")
+    print(result)
 
-        # With timeout
-        result = h.dev.run_command("ping google.com", timeout=5)
-        print(result)
-        ```
+    result = h.dev.run_command("python --version && pip --version")
+    print(result)
+
+    result = h.dev.run_command("ping google.com", timeout=5)
+    print(result)
+    ```
 
     """
     try:
         process = subprocess.run(
             command,
-            shell=shell,
+            shell=is_shell,
             capture_output=True,
             text=True,
             encoding="utf-8",

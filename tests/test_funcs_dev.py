@@ -1,5 +1,6 @@
 """Tests for the functions in the dev module of harrix_pylib."""
 
+import platform
 import shutil
 import subprocess
 
@@ -30,8 +31,6 @@ def test_load_config() -> None:
     reason="Shell commands are not available",
 )
 def test_run_command() -> None:
-    import platform
-
     if platform.system() == "Windows":
         test_command = "echo Hello, World!"
         expected_output = "Hello, World!"

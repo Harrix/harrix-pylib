@@ -2481,13 +2481,13 @@ def replace_section_content(
     new_content_lines = replace_content.strip().split("\n")
 
     # Assemble the updated content
-    updated_lines = (
-        lines[: start_index + 1]  # Including the section heading
-        + [""]  # Add a blank line after the heading
-        + new_content_lines  # New section content
-        + [""]  # Add a blank line after the new content
-        + lines[end_index:]  # Rest of the original content
-    )
+    updated_lines = [
+        *lines[: start_index + 1],  # Including the section heading
+        "",  # Add a blank line after the heading
+        *new_content_lines,  # New section content
+        "",  # Add a blank line after the new content
+        *lines[end_index:],  # Rest of the original content
+    ]
 
     if ends_with_newline:
         updated_lines.append("")  # Ensure the Markdown ends with a newline
