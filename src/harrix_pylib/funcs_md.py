@@ -1062,7 +1062,7 @@ def format_yaml_content(markdown_text: str) -> str:
     return yaml_md + "\n\n" + content_md
 
 
-def generate_author_book(filename: Path | str) -> str:
+def generate_author_book(filename: Path | str) -> str | None:
     """Add the author and the title of the book to the quotes and formats them as Markdown quotes.
 
     Args:
@@ -1071,7 +1071,7 @@ def generate_author_book(filename: Path | str) -> str:
 
     Returns:
 
-    - `str`: A string indicating whether changes were made to the file or not.
+    - `str | None`: A string indicating whether changes were made to the file or not.
 
     Example:
 

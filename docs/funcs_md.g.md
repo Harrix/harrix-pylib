@@ -1278,7 +1278,7 @@ def format_yaml_content(markdown_text: str) -> str:
 ## Function `generate_author_book`
 
 ```python
-def generate_author_book(filename: Path | str) -> str
+def generate_author_book(filename: Path | str) -> str | None
 ```
 
 Add the author and the title of the book to the quotes and formats them as Markdown quotes.
@@ -1289,7 +1289,7 @@ Args:
 
 Returns:
 
-- `str`: A string indicating whether changes were made to the file or not.
+- `str | None`: A string indicating whether changes were made to the file or not.
 
 Example:
 
@@ -1353,7 +1353,7 @@ print(result)
 <summary>Code:</summary>
 
 ```python
-def generate_author_book(filename: Path | str) -> str:
+def generate_author_book(filename: Path | str) -> str | None:
     lines_list = []
     file = Path(filename)
     if not file.is_file():
