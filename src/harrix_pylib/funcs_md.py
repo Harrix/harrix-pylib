@@ -117,25 +117,16 @@ def add_diary_new_dairy_in_year(path_dream: Path | str, beginning_of_md: str) ->
     return add_diary_entry_in_year(path_dream, beginning_of_md, diary_content)
 
 
-def add_diary_new_diary(path_diary: Path | str, beginning_of_md: str, *, is_with_images: bool = False) -> tuple[str, Path]:
+def add_diary_new_diary(
+    path_diary: Path | str, beginning_of_md: str, *, is_with_images: bool = False
+) -> tuple[str, Path]:
     """Create a new diary entry for the current day and time.
 
     Args:
 
     - `path_diary` (`Path | str`): The path to the folder for diary notes.
-    - `is_with_images` (`bool`): Whether to create folders for images. Defaults to `False`.
     - `beginning_of_md` (`str`): The section of YAML for a Markdown note.
-
-    Example of `beginning_of_md`:
-
-    ```markdown
-    ---
-    author: Jane Doe
-    author-email: jane.doe@example.com
-    lang: ru
-    ---
-
-    ```
+    - `is_with_images` (`bool`): Whether to create folders for images. Defaults to `False`.
 
     Returns:
 
@@ -157,21 +148,7 @@ def add_diary_new_diary(path_diary: Path | str, beginning_of_md: str, *, is_with
     print(new_entry_path)
     ```
 
-    """
-    text = f"{beginning_of_md}\n\n"
-    text += f"# {datetime.now(tz=datetime.now().astimezone().tzinfo).strftime('%Y-%m-%d')}\n\n"
-    text += f"## {datetime.now(tz=datetime.now().astimezone().tzinfo).strftime('%H:%M')}\n\n"
-    return add_diary_new_note(path_diary, text, is_with_images=is_with_images)
-
-
-def add_diary_new_dream(path_dream: Path | str, beginning_of_md: str, *, is_with_images: bool = False) -> tuple[str, Path]:
-    """Create a new dream diary entry for the current day and time with placeholders for dream descriptions.
-
-    Args:
-
-    - `is_with_images` (`bool`): Whether to create folders for images. Defaults to `False`.
-    - `path_dream` (`Path | str`): The path to the folder for dream notes.
-    - `beginning_of_md` (`str`): The section of YAML for a Markdown note.
+    Note:
 
     Example of `beginning_of_md`:
 
@@ -184,9 +161,27 @@ def add_diary_new_dream(path_dream: Path | str, beginning_of_md: str, *, is_with
 
     ```
 
+    """
+    text = f"{beginning_of_md}\n\n"
+    text += f"# {datetime.now(tz=datetime.now().astimezone().tzinfo).strftime('%Y-%m-%d')}\n\n"
+    text += f"## {datetime.now(tz=datetime.now().astimezone().tzinfo).strftime('%H:%M')}\n\n"
+    return add_diary_new_note(path_diary, text, is_with_images=is_with_images)
+
+
+def add_diary_new_dream(
+    path_dream: Path | str, beginning_of_md: str, *, is_with_images: bool = False
+) -> tuple[str, Path]:
+    """Create a new dream diary entry for the current day and time with placeholders for dream descriptions.
+
+    Args:
+
+    - `path_dream` (`Path | str`): The path to the folder for dream notes.
+    - `beginning_of_md` (`str`): The section of YAML for a Markdown note.
+    - `is_with_images` (`bool`): Whether to create folders for images. Defaults to `False`.
+
     Returns:
 
-    - `Path | str`: The path to the created dream diary entry file or a string message indicating creation.
+    - `tuple[str, Path]`: The path to the created dream diary entry file or a string message indicating creation.
 
     Example:
 
@@ -202,6 +197,19 @@ def add_diary_new_dream(path_dream: Path | str, beginning_of_md: str, *, is_with
 
     new_entry_path = h.md.add_diary_new_dream("C:/Dreams/", yaml_front_matter, is_with_images=True)
     print(new_entry_path)
+    ```
+
+    Note:
+
+    Example of `beginning_of_md`:
+
+    ```markdown
+    ---
+    author: Jane Doe
+    author-email: jane.doe@example.com
+    lang: ru
+    ---
+
     ```
 
     """
@@ -242,7 +250,7 @@ def add_diary_new_dream_in_year(path_dream: Path | str, beginning_of_md: str) ->
 
 
 def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool) -> tuple[str, Path]:
-    """Add a new note to the diary or dream diary for the given base path.
+    r"""Add a new note to the diary or dream diary for the given base path.
 
     Args:
 
@@ -263,7 +271,7 @@ def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool
     is_with_images = False
 
     result_msg, result_path = h.md.add_diary_new_note("C:/Diary/", text, is_with_images=is_with_images)
-    # File C:\Diary\2025\01\2025-01-21.md is created
+    # File C:/Diary/2025/01/2025-01-21.md is created
     ```
 
     """
@@ -284,7 +292,7 @@ def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool
 
 
 def add_note(base_path: Path | str, name: str, text: str, *, is_with_images: bool) -> tuple[str, Path]:
-    """Add a note to the specified base path.
+    r"""Add a note to the specified base path.
 
     Args:
 
