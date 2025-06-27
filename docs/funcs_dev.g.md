@@ -248,7 +248,8 @@ def run_powershell_script(commands: str) -> str:
 
     powershell_path = shutil.which("powershell")
     if powershell_path is None:
-        raise RuntimeError("PowerShell executable not found.")
+        msg = "PowerShell executable not found."
+        raise RuntimeError(msg)
 
     process = subprocess.run(
         [
