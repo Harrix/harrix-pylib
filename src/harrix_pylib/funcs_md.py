@@ -117,7 +117,7 @@ def add_diary_new_dairy_in_year(path_dream: Path | str, beginning_of_md: str) ->
     return add_diary_entry_in_year(path_dream, beginning_of_md, diary_content)
 
 
-def add_diary_new_diary(path_diary: Path | str, beginning_of_md: str, *, is_with_images: bool = False) -> Path | str:
+def add_diary_new_diary(path_diary: Path | str, beginning_of_md: str, *, is_with_images: bool = False) -> tuple[str, Path]:
     """Create a new diary entry for the current day and time.
 
     Args:
@@ -139,7 +139,7 @@ def add_diary_new_diary(path_diary: Path | str, beginning_of_md: str, *, is_with
 
     Returns:
 
-    - `Path | str`: The path to the created diary entry file or a string message indicating creation.
+    - `tuple[str, Path]`: The path to the created diary entry file or a string message indicating creation.
 
     Example:
 
@@ -164,7 +164,7 @@ def add_diary_new_diary(path_diary: Path | str, beginning_of_md: str, *, is_with
     return add_diary_new_note(path_diary, text, is_with_images=is_with_images)
 
 
-def add_diary_new_dream(path_dream: Path | str, beginning_of_md: str, *, is_with_images: bool = False) -> Path | str:
+def add_diary_new_dream(path_dream: Path | str, beginning_of_md: str, *, is_with_images: bool = False) -> tuple[str, Path]:
     """Create a new dream diary entry for the current day and time with placeholders for dream descriptions.
 
     Args:
@@ -241,8 +241,8 @@ def add_diary_new_dream_in_year(path_dream: Path | str, beginning_of_md: str) ->
     return add_diary_entry_in_year(path_dream, beginning_of_md, dream_content)
 
 
-def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool) -> Path | str:
-    r"""Add a new note to the diary or dream diary for the given base path.
+def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool) -> tuple[str, Path]:
+    """Add a new note to the diary or dream diary for the given base path.
 
     Args:
 
@@ -252,7 +252,7 @@ def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool
 
     Returns:
 
-    - `Path | str`: A string message indicating the file was created along with the file path.
+    - `tuple[str, Path]`: A tuple containing a message about file creation and the path to the file.
 
     Example:
 
@@ -283,8 +283,8 @@ def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool
     return add_note(month_path, day, text, is_with_images=is_with_images)
 
 
-def add_note(base_path: Path | str, name: str, text: str, *, is_with_images: bool) -> Path | str:
-    r"""Add a note to the specified base path.
+def add_note(base_path: Path | str, name: str, text: str, *, is_with_images: bool) -> tuple[str, Path]:
+    """Add a note to the specified base path.
 
     Args:
 
@@ -295,13 +295,12 @@ def add_note(base_path: Path | str, name: str, text: str, *, is_with_images: boo
 
     Returns:
 
-    - `Path | str`: A tuple containing a message about file creation and the path to the file.
+    - `tuple[str, Path]`: A tuple containing a message about file creation and the path to the file.
 
     Example:
 
     ```python
     import harrix_pylib as h
-
 
     name = "test_note"
     text = "# Test Note\nThis is a test note with images."
