@@ -389,10 +389,10 @@ number = h.file.find_max_folder_number("C:/projects/", "python_project_")
 ```python
 def find_max_folder_number(base_path: str, start_pattern: str) -> int:
     pattern = re.compile(start_pattern + r"(\d+)$")
-    max_number: int = 0
-    base_path = Path(base_path)
+    max_number = 0
+    base_path_obj = Path(base_path)
 
-    for item in base_path.iterdir():
+    for item in base_path_obj.iterdir():
         if item.is_dir():
             match = pattern.match(item.name)
             if match:
@@ -614,6 +614,7 @@ print(tree)
 def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False) -> str:
 
     def __tree(path: Path | str, *, is_ignore_hidden_folders: bool = False, prefix: str = "") -> Iterator[str]:
+        path = Path(path)
         if is_ignore_hidden_folders and (path.name.startswith(".") or path.name == "node_modules"):
             contents = []
         else:

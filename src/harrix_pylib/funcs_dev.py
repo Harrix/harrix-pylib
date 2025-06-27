@@ -196,9 +196,13 @@ def run_powershell_script(commands: str) -> str:
     """
     command = ";".join(map(str.strip, commands.strip().splitlines()))
 
+    powershell_path = shutil.which("powershell")
+    if powershell_path is None:
+        raise RuntimeError("PowerShell executable not found.")
+
     process = subprocess.run(
         [
-            shutil.which("powershell"),
+            powershell_path,
             "-Command",
             (
                 "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
