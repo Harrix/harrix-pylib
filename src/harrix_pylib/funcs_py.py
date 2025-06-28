@@ -143,7 +143,7 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
 
     """
     filename = Path(filename)
-    with Path.open(filename, encoding="utf-8") as f:
+    with Path(filename).open(encoding="utf-8") as f:
         code = f.read()
 
     # Parse the code into an Abstract Syntax Tree (AST)
@@ -389,7 +389,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
         return "".join(node_lines)
 
     file_path = Path(file_path)
-    with Path.open(file_path, encoding="utf-8") as f:
+    with Path(file_path).open(encoding="utf-8") as f:
         source = f.read()
     source_lines = source.splitlines(keepends=True)
     tree = ast.parse(source)
@@ -519,11 +519,10 @@ def lint_and_fix_python_code(py_content: str) -> str:
         if ruff_path:
             subprocess.run([ruff_path, "format", temp_file_path], capture_output=True, text=True, check=False)
         else:
-            # Обработка случая, когда ruff не найден
-            print("Ruff не найден в системе")
+            print("Ruff was not found in the system")
 
         # Read the fixed code from the temporary file
-        with Path.open(temp_file_path, encoding="utf-8") as file:
+        with Path(temp_file_path).open(encoding="utf-8") as file:
             return file.read()
 
     finally:
@@ -633,7 +632,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
     ```
 
     '''
-    with Path.open(filename, encoding="utf-8") as f:
+    with Path(filename).open(encoding="utf-8") as f:
         code: str = f.read()
 
     module: cst.Module = cst.parse_module(code)
@@ -669,7 +668,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         docstring: cst.SimpleStatementLine | None = None
         class_attributes: list[cst.SimpleStatementLine] = []
         methods: list[cst.FunctionDef] = []
-        other_statements: list[cst.BaseStatement] = []
+        other_statements: list[cst.BaseStatement | cst.BaseSmallStatement | cst.SimpleStatementLine] = []
 
         idx: int = 0
         total_statements: int = len(class_body_statements)
@@ -717,7 +716,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
             methods_sorted = other_methods_sorted
 
         # Assemble the new class body
-        new_body: list[cst.BaseStatement] = []
+        new_body: list[cst.BaseStatement | cst.BaseSmallStatement | cst.SimpleStatementLine] = []
         if docstring:
             new_body.append(docstring)
         new_body.extend(class_attributes)  # Class attributes remain at the top in original order
@@ -747,5 +746,5 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         new_code = lint_and_fix_python_code(new_code)
 
     # Write the sorted code back to the file
-    with Path.open(filename, "w", encoding="utf-8") as f:
+    with Path(filename).open("w", encoding="utf-8") as f:
         f.write(new_code)
