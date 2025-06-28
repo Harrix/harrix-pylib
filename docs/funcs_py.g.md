@@ -409,15 +409,19 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             signature += f"({bases_str})"
         return signature
 
-    def get_node_code(node: ast.AST, source_lines: list[str]) -> str:
+    def get_node_code(node: ast.FunctionDef | ast.ClassDef | ast.AsyncFunctionDef, source_lines: list[str]) -> str:
         start_line = node.lineno - 1  # AST line numbers start from 1
         end_line = node.end_lineno
+
+        # Check that end_lineno is not None
+        if end_line is None:
+            return ""
+
         node_lines = source_lines[start_line:end_line]
 
         # Remove the docstring if it exists
         if (
-            isinstance(node.body, list)
-            and node.body
+            node.body
             and isinstance(node.body[0], ast.Expr)
             and isinstance(node.body[0].value, ast.Constant)
             and isinstance(node.body[0].value.value, str)
@@ -425,9 +429,12 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             docstring_node = node.body[0]
             docstring_start = docstring_node.lineno - 1
             docstring_end = docstring_node.end_lineno
-            # Calculate the indexes of the lines related to the docstring
-            docstring_lines = set(range(docstring_start, docstring_end))
-            node_lines = [line for i, line in enumerate(node_lines, start=start_line) if i not in docstring_lines]
+
+            # Check that docstring_end is not None
+            if docstring_end is not None:
+                # Calculate the line indexes related to the docstring
+                docstring_lines = set(range(docstring_start, docstring_end))
+                node_lines = [line for i, line in enumerate(node_lines, start=start_line) if i not in docstring_lines]
 
         return "".join(node_lines)
 
