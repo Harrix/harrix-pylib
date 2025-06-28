@@ -721,7 +721,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         if docstring:
             new_body.append(docstring)
         new_body.extend(class_attributes)  # SimpleStatementLine inherits from BaseStatement
-        new_body.extend(methods_sorted)    # FunctionDef inherits from BaseStatement
+        new_body.extend(methods_sorted)  # FunctionDef inherits from BaseStatement
         new_body.extend(other_statements)  # Already BaseStatement
 
         new_class_body: cst.IndentedBlock = cst.IndentedBlock(body=new_body)
