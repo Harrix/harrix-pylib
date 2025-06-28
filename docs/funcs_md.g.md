@@ -2361,14 +2361,14 @@ def get_yaml_content(markdown_text: str) -> str:
 ## Function `identify_code_blocks`
 
 ```python
-def identify_code_blocks(lines: list[str]) -> Iterator[tuple[str, bool]]
+def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]
 ```
 
-Process a list of text lines to identify code blocks and yield each line with a boolean flag.
+Process a sequence of text lines to identify code blocks and yield each line with a boolean flag.
 
 Args:
 
-- `lines` (`list[str]`): A list of strings where each string is a line of text to be processed.
+- `lines` (`Sequence[str]`): A sequence of strings where each string is a line of text to be processed.
 
 Returns:
 
@@ -2403,7 +2403,7 @@ for _, state in h.md.identify_code_blocks(content.splitlines()):
 <summary>Code:</summary>
 
 ```python
-def identify_code_blocks(lines: list[str]) -> Iterator[tuple[str, bool]]:
+def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
     code_block_delimiter = None
     for line in lines:
         match = re.match(r"^(`{3,})(.*)", line)

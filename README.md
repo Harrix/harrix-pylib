@@ -101,7 +101,7 @@ Doc: [funcs_md.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs_m
 | `generate_toc_with_links`                    | Generate a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes      |
 | `generate_toc_with_links_content`            | Generate a Table of Contents (TOC) with links for the provided Markdown content.                                |
 | `get_yaml_content`                           | Get YAML from text of the Markdown file.                                                                        |
-| `identify_code_blocks`                       | Process a list of text lines to identify code blocks and yield each line with a boolean flag.                   |
+| `identify_code_blocks`                       | Process a sequence of text lines to identify code blocks and yield each line with a boolean flag.               |
 | `identify_code_blocks_line`                  | Parse a single line of Markdown to identify inline code blocks.                                                 |
 | `increase_heading_level_content`             | Increase the heading level of Markdown content.                                                                 |
 | `remove_toc_content`                         | Remove the table of contents (TOC) section from a Markdown document.                                            |

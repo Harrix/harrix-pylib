@@ -1,7 +1,7 @@
 """Functions for working with Markdown files."""
 
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -2051,12 +2051,12 @@ def get_yaml_content(markdown_text: str) -> str:
     return ""
 
 
-def identify_code_blocks(lines: list[str]) -> Iterator[tuple[str, bool]]:
-    """Process a list of text lines to identify code blocks and yield each line with a boolean flag.
+def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
+    """Process a sequence of text lines to identify code blocks and yield each line with a boolean flag.
 
     Args:
 
-    - `lines` (`list[str]`): A list of strings where each string is a line of text to be processed.
+    - `lines` (`Sequence[str]`): A sequence of strings where each string is a line of text to be processed.
 
     Returns:
 
