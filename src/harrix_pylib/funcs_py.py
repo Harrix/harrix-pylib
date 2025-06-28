@@ -668,7 +668,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         docstring: cst.SimpleStatementLine | None = None
         class_attributes: list[cst.SimpleStatementLine] = []
         methods: list[cst.FunctionDef] = []
-        other_statements: list[cst.BaseStatement | cst.BaseSmallStatement | cst.SimpleStatementLine] = []
+        other_statements: list[cst.BaseStatement] = []
 
         idx: int = 0
         total_statements: int = len(class_body_statements)
@@ -694,9 +694,10 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
             elif isinstance(stmt, cst.FunctionDef):
                 # This is a class method
                 methods.append(stmt)
-            else:
-                # Other statements (e.g., pass, expressions, etc.)
+            elif isinstance(stmt, cst.BaseStatement):
+                # Other BaseStatement types (e.g., pass, expressions, etc.)
                 other_statements.append(stmt)
+            # Skip BaseSmallStatement types as they should be wrapped in SimpleStatementLine
 
         # Process methods: __init__ and other methods
         init_method: cst.FunctionDef | None = None
@@ -715,13 +716,13 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         else:
             methods_sorted = other_methods_sorted
 
-        # Assemble the new class body
-        new_body: list[cst.BaseStatement | cst.BaseSmallStatement | cst.SimpleStatementLine] = []
+        # Assemble the new class body - all elements must be BaseStatement
+        new_body: list[cst.BaseStatement] = []
         if docstring:
             new_body.append(docstring)
-        new_body.extend(class_attributes)  # Class attributes remain at the top in original order
-        new_body.extend(methods_sorted)
-        new_body.extend(other_statements)
+        new_body.extend(class_attributes)  # SimpleStatementLine inherits from BaseStatement
+        new_body.extend(methods_sorted)    # FunctionDef inherits from BaseStatement
+        new_body.extend(other_statements)  # Already BaseStatement
 
         new_class_body: cst.IndentedBlock = cst.IndentedBlock(body=new_body)
 
