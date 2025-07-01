@@ -583,9 +583,8 @@ Example output:
 Args:
 
 - `path` (`Path | str`): The root folder path to start the tree from.
-- `is_ignore_hidden_folders` (`bool`): If `True`, hidden folders (starting with a dot and ``node_modules)
-are excluded from the tree.
-Defaults to `False`.
+- `is_ignore_hidden_folders` (`bool`): If `True`, hidden folders (starting with a dot or
+  in the list of ignored folders) are excluded from the tree. Defaults to `False`.
 
 Returns:
 
@@ -615,7 +614,8 @@ def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False
 
     def __tree(path: Path | str, *, is_ignore_hidden_folders: bool = False, prefix: str = "") -> Iterator[str]:
         path = Path(path)
-        if is_ignore_hidden_folders and (path.name.startswith(".") or path.name == "node_modules"):
+        ignore_patterns = [".git", ".venv", "node_modules", "__pycache__", ".pytest_cache"]
+        if is_ignore_hidden_folders and (path.name.startswith(".") or path.name in ignore_patterns):
             contents = []
         else:
             try:
