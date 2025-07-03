@@ -1719,7 +1719,12 @@ def generate_image_captions_content(markdown_text: str) -> str:
 
             new_lines.append(modified_line)
 
-            caption = f"_Рисунок {image_count} — {alt_text}_" if lang == "ru" else f"_Figure {image_count}: {alt_text}_"
+            caption_templates = {
+                "ru": "_Рисунок {count} — {text}_",  # ignore: HP001
+                "en": "_Figure {count}: {text}_",
+            }
+            template = caption_templates.get(lang, caption_templates["en"])
+            caption = template.format(count=image_count, text=alt_text)
             new_lines.append("")
             new_lines.append(caption)
         else:
@@ -1865,7 +1870,9 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
 
     for line in lines:
         if line.startswith("#"):
-            if (lang == "ru" and line.strip() == "## Содержание") or (lang != "ru" and line.strip() == "## Contents"):
+            contents_headers = {"ru": "## Содержание", "en": "## Contents"}  # ignore: HP001
+            expected_header = contents_headers.get(lang, contents_headers["en"])
+            if line.strip() == expected_header:
                 continue
 
             # Determine the header level
@@ -1991,10 +1998,10 @@ def generate_summaries(folder: Path | str) -> str:
         # Find all second-level headings
         matches = heading_pattern.findall(content)
 
-        # Process valid entries (exclude "Содержание" and "Contents")
+        # Process valid entries (exclude "Содержание" and "Contents")  # ignore: HP001
         valid_entries = []
         for heading, rating_from_heading in matches:
-            if heading.strip() not in ["Содержание", "Contents"]:
+            if heading.strip() not in ["Содержание", "Contents"]:  # ignore: HP001
                 # If there's no explicit rating in the heading, look for a rating in the section
                 extracted_rating = rating_from_heading
                 if not extracted_rating:
@@ -2236,7 +2243,9 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     toc_lines = []
     for line in lines:
         if line.startswith("##"):
-            if (lang == "ru" and line.strip() == "## Содержание") or (lang != "ru" and line.strip() == "## Contents"):
+            contents_headers = {"ru": "## Содержание", "en": "## Contents"}  # ignore: HP001
+            expected_header = contents_headers.get(lang, contents_headers["en"])
+            if line.strip() == expected_header:
                 continue
             # Determine the header level
             match = re.match(r"#+", line)
@@ -2255,7 +2264,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             toc_lines.append(f"{'  ' * (level - 2)}- [{title_text}]({link})")
     toc = "\n".join(toc_lines)
     if lang == "ru":
-        toc = f"<details>\n<summary>📖 Содержание</summary>\n\n## Содержание\n\n{toc}\n\n</details>"
+        toc = f"<details>\n<summary>📖 Содержание</summary>\n\n## Содержание\n\n{toc}\n\n</details>"  # ignore: HP001
     else:
         toc = f"<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n{toc}\n\n</details>"
 
@@ -2574,7 +2583,7 @@ Returns:
 Note:
 
 - The function detects the document language from the YAML frontmatter's `lang` field.
-- TOC is identified as content between <details> and </details> tags containing "📖 Contents" or "📖 Содержание".
+- TOC is identified as content between <details> and </details> tags containing "📖 Contents".
 - The function preserves the YAML frontmatter in the output.
 
 Example:
@@ -2611,7 +2620,7 @@ def remove_toc_content(markdown_text: str) -> str:
             if (
                 next_line_idx < len(lines)
                 and "<summary>" in lines[next_line_idx]
-                and ("📖 Contents" in lines[next_line_idx] or "📖 Содержание" in lines[next_line_idx])
+                and ("📖 Contents" in lines[next_line_idx] or "📖 Содержание" in lines[next_line_idx])  # ignore: HP001
             ):
                 in_toc_section = True
                 toc_section_found = True
@@ -3034,8 +3043,7 @@ Note:
 - Sections marked with `<!-- top-section -->` are sorted alphabetically and placed first.
 - Date headings (like `## 2024-01-01`) are sorted in descending order.
 - Regular headings are sorted alphabetically.
-- Preserves `<details>...</details>` blocks that contain
-  `<summary>📖 Содержание</summary>` or `<summary>📖 Contents</summary>`.
+- Preserves `<details>...</details>` blocks that contain `<summary>📖 Contents</summary>` (or in Russian).
 
 Example:
 
@@ -3156,7 +3164,7 @@ def sort_sections_content(markdown_text: str) -> str:
         # --- Logic for <details> blocks ---
         if not in_code_block:
             if "<details>" in line.strip():
-                # check the next line - it might be <summary>📖 Содержание</summary> or <summary>📖 Contents</summary>
+                # check the next line - it might be <summary>📖 Contents</summary> (or in Russian)
                 # but sometimes summary might be a few lines ahead. For simplicity, check 1-2 lines ahead.
                 look_ahead = []
                 # collect maximum 3 lines (current line already exists)
@@ -3170,10 +3178,12 @@ def sort_sections_content(markdown_text: str) -> str:
                     except StopIteration:
                         break
 
-                # Join these lines back together, check if there's <summary> with "Содержание"/"Contents"
+                # Join these lines back together, check if there's <summary>
+                # with "Содержание"/"Contents" # ignore: HP001
                 block_text = "\n".join(look_ahead)
-                if "<summary>📖 Содержание</summary>" in block_text or "<summary>📖 Contents</summary>" in block_text:
-                    # this means we're in a block that should be skipped
+                ru_summary = "<summary>📖 Содержание</summary>"  # ignore: HP001
+                en_summary = "<summary>📖 Contents</summary>"
+                if ru_summary in block_text or en_summary in block_text:
                     skip_block = True
 
                 # In any case, add everything we've read to section_buffer

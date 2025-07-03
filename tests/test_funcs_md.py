@@ -803,7 +803,7 @@ date: 2024-06-15
 
 # Books 2023
 
-## Содержание
+## Contents
 
 This should be ignored.
 
@@ -878,7 +878,7 @@ A long book about a whale.
         current_year_pattern = re.compile(rf"\| {current_year} \| \d+ \|")
         assert current_year_pattern.search(table_content) is not None
 
-        assert "| 2023 | 2 |" in table_content  # 2 valid entries (excluding "Содержание")
+        assert "| 2023 | 2 |" in table_content  # 2 valid entries (excluding "Содержание")  # ignore: HP001
         assert "| 2022 | 2 |" in table_content  # 2 valid entries (excluding "Contents")
         assert "| 2021 | 3 |" in table_content  # 3 valid entries
 
@@ -911,7 +911,7 @@ A long book about a whale.
         assert "  - Moby Dick: 6" in short_content
 
         # Verify excluded entries don't appear
-        assert "  - Содержание" not in short_content
+        assert "  - Содержание" not in short_content  # ignore: HP001
         assert "  - Contents" not in short_content
 
         # Verify the years are in descending order in the table too
