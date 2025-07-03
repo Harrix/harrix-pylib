@@ -142,6 +142,14 @@ Doc: [markdown_checker.md](https://github.com/Harrix/harrix-pylib/tree/main/docs
 | ----------------------- | ---------------------------------------------------------------------- |
 | Class `MarkdownChecker` | Class for checking Markdown files for compliance with specified rules. |
 
+### File `python_checker.py`
+
+Doc: [python_checker.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/python_checker.md)
+
+| Function/Class        | Description                                                          |
+| --------------------- | -------------------------------------------------------------------- |
+| Class `PythonChecker` | Class for checking Python files for compliance with specified rules. |
+
 ## Development
 
 <details>
