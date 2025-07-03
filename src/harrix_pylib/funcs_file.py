@@ -101,7 +101,8 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
 
     Note:
 
-    - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.) are ignored during processing.
+    - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
+      are ignored during processing.
     - Hidden files and folders (those with names starting with a dot) are ignored during processing.
     - The function handles different return types from the `func` parameter:
       - If `None`: Shows a simple success message
@@ -232,7 +233,8 @@ def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -
 
     Note:
 
-    - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.) are ignored during processing.
+    - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
+      are ignored during processing.
     - Hidden files and folders (those with names starting with a dot) are ignored during processing.
 
     Example:
@@ -487,7 +489,7 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
 
 
 def should_ignore_path(
-    path: Path | str, additional_patterns: list[str] | None = None, ignore_hidden: bool = True
+    path: Path | str, additional_patterns: list[str] | None = None, *, is_ignore_hidden: bool = True
 ) -> bool:
     """Check if a path should be ignored based on common ignore patterns.
 
@@ -495,7 +497,7 @@ def should_ignore_path(
 
     - `path` (`Path | str`): The path to check for ignoring.
     - `additional_patterns` (`list[str] | None`): Additional patterns to ignore. Defaults to `None`.
-    - `ignore_hidden` (`bool`): Whether to ignore hidden files/folders (starting with dot). Defaults to `True`.
+    - `is_ignore_hidden` (`bool`): Whether to ignore hidden files/folders (starting with dot). Defaults to `True`.
 
     Returns:
 
@@ -547,7 +549,7 @@ def should_ignore_path(
         base_patterns.update(additional_patterns)
 
     # Check for hidden files/folders
-    if ignore_hidden and path.name.startswith("."):
+    if is_ignore_hidden and path.name.startswith("."):
         return True
 
     # Check against patterns

@@ -198,9 +198,8 @@ def test_lint_and_fix_python_code() -> None:
     assert h.py.lint_and_fix_python_code(well_formatted_code) == well_formatted_code
 
 
-def test_should_ignore_path():
+def test_should_ignore_path() -> None:
     """Test the h.file.should_ignore_path function with various scenarios."""
-
     with TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
 
@@ -233,38 +232,38 @@ def test_should_ignore_path():
         custom_dir.mkdir()
 
         # Test hidden files/folders (starting with dot)
-        assert h.file.should_ignore_path(hidden_dir) == True
-        assert h.file.should_ignore_path(git_dir) == True
-        assert h.file.should_ignore_path(venv_dir) == True
-        assert h.file.should_ignore_path(idea_dir) == True
+        assert h.file.should_ignore_path(hidden_dir)
+        assert h.file.should_ignore_path(git_dir)
+        assert h.file.should_ignore_path(venv_dir)
+        assert h.file.should_ignore_path(idea_dir)
 
         # Test standard ignore patterns
-        assert h.file.should_ignore_path(venv_no_dot_dir) == True
-        assert h.file.should_ignore_path(pycache_dir) == True
-        assert h.file.should_ignore_path(node_modules_dir) == True
+        assert h.file.should_ignore_path(venv_no_dot_dir)
+        assert h.file.should_ignore_path(pycache_dir)
+        assert h.file.should_ignore_path(node_modules_dir)
 
         # Test normal folders that should not be ignored
-        assert h.file.should_ignore_path(normal_dir) == False
-        assert h.file.should_ignore_path(custom_dir) == False
+        assert not h.file.should_ignore_path(normal_dir)
+        assert not h.file.should_ignore_path(custom_dir)
 
         # Test with string paths instead of Path objects
-        assert h.file.should_ignore_path(str(git_dir)) == True
-        assert h.file.should_ignore_path(str(normal_dir)) == False
+        assert h.file.should_ignore_path(str(git_dir))
+        assert not h.file.should_ignore_path(str(normal_dir))
 
         # Test with additional patterns
-        assert h.file.should_ignore_path(custom_dir, additional_patterns=["temp_logs"]) == True
-        assert h.file.should_ignore_path(normal_dir, additional_patterns=["temp_logs"]) == False
+        assert h.file.should_ignore_path(custom_dir, additional_patterns=["temp_logs"])
+        assert not h.file.should_ignore_path(normal_dir, additional_patterns=["temp_logs"])
 
         # Test with ignore_hidden=False
-        assert h.file.should_ignore_path(hidden_dir, ignore_hidden=False) == False
-        assert h.file.should_ignore_path(git_dir, ignore_hidden=False) == True  # Still ignored due to pattern
-        assert h.file.should_ignore_path(venv_dir, ignore_hidden=False) == True  # Still ignored due to pattern
+        assert not h.file.should_ignore_path(hidden_dir, is_ignore_hidden=False)
+        assert h.file.should_ignore_path(git_dir, is_ignore_hidden=False)  # Still ignored due to pattern
+        assert h.file.should_ignore_path(venv_dir, is_ignore_hidden=False)  # Still ignored due to pattern
 
         # Test with both additional patterns and ignore_hidden=False
         dot_custom = temp_path / ".custom"
         dot_custom.mkdir()
-        assert h.file.should_ignore_path(dot_custom, additional_patterns=["custom"], ignore_hidden=False) == False
-        assert h.file.should_ignore_path(dot_custom, additional_patterns=["custom"], ignore_hidden=True) == True
+        assert not h.file.should_ignore_path(dot_custom, additional_patterns=["custom"], is_ignore_hidden=False)
+        assert h.file.should_ignore_path(dot_custom, additional_patterns=["custom"], is_ignore_hidden=True)
 
         # Test system-specific files
         ds_store = temp_path / ".DS_Store"
@@ -272,8 +271,8 @@ def test_should_ignore_path():
         thumbs_db = temp_path / "Thumbs.db"
         thumbs_db.touch()
 
-        assert h.file.should_ignore_path(ds_store) == True
-        assert h.file.should_ignore_path(thumbs_db) == True
+        assert h.file.should_ignore_path(ds_store)
+        assert h.file.should_ignore_path(thumbs_db)
 
 
 def test_sort_py_code() -> None:
