@@ -68,6 +68,7 @@ Doc: [funcs_file.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/funcs
 | `find_max_folder_number`            | Find the highest folder number in a given folder based on a pattern.                              |
 | `open_file_or_folder`               | Open a file or folder using the operating system's default application.                           |
 | `rename_largest_images_to_featured` | Find the largest image in each subdirectory of the given path and renames it to 'featured-image'. |
+| `should_ignore_path`                | Check if a path should be ignored based on common ignore patterns.                                |
 | `tree_view_folder`                  | Generate a tree-like representation of folder contents.                                           |
 
 ### File `funcs_md.py`

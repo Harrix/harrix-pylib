@@ -460,6 +460,74 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
     return "\n".join(result_lines)
 
 
+def should_ignore_path(
+    path: Path | str, additional_patterns: list[str] | None = None, ignore_hidden: bool = True
+) -> bool:
+    """Check if a path should be ignored based on common ignore patterns.
+
+    Args:
+
+    - `path` (`Path | str`): The path to check for ignoring.
+    - `additional_patterns` (`list[str] | None`): Additional patterns to ignore. Defaults to `None`.
+    - `ignore_hidden` (`bool`): Whether to ignore hidden files/folders (starting with dot). Defaults to `True`.
+
+    Returns:
+
+    - `bool`: `True` if the path should be ignored, `False` otherwise.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+    from pathlib import Path
+
+    path1 = Path(".git")
+    result1 = h.should_ignore_path(path1)
+    print(result1)
+
+    path2 = Path("my_folder")
+    result2 = h.should_ignore_path(path2)
+    print(result2)
+
+    path3 = Path("temp")
+    result3 = h.should_ignore_path(path3, additional_patterns=["temp", "logs"])
+    print(result3)
+    ```
+
+    """
+    path = Path(path)
+
+    # Base patterns to ignore
+    base_patterns = {
+        ".git",
+        ".venv",
+        "venv",
+        "__pycache__",
+        ".pytest_cache",
+        "node_modules",
+        ".idea",
+        ".vscode",
+        "build",
+        "dist",
+        ".DS_Store",
+        "Thumbs.db",
+        ".cache",
+        ".npm",
+        ".vs",
+    }
+
+    # Add additional patterns if provided
+    if additional_patterns:
+        base_patterns.update(additional_patterns)
+
+    # Check for hidden files/folders
+    if ignore_hidden and path.name.startswith("."):
+        return True
+
+    # Check against patterns
+    return path.name in base_patterns
+
+
 def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False) -> str:
     """Generate a tree-like representation of folder contents.
 
@@ -503,8 +571,7 @@ def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False
 
     def __tree(path: Path | str, *, is_ignore_hidden_folders: bool = False, prefix: str = "") -> Iterator[str]:
         path = Path(path)
-        ignore_patterns = [".git", ".venv", "node_modules", "__pycache__", ".pytest_cache"]
-        if is_ignore_hidden_folders and (path.name.startswith(".") or path.name in ignore_patterns):
+        if is_ignore_hidden_folders and (path.name.startswith(".") or should_ignore_path(path.name)):
             contents = []
         else:
             try:

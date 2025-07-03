@@ -198,6 +198,84 @@ def test_lint_and_fix_python_code() -> None:
     assert h.py.lint_and_fix_python_code(well_formatted_code) == well_formatted_code
 
 
+def test_should_ignore_path():
+    """Test the h.file.should_ignore_path function with various scenarios."""
+
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Create test directories and files
+        hidden_dir = temp_path / ".hidden"
+        hidden_dir.mkdir()
+
+        git_dir = temp_path / ".git"
+        git_dir.mkdir()
+
+        venv_dir = temp_path / ".venv"
+        venv_dir.mkdir()
+
+        venv_no_dot_dir = temp_path / "venv"
+        venv_no_dot_dir.mkdir()
+
+        pycache_dir = temp_path / "__pycache__"
+        pycache_dir.mkdir()
+
+        node_modules_dir = temp_path / "node_modules"
+        node_modules_dir.mkdir()
+
+        idea_dir = temp_path / ".idea"
+        idea_dir.mkdir()
+
+        normal_dir = temp_path / "normal_folder"
+        normal_dir.mkdir()
+
+        custom_dir = temp_path / "temp_logs"
+        custom_dir.mkdir()
+
+        # Test hidden files/folders (starting with dot)
+        assert h.file.should_ignore_path(hidden_dir) == True
+        assert h.file.should_ignore_path(git_dir) == True
+        assert h.file.should_ignore_path(venv_dir) == True
+        assert h.file.should_ignore_path(idea_dir) == True
+
+        # Test standard ignore patterns
+        assert h.file.should_ignore_path(venv_no_dot_dir) == True
+        assert h.file.should_ignore_path(pycache_dir) == True
+        assert h.file.should_ignore_path(node_modules_dir) == True
+
+        # Test normal folders that should not be ignored
+        assert h.file.should_ignore_path(normal_dir) == False
+        assert h.file.should_ignore_path(custom_dir) == False
+
+        # Test with string paths instead of Path objects
+        assert h.file.should_ignore_path(str(git_dir)) == True
+        assert h.file.should_ignore_path(str(normal_dir)) == False
+
+        # Test with additional patterns
+        assert h.file.should_ignore_path(custom_dir, additional_patterns=["temp_logs"]) == True
+        assert h.file.should_ignore_path(normal_dir, additional_patterns=["temp_logs"]) == False
+
+        # Test with ignore_hidden=False
+        assert h.file.should_ignore_path(hidden_dir, ignore_hidden=False) == False
+        assert h.file.should_ignore_path(git_dir, ignore_hidden=False) == True  # Still ignored due to pattern
+        assert h.file.should_ignore_path(venv_dir, ignore_hidden=False) == True  # Still ignored due to pattern
+
+        # Test with both additional patterns and ignore_hidden=False
+        dot_custom = temp_path / ".custom"
+        dot_custom.mkdir()
+        assert h.file.should_ignore_path(dot_custom, additional_patterns=["custom"], ignore_hidden=False) == False
+        assert h.file.should_ignore_path(dot_custom, additional_patterns=["custom"], ignore_hidden=True) == True
+
+        # Test system-specific files
+        ds_store = temp_path / ".DS_Store"
+        ds_store.touch()
+        thumbs_db = temp_path / "Thumbs.db"
+        thumbs_db.touch()
+
+        assert h.file.should_ignore_path(ds_store) == True
+        assert h.file.should_ignore_path(thumbs_db) == True
+
+
 def test_sort_py_code() -> None:
     current_folder = h.dev.get_project_root()
     py = Path(current_folder / "tests/data/sort_py_code__before.txt").read_text(encoding="utf8")
