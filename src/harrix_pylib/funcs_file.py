@@ -101,6 +101,7 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
 
     Note:
 
+    - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.) are ignored during processing.
     - Hidden files and folders (those with names starting with a dot) are ignored during processing.
     - The function handles different return types from the `func` parameter:
       - If `None`: Shows a simple success message
@@ -132,8 +133,18 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
     folder_path = Path(path)
 
     for file_path in folder_path.rglob(f"*{ext}"):
-        # Exclude all folders and files starting with a dot
-        if file_path.is_file() and not any(part.startswith(".") for part in file_path.parts):
+        # Check if file should be processed
+        if file_path.is_file():
+            # Check if any part of the path should be ignored
+            should_skip = False
+            for part in file_path.parts:
+                if should_ignore_path(part):
+                    should_skip = True
+                    break
+
+            if should_skip:
+                continue
+
             try:
                 result = func(str(file_path))
                 if result is None:
@@ -145,7 +156,7 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
                         list_lines.append(f"✅ File {file_path.name} is applied.")
                     else:
                         list_lines.append(f"✅ File {file_path.name} is applied:")
-                        list_lines.append([f"  - {item}\n" for item in result])
+                        list_lines.extend([f"  - {item}" for item in result])
                 else:
                     list_lines.append(f"✅ File {file_path.name} is applied: {result}")
             except OSError as e:
@@ -212,12 +223,17 @@ def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -
     - `path` (`Path | str`): The directory path where the files will be searched.
       If provided as a string, it will be converted to a Path object.
     - `ext` (`str`): The file extension to filter files. For example, ".md".
-    - `func` (`Callable[[Path | str], lis]`): A function that takes a file path and returns a list
+    - `func` (`Callable[[Path | str], list]`): A function that takes a file path and returns a list
       representing check results or errors.
 
     Returns:
 
     - `list`: A combined list of all check results from all processed files.
+
+    Note:
+
+    - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.) are ignored during processing.
+    - Hidden files and folders (those with names starting with a dot) are ignored during processing.
 
     Example:
 
@@ -242,8 +258,18 @@ def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -
     folder_path = Path(path)
 
     for file_path in folder_path.rglob(f"*{ext}"):
-        # Exclude all folders and files starting with a dot
-        if file_path.is_file() and not any(part.startswith(".") for part in file_path.parts):
+        # Check if file should be processed
+        if file_path.is_file():
+            # Check if any part of the path should be ignored
+            should_skip = False
+            for part in file_path.parts:
+                if should_ignore_path(part):
+                    should_skip = True
+                    break
+
+            if should_skip:
+                continue
+
             result = func(file_path)
             if result is not None and result:
                 list_checkers.extend(result)
@@ -544,8 +570,9 @@ def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False
     Args:
 
     - `path` (`Path | str`): The root folder path to start the tree from.
-    - `is_ignore_hidden_folders` (`bool`): If `True`, hidden folders (starting with a dot or
-      in the list of ignored folders) are excluded from the tree. Defaults to `False`.
+    - `is_ignore_hidden_folders` (`bool`): If `True`, hidden folders and files (starting with a dot or
+      matching common ignore patterns like `.git`, `__pycache__`, `node_modules`, etc.) are shown in the tree
+      but their contents are not explored. Defaults to `False`.
 
     Returns:
 
@@ -556,6 +583,7 @@ def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False
     - This function uses recursion to traverse folders. It handles `PermissionError`
       by excluding folders without permission.
     - Uses ASCII characters to represent tree branches (`├──`, `└──`, `│`).
+    - When `is_ignore_hidden_folders` is `True`, ignored folders are displayed but not traversed.
 
     Example:
 
@@ -565,23 +593,27 @@ def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False
 
     tree = h.file.tree_view_folder("C:/Notes")
     print(tree)
+
+    # Show ignored folders but don't explore their contents
+    tree_clean = h.file.tree_view_folder("C:/Notes", is_ignore_hidden_folders=True)
+    print(tree_clean)
     ```
 
     """
 
     def __tree(path: Path | str, *, is_ignore_hidden_folders: bool = False, prefix: str = "") -> Iterator[str]:
         path = Path(path)
-        if is_ignore_hidden_folders and (path.name.startswith(".") or should_ignore_path(path.name)):
+        try:
+            contents = list(path.iterdir())
+        except PermissionError:
             contents = []
-        else:
-            try:
-                contents = list(path.iterdir())
-            except PermissionError:
-                contents = []
+
         pointers = ["├─ "] * (len(contents) - 1) + ["└─ "]
         for pointer, item in zip(pointers, contents, strict=False):
             yield prefix + pointer + item.name
-            if item.is_dir():
+
+            # Only traverse into directories if they shouldn't be ignored or if we're not ignoring
+            if item.is_dir() and not (is_ignore_hidden_folders and should_ignore_path(item.name)):
                 extension = "│  " if pointer == "├─ " else "   "
                 yield from __tree(item, is_ignore_hidden_folders=is_ignore_hidden_folders, prefix=prefix + extension)
 
