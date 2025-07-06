@@ -1480,7 +1480,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
 
     # Add captions
     image_re = re.compile(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$")
-    forbidden_substrings = ("![Featured image](featured-image", "img.shields.io", "<!-- no-caption -->")
+    forbidden_substrings = ("![Featured image](", "img.shields.io", "<!-- no-caption -->")
 
     image_count = 0
     new_lines = []
