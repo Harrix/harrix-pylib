@@ -291,7 +291,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
 
     # Copy all MD files from root to docs folder
     for md_file in folder.glob("*.md"):
-        if md_file.is_file():
+        if md_file.is_file() and not md_file.name.startswith("."):
             # Special handling for README.md - create index.md
             if md_file.name.upper() == "README.MD":
                 original_content = md_file.read_text(encoding="utf8")
