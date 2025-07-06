@@ -1034,10 +1034,12 @@ def format_yaml_content(markdown_text: str) -> str:
     Returns:
 
     - `str`: The formatted YAML content followed by the Markdown content.
+      If no YAML front matter exists, returns the original text unchanged.
 
     Note:
 
     - It uses a custom YAML dumper (`IndentDumper`) to adjust indentation.
+    - If the document doesn't contain YAML front matter, it remains unchanged.
 
     Example:
 
@@ -1046,13 +1048,21 @@ def format_yaml_content(markdown_text: str) -> str:
     from pathlib import Path
 
     text = Path('example.md').read_text(encoding="utf8")
-    print(h.md.format_yaml(text))
+    print(h.md.format_yaml_content(text))
     ```
 
     """
     yaml_md, content_md = split_yaml_content(markdown_text)
 
+    # If no YAML front matter exists, return original text
+    if not yaml_md.strip():
+        return markdown_text
+
     data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+
+    # If YAML data is None or empty, return original text
+    if data_yaml is None:
+        return markdown_text
 
     class IndentDumper(yaml.Dumper):
         def increase_indent(
