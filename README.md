@@ -2,13 +2,13 @@
 
 ![Featured image](https://raw.githubusercontent.com/Harrix/harrix-pylib/refs/heads/main/img/featured-image.svg)
 
-Common functions for working in Python (>= 3.10) for [my projects](https://github.com/Harrix?tab=repositories).
+This is a **Python library** containing common functions for working in Python (>= 3.10) for [my projects](https://github.com/Harrix?tab=repositories).
 
-![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
+![GitHub](https://img.shields.io/badge/GitHub-harrix--pylib-blue?logo=github) ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
 
-GitHub: <https://github.com/Harrix/harrix-pylib>.
+GitHub: <https://github.com/Harrix/harrix-pylib>
 
-Documentation: [docs](https://github.com/Harrix/harrix-pylib/blob/main/docs/index.md).
+Documentation: [docs](https://github.com/Harrix/harrix-pylib/blob/main/docs/index.md)
 
 ## Install
 
@@ -144,77 +144,6 @@ Doc: [python_checker.md](https://github.com/Harrix/harrix-pylib/tree/main/docs/p
 | --------------------- | -------------------------------------------------------------------- |
 | Class `PythonChecker` | Class for checking Python files for compliance with specified rules. |
 
-## Development
-
-<details>
-<summary>Deploy on an empty machine ⬇️</summary>
-
-For me:
-
-- Install [uv](https://docs.astral.sh/uv/) ([Installing and Working with uv (Python) in VSCode](https://github.com/Harrix/harrix.dev-articles-2025-en/blob/main/uv-vscode-python/uv-vscode-python.md)), VSCode (with python extensions), Git.
-
-- Clone project:
-
-  ```shell
-  mkdir C:/GitHub
-  cd C:/GitHub
-  git clone https://github.com/Harrix/harrix-pylib.git
-  ```
-
-- Open the folder `C:/GitHub/harrix-pylib` in VSCode.
-
-- Open a terminal `Ctrl` + `` ` ``.
-
-- Run `uv sync`.
-
-CLI commands after installation.
-
-- `uv self update` — update uv itself.
-- `uv sync --upgrade` — update all project libraries (sometimes you need to call twice).
-- `isort .` — sort imports.
-- `ruff format` — format the project's Python files.
-- `ruff check` — lint the project's Python files.
-- `ruff check --fix` — lint and fix the project's Python files.
-- `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
-- `vermin src` — determines the minimum version of Python.
-- `pytest -m slow` — run pytest with slow tests.
-
-</details>
-
-<details>
-<summary>Adding a new function ⬇️</summary>
-
-For me:
-
-- Add the function in `src/harrix_pylib/funcs_<module>.py`.
-- Write a docstring in Markdown style.
-- Add an example in Markdown style.
-- Add a test in `tests/funcs_<module>.py`.
-- Run `pytest`.
-- From `harrix-swiss-knife`, call the command `Python` → `Sort classes, methods, functions in PY files`.
-  and select folder `harrix-pylib`.
-- From `harrix-swiss-knife`, call the command `Python` → `Generate MD documentation in …`
-  and select folder `harrix-pylib`.
-- Create a commit `➕ Add function <function>()`.
-- Update the version in `pyproject.toml`.
-- Delete the folder `dist`.
-- Run `uv sync --upgrade`.
-- Run `uv build`.
-- Run `uv publish --token <token>`.
-- Create a commit `🚀 Build version <number>`.
-
-### Minimum Python Version
-
-We determine the minimum Python version using [vermin](https://github.com/netromdk/vermin):
-
-```shell
-vermin src
-```
-
-However, if the version is below 3.10, we stick with 3.10 because Python 3.10 annotations are used.
-
-</details>
-
 ## License
 
-License: [MIT](https://github.com/Harrix/harrix-swiss-knife/blob/main/LICENSE.md).
+License: [MIT](https://github.com/Harrix/harrix-pylib/blob/main/LICENSE.md).
