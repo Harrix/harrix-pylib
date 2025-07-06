@@ -671,9 +671,7 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_m
 
     # Collect all folders, excluding ignored ones
     all_folders = [
-        subfolder
-        for subfolder in Path(folder_path).rglob("*")
-        if subfolder.is_dir() and should_process_path(subfolder)
+        subfolder for subfolder in Path(folder_path).rglob("*") if subfolder.is_dir() and should_process_path(subfolder)
     ]
 
     # Add the root folder if it should be processed
@@ -687,22 +685,23 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_m
     for folder in all_folders:
         # Get all .md files in this folder (non-recursively)
         md_files_in_folder = [
-            f for f in folder.glob("*.md")
-            if f.is_file() and should_include_file(f) and should_process_path(f)
+            f for f in folder.glob("*.md") if f.is_file() and should_include_file(f) and should_process_path(f)
         ]
 
         # Get all .md files in this folder and its subfolders (recursively)
         md_files_recursive = [
-            f for f in folder.rglob("*.md")
-            if f.is_file() and should_include_file(f) and should_process_path(f)
+            f for f in folder.rglob("*.md") if f.is_file() and should_include_file(f) and should_process_path(f)
         ]
 
         # Get .g.md files in direct subfolders (these were created in previous iterations, but exclude .include.g.md)
         g_md_files_in_subfolders = []
         for subfolder in [f for f in folder.iterdir() if f.is_dir() and should_process_path(f)]:
             g_md_files_in_subfolders.extend(
-                [f for f in subfolder.glob("*.g.md")
-                 if f.is_file() and not f.name.endswith(".include.g.md") and should_process_path(f)]
+                [
+                    f
+                    for f in subfolder.glob("*.g.md")
+                    if f.is_file() and not f.name.endswith(".include.g.md") and should_process_path(f)
+                ]
             )
 
         # Create a combined file if:
