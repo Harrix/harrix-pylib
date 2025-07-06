@@ -219,8 +219,8 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
     output_lines = []
     output_lines.append(f"### File `{filename.name}`\n")
     if is_add_link_demo:
-        link = f"{domain}/tree/main/docs/{filename.stem}.md"
-        output_lines.append(f"Doc: [{filename.stem}.md]({link})\n")
+        link = f"{domain}/tree/main/docs/{filename.stem}.g.md"
+        output_lines.append(f"Doc: [{filename.stem}.g.md]({link})\n")
     output_lines.append("| Function/Class | Description |")
     output_lines.append("|----------------|-------------|")
 
