@@ -34,7 +34,7 @@ h.file.clear_directory("C:/temp_dir")
 ```py
 import harrixpylib as h
 
-md_clean = h.file.remove_yaml_from_markdown("""
+md_clean = h.file.remove_yaml_content("""
 ---
 categories: [it, program]
 tags: [VSCode, FAQ]
