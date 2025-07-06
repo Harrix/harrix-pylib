@@ -201,19 +201,35 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
         # Retrieve docstring and extract the first line (summary)
         docstring = ast.get_docstring(class_node)
         summary = docstring.splitlines()[0] if docstring else ""
-        # Format the class entry
-        name = f"Class `{class_name} ({base_classes_str})`" if base_classes_str else f"Class `{class_name}`"
+
+        # Format the class entry with link
+        if is_add_link_demo and domain:
+            class_link = f"{domain}/tree/main/docs/{filename.stem}.g.md#class-{class_name.lower()}"
+            if base_classes_str:
+                name = f"Class [`{class_name} ({base_classes_str})`]({class_link})"
+            else:
+                name = f"Class [`{class_name}`]({class_link})"
+        else:
+            name = f"Class `{class_name} ({base_classes_str})`" if base_classes_str else f"Class `{class_name}`"
+
         description = summary
         entries.append((name, description))
 
     # Process functions
     for func_node in functions:
-        func_name = f"`{func_node.name}`"
+        func_name = func_node.name
         # Retrieve docstring and extract the first line (summary)
         docstring = ast.get_docstring(func_node)
         summary = docstring.splitlines()[0] if docstring else ""
-        # Format the function entry
-        entries.append((func_name, summary))
+
+        # Format the function entry with link
+        if is_add_link_demo and domain:
+            func_link = f"{domain}/tree/main/docs/{filename.stem}.g.md#function-{func_name.lower()}"
+            name = f"[`{func_name}`]({func_link})"
+        else:
+            name = f"`{func_name}`"
+
+        entries.append((name, summary))
 
     # Create Markdown table
     output_lines = []
