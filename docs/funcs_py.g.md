@@ -290,12 +290,14 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
     folder = Path(folder)
 
     docs_folder = folder / "docs"
-    docs_folder.mkdir(parents=True, exist_ok=True)
 
-    # Remove all existing .g.md files before generating new ones
-    for old_file in docs_folder.rglob("*.g.md"):
-        old_file.unlink()
-        result_lines.append(f"Removed old auto-generated file {old_file.name}")
+    # Remove entire docs folder and recreate it
+    if docs_folder.exists():
+        shutil.rmtree(docs_folder)
+        result_lines.append("Removed entire docs folder")
+
+    docs_folder.mkdir(parents=True, exist_ok=True)
+    result_lines.append("Created clean docs folder")
 
     list_funcs_all = ""
     src_folder = folder / "src"
