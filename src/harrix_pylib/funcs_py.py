@@ -292,18 +292,18 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
     # Copy all MD files from root to docs folder
     for md_file in folder.glob("*.md"):
         if md_file.is_file() and not md_file.name.startswith("."):
-            # Special handling for README.md - create index.md
+            # Special handling for README.md - create index.g.md
             if md_file.name.upper() == "README.MD":
                 original_content = md_file.read_text(encoding="utf8")
                 final_content = beginning_of_md + "\n" + original_content
                 final_content = h.md.generate_toc_with_links_content(final_content)
                 final_content = h.md.generate_image_captions_content(final_content)
 
-                (docs_folder / "index.md").write_text(final_content, encoding="utf8")
-                result_lines.append(f"File {md_file.name} copied as index.md")
+                (docs_folder / "index.g.md").write_text(final_content, encoding="utf8")
+                result_lines.append(f"File {md_file.name} copied as index.g.md")
             else:
-                # Convert filename to lowercase for other MD files
-                target_filename = md_file.stem.lower() + ".md"
+                # Convert filename to lowercase for other MD files and add .g.md
+                target_filename = md_file.stem.lower() + ".g.md"
                 target_path = docs_folder / target_filename
 
                 # Read original content and add beginning_of_md

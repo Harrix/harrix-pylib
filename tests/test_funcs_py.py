@@ -103,7 +103,7 @@ class ExampleClass:
 
         # Assertions
         docs_folder = temp_path / "docs"
-        index_file = docs_folder / "index.md"
+        index_file = docs_folder / "index.g.md"
         test_file_docs = docs_folder / "test_file.g.md"
 
         # Check if documentation was generated
@@ -111,12 +111,12 @@ class ExampleClass:
         assert index_file.exists(), "Index file should be created."
         assert test_file_docs.exists(), "Test file documentation should be created."
 
-        # Check content of index.md
+        # Check content of index.g.md
         index_content = index_file.read_text(encoding="utf8")
         assert "# Test Documentation" in index_content, "Index file should contain the beginning Markdown."
         assert "## List of functions" in index_content, "Index should include a list of functions section."
 
-        # Check content of test_file.md
+        # Check content of test_file.g.md
         test_file_content = test_file_docs.read_text(encoding="utf8")
         assert "# File `test_file.py`" in test_file_content, "Test file documentation should start with its name."
         assert "```python" in test_file_content, "Should contain code blocks."
@@ -129,8 +129,8 @@ class ExampleClass:
 
         # Check the result string
         assert "File test_file.py is processed." in result, "Result should indicate processing of the test file."
-        assert "File README.md copied as index.md" in result, (
-            "Result should indicate creation of index.md from README.md."
+        assert "File README.md copied as index.g.md" in result, (
+            "Result should indicate creation of index.g.md from README.md."
         )
 
 
