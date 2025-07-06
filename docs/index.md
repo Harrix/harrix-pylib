@@ -6,7 +6,7 @@ lang: en
 
 # harrix-pylib
 
-![harrix-pylib](https://raw.githubusercontent.com/Harrix/harrix-pylib/refs/heads/main/img/featured-image.svg)
+![Featured image](https://raw.githubusercontent.com/Harrix/harrix-pylib/refs/heads/main/img/featured-image.svg)
 
 Common functions for working in Python (>= 3.10) for [my projects](https://github.com/Harrix?tab=repositories).
 

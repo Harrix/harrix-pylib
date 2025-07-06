@@ -639,21 +639,22 @@ def should_ignore_path(
 
     # Base patterns to ignore
     base_patterns = {
-        ".git",
-        ".venv",
-        "venv",
         "__pycache__",
-        ".pytest_cache",
-        "node_modules",
+        ".cache",
+        ".DS_Store",
+        ".git",
         ".idea",
+        ".npm",
+        ".pytest_cache",
+        ".venv",
+        ".vs",
         ".vscode",
         "build",
+        "config",
         "dist",
-        ".DS_Store",
+        "node_modules",
         "Thumbs.db",
-        ".cache",
-        ".npm",
-        ".vs",
+        "venv",
     }
 
     # Add additional patterns if provided
