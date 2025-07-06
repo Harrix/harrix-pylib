@@ -328,9 +328,39 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
     except ValueError:
         result_lines.append("❗ Don't find `## List of functions`.")
 
-    index_content = beginning_of_md + "\n" + Path(folder / "README.md").read_text(encoding="utf8")
-    Path(docs_folder / "index.md").write_text(index_content, encoding="utf8")
-    result_lines.append("File index.md is created.")
+    # Copy all MD files from root to docs folder
+    for md_file in folder.glob("*.md"):
+        if md_file.is_file():
+            # Special handling for README.md - create both readme.md and index.md
+            if md_file.name.upper() == "README.MD":
+                # Create index.md
+                original_content = md_file.read_text(encoding="utf8")
+                final_content = beginning_of_md + "\n" + original_content
+                final_content = h.md.generate_toc_with_links_content(final_content)
+                final_content = h.md.generate_image_captions_content(final_content)
+
+                (docs_folder / "index.md").write_text(final_content, encoding="utf8")
+                result_lines.append(f"File {md_file.name} copied as index.md")
+
+                # Also create readme.md
+                (docs_folder / "readme.md").write_text(final_content, encoding="utf8")
+                result_lines.append(f"File {md_file.name} copied as readme.md")
+            else:
+                # Convert filename to lowercase for other MD files
+                target_filename = md_file.stem.lower() + ".md"
+                target_path = docs_folder / target_filename
+
+                # Read original content and add beginning_of_md
+                original_content = md_file.read_text(encoding="utf8")
+                final_content = beginning_of_md + "\n" + original_content
+
+                # Apply additional processing
+                final_content = h.md.generate_toc_with_links_content(final_content)
+                final_content = h.md.generate_image_captions_content(final_content)
+
+                # Write to docs folder
+                target_path.write_text(final_content, encoding="utf8")
+                result_lines.append(f"File {md_file.name} copied as {target_filename}")
 
     return "\n".join(result_lines)
 ```

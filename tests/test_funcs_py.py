@@ -104,11 +104,13 @@ class ExampleClass:
         # Assertions
         docs_folder = temp_path / "docs"
         index_file = docs_folder / "index.md"
+        readme_file = docs_folder / "readme.md"
         test_file_docs = docs_folder / "test_file.g.md"
 
         # Check if documentation was generated
         assert docs_folder.exists(), "Docs folder should be created."
         assert index_file.exists(), "Index file should be created."
+        assert readme_file.exists(), "Readme file should be created."
         assert test_file_docs.exists(), "Test file documentation should be created."
 
         # Check content of index.md
@@ -129,7 +131,12 @@ class ExampleClass:
 
         # Check the result string
         assert "File test_file.py is processed." in result, "Result should indicate processing of the test file."
-        assert "File index.md is created." in result, "Result should indicate creation of index.md."
+        assert "File README.md copied as index.md" in result, (
+            "Result should indicate creation of index.md from README.md."
+        )
+        assert "File README.md copied as readme.md" in result, (
+            "Result should indicate creation of readme.md from README.md."
+        )
 
 
 def test_generate_md_docs_content() -> None:
