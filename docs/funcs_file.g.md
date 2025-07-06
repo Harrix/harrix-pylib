@@ -653,6 +653,7 @@ def should_ignore_path(
         "config",
         "dist",
         "node_modules",
+        "tests",
         "Thumbs.db",
         "venv",
     }
