@@ -41,7 +41,7 @@ Rules:
 
 Examples for ignore directives:
 
-```
+```python
 # ignore: HP001
 # ignore: HP001, HP002
 ```
