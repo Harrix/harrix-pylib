@@ -1,5 +1,18 @@
 # Development
 
+<details>
+<summary>📖 Contents</summary>
+
+## Contents
+
+- [Deploy on an empty machine](#deploy-on-an-empty-machine)
+  - [Prerequisites](#prerequisites)
+  - [Installation steps](#installation-steps)
+- [CLI commands](#cli-commands)
+- [Adding a new function](#adding-a-new-function)
+
+</details>
+
 ## Deploy on an empty machine
 
 ### Prerequisites

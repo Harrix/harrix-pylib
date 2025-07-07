@@ -4,6 +4,24 @@
 
 This is a **Python library** containing common functions for working in Python (>= 3.10) for [my projects](https://github.com/Harrix?tab=repositories).
 
+<details>
+<summary>📖 Contents</summary>
+
+## Contents
+
+- [Install](#install)
+- [Quick start](#quick-start)
+- [List of functions](#list-of-functions)
+  - [File `funcs_dev.py`](#file-funcs_devpy)
+  - [File `funcs_file.py`](#file-funcs_filepy)
+  - [File `funcs_md.py`](#file-funcs_mdpy)
+  - [File `funcs_py.py`](#file-funcs_pypy)
+  - [File `markdown_checker.py`](#file-markdown_checkerpy)
+  - [File `python_checker.py`](#file-python_checkerpy)
+- [License](#license)
+
+</details>
+
 ![GitHub](https://img.shields.io/badge/GitHub-harrix--pylib-blue?logo=github) ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
 
 GitHub: <https://github.com/Harrix/harrix-pylib>
