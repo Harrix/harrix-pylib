@@ -1,6 +1,6 @@
 [project]
 name = "harrix-pylib"
-version = "0.164"
+version = "0.165"
 description = "Common functions for working in Python"
 readme = "README.md"
 license = { file = "LICENSE.md" }
