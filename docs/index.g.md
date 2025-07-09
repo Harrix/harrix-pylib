@@ -32,7 +32,7 @@ This is a **Python library** containing common functions for working in Python (
 
 GitHub: <https://github.com/Harrix/harrix-pylib>
 
-Documentation: [docs](https://github.com/Harrix/harrix-pylib/blob/main/docs/index.md)
+Documentation: [docs](https://github.com/Harrix/harrix-pylib/blob/main/docs/index.g.md)
 
 ## Install
 
