@@ -8,6 +8,8 @@ import subprocess
 from collections.abc import Callable, Iterator
 from pathlib import Path
 
+from transliterate import translit
+
 
 def all_to_parent_folder(path: Path | str) -> str:
     """Move all files from subfolders within the given path to the parent folder and then
@@ -404,6 +406,196 @@ def open_file_or_folder(path: Path | str) -> None:
         raise RuntimeError(msg)
 
     subprocess.run([opener, str(target)], check=False, shell=False)
+
+
+def rename_fb2_file(filename: Path | str) -> str:
+    """Rename FB2 file based on metadata from file content.
+
+    This function reads an FB2 file and extracts author, title, and year information
+    from its XML metadata. The file is then renamed according to the pattern:
+    "Author - Title - Year.fb2" (year is optional).
+
+    If metadata extraction fails, the function attempts to transliterate the filename
+    from English to Russian, assuming it might be a transliterated Russian title.
+    If transliteration doesn't improve the filename, it remains unchanged.
+
+    Args:
+
+    - `filename` (`Path | str`): The path to the FB2 file to be processed.
+
+    Returns:
+
+    - `str`: A status message indicating the result of the operation.
+
+    Note:
+
+    - The function modifies the filename in place if changes are made.
+    - Requires 'transliterate' library for Russian transliteration.
+    - Handles various FB2 metadata formats and encodings.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    rename_fb2_file("C:/Books/unknown_book.fb2")
+    ```
+
+    """
+
+    def extract_fb2_metadata(file_path: Path | str) -> tuple[str | None, str | None, str | None]:
+        """Extract author, title, and year from FB2 file."""
+        try:
+            with Path.open(Path(file_path), encoding="utf-8") as f:
+                content = f.read()
+        except UnicodeDecodeError:
+            try:
+                with Path.open(Path(file_path), encoding="windows-1251") as f:
+                    content = f.read()
+            except UnicodeDecodeError:
+                return None, None, None
+
+        # Clean up content for XML parsing
+        content = re.sub(r"<\?xml[^>]*\?>", "", content)
+        content = re.sub(r"<!DOCTYPE[^>]*>", "", content)
+
+        try:
+            # Find the description section
+            desc_match = re.search(r"<description>(.*?)</description>", content, re.DOTALL)
+            if not desc_match:
+                return None, None, None
+
+            desc_content = desc_match.group(1)
+
+            # Extract author
+            author = None
+            author_patterns = [
+                r"<first-name>(.*?)</first-name>.*?<last-name>(.*?)</last-name>",
+                r"<last-name>(.*?)</last-name>.*?<first-name>(.*?)</first-name>",
+                r"<author[^>]*>(.*?)</author>",
+            ]
+
+            for pattern in author_patterns:
+                match = re.search(pattern, desc_content, re.DOTALL)
+                if match:
+                    count_elements = 2
+                    if len(match.groups()) == count_elements:
+                        first_name = match.group(1).strip()
+                        last_name = match.group(2).strip()
+                        author = f"{first_name} {last_name}"
+                    else:
+                        author = match.group(1).strip()
+                    break
+
+            # Extract title
+            title = None
+            title_patterns = [r"<book-title>(.*?)</book-title>", r"<title[^>]*>(.*?)</title>"]
+
+            for pattern in title_patterns:
+                match = re.search(pattern, desc_content, re.DOTALL)
+                if match:
+                    title = match.group(1).strip()
+                    # Remove HTML tags if present
+                    title = re.sub(r"<[^>]+>", "", title)
+                    break
+
+            # Extract year
+            year = None
+            year_patterns = [r"<year>(\d{4})</year>", r"<date[^>]*>(\d{4})", r"(\d{4})"]
+
+            for pattern in year_patterns:
+                match = re.search(pattern, desc_content)
+                if match:
+                    year = match.group(1)
+                    break
+
+        except Exception:
+            return None, None, None
+        else:
+            return author, title, year
+
+    def clean_filename(text: str) -> str:
+        """Clean text for use in filename."""
+        if not text:
+            return ""
+
+        # Remove HTML entities and tags
+        text = re.sub(r"&[^;]+;", "", text)
+        text = re.sub(r"<[^>]+>", "", text)
+
+        # Remove or replace invalid filename characters
+        invalid_chars = r'[<>:"/\\|?*]'
+        text = re.sub(invalid_chars, "", text)
+
+        # Replace multiple spaces with single space
+        text = re.sub(r"\s+", " ", text)
+
+        return text.strip()
+
+    def transliterate_filename(filename_stem: str) -> str:
+        """Attempt to transliterate filename from English to Russian."""
+        try:
+            # Try reverse transliteration (English to Russian)
+            transliterated = translit(filename_stem, "ru", reversed=True)
+
+            # Check if transliteration made sense (contains Cyrillic characters)
+            if re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", transliterated, re.IGNORECASE):
+                return transliterated
+        except Exception:
+            return filename_stem
+        else:
+            return filename_stem
+
+    filename = Path(filename)
+
+    if not filename.exists():
+        return f"❌ File {filename} does not exist."
+
+    if filename.suffix.lower() != ".fb2":
+        return f"❌ File {filename} is not an FB2 file."
+
+    # Extract metadata from FB2 file
+    author, title, year = extract_fb2_metadata(filename)
+
+    new_name = None
+
+    if author and title:
+        # Clean the extracted data
+        author = clean_filename(author)
+        title = clean_filename(title)
+
+        # Construct new filename
+        new_name = f"{author} - {title} - {year}.fb2" if year else f"{author} - {title}.fb2"
+
+    else:
+        # Try transliteration
+        original_stem = filename.stem
+        transliterated = transliterate_filename(original_stem)
+
+        if transliterated != original_stem:
+            new_name = f"{transliterated}.fb2"
+
+    if new_name:
+        new_name = clean_filename(new_name.replace(".fb2", "")) + ".fb2"
+        new_path = filename.parent / new_name
+
+        # Avoid overwriting existing files
+        counter = 1
+        while new_path.exists() and new_path != filename:
+            name_without_ext = new_name.replace(".fb2", "")
+            new_name = f"{name_without_ext} ({counter}).fb2"
+            new_path = filename.parent / new_name
+            counter += 1
+
+        if new_path != filename:
+            try:
+                filename.rename(new_path)
+            except Exception as e:
+                return f"❌ Error renaming file: {e!s}"
+            else:
+                return f"✅ File renamed: {filename.name} → {new_name}"
+
+    return f"📝 File {filename.name} left unchanged."
 
 
 def rename_largest_images_to_featured(path: Path | str) -> str:
