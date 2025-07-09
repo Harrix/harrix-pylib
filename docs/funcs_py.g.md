@@ -755,15 +755,18 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         """Return a sort key for function/method names.
 
         Priority:
-        1. Special methods (double underscore) - highest priority (0)
-        2. Regular methods/functions - medium priority (1)
-        3. Private methods/functions (single underscore) - lowest priority (2)
+        0. __init__ method - highest priority
+        1. Other special methods (double underscore)
+        2. Regular methods/functions
+        3. Private methods/functions (single underscore)
         """
+        if name == "__init__":
+            return (0, name)  # __init__ always first
         if name.startswith("__") and name.endswith("__"):
-            return (0, name)  # Special methods like __init__, __str__
+            return (1, name)  # Other special methods like __str__, __repr__
         if name.startswith("_") and not name.startswith("__"):
-            return (2, name)  # Private methods/functions with single underscore
-        return (1, name)  # Regular methods/functions
+            return (3, name)  # Private methods/functions with single underscore
+        return (2, name)  # Regular methods/functions
 
     with Path(filename).open(encoding="utf-8") as f:
         code: str = f.read()
