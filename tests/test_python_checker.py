@@ -141,3 +141,84 @@ def test_python_checker() -> None:
         errors = checker.check(multiple_russian_file)
         assert len(errors) == 1
         assert ":1:8:" in errors[0]  # Should point to the first 'П' character  # ignore: HP001
+
+        # Test file-ignore directive - single rule
+        file_ignored_single_file = temp_path / "file_ignored_single.py"
+        file_ignored_single_file.write_text(
+            '# file-ignore: HP001\nprint("Привет мир")\n', encoding="utf-8"
+        )  # ignore: HP001
+        errors = checker.check(file_ignored_single_file)
+        assert len(errors) == 0
+
+        # Test file-ignore directive - multiple rules
+        file_ignored_multiple_file = temp_path / "file_ignored_multiple.py"
+        file_ignored_multiple_file.write_text(
+            '# file-ignore: HP001, HP002\nprint("Привет мир")\n', encoding="utf-8"
+        )  # ignore: HP001
+        errors = checker.check(file_ignored_multiple_file)
+        assert len(errors) == 0
+
+        # Test file-ignore directive - case insensitive
+        file_ignored_case_file = temp_path / "file_ignored_case.py"
+        file_ignored_case_file.write_text(
+            '# file-ignore: hp001\nprint("Привет мир")\n', encoding="utf-8"
+        )  # ignore: HP001
+        errors = checker.check(file_ignored_case_file)
+        assert len(errors) == 0
+
+        # Test file-ignore directive - with spaces
+        file_ignored_spaces_file = temp_path / "file_ignored_spaces.py"
+        file_ignored_spaces_file.write_text(
+            '# file-ignore: HP001 , HP002 \nprint("Привет мир")\n', encoding="utf-8"
+        )  # ignore: HP001
+        errors = checker.check(file_ignored_spaces_file)
+        assert len(errors) == 0
+
+        # Test file-ignore directive - different format
+        file_ignored_format_file = temp_path / "file_ignored_format.py"
+        file_ignored_format_file.write_text(
+            '#file-ignore:HP001\nprint("Привет мир")\n', encoding="utf-8"
+        )  # ignore: HP001
+        errors = checker.check(file_ignored_format_file)
+        assert len(errors) == 0
+
+        # Test file-ignore directive - multiple lines with Russian letters
+        file_ignored_multiple_lines_file = temp_path / "file_ignored_multiple_lines.py"
+        file_ignored_multiple_lines_file.write_text(
+            '# file-ignore: HP001\nprint("Привет")\nprint("Мир")\n', encoding="utf-8"
+        )  # ignore: HP001
+        errors = checker.check(file_ignored_multiple_lines_file)
+        assert len(errors) == 0
+
+        # Test file-ignore directive - mixed with line-ignore (line-ignore should still work)
+        file_and_line_ignore_file = temp_path / "file_and_line_ignore.py"
+        file_and_line_ignore_file.write_text(
+            '# file-ignore: HP001\nprint("Привет")\nprint("Мир")  # ignore: HP001\n', encoding="utf-8"
+        )  # ignore: HP001
+        errors = checker.check(file_and_line_ignore_file)
+        assert len(errors) == 0
+
+        # Test file-ignore directive - only affects specified rules
+        file_ignored_specific_file = temp_path / "file_ignored_specific.py"
+        file_ignored_specific_file.write_text(
+            '# file-ignore: HP002\nprint("Привет мир")\n', encoding="utf-8"
+        )  # ignore: HP001
+        errors = checker.check(file_ignored_specific_file)
+        assert len(errors) == 1  # HP001 should still be checked
+        assert "HP001" in errors[0]
+
+        # Test file-ignore directive - in middle of file (should still work)
+        file_ignored_middle_file = temp_path / "file_ignored_middle.py"
+        file_ignored_middle_file.write_text(
+            'print("Привет")\n# file-ignore: HP001\nprint("Мир")\n', encoding="utf-8"
+        )  # ignore: HP001
+        errors = checker.check(file_ignored_middle_file)
+        assert len(errors) == 0  # Should ignore all HP001 violations in the file
+
+        # Test file-ignore directive - multiple file-ignore lines
+        file_ignored_multiple_directives_file = temp_path / "file_ignored_multiple_directives.py"
+        file_ignored_multiple_directives_file.write_text(
+            '# file-ignore: HP001\n# file-ignore: HP002\nprint("Привет мир")\n', encoding="utf-8"
+        )  # ignore: HP001
+        errors = checker.check(file_ignored_multiple_directives_file)
+        assert len(errors) == 0

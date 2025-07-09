@@ -20,6 +20,7 @@ lang: en
   - [Method `_determine_project_root`](#method-_determine_project_root)
   - [Method `_find_russian_letters_position`](#method-_find_russian_letters_position)
   - [Method `_format_error`](#method-_format_error)
+  - [Method `_get_file_ignored_rules`](#method-_get_file_ignored_rules)
   - [Method `_get_relative_path`](#method-_get_relative_path)
   - [Method `_has_russian_letters`](#method-_has_russian_letters)
   - [Method `_parse_rules_string`](#method-_parse_rules_string)
@@ -44,6 +45,8 @@ Examples for ignore directives:
 ```python
 # ignore: HP001
 # ignore: HP001, HP002
+# file-ignore: HP001
+# file-ignore: HP001, HP002
 ```
 
 <details>
@@ -57,8 +60,11 @@ class PythonChecker:
         "HP001": "Presence of Russian letters in the code",
     }
 
-    # Comment pattern for ignoring checks
+    # Comment pattern for ignoring checks on specific lines
     IGNORE_PATTERN: ClassVar[re.Pattern] = re.compile(r"#\s*ignore:\s*([A-Z0-9,\s]+)", re.IGNORECASE)
+
+    # Comment pattern for ignoring checks for entire file
+    FILE_IGNORE_PATTERN: ClassVar[re.Pattern] = re.compile(r"#\s*file-ignore:\s*([A-Z0-9,\s]+)", re.IGNORECASE)
 
     def __init__(self, project_root: Path | str | None = None) -> None:
         """Initialize the PythonChecker with all available rules.
@@ -120,7 +126,11 @@ class PythonChecker:
             content = filename.read_text(encoding="utf-8")
             lines = content.splitlines()
 
-            yield from self._check_content_rules(filename, lines, rules)
+            # Check for file-level ignore directives
+            file_ignored_rules = self._get_file_ignored_rules(lines)
+            rules_to_check = rules - file_ignored_rules
+
+            yield from self._check_content_rules(filename, lines, rules_to_check)
 
         except Exception as e:
             yield self._format_error("P000", f"Exception error: {e}", filename)
@@ -216,6 +226,29 @@ class PythonChecker:
                 location += f":{col}"
 
         return f"{location}: {error_code} {message}"
+
+    def _get_file_ignored_rules(self, lines: list[str]) -> set[str]:
+        """Get set of rules that should be ignored for the entire file.
+
+        Args:
+
+        - `lines` (`list[str]`): All lines from the file.
+
+        Returns:
+
+        - `set[str]`: Set of rule codes that should be ignored for the entire file.
+
+        """
+        file_ignored_rules = set()
+
+        for line in lines:
+            # Look for file-ignore pattern anywhere in the line
+            match = self.FILE_IGNORE_PATTERN.search(line)
+            if match:
+                rules_str = match.group(1)
+                file_ignored_rules.update(self._parse_rules_string(rules_str))
+
+        return file_ignored_rules
 
     def _get_relative_path(self, filename: Path) -> str:
         """Get relative path from project root, fallback to absolute if outside project.
@@ -394,7 +427,11 @@ def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, N
             content = filename.read_text(encoding="utf-8")
             lines = content.splitlines()
 
-            yield from self._check_content_rules(filename, lines, rules)
+            # Check for file-level ignore directives
+            file_ignored_rules = self._get_file_ignored_rules(lines)
+            rules_to_check = rules - file_ignored_rules
+
+            yield from self._check_content_rules(filename, lines, rules_to_check)
 
         except Exception as e:
             yield self._format_error("P000", f"Exception error: {e}", filename)
@@ -538,6 +575,41 @@ def _format_error(self, error_code: str, message: str, filename: Path, *, line_n
                 location += f":{col}"
 
         return f"{location}: {error_code} {message}"
+```
+
+</details>
+
+### Method `_get_file_ignored_rules`
+
+```python
+def _get_file_ignored_rules(self, lines: list[str]) -> set[str]
+```
+
+Get set of rules that should be ignored for the entire file.
+
+Args:
+
+- `lines` (`list[str]`): All lines from the file.
+
+Returns:
+
+- `set[str]`: Set of rule codes that should be ignored for the entire file.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _get_file_ignored_rules(self, lines: list[str]) -> set[str]:
+        file_ignored_rules = set()
+
+        for line in lines:
+            # Look for file-ignore pattern anywhere in the line
+            match = self.FILE_IGNORE_PATTERN.search(line)
+            if match:
+                rules_str = match.group(1)
+                file_ignored_rules.update(self._parse_rules_string(rules_str))
+
+        return file_ignored_rules
 ```
 
 </details>
