@@ -281,8 +281,8 @@ def test_rename_fb2_file() -> None:
 
         result = h.file.rename_fb2_file(complete_file)
         assert "✅ File renamed:" in result
-        assert "Лев Толстой - Война и мир - 1869.fb2" in result
-        assert (temp_path / "Лев Толстой - Война и мир - 1869.fb2").exists()
+        assert "Толстой Лев - Война и мир - 1869.fb2" in result
+        assert (temp_path / "Толстой Лев - Война и мир - 1869.fb2").exists()
         assert not complete_file.exists()
 
         # Test 2: FB2 file with metadata but no year
@@ -309,8 +309,8 @@ def test_rename_fb2_file() -> None:
 
         result = h.file.rename_fb2_file(no_year_file)
         assert "✅ File renamed:" in result
-        assert "Александр Пушкин - Евгений Онегин.fb2" in result
-        assert (temp_path / "Александр Пушкин - Евгений Онегин.fb2").exists()
+        assert "Пушкин Александр - Евгений Онегин.fb2" in result
+        assert (temp_path / "Пушкин Александр - Евгений Онегин.fb2").exists()
 
         # Test 3: FB2 file with reversed author name order (last-name first)
         fb2_content_reversed = """<?xml version="1.0" encoding="utf-8"?>
@@ -337,10 +337,10 @@ def test_rename_fb2_file() -> None:
 
         result = h.file.rename_fb2_file(reversed_file)
         assert "✅ File renamed:" in result
-        # The function matches the second pattern and puts last-name first
+        # The function should still format as "LastName FirstName"
         assert "Достоевский Федор - Преступление и наказание - 1866.fb2" in result
 
-        # Test 4: FB2 file with invalid characters in metadata (colon is valid in content)
+        # Test 4: FB2 file with invalid characters in metadata
         fb2_content_invalid_chars = """<?xml version="1.0" encoding="utf-8"?>
 <FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0">
 <description>
@@ -360,12 +360,12 @@ def test_rename_fb2_file() -> None:
 </body>
 </FictionBook>"""
 
-        invalid_chars_file = temp_path / "testfile.fb2"  # Use valid filename
+        invalid_chars_file = temp_path / "testfile.fb2"
         invalid_chars_file.write_text(fb2_content_invalid_chars, encoding="utf-8")
 
         result = h.file.rename_fb2_file(invalid_chars_file)
         assert "✅ File renamed:" in result
-        assert "Иван Тургенев - Отцы и дети роман - 1862.fb2" in result
+        assert "Тургенев Иван - Отцы и дети роман - 1862.fb2" in result
 
         # Test 5: FB2 file with Windows-1251 encoding
         fb2_content_cp1251 = """<?xml version="1.0" encoding="windows-1251"?>
@@ -391,9 +391,60 @@ def test_rename_fb2_file() -> None:
 
         result = h.file.rename_fb2_file(cp1251_file)
         assert "✅ File renamed:" in result
-        assert "Антон Чехов - Вишневый сад.fb2" in result
+        assert "Чехов Антон - Вишневый сад.fb2" in result
 
-        # Test 6: File with transliterated Russian name (mock transliteration)
+        # Test 6: FB2 file with author in single field (testing format_author_name function)
+        fb2_content_single_author = """<?xml version="1.0" encoding="utf-8"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0">
+<description>
+<title-info>
+<author>Михаил Лермонтов</author>
+<book-title>Герой нашего времени</book-title>
+<year>1840</year>
+</title-info>
+</description>
+<body>
+<section>
+<p>Текст книги...</p>
+</section>
+</body>
+</FictionBook>"""
+
+        single_author_file = temp_path / "single_author.fb2"
+        single_author_file.write_text(fb2_content_single_author, encoding="utf-8")
+
+        result = h.file.rename_fb2_file(single_author_file)
+        assert "✅ File renamed:" in result
+        assert "Лермонтов Михаил - Герой нашего времени - 1840.fb2" in result
+
+        # Test 7: FB2 file with author having middle name
+        fb2_content_middle_name = """<?xml version="1.0" encoding="utf-8"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0">
+<description>
+<title-info>
+<author>
+<first-name>Александр Сергеевич</first-name>
+<last-name>Пушкин</last-name>
+</author>
+<book-title>Капитанская дочка</book-title>
+<year>1836</year>
+</title-info>
+</description>
+<body>
+<section>
+<p>Текст книги...</p>
+</section>
+</body>
+</FictionBook>"""
+
+        middle_name_file = temp_path / "middle_name.fb2"
+        middle_name_file.write_text(fb2_content_middle_name, encoding="utf-8")
+
+        result = h.file.rename_fb2_file(middle_name_file)
+        assert "✅ File renamed:" in result
+        assert "Пушкин Александр Сергеевич - Капитанская дочка - 1836.fb2" in result
+
+        # Test 8: File with transliterated Russian name (mock transliteration)
         transliterated_file = temp_path / "voyna_i_mir.fb2"
         # Create a file with no valid metadata
         invalid_content = """<?xml version="1.0" encoding="utf-8"?>
@@ -413,7 +464,7 @@ def test_rename_fb2_file() -> None:
         # It should either rename or leave unchanged
         assert "✅ File renamed:" in result or "📝 File" in result
 
-        # Test 7: Non-FB2 file
+        # Test 9: Non-FB2 file
         txt_file = temp_path / "test.txt"
         txt_file.write_text("This is not an FB2 file")
 
@@ -421,13 +472,13 @@ def test_rename_fb2_file() -> None:
         assert "❌ File" in result
         assert "is not an FB2 file" in result
 
-        # Test 8: Non-existent file
+        # Test 10: Non-existent file
         non_existent = temp_path / "does_not_exist.fb2"
         result = h.file.rename_fb2_file(non_existent)
         assert "❌ File" in result
         assert "does not exist" in result
 
-        # Test 9: File with no extractable metadata and no transliteration improvement
+        # Test 11: File with no extractable metadata and no transliteration improvement
         no_metadata_file = temp_path / "no_metadata_123.fb2"
         minimal_content = """<?xml version="1.0" encoding="utf-8"?>
 <FictionBook>
@@ -443,12 +494,12 @@ def test_rename_fb2_file() -> None:
         assert "📝 File" in result
         assert "left unchanged" in result
 
-        # Test 10: File name collision handling
+        # Test 12: File name collision handling
         collision_file1 = temp_path / "collision_test.fb2"
         collision_file1.write_text(fb2_content_complete, encoding="utf-8")
 
         # Create a file that would have the same target name
-        target_name = temp_path / "Лев Толстой - Война и мир - 1869.fb2"
+        target_name = temp_path / "Толстой Лев - Война и мир - 1869.fb2"
         if not target_name.exists():
             target_name.write_text("existing file", encoding="utf-8")
 
@@ -458,18 +509,41 @@ def test_rename_fb2_file() -> None:
         result = h.file.rename_fb2_file(collision_file2)
         assert "✅ File renamed:" in result
         # Should create a file with (1) suffix or similar
-        assert any(f.name.startswith("Лев Толстой - Война и мир - 1869") for f in temp_path.glob("*.fb2"))
+        assert any(f.name.startswith("Толстой Лев - Война и мир - 1869") for f in temp_path.glob("*.fb2"))
 
-        # Test 11: Test with Path object input
+        # Test 13: Test with Path object input
         path_test_file = temp_path / "path_test.fb2"
         path_test_file.write_text(fb2_content_no_year, encoding="utf-8")
 
         result = h.file.rename_fb2_file(path_test_file)  # Path object
         assert "✅ File renamed:" in result
 
-        # Test 12: Test with string input
+        # Test 14: Test with string input
         string_test_file = temp_path / "string_test.fb2"
         string_test_file.write_text(fb2_content_no_year, encoding="utf-8")
 
         result = h.file.rename_fb2_file(str(string_test_file))  # String path
         assert "✅ File renamed:" in result
+
+        # Test 15: Test with only one name part
+        fb2_content_single_name = """<?xml version="1.0" encoding="utf-8"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0">
+<description>
+<title-info>
+<author>Гомер</author>
+<book-title>Илиада</book-title>
+</title-info>
+</description>
+<body>
+<section>
+<p>Текст книги...</p>
+</section>
+</body>
+</FictionBook>"""
+
+        single_name_file = temp_path / "single_name.fb2"
+        single_name_file.write_text(fb2_content_single_name, encoding="utf-8")
+
+        result = h.file.rename_fb2_file(single_name_file)
+        assert "✅ File renamed:" in result
+        assert "Гомер - Илиада.fb2" in result

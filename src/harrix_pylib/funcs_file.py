@@ -413,7 +413,7 @@ def rename_fb2_file(filename: Path | str) -> str:
 
     This function reads an FB2 file and extracts author, title, and year information
     from its XML metadata. The file is then renamed according to the pattern:
-    "Author - Title - Year.fb2" (year is optional).
+    "LastName FirstName - Title - Year.fb2" (year is optional).
 
     If metadata extraction fails, the function attempts to transliterate the filename
     from English to Russian, assuming it might be a transliterated Russian title.
@@ -469,23 +469,40 @@ def rename_fb2_file(filename: Path | str) -> str:
 
             # Extract author
             author = None
+            first_name = None
+            last_name = None
+
+            # Try to extract first and last names separately
             author_patterns = [
                 r"<first-name>(.*?)</first-name>.*?<last-name>(.*?)</last-name>",
                 r"<last-name>(.*?)</last-name>.*?<first-name>(.*?)</first-name>",
-                r"<author[^>]*>(.*?)</author>",
             ]
 
             for pattern in author_patterns:
                 match = re.search(pattern, desc_content, re.DOTALL)
                 if match:
-                    count_elements = 2
-                    if len(match.groups()) == count_elements:
+                    if "first-name" in pattern and pattern.index("first-name") < pattern.index("last-name"):
                         first_name = match.group(1).strip()
                         last_name = match.group(2).strip()
-                        author = f"{first_name} {last_name}"
                     else:
-                        author = match.group(1).strip()
+                        last_name = match.group(1).strip()
+                        first_name = match.group(2).strip()
                     break
+
+            # If we have both first and last names, format as "LastName FirstName"
+            if first_name and last_name:
+                author = f"{last_name} {first_name}"
+            else:
+                # Fallback to other patterns
+                fallback_patterns = [r"<author[^>]*>(.*?)</author>"]
+
+                for pattern in fallback_patterns:
+                    match = re.search(pattern, desc_content, re.DOTALL)
+                    if match:
+                        author_text = match.group(1).strip()
+                        # Try to parse "FirstName LastName" format and reverse it
+                        author = format_author_name(author_text)
+                        break
 
             # Extract title
             title = None
@@ -513,6 +530,29 @@ def rename_fb2_file(filename: Path | str) -> str:
             return None, None, None
         else:
             return author, title, year
+
+    def format_author_name(author_text: str) -> str:
+        """Format author name as 'LastName FirstName' if possible."""
+        if not author_text:
+            return ""
+
+        # Remove HTML tags and entities
+        author_text = re.sub(r"<[^>]+>", "", author_text)
+        author_text = re.sub(r"&[^;]+;", "", author_text)
+        author_text = author_text.strip()
+
+        # Split by spaces and try to identify first and last names
+        parts = author_text.split()
+
+        count_parts = 2
+        if len(parts) >= count_parts:
+            # Assume first part is first name, last part is last name
+            # If there are middle names, include them with the first name
+            first_name = " ".join(parts[:-1])
+            last_name = parts[-1]
+            return f"{last_name} {first_name}"
+        # If only one part, return as is
+        return author_text
 
     def clean_filename(text: str) -> str:
         """Clean text for use in filename."""
