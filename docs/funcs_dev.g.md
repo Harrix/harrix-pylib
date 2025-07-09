@@ -28,28 +28,22 @@ def get_project_root() -> Path
 
 Find the root folder of the current project.
 
-This function traverses up the folder tree from the current file looking for a folder containing
-a `.venv` folder, which is assumed to indicate the project root.
+This function traverses up the folder tree from the caller's file location looking for a folder
+containing a `.venv` folder, which is assumed to indicate the project root. The function
+automatically detects the file that called it, making it work correctly both with PyPI
+installations and editable installs.
 
 Returns:
 
 - `Path`: The path to the project's root folder.
 
-Examples:
+Example:
 
 ```python
 import harrix_pylib as h
 
 root_path = h.dev.get_project_root()
-```
-
-```python
-from pathlib import Path
-
-import harrix_pylib as h
-
-root_path = h.dev.get_project_root()
-Path(root_path / "1.txt").write_text("Test", encoding="utf8")
+print(root_path)
 ```
 
 <details>
@@ -57,11 +51,38 @@ Path(root_path / "1.txt").write_text("Test", encoding="utf8")
 
 ```python
 def get_project_root() -> Path:
-    current_file: Path = Path(__file__).resolve()
-    for parent in current_file.parents:
+    # Get the current stack frames
+    current_frame = inspect.currentframe()
+    if current_frame is None:
+        # Fallback when frame inspection is not available
+        return Path.cwd()
+
+    # Walk through the call stack to find the first frame outside harrix_pylib
+    frame = current_frame.f_back
+    while frame:
+        caller_file = Path(frame.f_globals["__file__"]).resolve()
+
+        # If the caller is not from harrix_pylib, use this frame
+        if "harrix_pylib" not in str(caller_file):
+            break
+
+        frame = frame.f_back
+
+    # If we didn't find a frame outside harrix_pylib, use the last frame
+    if frame is None:
+        frame = current_frame.f_back
+        if frame is None:
+            # Fallback when caller frame is not available
+            return Path.cwd()
+        caller_file = Path(frame.f_globals["__file__"]).resolve()
+
+    # Traverse up the folder tree looking for .venv
+    for parent in caller_file.parents:
         if (parent / ".venv").exists():
             return parent
-    return current_file.parent
+
+    # Fallback to caller file's parent if no .venv found
+    return caller_file.parent
 ```
 
 </details>
