@@ -663,7 +663,8 @@ Note:
 - Sorting prioritizes initial non-class, non-function statements, followed by sorted classes,
   then sorted functions, and finally any trailing statements.
 - Within classes, `__init__` method is placed first among methods, followed by other methods
-  sorted alphabetically.
+  sorted alphabetically, with single underscore methods at the end.
+- Functions and methods starting with single underscore are placed after regular ones.
 
 Example:
 
@@ -677,22 +678,23 @@ Example:
 Before sorting:
 
 ```python
+def _helper_function():
+    """Helper function."""
+    pass
+
 def multiply(a, b):
     """Returns the product of two numbers."""
     return a * b
-
-
-def subtract(a, b):
-    """Returns the difference between two numbers."""
-    return a - b
-
 
 def add(a, b):
     """Returns the sum of two numbers."""
     return a + b
 
-
 class Point:
+    def _internal_method(self):
+        """Internal method."""
+        pass
+
     def move(self, dx, dy):
         """Moves the point by a given distance along x and y axes."""
         self.x += dx
@@ -726,20 +728,21 @@ class Point:
         self.x += dx
         self.y += dy
 
+    def _internal_method(self):
+        """Internal method."""
+        pass
 
 def add(a, b):
     """Returns the sum of two numbers."""
     return a + b
 
-
 def multiply(a, b):
     """Returns the product of two numbers."""
     return a * b
 
-
-def subtract(a, b):
-    """Returns the difference between two numbers."""
-    return a - b
+def _helper_function():
+    """Helper function."""
+    pass
 ```
 
 <details>
@@ -747,6 +750,21 @@ def subtract(a, b):
 
 ```python
 def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
+
+    def _get_sort_key(name: str) -> tuple[int, str]:
+        """Return a sort key for function/method names.
+
+        Priority:
+        1. Special methods (double underscore) - highest priority (0)
+        2. Regular methods/functions - medium priority (1)
+        3. Private methods/functions (single underscore) - lowest priority (2)
+        """
+        if name.startswith("__") and name.endswith("__"):
+            return (0, name)  # Special methods like __init__, __str__
+        if name.startswith("_") and not name.startswith("__"):
+            return (2, name)  # Private methods/functions with single underscore
+        return (1, name)  # Regular methods/functions
+
     with Path(filename).open(encoding="utf-8") as f:
         code: str = f.read()
 
@@ -814,22 +832,8 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
                 other_statements.append(stmt)
             # Skip BaseSmallStatement types as they should be wrapped in SimpleStatementLine
 
-        # Process methods: __init__ and other methods
-        init_method: cst.FunctionDef | None = None
-        other_methods: list[cst.FunctionDef] = []
-
-        for method in methods:
-            if method.name.value == "__init__":
-                init_method = method
-            else:
-                other_methods.append(method)
-
-        other_methods_sorted: list[cst.FunctionDef] = sorted(other_methods, key=lambda m: m.name.value)
-
-        if init_method is not None:
-            methods_sorted: list[cst.FunctionDef] = [init_method, *other_methods_sorted]
-        else:
-            methods_sorted = other_methods_sorted
+        # Sort methods with custom priority: special methods first, then regular, then private
+        methods_sorted: list[cst.FunctionDef] = sorted(methods, key=lambda m: _get_sort_key(m.name.value))
 
         # Assemble the new class body - all elements must be BaseStatement
         new_body: list[cst.BaseStatement] = []
@@ -845,8 +849,8 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         new_class_def: cst.ClassDef = class_def.with_changes(body=new_class_body)
         sorted_class_defs.append(new_class_def)
 
-    # Sort functions alphabetically
-    func_defs_sorted: list[cst.FunctionDef] = sorted(func_defs, key=lambda func: func.name.value)
+    # Sort functions with custom priority: regular functions first, then private
+    func_defs_sorted: list[cst.FunctionDef] = sorted(func_defs, key=lambda func: _get_sort_key(func.name.value))
 
     # Assemble the new module body
     new_module_body: list[cst.BaseStatement] = (
