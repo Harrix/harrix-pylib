@@ -3,6 +3,7 @@
 import os
 import re
 import shutil
+import zipfile
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -846,3 +847,193 @@ def rename_pdf_file(filename: Path | str) -> str:
 
     # Attempt to rename the file
     return attempt_rename(filename, new_name, original_name)
+
+
+def test_rename_epub_file() -> None:
+    """Test rename_epub_file function with various scenarios."""
+
+    def create_epub_file(file_path: Path, author: str = "", title: str = "", year: str = "") -> None:
+        """Create a minimal EPUB file with specified metadata."""
+        with zipfile.ZipFile(file_path, "w") as epub_zip:
+            # Create mimetype file
+            epub_zip.writestr("mimetype", "application/epub+zip")
+
+            # Create container.xml
+            container_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+    <rootfiles>
+        <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
+    </rootfiles>
+</container>"""
+            epub_zip.writestr("META-INF/container.xml", container_xml)
+
+            # Create OPF file with metadata
+            opf_content = """<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0">
+    <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">"""
+
+            if author:
+                opf_content += f"<dc:creator>{author}</dc:creator>"
+            if title:
+                opf_content += f"<dc:title>{title}</dc:title>"
+            if year:
+                opf_content += f"<dc:date>{year}</dc:date>"
+
+            opf_content += """
+    </metadata>
+    <manifest>
+        <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    </manifest>
+    <spine toc="ncx">
+    </spine>
+</package>"""
+
+            epub_zip.writestr("OEBPS/content.opf", opf_content)
+
+            # Create minimal toc.ncx
+            toc_ncx = """<?xml version="1.0" encoding="UTF-8"?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+    <head>
+        <meta name="dtb:uid" content="test"/>
+    </head>
+    <docTitle>
+        <text>Test Book</text>
+    </docTitle>
+    <navMap>
+    </navMap>
+</ncx>"""
+            epub_zip.writestr("OEBPS/toc.ncx", toc_ncx)
+
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Test 1: Non-existent file
+        non_existent = temp_path / "non_existent.epub"
+        result = h.file.rename_epub_file(non_existent)
+        assert "❌ File" in result
+        assert "does not exist" in result
+
+        # Test 2: Non-EPUB file
+        txt_file = temp_path / "test.txt"
+        txt_file.write_text("This is not an epub file")
+        result = h.file.rename_epub_file(txt_file)
+        assert "❌ File" in result
+        assert "is not an EPUB file" in result
+
+        # Test 3: EPUB with complete metadata (author, title, year)
+        epub_complete = temp_path / "original.epub"
+        create_epub_file(epub_complete, "John Doe", "Test Book", "2023")
+        result = h.file.rename_epub_file(epub_complete)
+        assert "✅ File renamed:" in result
+        expected_name = "Doe John - Test Book - 2023.epub"
+        renamed_file = temp_path / expected_name
+        assert renamed_file.exists()
+        assert not epub_complete.exists()
+
+        # Test 4: EPUB with author and title, no year
+        epub_no_year = temp_path / "no_year.epub"
+        create_epub_file(epub_no_year, "Jane Smith", "Another Book")
+        result = h.file.rename_epub_file(epub_no_year)
+        assert "✅ File renamed:" in result
+        expected_name = "Smith Jane - Another Book.epub"
+        renamed_file = temp_path / expected_name
+        assert renamed_file.exists()
+        assert not epub_no_year.exists()
+
+        # Test 5: EPUB with multi-part author name
+        epub_multi_author = temp_path / "multi_author.epub"
+        create_epub_file(epub_multi_author, "Jean Claude Van Damme", "Action Book", "2020")
+        result = h.file.rename_epub_file(epub_multi_author)
+        assert "✅ File renamed:" in result
+        expected_name = "Damme Jean Claude Van - Action Book - 2020.epub"
+        renamed_file = temp_path / expected_name
+        assert renamed_file.exists()
+
+        # Test 6: EPUB with special characters in metadata
+        epub_special = temp_path / "special.epub"
+        create_epub_file(epub_special, "Author: Name", "Title/With\\Special*Chars", "2021")
+        result = h.file.rename_epub_file(epub_special)
+        assert "✅ File renamed:" in result
+        # Special characters should be removed
+        expected_name = "Name Author - TitleWithSpecialChars - 2021.epub"
+        renamed_file = temp_path / expected_name
+        assert renamed_file.exists()
+
+        # Test 7: EPUB without metadata (should remain unchanged)
+        epub_no_meta = temp_path / "no_metadata.epub"
+        create_epub_file(epub_no_meta)
+        result = h.file.rename_epub_file(epub_no_meta)
+        assert "left unchanged" in result
+        assert "📝 File" in result
+        assert epub_no_meta.exists()
+
+        # Test 8: EPUB with only title, no author
+        epub_title_only = temp_path / "title_only.epub"
+        create_epub_file(epub_title_only, title="Solo Title")
+        result = h.file.rename_epub_file(epub_title_only)
+        assert "left unchanged" in result
+        assert "📝 File" in result
+        assert epub_title_only.exists()
+
+        # Test 9: EPUB with only author, no title
+        epub_author_only = temp_path / "author_only.epub"
+        create_epub_file(epub_author_only, author="Solo Author")
+        result = h.file.rename_epub_file(epub_author_only)
+        assert "left unchanged" in result
+        assert "📝 File" in result
+        assert epub_author_only.exists()
+
+        # Test 10: File name collision (should add counter)
+        epub_collision1 = temp_path / "collision1.epub"
+        epub_collision2 = temp_path / "collision2.epub"
+        create_epub_file(epub_collision1, "Same Author", "Same Title", "2022")
+        create_epub_file(epub_collision2, "Same Author", "Same Title", "2022")
+
+        # Rename first file
+        result1 = h.file.rename_epub_file(epub_collision1)
+        assert "✅ File renamed:" in result1
+
+        # Rename second file (should get counter)
+        result2 = h.file.rename_epub_file(epub_collision2)
+        assert "✅ File renamed:" in result2
+
+        # Check both files exist with different names
+        expected_name1 = "Author Same - Same Title - 2022.epub"
+        expected_name2 = "Author Same - Same Title - 2022 (1).epub"
+        assert (temp_path / expected_name1).exists()
+        assert (temp_path / expected_name2).exists()
+
+        # Test 11: Invalid year (should be ignored)
+        epub_invalid_year = temp_path / "invalid_year.epub"
+        create_epub_file(epub_invalid_year, "Test Author", "Test Title", "999")  # Invalid year
+        result = h.file.rename_epub_file(epub_invalid_year)
+        assert "✅ File renamed:" in result
+        expected_name = "Author Test - Test Title.epub"  # No year in filename
+        renamed_file = temp_path / expected_name
+        assert renamed_file.exists()
+
+        # Test 12: Test with Path object input
+        epub_path_input = temp_path / "path_input.epub"
+        create_epub_file(epub_path_input, "Path Author", "Path Title", "2024")
+        result = h.file.rename_epub_file(epub_path_input)  # Pass Path object
+        assert "✅ File renamed:" in result
+        expected_name = "Author Path - Path Title - 2024.epub"
+        renamed_file = temp_path / expected_name
+        assert renamed_file.exists()
+
+        # Test 13: Test with string input
+        epub_string_input = temp_path / "string_input.epub"
+        create_epub_file(epub_string_input, "String Author", "String Title", "2025")
+        result = h.file.rename_epub_file(str(epub_string_input))  # Pass string
+        assert "✅ File renamed:" in result
+        expected_name = "Author String - String Title - 2025.epub"
+        renamed_file = temp_path / expected_name
+        assert renamed_file.exists()
+
+        # Test 14: Corrupted EPUB (invalid ZIP)
+        corrupted_epub = temp_path / "corrupted.epub"
+        corrupted_epub.write_text("This is not a valid ZIP file")
+        result = h.file.rename_epub_file(corrupted_epub)
+        assert "📝 File" in result
+        assert "left unchanged" in result
+        assert corrupted_epub.exists()

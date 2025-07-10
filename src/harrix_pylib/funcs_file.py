@@ -5,6 +5,7 @@ import platform
 import re
 import shutil
 import subprocess
+import zipfile
 from collections.abc import Callable, Iterator
 from pathlib import Path
 
@@ -407,6 +408,253 @@ def open_file_or_folder(path: Path | str) -> None:
         raise RuntimeError(msg)
 
     subprocess.run([opener, str(target)], check=False, shell=False)
+
+
+def rename_epub_file(filename: Path | str) -> str:
+    """Rename EPUB file based on metadata from file content.
+
+    This function reads an EPUB file and extracts author, title, and year information
+    from its metadata (OPF file). The file is then renamed according to the pattern:
+    "LastName FirstName - Title - Year.epub" (year is optional).
+
+    If metadata extraction fails, the function attempts to transliterate the filename
+    from English to Russian, assuming it might be a transliterated Russian title.
+    If transliteration doesn't improve the filename, it remains unchanged.
+
+    Args:
+
+    - `filename` (`Path | str`): The path to the EPUB file to be processed.
+
+    Returns:
+
+    - `str`: A status message indicating the result of the operation.
+
+    Note:
+
+    - The function modifies the filename in place if changes are made.
+    - Requires 'transliterate' library for Russian transliteration.
+    - Handles various EPUB metadata formats and encodings.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    rename_epub_file("C:/Books/unknown_book.epub")
+    ```
+
+    """
+
+    def extract_epub_metadata(file_path: Path | str) -> tuple[str | None, str | None, str | None]:
+        """Extract author, title, and year from EPUB file."""
+        try:
+            with zipfile.ZipFile(file_path, "r") as epub_zip:
+                # Find the OPF file
+                opf_file = None
+
+                # First, try to find container.xml to get the OPF path
+                try:
+                    container_content = epub_zip.read("META-INF/container.xml").decode("utf-8")
+                    opf_match = re.search(r'full-path="([^"]*\.opf)"', container_content)
+                    if opf_match:
+                        opf_file = opf_match.group(1)
+                except Exception as e:
+                    print(f"Error: {e!s}")
+
+                # If container.xml method failed, look for OPF files directly
+                if not opf_file:
+                    for file_info in epub_zip.filelist:
+                        if file_info.filename.endswith(".opf"):
+                            opf_file = file_info.filename
+                            break
+
+                if not opf_file:
+                    return None, None, None
+
+                # Read and parse the OPF file
+                opf_content = epub_zip.read(opf_file).decode("utf-8")
+
+                # Extract metadata
+                author = extract_epub_author(opf_content)
+                title = extract_epub_title(opf_content)
+                year = extract_epub_year(opf_content)
+
+                return author, title, year
+
+        except Exception:
+            return None, None, None
+
+    def extract_epub_author(opf_content: str) -> str | None:
+        """Extract author from OPF content."""
+        author_patterns = [
+            r"<dc:creator[^>]*>(.*?)</dc:creator>",
+            r"<creator[^>]*>(.*?)</creator>",
+            r'<meta name="author" content="([^"]*)"',
+        ]
+
+        for pattern in author_patterns:
+            match = re.search(pattern, opf_content, re.DOTALL | re.IGNORECASE)
+            if match:
+                author_text = match.group(1).strip()
+                # Remove HTML tags and entities
+                author_text = re.sub(r"<[^>]+>", "", author_text)
+                author_text = re.sub(r"&[^;]+;", "", author_text)
+                author_text = author_text.strip()
+
+                if author_text:
+                    return format_author_name(author_text)
+
+        return None
+
+    def extract_epub_title(opf_content: str) -> str | None:
+        """Extract title from OPF content."""
+        title_patterns = [
+            r"<dc:title[^>]*>(.*?)</dc:title>",
+            r"<title[^>]*>(.*?)</title>",
+            r'<meta name="title" content="([^"]*)"',
+        ]
+
+        for pattern in title_patterns:
+            match = re.search(pattern, opf_content, re.DOTALL | re.IGNORECASE)
+            if match:
+                title_text = match.group(1).strip()
+                # Remove HTML tags and entities
+                title_text = re.sub(r"<[^>]+>", "", title_text)
+                title_text = re.sub(r"&[^;]+;", "", title_text)
+                title_text = title_text.strip()
+
+                if title_text:
+                    return title_text
+
+        return None
+
+    def extract_epub_year(opf_content: str) -> str | None:
+        """Extract year from OPF content."""
+        year_patterns = [
+            r"<dc:date[^>]*>.*?(\d{4}).*?</dc:date>",
+            r"<date[^>]*>.*?(\d{4}).*?</date>",
+            r'<meta name="date" content="[^"]*(\d{4})[^"]*"',
+            r'<meta property="dcterms:created">.*?(\d{4}).*?</meta>',
+            r'<meta property="dcterms:modified">.*?(\d{4}).*?</meta>',
+        ]
+
+        for pattern in year_patterns:
+            match = re.search(pattern, opf_content, re.DOTALL | re.IGNORECASE)
+            if match:
+                year = match.group(1)
+                # Validate year (should be reasonable)
+                min_year = 1000
+                max_year = 2100
+                if min_year <= int(year) <= max_year:
+                    return year
+
+        return None
+
+    def format_author_name(author_text: str) -> str:
+        """Format author name as 'LastName FirstName' if possible."""
+        if not author_text:
+            return ""
+
+        # Remove HTML tags and entities
+        author_text = re.sub(r"<[^>]+>", "", author_text)
+        author_text = re.sub(r"&[^;]+;", "", author_text)
+        author_text = author_text.strip()
+
+        # Split by spaces and try to identify first and last names
+        parts = author_text.split()
+
+        count_parts = 2
+        if len(parts) >= count_parts:
+            # Assume first part is first name, last part is last name
+            # If there are middle names, include them with the first name
+            first_name = " ".join(parts[:-1])
+            last_name = parts[-1]
+            return f"{last_name} {first_name}"
+        # If only one part, return as is
+        return author_text
+
+    def clean_filename(text: str) -> str:
+        """Clean text for use in filename."""
+        if not text:
+            return ""
+
+        # Remove HTML entities and tags
+        text = re.sub(r"&[^;]+;", "", text)
+        text = re.sub(r"<[^>]+>", "", text)
+
+        # Remove or replace invalid filename characters
+        invalid_chars = r'[<>:"/\\|?*]'
+        text = re.sub(invalid_chars, "", text)
+
+        # Replace multiple spaces with single space
+        text = re.sub(r"\s+", " ", text)
+
+        return text.strip()
+
+    def transliterate_filename(filename_stem: str) -> str:
+        """Attempt to transliterate filename from English to Russian."""
+        try:
+            # Try reverse transliteration (English to Russian)
+            transliterated = translit(filename_stem, "ru", reversed=True)
+
+            # Check if transliteration made sense (contains Cyrillic characters)
+            if re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", transliterated, re.IGNORECASE):
+                return transliterated
+        except Exception:
+            return filename_stem
+        else:
+            return filename_stem
+
+    filename = Path(filename)
+
+    if not filename.exists():
+        return f"❌ File {filename} does not exist."
+
+    if filename.suffix.lower() != ".epub":
+        return f"❌ File {filename} is not an EPUB file."
+
+    # Extract metadata from EPUB file
+    author, title, year = extract_epub_metadata(filename)
+
+    new_name = None
+
+    if author and title:
+        # Clean the extracted data
+        author = clean_filename(author)
+        title = clean_filename(title)
+
+        # Construct new filename
+        new_name = f"{author} - {title} - {year}.epub" if year else f"{author} - {title}.epub"
+
+    else:
+        # Try transliteration
+        original_stem = filename.stem
+        transliterated = transliterate_filename(original_stem)
+
+        if transliterated != original_stem:
+            new_name = f"{transliterated}.epub"
+
+    if new_name:
+        new_name = clean_filename(new_name.replace(".epub", "")) + ".epub"
+        new_path = filename.parent / new_name
+
+        # Avoid overwriting existing files
+        counter = 1
+        while new_path.exists() and new_path != filename:
+            name_without_ext = new_name.replace(".epub", "")
+            new_name = f"{name_without_ext} ({counter}).epub"
+            new_path = filename.parent / new_name
+            counter += 1
+
+        if new_path != filename:
+            try:
+                filename.rename(new_path)
+            except Exception as e:
+                return f"❌ Error renaming file: {e!s}"
+            else:
+                return f"✅ File renamed: {filename.name} → {new_name}"
+
+    return f"📝 File {filename.name} left unchanged."
 
 
 def rename_fb2_file(filename: Path | str) -> str:
