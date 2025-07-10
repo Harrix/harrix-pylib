@@ -1260,19 +1260,20 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
 
                 return author, title, year
 
-        except pypdf.errors.PdfReadError as e:
-            if is_verbose:
-                print(f"Debug: PDF read error for {file_path}: {e}")
         except Exception as e:
             if is_verbose:
                 print(f"Debug: Error extracting PDF metadata from {file_path}: {e}")
 
         return None, None, None
 
-
-    def _extract_year_from_metadata(metadata: pypdf.PdfReader) -> str | None:
+    def _extract_year_from_metadata(metadata: object | None) -> str | None:
         """Extract year from PDF metadata."""
-        date_fields = [metadata.creation_date, metadata.modification_date]
+        date_fields = []
+        if metadata is not None:
+            # Try to get creation and modification date attributes safely
+            creation_date = getattr(metadata, "creation_date", None)
+            modification_date = getattr(metadata, "modification_date", None)
+            date_fields = [creation_date, modification_date]
 
         for date_field in date_fields:
             if date_field:
@@ -1291,7 +1292,11 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
                     continue
 
         # Also try to extract year from subject
-        text_fields = [metadata.subject] if hasattr(metadata, "subject") and metadata.subject else []
+        text_fields = []
+        if metadata is not None:
+            subject = getattr(metadata, "subject", None)
+            if subject:
+                text_fields = [subject]
         for field in text_fields:
             if field:
                 year_match = re.search(r"(\d{4})", str(field))
@@ -1367,10 +1372,6 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
 
                 return author, title, year
 
-        except pypdf.errors.PdfReadError as e:
-            if is_verbose:
-                print(f"Debug: PDF read error during text extraction for {file_path}: {e}")
-            return None, None, None
         except Exception as e:
             if is_verbose:
                 print(f"Debug: Error extracting text metadata from {file_path}: {e}")
@@ -1547,70 +1548,6 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
 
     # Attempt to rename the file
     return attempt_rename(filename, new_name, original_name)
-
-
-def process_multiple_pdf_files(file_list: list[Path | str], *, is_verbose: bool = False) -> dict:
-    """Process multiple PDF files and return statistics.
-
-    Args:
-        file_list: List of file paths to process
-        is_verbose: If True, print detailed debug information
-
-    Returns:
-        Dictionary with processing statistics
-
-    Example:
-        ```python
-        import harrix_pylib as h
-        from pathlib import Path
-
-        files = list(Path("C:/Books").glob("*.pdf"))
-        stats = h.process_multiple_pdf_files(files)
-        print(f"Successfully renamed: {stats['success']}")
-        print(f"Errors: {stats['errors']}")
-        print(f"Unchanged: {stats['unchanged']}")
-        ```
-
-    """
-    stats = {
-        "success": 0,
-        "errors": 0,
-        "unchanged": 0,
-        "error_files": [],
-        "success_files": [],
-        "unchanged_files": []
-    }
-
-    total_files = len(file_list)
-
-    for i, file_path in enumerate(file_list, 1):
-        if is_verbose:
-            print(f"Processing {i}/{total_files}: {Path(file_path).name}")
-
-        result = rename_pdf_file(file_path, is_verbose=is_verbose)
-
-        if result.startswith("✅"):
-            stats["success"] += 1
-            stats["success_files"].append(str(file_path))
-        elif result.startswith(("❌", "⚠️")):
-            stats["errors"] += 1
-            stats["error_files"].append(str(file_path))
-        else:
-            stats["unchanged"] += 1
-            stats["unchanged_files"].append(str(file_path))
-
-        if not is_verbose:
-            # Show only final result for each file when not in verbose mode
-            print(result)
-
-    # Print summary
-    print("\n📊 Processing Summary:")
-    print(f"✅ Successfully renamed: {stats['success']}")
-    print(f"❗ Left unchanged: {stats['unchanged']}")
-    print(f"❌ Errors: {stats['errors']}")
-    print(f"📁 Total processed: {total_files}")
-
-    return stats
 
 
 def rename_transliterated_file(filename: Path | str) -> str:
