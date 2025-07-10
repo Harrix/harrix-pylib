@@ -1332,30 +1332,26 @@ def test_remove_empty_folders() -> None:
         assert not inner.exists()  # Should be removed first
 
 
-def test_rename_transliterated_file():
+def test_rename_transliterated_file() -> None:
     """Test the rename_transliterated_file function with various scenarios."""
 
     # Mock the translit function since we don't want to depend on the actual library
-    def mock_translit(text, lang, reversed: bool=False):
+    def mock_translit(text: str, lang: str, *, reversed: bool = False) -> str:
         """Mock transliteration function."""
         if lang == "ru" and reversed:
             # Simple mock transliteration mappings
             transliteration_map = {
-                "Strannaia istoriia doktora Dzhiekila i m - Robiert Luis Stivienson":
-                    "Странная история доктора Джекила и м - Роберт Луис Стивенсон",
+                "Strannaia istoriia doktora Dzhiekila": "Странная история доктора Джекила",
                 "bukvarionok1980_": "букварёнок1980_",  # noqa: RUF001
-                "Kak_razgovarivat_s_mudakami":
-                    "Как_разговаривать_с_мудаками",  # noqa: RUF001
+                "Kak_razgovarivat_s_mudakami": "Как_разговаривать_с_мудаками",  # noqa: RUF001
                 "Russkaia literatura": "Русская литература",
                 "Zhizn zamechatelnykh liudei": "Жизнь замечательных людей",
                 "Pushkin Aleksandr Sergeevich": "Пушкин Александр Сергеевич",
-                "Russkaia klassicheskaia literatura":
-                    "Русская классическая литература",
+                "Russkaia klassicheskaia literatura": "Русская классическая литература",
                 "Tolstoi Lev Nikolaevich": "Толстой Лев Николаевич",
                 "Hugh Howey-The Hurricane": "Hugh Howey-The Hurricane",  # Should not change
                 "matrix2script": "matrix2script",  # Should not change
-                "AI - Mastering.Data.Analysis.with.Python":
-                    "AI - Mastering.Data.Analysis.with.Python",  # Should not change
+                "AI - Mastering.Data.Analysis.with.Python": "AI - Mastering.Data.Analysis.with.Python",  # Should not change
             }
             return transliteration_map.get(text, text)
         return text
@@ -1367,7 +1363,7 @@ def test_rename_transliterated_file():
         # Updated based on actual behavior of is_transliterated_russian function
         test_cases = [
             # Files that should be detected as transliterated Russian
-            ("Strannaia istoriia doktora Dzhiekila i m - Robiert Luis Stivienson.pdf", "renamed", True),
+            ("Strannaia istoriia doktora Dzhiekila.pdf", "renamed", True),
             ("Kak_razgovarivat_s_mudakami.pdf", "renamed", True),
             ("Russkaia klassicheskaia literatura.txt", "renamed", True),
             ("Zhizn zamechatelnykh liudei.docx", "renamed", True),

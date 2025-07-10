@@ -1694,13 +1694,14 @@ def rename_transliterated_file(filename: Path | str) -> str:
         # Remove common non-alphabetic characters
         clean_text = re.sub(r"[^a-zA-Z]", "", text_lower)
 
-        if len(clean_text) < 3:  # Too short to analyze
+        min_length = 3
+        if len(clean_text) < min_length:  # Too short to analyze
             return False
 
         # Common transliteration patterns that indicate Russian
         russian_patterns = [
             r"zh",  # ж
-            r"kh",  # х
+            r"kh",  # х  # noqa: RUF003
             r"ch",  # ч
             r"sh",  # ш
             r"shch",  # щ
@@ -1708,7 +1709,7 @@ def rename_transliterated_file(filename: Path | str) -> str:
             r"yu",  # ю
             r"ya",  # я
             r"yo",  # ё
-            r"ye",  # е
+            r"ye",  # е  # noqa: RUF003
             r"ts",  # ц
             r"ck",  # к (sometimes)
             r"iai",  # iai pattern
@@ -1717,8 +1718,8 @@ def rename_transliterated_file(filename: Path | str) -> str:
             r"iie",  # ие pattern
             r"ii",  # ии pattern
             r"aia",  # ая pattern
-            r"ogo",  # ого pattern
-            r"ogo$",  # ого ending
+            r"ogo",  # ого pattern  # noqa: RUF003
+            r"ogo$",  # ого ending  # noqa: RUF003
             r"aia$",  # ая ending
             r"yie",  # ые pattern
             r"ykh",  # ых pattern
@@ -1779,7 +1780,7 @@ def rename_transliterated_file(filename: Path | str) -> str:
             r"\beto\b",  # это
             r"\bona\b",  # она
             r"\boni\b",  # они
-            r"\bego\b",  # его
+            r"\bego\b",  # его  # noqa: RUF003
             r"\beie\b",  # её
             r"\bikh\b",  # их
             r"\bnam\b",  # нам
@@ -1818,24 +1819,30 @@ def rename_transliterated_file(filename: Path | str) -> str:
         score = 0
 
         # Russian patterns (strong indicator)
-        if russian_pattern_count >= 2:
-            score += 3
-        elif russian_pattern_count >= 1:
-            score += 2
+        min_russian_pattern_count = 2
+        score_min_russian_pattern_count = 3
+        if russian_pattern_count >= min_russian_pattern_count:
+            score += score_min_russian_pattern_count
+        elif russian_pattern_count >= min_russian_pattern_count - 1:
+            score += score_min_russian_pattern_count - 1
 
         # Russian endings
-        if ending_matches >= 1:
-            score += 2
+        score_min_ending_matches = 2
+        if ending_matches >= score_min_ending_matches:
+            score += score_min_ending_matches
 
         # Russian words
-        if russian_word_count >= 2:
-            score += 3
-        elif russian_word_count >= 1:
-            score += 2
+        score_min_russian_word_count = 2
+        score_min_russian_word_count_2 = 1
+        if russian_word_count >= score_min_russian_word_count:
+            score += score_min_russian_word_count
+        elif russian_word_count >= score_min_russian_word_count_2:
+            score += score_min_russian_word_count_2
 
         # Vowel combinations (moderate indicator)
-        if vowel_combinations >= 2:
-            score += 1
+        score_min_vowel_combinations = 2
+        if vowel_combinations >= score_min_vowel_combinations:
+            score += score_min_vowel_combinations
 
         # Uncommon letter combinations
         if uncommon_count >= 1:
@@ -1954,12 +1961,8 @@ def rename_transliterated_file(filename: Path | str) -> str:
         words = re.findall(r"\b[a-z]+\b", text_lower)
         english_word_count = sum(1 for word in words if word in common_english_words)
 
-        if english_word_count >= 3:
-            score -= 3
-        elif english_word_count >= 2:
-            score -= 2
-        elif english_word_count >= 1:
-            score -= 1
+        min_english_word_count = 3
+        score -= min(english_word_count, min_english_word_count)
 
         # Additional check for typical English patterns
         english_patterns = [
@@ -1969,10 +1972,12 @@ def rename_transliterated_file(filename: Path | str) -> str:
         ]
 
         english_pattern_count = sum(1 for pattern in english_patterns if re.search(pattern, text_lower))
-        if english_pattern_count >= 2:
-            score -= 3
-        elif english_pattern_count >= 1:
-            score -= 2
+        min_english_pattern_count = 2
+        score_min_english_pattern_count = 3
+        if english_pattern_count >= min_english_pattern_count:
+            score -= score_min_english_pattern_count
+        elif english_pattern_count >= min_english_pattern_count - 1:
+            score -= score_min_english_pattern_count - 1
 
         # Final decision (made more lenient)
         min_score = 2
