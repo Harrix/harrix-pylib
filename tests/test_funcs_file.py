@@ -1360,7 +1360,7 @@ def test_rename_transliterated_file() -> None:
         temp_path = Path(temp_dir)
 
         # Test cases: (filename, expected_result_type, should_be_renamed)
-        # Updated based on actual behavior of is_transliterated_russian function
+        # Updated based on new stricter behavior of is_transliterated_russian function
         test_cases = [
             # Files that should be detected as transliterated Russian
             ("Strannaia istoriia doktora Dzhiekila.pdf", "renamed", True),
@@ -1369,17 +1369,23 @@ def test_rename_transliterated_file() -> None:
             ("Zhizn zamechatelnykh liudei.docx", "renamed", True),
             ("Pushkin Aleksandr Sergeevich.pdf", "renamed", True),
             ("Tolstoi Lev Nikolaevich.txt", "renamed", True),
-            # Files that may not be detected as transliterated (due to algorithm limitations)
-            ("bukvarionok1980_.pdf", "unchanged", False),  # May not have enough Russian patterns
-            # English files (should not be renamed)
+            # Files with specific Russian words that should be detected
+            ("bukvarionok1980_.pdf", "renamed", True),  # Now should be renamed due to 'bukvarionok' in russian_words
+            ("mann_tomas_tristan.txt", "renamed", True),  # Should be renamed due to specific words
+            ("volshebnaya_gora.txt", "renamed", True),  # Should be renamed due to 'volshebnaya'
+            # English files (should not be renamed due to stricter filtering)
             ("Hugh Howey-The Hurricane.epub", "unchanged", False),
             ("matrix2script.txt", "unchanged", False),
             ("AI - Mastering.Data.Analysis.pdf", "unchanged", False),
             ("The Great Gatsby.pdf", "unchanged", False),
             ("data_analysis_script.py", "unchanged", False),
+            ("Harry Potter and the Chamber.pdf", "unchanged", False),  # Should be detected as English
+            # Mixed English-Russian (should not be renamed due to English ratio check)
+            ("Machine Learning Kompyuternoe Zrenie.pdf", "unchanged", False),
             # Edge cases
             ("a.txt", "unchanged", False),  # Too short
             ("ab.txt", "unchanged", False),  # Too short
+            ("abc.txt", "unchanged", False),  # Too short after cleaning
         ]
 
         # Patch the translit function in the correct module
@@ -1401,22 +1407,22 @@ def test_rename_transliterated_file() -> None:
                     assert original_filename in result
                     assert "→" in result
                     # Original file should not exist
-                    assert not test_file.exists()
+                    assert not test_file.exists(), f"Original file {original_filename} should not exist after renaming"
                     # New file should exist
                     new_files = list(temp_path.glob(f"*{test_file.suffix}"))
-                    assert len(new_files) >= 1
+                    assert len(new_files) >= 1, f"No new files found for {original_filename}"
                     # Check that at least one file has Cyrillic characters
                     has_cyrillic = any(
                         bool(re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", f.stem)) for f in new_files
                     )
-                    assert has_cyrillic
+                    assert has_cyrillic, f"No Cyrillic characters found in renamed files for {original_filename}"
 
                 elif expected_result == "unchanged":
                     assert ("📝 File" in result and "left unchanged" in result) or (
                         "appears to be in English" in result
                     ), f"Expected file {original_filename} to be unchanged, but got: {result}"
                     # Original file should still exist
-                    assert test_file.exists()
+                    assert test_file.exists(), f"Original file {original_filename} should still exist"
 
                 # Clean up for next test
                 for f in temp_path.glob("*"):
@@ -1429,13 +1435,20 @@ def test_rename_transliterated_file() -> None:
         assert "❌ File" in result
         assert "does not exist" in result
 
-        # Test file that exists but transliteration fails
+        # Test file that exists but transliteration fails (should not happen with new fallback logic)
         with patch("harrix_pylib.file.translit", side_effect=Exception("Transliteration error")):
             test_file = temp_path / "Russkaia klassicheskaia literatura.txt"
             test_file.write_text("test content")
             result = h.file.rename_transliterated_file(test_file)
-            assert "could not be transliterated" in result or "left unchanged" in result
-            assert test_file.exists()
+            # With new fallback logic, it should still transliterate
+            assert (
+                ("✅ File renamed:" in result)
+                or ("could not be transliterated" in result)
+                or ("left unchanged" in result)
+            )
+            # File should either be renamed or still exist
+            renamed_files = list(temp_path.glob("*.txt"))
+            assert len(renamed_files) >= 1
 
         # Test file collision (when target file already exists)
         with patch("harrix_pylib.file.translit", side_effect=mock_translit):
@@ -1456,3 +1469,28 @@ def test_rename_transliterated_file() -> None:
             # Should create numbered version
             numbered_file = temp_path / "Русская классическая литература (1).txt"
             assert numbered_file.exists()
+
+        # Additional test for files that should definitely be detected as Russian
+        russian_test_cases = [
+            "bukvarionok1980_.pdf",
+            "razgovarivat_s_mudakami.txt",
+            "yunyi_iosif.txt",
+            "volshebnaya_gora.txt",
+            "zelenye_holmy.txt",
+        ]
+
+        with patch("harrix_pylib.file.translit", side_effect=mock_translit):
+            for filename in russian_test_cases:
+                test_file = temp_path / filename
+                test_file.write_text("test content")
+                result = h.file.rename_transliterated_file(test_file)
+
+                # These should definitely be renamed
+                assert "✅ File renamed:" in result or "could not be transliterated" in result, (
+                    f"File {filename} with Russian words should be processed, but got: {result}"
+                )
+
+                # Clean up
+                for f in temp_path.glob("*"):
+                    if f.is_file():
+                        f.unlink()

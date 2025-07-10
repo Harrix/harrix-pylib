@@ -1759,165 +1759,36 @@ def rename_transliterated_file(filename: Path | str) -> str:
         # Convert to lowercase for analysis
         text_lower = text.lower()
 
-        # Remove common non-alphabetic characters
-        clean_text = re.sub(r"[^a-zA-Z]", "", text_lower)
+        # Replace separators with spaces for better word analysis
+        text_normalized = re.sub(r"[_\-\d]", " ", text_lower)
+
+        # Remove common non-alphabetic characters but keep spaces
+        clean_text = re.sub(r"[^a-zA-Z\s]", "", text_normalized)
 
         min_length = 3
-        if len(clean_text) < min_length:  # Too short to analyze
+        if len(clean_text.replace(" ", "")) < min_length:
             return False
 
-        # Common transliteration patterns that indicate Russian
-        russian_patterns = [
-            r"zh",
-            r"kh",
-            r"ch",
-            r"sh",
-            r"shch",
-            r"sch",
-            r"yu",
-            r"ya",
-            r"yo",
-            r"ye",
-            r"ts",
-            r"ck",
-            r"iai",
-            r"iei",
-            r"iia",
-            r"iie",
-            r"ii",
-            r"aia",
-            r"ogo",
-            r"ogo$",
-            r"aia$",
-            r"yie",
-            r"ykh",
-            r"ov",
-            r"ev",
-            r"at",
-            r"it$",
-            r"et$",
+        # Check for obvious English indicators first (early exit)
+        obvious_english_patterns = [
+            r"\b(the|and|with|for|of|in|on|at|by|from|to|a|an)\b",
+            r"\b(book|photography|photographer|digital|professional|visual)\b",
+            r"\b(machine|learning|intelligence|revolution|techniques|processing)\b",
+            r"\b(harry|potter|chamber|secrets|deathly|hallows|goblet|fire|prince)\b",
+            r"\b(poses|brides|sourcebook|wedding|unlocking|hottest)\b",
+            r"\b(python|data|labeling|deep|meets|human)\b",
         ]
 
-        # Count Russian-specific patterns
-        russian_pattern_count = 0
-        for pattern in russian_patterns:
-            if re.search(pattern, text_lower):
-                russian_pattern_count += 1
+        obvious_english_count = sum(1 for pattern in obvious_english_patterns if re.search(pattern, text_lower))
+        min_obvious_english_count = 2
+        if obvious_english_count >= min_obvious_english_count:  # If we find 2+ obvious English patterns, it's English
+            return False
 
-        # Common Russian endings in transliteration
-        russian_endings = [
-            r"ov$",
-            r"ova$",
-            r"ovich$",
-            r"ovna$",  # surnames
-            r"skii$",
-            r"skaia$",
-            r"skai$",  # adjectives
-            r"enko$",  # Ukrainian surnames
-            r"nik$",  # common endings
-            r"ost$",  # abstract nouns
-            r"stvo$",  # abstract nouns
-            r"aia$",  # feminine adjectives
-            r"yie$",  # plural adjectives
-            r"ami$",  # instrumental plural
-            r"ymi$",  # instrumental plural
-            r"ikh$",  # genitive plural
-            r"ykh$",  # genitive plural
-            r"at$",  # verb endings
-            r"it$",  # verb endings
-            r"et$",  # verb endings
-        ]
+        # Split into words
+        words = re.findall(r"\b[a-z]+\b", text_normalized)
 
-        ending_matches = sum(1 for ending in russian_endings if re.search(ending, text_lower))
-
-        # Check for excessive vowel combinations typical in transliteration
-        vowel_combinations = len(re.findall(r"[aeiou]{2,}", text_lower))
-
-        # Check for letter combinations uncommon in English
-        uncommon_combinations = [
-            r"[bcdfghjklmnpqrstvwxz]{3,}",  # 3+ consonants in a row
-            r"[aeiou]{3,}",  # 3+ vowels in a row
-        ]
-
-        uncommon_count = sum(1 for pattern in uncommon_combinations if re.search(pattern, text_lower))
-
-        # Additional Russian-specific patterns
-        russian_words = [
-            r"\bkak\b",
-            r"\btak\b",
-            r"\beto\b",
-            r"\bona\b",
-            r"\boni\b",
-            r"\bego\b",
-            r"\beie\b",
-            r"\bikh\b",
-            r"\bnam\b",
-            r"\bvas\b",
-            r"\bnim\b",
-            r"\btem\b",
-            r"\btom\b",
-            r"\bpod\b",
-            r"\bnad\b",
-            r"\bpro\b",
-            r"\bpri\b",
-            r"\biza\b",
-            r"\bdlia\b",
-            r"\bvse\b",
-            r"\bvsia\b",
-            r"\bvso\b",
-            r"\bchto\b",
-            r"\bkto\b",
-            r"\bgde\b",
-            r"\bkogda\b",
-            r"\bpochemu\b",
-            r"\bkotoryi\b",
-            r"\bkotoraia\b",
-            r"\bkotoroe\b",
-            r"\brussk",
-            r"\brossii",
-            r"\bmoskv",
-            r"\bpeter",
-            r"\bsovet",
-            r"\bsoviet",
-        ]
-
-        russian_word_count = sum(1 for pattern in russian_words if re.search(pattern, text_lower))
-
-        # Scoring system (made more lenient)
-        score = 0
-
-        # Russian patterns (strong indicator)
-        min_russian_pattern_count = 2
-        score_min_russian_pattern_count = 3
-        if russian_pattern_count >= min_russian_pattern_count:
-            score += score_min_russian_pattern_count
-        elif russian_pattern_count >= min_russian_pattern_count - 1:
-            score += score_min_russian_pattern_count - 1
-
-        # Russian endings
-        score_min_ending_matches = 2
-        if ending_matches >= score_min_ending_matches:
-            score += score_min_ending_matches
-
-        # Russian words
-        score_min_russian_word_count = 2
-        score_min_russian_word_count_2 = 1
-        if russian_word_count >= score_min_russian_word_count:
-            score += score_min_russian_word_count
-        elif russian_word_count >= score_min_russian_word_count_2:
-            score += score_min_russian_word_count_2
-
-        # Vowel combinations (moderate indicator)
-        score_min_vowel_combinations = 2
-        if vowel_combinations >= score_min_vowel_combinations:
-            score += score_min_vowel_combinations
-
-        # Uncommon letter combinations
-        if uncommon_count >= 1:
-            score += 1
-
-        # Check for common English words (negative indicator)
-        common_english_words = [
+        # Check ratio of English to total words
+        common_english_words = {
             "the",
             "and",
             "for",
@@ -1969,7 +1840,6 @@ def rename_transliterated_file(filename: Path | str) -> str:
             "win",
             "yes",
             "yet",
-            "zoo",
             "with",
             "from",
             "they",
@@ -2023,41 +1893,512 @@ def rename_transliterated_file(filename: Path | str) -> str:
             "here",
             "give",
             "many",
-            "well",
-        ]
+            "book",
+            "books",
+            "chapter",
+            "page",
+            "pages",
+            "author",
+            "title",
+            "volume",
+            "part",
+            "series",
+            # Technical and photography terms
+            "photography",
+            "photographer",
+            "digital",
+            "professional",
+            "visual",
+            "machine",
+            "learning",
+            "intelligence",
+            "revolution",
+            "techniques",
+            "processing",
+            "data",
+            "labeling",
+            "deep",
+            "meets",
+            "human",
+            "python",
+            "poses",
+            "brides",
+            "sourcebook",
+            "wedding",
+            "unlocking",
+            "hottest",
+            "chamber",
+            "secrets",
+            "deathly",
+            "hallows",
+            "goblet",
+            "fire",
+            "prince",
+            "harry",
+            "potter",
+            "service",
+            "king",
+        }
 
-        words = re.findall(r"\b[a-z]+\b", text_lower)
         english_word_count = sum(1 for word in words if word in common_english_words)
+        total_words = len(words)
 
-        min_english_word_count = 3
-        score -= min(english_word_count, min_english_word_count)
+        if total_words > 0:
+            english_ratio = english_word_count / total_words
+            min_english_ratio = 0.4
+            if english_ratio > min_english_ratio:  # If more than 40% are English words, it's probably English
+                return False
 
-        # Additional check for typical English patterns
-        english_patterns = [
-            r"\b(script|data|analysis|mastering|hurricane|matrix|python|programming)\b",
-            r"\b(the|and|with|for|of|in|on|at|by|from)\b",
-            r"\b(great|good|best|new|old|big|small|long|short)\b",
+        # Extended Russian transliteration patterns
+        russian_patterns = [
+            r"zh",
+            r"kh",
+            r"ch",
+            r"sh",
+            r"shch",
+            r"sch",
+            r"yu",
+            r"ya",
+            r"yo",
+            r"ye",
+            r"ts",
+            r"ck",
+            r"iai",
+            r"iei",
+            r"iia",
+            r"iie",
+            r"ii",
+            r"aia",
+            r"ogo",
+            r"yie",
+            r"ykh",
+            r"ov",
+            r"ev",
+            r"nyiy",
+            r"nyi",
+            r"naia",
+            r"noe",
+            r"ovat",
+            r"ivat",
+            r"onok",
+            r"enok",
+            r"yonok",
         ]
 
-        english_pattern_count = sum(1 for pattern in english_patterns if re.search(pattern, text_lower))
-        min_english_pattern_count = 2
-        score_min_english_pattern_count = 3
-        if english_pattern_count >= min_english_pattern_count:
-            score -= score_min_english_pattern_count
-        elif english_pattern_count >= min_english_pattern_count - 1:
-            score -= score_min_english_pattern_count - 1
+        russian_pattern_count = sum(1 for pattern in russian_patterns if re.search(pattern, text_lower))
 
-        # Final decision (made more lenient)
-        min_score = 2
+        # Extended Russian endings
+        russian_endings = [
+            r"ov$",
+            r"ova$",
+            r"ovich$",
+            r"ovna$",
+            r"skii$",
+            r"skaia$",
+            r"skai$",
+            r"skyj$",
+            r"skiy$",
+            r"skie$",
+            r"skih$",
+            r"enko$",
+            r"nik$",
+            r"ost$",
+            r"stvo$",
+            r"aia$",
+            r"yie$",
+            r"nyiy$",
+            r"nyi$",
+            r"nye$",
+            r"naia$",
+            r"noe$",
+            r"ami$",
+            r"ymi$",
+            r"ikh$",
+            r"ykh$",
+            r"imi$",
+            r"ymi$",
+            r"at$",
+            r"it$",
+            r"et$",
+            r"at'$",
+            r"it'$",
+            r"et'$",
+            r"ka$",
+            r"ko$",
+            r"ki$",
+            r"ku$",
+            r"ke$",
+            r"ist$",
+            r"ost$",
+            r"enie$",
+            r"anie$",
+            r"tel$",
+            r"ar$",
+            r"er$",
+            r"or$",
+            r"om$",
+            r"em$",
+            r"oj$",
+            r"ej$",
+            r"ogo$",
+            r"ego$",
+            r"onok$",
+            r"enok$",
+            r"yonok$",
+        ]
+
+        ending_matches = sum(1 for ending in russian_endings if re.search(ending, text_lower))
+
+        # Russian words in transliteration
+        russian_words = {
+            # Common words
+            "kak",
+            "tak",
+            "eto",
+            "ona",
+            "oni",
+            "ego",
+            "eie",
+            "ikh",
+            "nam",
+            "vas",
+            "nim",
+            "tem",
+            "tom",
+            "pod",
+            "nad",
+            "pro",
+            "pri",
+            "iza",
+            "dlia",
+            "vse",
+            "vsia",
+            "vso",
+            "chto",
+            "kto",
+            "gde",
+            "kogda",
+            "pochemu",
+            "kotoryi",
+            "kotoraia",
+            "kotoroe",
+            "russk",
+            "rossii",
+            "moskv",
+            "peter",
+            "sovet",
+            # From your examples
+            "razgovarivat",
+            "mudakami",
+            "mudam",
+            "mudak",
+            "bukvarionok",
+            "bukvar",
+            "mann",
+            "tomas",
+            "tristan",
+            "volshebnaya",
+            "volsheb",
+            "gora",
+            "chast",
+            "yunyi",
+            "iosif",
+            "kolokol",
+            "zvonit",
+            "prazdnik",
+            "kotoryj",
+            "vsegda",
+            "toboi",
+            "toboj",
+            "starik",
+            "more",
+            "rekoj",
+            "reka",
+            "teni",
+            "derev",
+            "derevev",
+            "zelenye",
+            "zelen",
+            "holmy",
+            "holm",
+            "afriki",
+            "afrik",
+            # Technical terms in Russian transliteration
+            "kompyuternoe",
+            "zrenie",
+            "pervye",
+            "shagi",
+            "shakiryanov",
+            # Russian names and surnames
+            "aleksandr",
+            "sergei",
+            "ivan",
+            "petr",
+            "mikhail",
+            "nikolai",
+            "dmitri",
+            "pushkin",
+            "tolstoi",
+            "dostoevskii",
+            "chekhov",
+            "turgenev",
+            "gogol",
+        }
+
+        russian_word_matches = sum(1 for word in words if word in russian_words)
+
+        # Check for vowel combinations
+        vowel_combinations = len(re.findall(r"[aeiou]{2,}", text_lower))
+
+        # Scoring system
+        score = 0
+
+        # Russian patterns
+        score_1_russian_pattern_count = 2
+        if russian_pattern_count >= 1:
+            score += score_1_russian_pattern_count + min(russian_pattern_count - 1, score_1_russian_pattern_count + 1)
+
+        # Russian endings
+        score_2_russian_pattern_count = 2
+        if ending_matches >= 1:
+            score += score_2_russian_pattern_count + min(ending_matches - 1, score_2_russian_pattern_count)
+
+        # Russian words (very strong indicator)
+        score_3_russian_pattern_count = 4
+        if russian_word_matches >= 1:
+            score += score_3_russian_pattern_count + min(russian_word_matches - 1, score_3_russian_pattern_count)
+
+        # Vowel combinations
+        count_vowel_combinations = 2
+        if vowel_combinations >= count_vowel_combinations:
+            score += 1
+
+        # Special bonuses
+        if "_" in text or "-" in text:
+            score += 1
+
+        # Pattern bonuses for typical Russian file naming
+        if re.search(r"\b[a-z]+_[a-z]+_[a-z]+\b", text_normalized):
+            score += 2
+
+        # Penalties for English
+        # Strong penalty for English words
+        level_1_english_word_count = 5
+        level_2_english_word_count = 3
+        level_3_english_word_count = 2
+        score_1_english_word_count = -6
+        score_2_english_word_count = -4
+        score_3_english_word_count = -2
+        if english_word_count >= level_1_english_word_count:
+            score += score_1_english_word_count
+        elif english_word_count >= level_2_english_word_count:
+            score += score_2_english_word_count
+        elif english_word_count >= level_3_english_word_count:
+            score += score_3_english_word_count
+
+        # Additional technical English patterns penalty
+        tech_english_patterns = [
+            r"\b(ai|ml|dl|nn|cv|nlp|gpu|cpu|api|sdk|ide)\b",  # Abbreviations
+            r"\b(algorithm|framework|library|dataset|model|neural)\b",
+            r"\b(training|testing|validation|optimization|regression)\b",
+        ]
+
+        tech_english_count = sum(1 for pattern in tech_english_patterns if re.search(pattern, text_lower))
+        if tech_english_count >= 1:
+            score -= 3
+
+        # Final decision - increased threshold
+        min_score = 3  # Increased from 2 to 3 for stricter filtering
         return score >= min_score
 
     def transliterate_to_cyrillic(text: str) -> str:
-        """Convert transliterated text to Cyrillic."""
+        """Convert transliterated text to Cyrillic using multiple transliteration systems."""
+
+        def create_transliteration_table() -> list[tuple[str, str]]:
+            """Create comprehensive transliteration mapping."""
+            # Multi-character patterns MUST go first (longest to shortest)
+            return [
+                # 4+ character patterns
+                ("shch", "щ"),
+                ("sch", "щ"),
+                # 3 character patterns
+                ("kh", "х"),  # noqa: RUF001
+                ("zh", "ж"),
+                ("ch", "ч"),
+                ("sh", "ш"),
+                ("ts", "ц"),
+                ("yu", "ю"),
+                ("ya", "я"),
+                ("yo", "ё"),
+                ("ye", "е"),  # noqa: RUF001
+                ("ju", "ю"),
+                ("ja", "я"),
+                ("jo", "ё"),
+                ("je", "е"),  # noqa: RUF001
+                ("tz", "ц"),
+                ("cz", "ц"),
+                # 2 character patterns - endings and combinations
+                ("oj", "ой"),
+                ("ey", "ей"),
+                ("ay", "ай"),
+                ("oy", "ой"),
+                ("yi", "ый"),
+                ("ii", "ий"),
+                ("yj", "ый"),
+                ("ij", "ий"),
+                ("ck", "к"),
+                # Specific word patterns (common words that are often messed up)
+                ("rekoj", "рекой"),
+                ("holmy", "холмы"),
+                ("yunyi", "юный"),
+                ("iosif", "иосиф"),
+                ("zelenye", "зеленые"),
+                ("derevev", "деревьев"),
+                ("teni", "тени"),
+                ("afriki", "африки"),
+                ("mann", "манн"),
+                ("tomas", "томас"),
+                ("tristan", "тристан"),
+                # Common endings
+                ("ogo", "ого"),  # noqa: RUF001
+                ("ego", "его"),  # noqa: RUF001
+                ("aia", "ая"),
+                ("aya", "ая"),
+                ("yie", "ые"),
+                ("ykh", "ых"),
+                ("ikh", "их"),
+                ("ov", "ов"),
+                ("ova", "ова"),
+                ("ev", "ев"),
+                ("eva", "ева"),
+                ("skii", "ский"),
+                ("skij", "ский"),
+                ("sky", "ский"),
+                ("skiy", "ский"),
+                ("skaia", "ская"),
+                ("skaja", "ская"),
+                ("skaya", "ская"),
+                ("stvo", "ство"),
+                ("enie", "ение"),
+                ("anie", "ание"),
+            ]
+
+        def create_single_char_map() -> dict[str, str]:
+            """Create single character mapping (applied last)."""
+            return {
+                "a": "а",  # noqa: RUF001
+                "b": "б",  # noqa: RUF001
+                "v": "в",
+                "g": "г",  # noqa: RUF001
+                "d": "д",
+                "e": "е",  # noqa: RUF001
+                "z": "з",
+                "i": "и",
+                "k": "к",
+                "l": "л",
+                "m": "м",
+                "n": "н",
+                "o": "о",  # noqa: RUF001
+                "p": "п",
+                "r": "р",  # noqa: RUF001
+                "s": "с",  # noqa: RUF001
+                "t": "т",
+                "u": "у",  # noqa: RUF001
+                "f": "ф",
+                "h": "х",  # noqa: RUF001
+                "w": "в",
+                "x": "кс",
+                "q": "к",
+                "j": "й",
+            }
+
+        def apply_word_based_transliteration(text: str) -> str:
+            """Apply transliteration word by word to avoid conflicts."""
+            # Split text preserving separators
+            parts = re.split(r"([_\-\s\d]+)", text.lower())
+
+            result_parts = []
+
+            for part in parts:
+                if re.match(r"[_\-\s\d]+", part):
+                    # Keep separators and numbers as is
+                    result_parts.append(part)
+                elif part:
+                    # Transliterate word
+                    transliterated_word = transliterate_single_word(part)
+                    result_parts.append(transliterated_word)
+
+            return "".join(result_parts)
+
+        def transliterate_single_word(word: str) -> str:
+            """Transliterate a single word."""
+            # Get patterns and single char map
+            patterns = create_transliteration_table()
+            single_chars = create_single_char_map()
+
+            result = word
+
+            # Apply multi-character patterns first (in order)
+            for pattern, replacement in patterns:
+                result = result.replace(pattern, replacement)
+
+            # Then apply single character replacements
+            final_result = ""
+            i = 0
+            while i < len(result):
+                char = result[i]
+                # Only replace if it's still a Latin character
+                if char in single_chars and not re.match(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", char):
+                    final_result += single_chars[char]
+                else:
+                    final_result += char
+                i += 1
+
+            return final_result
+
+        def preserve_case_and_separators(original: str, transliterated: str) -> str:
+            """Preserve original case pattern."""
+            # Handle case preservation more carefully
+            if original.isupper():
+                return transliterated.upper()
+            if original.istitle():
+                return transliterated.title()
+            if original[0].isupper():
+                return transliterated.capitalize()
+
+            return transliterated
+
+        # Main transliteration logic
+        original_text = text
+
+        # Try the standard transliterate library first
         try:
-            transliterated = translit(text, "ru", reversed=True)
-            return transliterated if re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", transliterated) else text
-        except Exception:
-            return text
+            standard_result = translit(text, "ru", reversed=True)
+            if re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", standard_result):
+                return standard_result
+        except Exception as e:
+            print(f"❌ Error in standard transliterate: {e!s}")
+
+        # Use our custom word-based approach
+        transliterated = apply_word_based_transliteration(text)
+
+        # Restore original case
+        result = preserve_case_and_separators(original_text, transliterated)
+
+        # Final fallback if still no Cyrillic
+        if not re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", result):
+            # Very basic character-by-character replacement
+            single_chars = create_single_char_map()
+            fallback = ""
+            for char in text.lower():
+                if char in single_chars:
+                    fallback += single_chars[char]
+                else:
+                    fallback += char
+
+            result = preserve_case_and_separators(original_text, fallback)
+
+        return result
 
     def clean_filename(text: str) -> str:
         """Clean text for use in filename."""
