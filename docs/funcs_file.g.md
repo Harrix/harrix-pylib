@@ -19,6 +19,7 @@ lang: en
 - [Function `extract_zip_archive`](#function-extract_zip_archive)
 - [Function `find_max_folder_number`](#function-find_max_folder_number)
 - [Function `open_file_or_folder`](#function-open_file_or_folder)
+- [Function `remove_empty_folders`](#function-remove_empty_folders)
 - [Function `rename_epub_file`](#function-rename_epub_file)
 - [Function `rename_fb2_file`](#function-rename_fb2_file)
 - [Function `rename_largest_images_to_featured`](#function-rename_largest_images_to_featured)
@@ -436,12 +437,14 @@ def extract_zip_archive(filename: Path | str) -> str:
         try:
             with zipfile.ZipFile(file_path, "r") as zip_ref:
                 zip_ref.extractall(extract_to)
-            return True
         except Exception:
             return False
+        else:
+            return True
 
     filename = Path(filename)
 
+    # Validate file existence and type
     if not filename.exists():
         return f"❌ File {filename} does not exist."
 
@@ -454,21 +457,17 @@ def extract_zip_archive(filename: Path | str) -> str:
     # Extract to the same directory where the archive is located
     extract_to = filename.parent
 
+    # Extract ZIP file directly to parent directory
+    if not extract_zip_file(filename, extract_to):
+        return f"❌ Failed to extract {filename.name}. Archive might be corrupted or password-protected."
+
+    # Remove original archive file
     try:
-        # Extract ZIP file directly to parent directory
-        if not extract_zip_file(filename, extract_to):
-            return f"❌ Failed to extract {filename.name}. Archive might be corrupted or password-protected."
-
-        # Remove original archive file
-        try:
-            filename.unlink()
-        except Exception as e:
-            return f"⚠️ Archive extracted successfully, but failed to delete original file: {e!s}"
-
-        return f"✅ Archive {filename.name} extracted and original file deleted."
-
+        filename.unlink()
     except Exception as e:
-        return f"❌ Error extracting archive: {e!s}"
+        return f"⚠️ Archive extracted successfully, but failed to delete original file: {e!s}"
+    else:
+        return f"✅ Archive {filename.name} extracted and original file deleted."
 ```
 
 </details>
@@ -581,6 +580,134 @@ def open_file_or_folder(path: Path | str) -> None:
         raise RuntimeError(msg)
 
     subprocess.run([opener, str(target)], check=False, shell=False)
+```
+
+</details>
+
+## Function `remove_empty_folders`
+
+```python
+def remove_empty_folders(folder_path: Path | str, additional_patterns: list[str] | None = None) -> str
+```
+
+Remove all empty folders recursively while respecting ignore patterns.
+
+This function traverses the directory tree and removes empty folders, but does not
+enter or process folders that should be ignored based on common ignore patterns.
+The function works recursively from the deepest level up to avoid issues with
+nested empty folders.
+
+Args:
+
+- `folder_path` (`Path | str`): The root path to start removing empty folders from.
+- `additional_patterns` (`list[str] | None`): Additional patterns to ignore. Defaults to `None`.
+- `is_ignore_hidden` (`bool`): Whether to ignore hidden files/folders (starting with dot). Defaults to `True`.
+
+Returns:
+
+- `str`: A status message indicating the result of the operation with count of removed folders.
+
+Note:
+
+- Uses `should_ignore_path()` function to determine which folders to skip.
+- Processes folders recursively from deepest to shallowest level.
+- Only removes truly empty folders (no files or subdirectories).
+- Ignores system and development-related folders by default.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+remove_empty_folders("C:/Projects/my_project")
+remove_empty_folders("C:/Downloads", additional_patterns=["temp", "cache"])
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def remove_empty_folders(
+    folder_path: Path | str, additional_patterns: list[str] | None = None, *, is_ignore_hidden: bool = True
+) -> str:
+
+    def is_folder_empty(path: Path) -> bool:
+        """Check if folder is completely empty."""
+        try:
+            return not any(path.iterdir())
+        except (OSError, PermissionError):
+            return False
+
+    def collect_all_folders(root_path: Path) -> list[Path]:
+        """Collect all folders that should be processed, respecting ignore patterns."""
+        folders = []
+
+        try:
+            for item in root_path.iterdir():
+                if item.is_dir():
+                    # Skip ignored folders
+                    if should_ignore_path(item, additional_patterns, is_ignore_hidden=is_ignore_hidden):
+                        continue
+
+                    # Add current folder to list
+                    folders.append(item)
+
+                    # Recursively collect subfolders
+                    folders.extend(collect_all_folders(item))
+        except (OSError, PermissionError):
+            pass
+
+        return folders
+
+    def remove_empty_folders_list(folders: list[Path]) -> int:
+        """Remove empty folders from the list, starting from deepest level."""
+        removed_count = 0
+
+        # Sort folders by depth (deepest first) to handle nested empty folders
+        folders_by_depth = sorted(folders, key=lambda p: len(p.parts), reverse=True)
+
+        for folder in folders_by_depth:
+            if folder.exists() and folder.is_dir() and is_folder_empty(folder):
+                try:
+                    folder.rmdir()
+                    removed_count += 1
+                except (OSError, PermissionError):
+                    # Skip folders that can't be removed due to permissions
+                    pass
+
+        return removed_count
+
+    folder_path = Path(folder_path)
+
+    # Validate input path
+    if not folder_path.exists():
+        return f"❌ Folder {folder_path} does not exist."
+
+    if not folder_path.is_dir():
+        return f"❌ {folder_path} is not a directory."
+
+    try:
+        # Collect all folders that should be processed
+        all_folders = collect_all_folders(folder_path)
+
+        if not all_folders:
+            return f"📁 No folders found to process in {folder_path.name}."
+
+        # Remove empty folders
+        removed_count = remove_empty_folders_list(all_folders)
+
+        # Generate result message based on count
+        if removed_count == 0:
+            result_message = f"📁 No empty folders found in {folder_path.name}."
+        elif removed_count == 1:
+            result_message = f"✅ Removed 1 empty folder from {folder_path.name}."
+        else:
+            result_message = f"✅ Removed {removed_count} empty folders from {folder_path.name}"
+
+    except Exception as e:
+        return f"❌ Error removing empty folders: {e!s}"
+    else:
+        return result_message
 ```
 
 </details>

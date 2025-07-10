@@ -1144,3 +1144,188 @@ def test_extract_zip_archive() -> None:
         # Should succeed even with empty ZIP
         assert "✅ Archive empty_valid.zip extracted and original file deleted" in result
         assert not empty_valid_zip.exists()
+
+
+def test_remove_empty_folders() -> None:
+    """Test the remove_empty_folders function with various scenarios."""
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Test 1: Non-existent folder
+        non_existent = temp_path / "non_existent"
+        result = h.file.remove_empty_folders(non_existent)
+        assert "❌ Folder" in result
+        assert "does not exist" in result
+
+        # Test 2: Not a directory (file)
+        test_file = temp_path / "test.txt"
+        test_file.write_text("test content")
+        result = h.file.remove_empty_folders(test_file)
+        assert "❌" in result
+        assert "is not a directory" in result
+
+        # Test 3: Empty root directory
+        empty_root = temp_path / "empty_root"
+        empty_root.mkdir()
+        result = h.file.remove_empty_folders(empty_root)
+        assert "📁 No folders found to process" in result
+
+        # Test 4: Directory with no subdirectories
+        no_subdirs = temp_path / "no_subdirs"
+        no_subdirs.mkdir()
+        (no_subdirs / "file.txt").write_text("content")
+        result = h.file.remove_empty_folders(no_subdirs)
+        assert "📁 No folders found to process" in result
+
+        # Test 5: Single empty folder
+        single_empty_root = temp_path / "single_empty_root"
+        single_empty_root.mkdir()
+        empty_folder = single_empty_root / "empty_folder"
+        empty_folder.mkdir()
+
+        result = h.file.remove_empty_folders(single_empty_root)
+        assert "✅ Removed 1 empty folder" in result
+        assert not empty_folder.exists()
+        assert single_empty_root.exists()  # Root should still exist
+
+        # Test 6: Multiple empty folders
+        multi_empty_root = temp_path / "multi_empty_root"
+        multi_empty_root.mkdir()
+        empty1 = multi_empty_root / "empty1"
+        empty2 = multi_empty_root / "empty2"
+        empty3 = multi_empty_root / "empty3"
+        empty1.mkdir()
+        empty2.mkdir()
+        empty3.mkdir()
+
+        result = h.file.remove_empty_folders(multi_empty_root)
+        assert "✅ Removed 3 empty folders" in result
+        assert not empty1.exists()
+        assert not empty2.exists()
+        assert not empty3.exists()
+
+        # Test 7: Nested empty folders
+        nested_root = temp_path / "nested_root"
+        nested_root.mkdir()
+        level1 = nested_root / "level1"
+        level2 = level1 / "level2"
+        level3 = level2 / "level3"
+        level1.mkdir()
+        level2.mkdir()
+        level3.mkdir()
+
+        result = h.file.remove_empty_folders(nested_root)
+        assert "✅ Removed 3 empty folders" in result
+        assert not level1.exists()
+        assert not level2.exists()
+        assert not level3.exists()
+
+        # Test 8: Mixed empty and non-empty folders
+        mixed_root = temp_path / "mixed_root"
+        mixed_root.mkdir()
+        empty_folder = mixed_root / "empty_folder"
+        non_empty_folder = mixed_root / "non_empty_folder"
+        nested_empty = non_empty_folder / "nested_empty"
+        empty_folder.mkdir()
+        non_empty_folder.mkdir()
+        nested_empty.mkdir()
+        (non_empty_folder / "file.txt").write_text("content")
+
+        result = h.file.remove_empty_folders(mixed_root)
+        assert "✅ Removed 2 empty folders" in result
+        assert not empty_folder.exists()
+        assert non_empty_folder.exists()  # Should remain (has file)
+        assert not nested_empty.exists()  # Should be removed
+
+        # Test 9: Ignored folders (should not be processed)
+        ignored_root = temp_path / "ignored_root"
+        ignored_root.mkdir()
+        git_folder = ignored_root / ".git"
+        pycache_folder = ignored_root / "__pycache__"
+        node_modules = ignored_root / "node_modules"
+        normal_empty = ignored_root / "normal_empty"
+
+        git_folder.mkdir()
+        pycache_folder.mkdir()
+        node_modules.mkdir()
+        normal_empty.mkdir()
+
+        result = h.file.remove_empty_folders(ignored_root)
+        assert "✅ Removed 1 empty folder" in result
+        assert git_folder.exists()  # Should remain (ignored)
+        assert pycache_folder.exists()  # Should remain (ignored)
+        assert node_modules.exists()  # Should remain (ignored)
+        assert not normal_empty.exists()  # Should be removed
+
+        # Test 10: Hidden folders with is_ignore_hidden=False
+        hidden_root = temp_path / "hidden_root"
+        hidden_root.mkdir()
+        hidden_empty = hidden_root / ".hidden_empty"
+        normal_empty = hidden_root / "normal_empty"
+        hidden_empty.mkdir()
+        normal_empty.mkdir()
+
+        result = h.file.remove_empty_folders(hidden_root, is_ignore_hidden=False)
+        assert "✅ Removed 2 empty folders" in result
+        assert not hidden_empty.exists()  # Should be removed
+        assert not normal_empty.exists()  # Should be removed
+
+        # Test 11: Additional patterns
+        additional_root = temp_path / "additional_root"
+        additional_root.mkdir()
+        temp_folder = additional_root / "temp"
+        logs_folder = additional_root / "logs"
+        normal_folder = additional_root / "normal"
+        temp_folder.mkdir()
+        logs_folder.mkdir()
+        normal_folder.mkdir()
+
+        result = h.file.remove_empty_folders(additional_root, additional_patterns=["temp", "logs"])
+        assert "✅ Removed 1 empty folder" in result
+        assert temp_folder.exists()  # Should remain (ignored by additional pattern)
+        assert logs_folder.exists()  # Should remain (ignored by additional pattern)
+        assert not normal_folder.exists()  # Should be removed
+
+        # Test 12: Complex nested structure with ignored folders
+        complex_root = temp_path / "complex_root"
+        complex_root.mkdir()
+
+        # Create structure: complex_root/project/.git/empty_folder
+        project = complex_root / "project"
+        git_in_project = project / ".git"
+        empty_in_git = git_in_project / "empty_folder"
+        normal_empty = complex_root / "normal_empty"
+
+        project.mkdir()
+        git_in_project.mkdir()
+        empty_in_git.mkdir()
+        normal_empty.mkdir()
+
+        result = h.file.remove_empty_folders(complex_root)
+        assert "✅ Removed 1 empty folder" in result
+        assert git_in_project.exists()  # Should remain (ignored)
+        assert empty_in_git.exists()  # Should remain (parent is ignored)
+        assert not normal_empty.exists()  # Should be removed
+
+        # Test 13: Test with string path (not Path object)
+        string_test_root = temp_path / "string_test_root"
+        string_test_root.mkdir()
+        string_empty = string_test_root / "string_empty"
+        string_empty.mkdir()
+
+        result = h.file.remove_empty_folders(str(string_test_root))  # Pass string path
+        assert "✅ Removed 1 empty folder" in result
+        assert not string_empty.exists()
+
+        # Test 14: Folder that becomes empty after removing nested empty folders
+        cascade_root = temp_path / "cascade_root"
+        cascade_root.mkdir()
+        outer = cascade_root / "outer"
+        inner = outer / "inner"
+        outer.mkdir()
+        inner.mkdir()
+
+        result = h.file.remove_empty_folders(cascade_root)
+        assert "✅ Removed 2 empty folders" in result
+        assert not outer.exists()  # Should be removed after inner is removed
+        assert not inner.exists()  # Should be removed first
