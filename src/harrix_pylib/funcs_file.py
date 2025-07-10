@@ -1156,7 +1156,7 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
     return "\n".join(result_lines)
 
 
-def rename_pdf_file(filename: Path | str) -> str:
+def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
     """Rename PDF file based on metadata from file content.
 
     This function reads a PDF file and extracts author, title, and year information
@@ -1170,6 +1170,7 @@ def rename_pdf_file(filename: Path | str) -> str:
     Args:
 
     - `filename` (`Path | str`): The path to the PDF file to be processed.
+    - `verbose` (`bool`): If True, print detailed debug information. Default is False.
 
     Returns:
 
@@ -1178,8 +1179,9 @@ def rename_pdf_file(filename: Path | str) -> str:
     Note:
 
     - The function modifies the filename in place if changes are made.
-    - Requires 'pypdf' or 'pypdf' library for PDF metadata extraction.
+    - Requires 'pypdf' library for PDF metadata extraction.
     - Requires 'transliterate' library for Russian transliteration.
+    - Requires 'cryptography>=3.1' for encrypted PDF files.
     - Handles various PDF metadata formats and encodings.
     - Preserves Russian characters and avoids renaming if they would be lost.
 
@@ -1189,72 +1191,126 @@ def rename_pdf_file(filename: Path | str) -> str:
     import harrix_pylib as h
 
     rename_pdf_file("C:/Books/unknown_book.pdf")
+    rename_pdf_file("C:/Books/unknown_book.pdf", verbose=True)  # With debug output
     ```
 
     """
 
+    def is_valid_pdf(file_path: Path) -> bool:
+        """Quick check if file is likely a valid PDF."""
+        try:
+            min_file_size = 100
+            if file_path.stat().st_size < min_file_size:  # Too small to be valid PDF
+                return False
+
+            with Path.open(file_path, "rb") as f:
+                header = f.read(8)
+                return header.startswith(b"%PDF-")
+        except Exception:
+            return False
+
     def extract_pdf_metadata(file_path: Path | str) -> tuple[str | None, str | None, str | None]:
-        """Extract author, title, and year from PDF file."""
+        """Extract author, title, and year from PDF file with better error handling."""
         try:
             with Path.open(Path(file_path), "rb") as f:
-                pdf_reader = pypdf.PdfReader(f)
+                # Check file size
+                f.seek(0, 2)  # Go to end
+                file_size = f.tell()
+                f.seek(0)  # Return to beginning
+
+                min_file_size = 100
+                if file_size < min_file_size:  # Too small
+                    if is_verbose:
+                        print(f"Debug: File {file_path} is too small to be a valid PDF")
+                    return None, None, None
+
+                # Check PDF header
+                header = f.read(8)
+                f.seek(0)
+                if not header.startswith(b"%PDF-"):
+                    if is_verbose:
+                        print(f"Debug: File {file_path} doesn't have valid PDF header")
+                    return None, None, None
+
+                # Use strict=False for more tolerant parsing
+                pdf_reader = pypdf.PdfReader(f, strict=False)
+
+                # Check if file is encrypted
+                if pdf_reader.is_encrypted:
+                    if is_verbose:
+                        print(f"Debug: File {file_path} is encrypted, skipping")
+                    return None, None, None
+
                 metadata = pdf_reader.metadata
 
                 if not metadata:
                     return None, None, None
 
-                # Extract author
+                # Extract metadata fields
                 author = None
                 if metadata.author:
                     author = format_author_name(str(metadata.author))
 
-                # Extract title
                 title = None
                 if metadata.title:
                     title = str(metadata.title).strip()
 
                 # Extract year from creation date or modification date
-                year = None
-                date_fields = [metadata.creation_date, metadata.modification_date]
-
-                for date_field in date_fields:
-                    if date_field:
-                        try:
-                            # Handle different date formats
-                            if hasattr(date_field, "year"):
-                                year = str(date_field.year)
-                                break
-                            # Try to extract year from string representation
-                            date_str = str(date_field)
-                            year_match = re.search(r"(\d{4})", date_str)
-                            if year_match:
-                                year = year_match.group(1)
-                                break
-                        except Exception as e:
-                            print(f"Debug: Error extracting year from date field: {e}")
-                            continue
-
-                # Also try to extract year from subject
-                if not year:
-                    text_fields = [metadata.subject] if hasattr(metadata, "subject") and metadata.subject else []
-                    for field in text_fields:
-                        if field:
-                            year_match = re.search(r"(\d{4})", str(field))
-                            if year_match:
-                                year = year_match.group(1)
-                                break
+                year = _extract_year_from_metadata(metadata)
 
                 return author, title, year
 
+        except pypdf.errors.PdfReadError as e:
+            if is_verbose:
+                print(f"Debug: PDF read error for {file_path}: {e}")
         except Exception as e:
-            print(f"Debug: Error extracting PDF metadata: {e}")
-            return None, None, None
+            if is_verbose:
+                print(f"Debug: Error extracting PDF metadata from {file_path}: {e}")
+
+        return None, None, None
+
+
+    def _extract_year_from_metadata(metadata: pypdf.PdfReader) -> str | None:
+        """Extract year from PDF metadata."""
+        date_fields = [metadata.creation_date, metadata.modification_date]
+
+        for date_field in date_fields:
+            if date_field:
+                try:
+                    # Handle different date formats
+                    if hasattr(date_field, "year"):
+                        return str(date_field.year)
+                    # Try to extract year from string representation
+                    date_str = str(date_field)
+                    year_match = re.search(r"(\d{4})", date_str)
+                    if year_match:
+                        return year_match.group(1)
+                except Exception as e:
+                    if is_verbose:
+                        print(f"Debug: Error extracting year from date field: {e}")
+                    continue
+
+        # Also try to extract year from subject
+        text_fields = [metadata.subject] if hasattr(metadata, "subject") and metadata.subject else []
+        for field in text_fields:
+            if field:
+                year_match = re.search(r"(\d{4})", str(field))
+                if year_match:
+                    return year_match.group(1)
+
+        return None
 
     def extract_pdf_text_metadata(file_path: Path | str) -> tuple[str | None, str | None, str | None]:
         """Extract metadata from PDF text content as fallback."""
         try:
             with Path.open(Path(file_path), "rb") as f:
-                pdf_reader = pypdf.PdfReader(f)
+                pdf_reader = pypdf.PdfReader(f, strict=False)
+
+                # Check if file is encrypted
+                if pdf_reader.is_encrypted:
+                    if is_verbose:
+                        print(f"Debug: File {file_path} is encrypted, cannot extract text")
+                    return None, None, None
 
                 # Extract text from first few pages
                 text = ""
@@ -1265,7 +1321,8 @@ def rename_pdf_file(filename: Path | str) -> str:
                         page = pdf_reader.pages[page_num]
                         text += page.extract_text() + "\n"
                     except Exception as e:
-                        print(f"Debug: Error extracting text from page {page_num}: {e}")
+                        if is_verbose:
+                            print(f"Debug: Error extracting text from page {page_num + 1}: {e}")
                         continue
 
                 if not text.strip():
@@ -1310,8 +1367,13 @@ def rename_pdf_file(filename: Path | str) -> str:
 
                 return author, title, year
 
+        except pypdf.errors.PdfReadError as e:
+            if is_verbose:
+                print(f"Debug: PDF read error during text extraction for {file_path}: {e}")
+            return None, None, None
         except Exception as e:
-            print(f"Debug: Error extracting text metadata: {e}")
+            if is_verbose:
+                print(f"Debug: Error extracting text metadata from {file_path}: {e}")
             return None, None, None
 
     def format_author_name(author_text: str) -> str:
@@ -1377,7 +1439,8 @@ def rename_pdf_file(filename: Path | str) -> str:
             if has_cyrillic(transliterated) and transliterated != filename_stem:
                 return transliterated
         except Exception as e:
-            print(f"Debug: Error during transliteration: {e}")
+            if is_verbose:
+                print(f"Debug: Error during transliteration: {e}")
 
         return filename_stem
 
@@ -1392,6 +1455,10 @@ def rename_pdf_file(filename: Path | str) -> str:
 
         if filename.suffix.lower() != ".pdf":
             return f"❌ File {filename} is not a PDF file."
+
+        # Quick PDF validation
+        if not is_valid_pdf(filename):
+            return f"⚠️ File {filename.name} is not a valid PDF, skipping."
 
         return None
 
@@ -1482,6 +1549,70 @@ def rename_pdf_file(filename: Path | str) -> str:
     return attempt_rename(filename, new_name, original_name)
 
 
+def process_multiple_pdf_files(file_list: list[Path | str], *, is_verbose: bool = False) -> dict:
+    """Process multiple PDF files and return statistics.
+
+    Args:
+        file_list: List of file paths to process
+        is_verbose: If True, print detailed debug information
+
+    Returns:
+        Dictionary with processing statistics
+
+    Example:
+        ```python
+        import harrix_pylib as h
+        from pathlib import Path
+
+        files = list(Path("C:/Books").glob("*.pdf"))
+        stats = h.process_multiple_pdf_files(files)
+        print(f"Successfully renamed: {stats['success']}")
+        print(f"Errors: {stats['errors']}")
+        print(f"Unchanged: {stats['unchanged']}")
+        ```
+
+    """
+    stats = {
+        "success": 0,
+        "errors": 0,
+        "unchanged": 0,
+        "error_files": [],
+        "success_files": [],
+        "unchanged_files": []
+    }
+
+    total_files = len(file_list)
+
+    for i, file_path in enumerate(file_list, 1):
+        if is_verbose:
+            print(f"Processing {i}/{total_files}: {Path(file_path).name}")
+
+        result = rename_pdf_file(file_path, is_verbose=is_verbose)
+
+        if result.startswith("✅"):
+            stats["success"] += 1
+            stats["success_files"].append(str(file_path))
+        elif result.startswith(("❌", "⚠️")):
+            stats["errors"] += 1
+            stats["error_files"].append(str(file_path))
+        else:
+            stats["unchanged"] += 1
+            stats["unchanged_files"].append(str(file_path))
+
+        if not is_verbose:
+            # Show only final result for each file when not in verbose mode
+            print(result)
+
+    # Print summary
+    print("\n📊 Processing Summary:")
+    print(f"✅ Successfully renamed: {stats['success']}")
+    print(f"❗ Left unchanged: {stats['unchanged']}")
+    print(f"❌ Errors: {stats['errors']}")
+    print(f"📁 Total processed: {total_files}")
+
+    return stats
+
+
 def rename_transliterated_file(filename: Path | str) -> str:
     """Rename files with transliterated Russian names to Cyrillic.
 
@@ -1532,7 +1663,7 @@ def rename_transliterated_file(filename: Path | str) -> str:
         # Common transliteration patterns that indicate Russian
         russian_patterns = [
             r"zh",
-            r"kh",  # noqa: RUF003
+            r"kh",
             r"ch",
             r"sh",
             r"shch",
@@ -1540,7 +1671,7 @@ def rename_transliterated_file(filename: Path | str) -> str:
             r"yu",
             r"ya",
             r"yo",
-            r"ye",  # noqa: RUF003
+            r"ye",
             r"ts",
             r"ck",
             r"iai",
@@ -1549,8 +1680,8 @@ def rename_transliterated_file(filename: Path | str) -> str:
             r"iie",
             r"ii",
             r"aia",
-            r"ogo",  # noqa: RUF003
-            r"ogo$",  # noqa: RUF003
+            r"ogo",
+            r"ogo$",
             r"aia$",
             r"yie",
             r"ykh",
@@ -1611,7 +1742,7 @@ def rename_transliterated_file(filename: Path | str) -> str:
             r"\beto\b",
             r"\bona\b",
             r"\boni\b",
-            r"\bego\b",  # noqa: RUF003
+            r"\bego\b",
             r"\beie\b",
             r"\bikh\b",
             r"\bnam\b",
