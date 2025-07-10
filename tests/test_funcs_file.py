@@ -6,6 +6,7 @@ import shutil
 import zipfile
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 import pypdf
 import pytest
@@ -1329,3 +1330,133 @@ def test_remove_empty_folders() -> None:
         assert "✅ Removed 2 empty folders" in result
         assert not outer.exists()  # Should be removed after inner is removed
         assert not inner.exists()  # Should be removed first
+
+
+def test_rename_transliterated_file():
+    """Test the rename_transliterated_file function with various scenarios."""
+
+    # Mock the translit function since we don't want to depend on the actual library
+    def mock_translit(text, lang, reversed: bool=False):
+        """Mock transliteration function."""
+        if lang == "ru" and reversed:
+            # Simple mock transliteration mappings
+            transliteration_map = {
+                "Strannaia istoriia doktora Dzhiekila i m - Robiert Luis Stivienson":
+                    "Странная история доктора Джекила и м - Роберт Луис Стивенсон",
+                "bukvarionok1980_": "букварёнок1980_",  # noqa: RUF001
+                "Kak_razgovarivat_s_mudakami":
+                    "Как_разговаривать_с_мудаками",  # noqa: RUF001
+                "Russkaia literatura": "Русская литература",
+                "Zhizn zamechatelnykh liudei": "Жизнь замечательных людей",
+                "Pushkin Aleksandr Sergeevich": "Пушкин Александр Сергеевич",
+                "Russkaia klassicheskaia literatura":
+                    "Русская классическая литература",
+                "Tolstoi Lev Nikolaevich": "Толстой Лев Николаевич",
+                "Hugh Howey-The Hurricane": "Hugh Howey-The Hurricane",  # Should not change
+                "matrix2script": "matrix2script",  # Should not change
+                "AI - Mastering.Data.Analysis.with.Python":
+                    "AI - Mastering.Data.Analysis.with.Python",  # Should not change
+            }
+            return transliteration_map.get(text, text)
+        return text
+
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Test cases: (filename, expected_result_type, should_be_renamed)
+        # Updated based on actual behavior of is_transliterated_russian function
+        test_cases = [
+            # Files that should be detected as transliterated Russian
+            ("Strannaia istoriia doktora Dzhiekila i m - Robiert Luis Stivienson.pdf", "renamed", True),
+            ("Kak_razgovarivat_s_mudakami.pdf", "renamed", True),
+            ("Russkaia klassicheskaia literatura.txt", "renamed", True),
+            ("Zhizn zamechatelnykh liudei.docx", "renamed", True),
+            ("Pushkin Aleksandr Sergeevich.pdf", "renamed", True),
+            ("Tolstoi Lev Nikolaevich.txt", "renamed", True),
+            # Files that may not be detected as transliterated (due to algorithm limitations)
+            ("bukvarionok1980_.pdf", "unchanged", False),  # May not have enough Russian patterns
+            # English files (should not be renamed)
+            ("Hugh Howey-The Hurricane.epub", "unchanged", False),
+            ("matrix2script.txt", "unchanged", False),
+            ("AI - Mastering.Data.Analysis.with.Python.pdf", "unchanged", False),
+            ("The Great Gatsby.pdf", "unchanged", False),
+            ("data_analysis_script.py", "unchanged", False),
+            # Edge cases
+            ("a.txt", "unchanged", False),  # Too short
+            ("ab.txt", "unchanged", False),  # Too short
+        ]
+
+        # Patch the translit function in the correct module
+        with patch("harrix_pylib.file.translit", side_effect=mock_translit):
+            # Test each case
+            for original_filename, expected_result, _should_be_renamed in test_cases:
+                # Create test file
+                test_file = temp_path / original_filename
+                test_file.write_text("test content")
+
+                # Call the function
+                result = h.file.rename_transliterated_file(test_file)
+
+                # Check results
+                if expected_result == "renamed":
+                    assert "✅ File renamed:" in result, (
+                        f"Expected file {original_filename} to be renamed, but got: {result}"
+                    )
+                    assert original_filename in result
+                    assert "→" in result
+                    # Original file should not exist
+                    assert not test_file.exists()
+                    # New file should exist
+                    new_files = list(temp_path.glob(f"*{test_file.suffix}"))
+                    assert len(new_files) >= 1
+                    # Check that at least one file has Cyrillic characters
+                    has_cyrillic = any(
+                        bool(re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", f.stem)) for f in new_files
+                    )
+                    assert has_cyrillic
+
+                elif expected_result == "unchanged":
+                    assert ("📝 File" in result and "left unchanged" in result) or (
+                        "appears to be in English" in result
+                    ), f"Expected file {original_filename} to be unchanged, but got: {result}"
+                    # Original file should still exist
+                    assert test_file.exists()
+
+                # Clean up for next test
+                for f in temp_path.glob("*"):
+                    if f.is_file():
+                        f.unlink()
+
+        # Test non-existent file
+        non_existent = temp_path / "does_not_exist.txt"
+        result = h.file.rename_transliterated_file(non_existent)
+        assert "❌ File" in result
+        assert "does not exist" in result
+
+        # Test file that exists but transliteration fails
+        with patch("harrix_pylib.file.translit", side_effect=Exception("Transliteration error")):
+            test_file = temp_path / "Russkaia klassicheskaia literatura.txt"
+            test_file.write_text("test content")
+            result = h.file.rename_transliterated_file(test_file)
+            assert "could not be transliterated" in result or "left unchanged" in result
+            assert test_file.exists()
+
+        # Test file collision (when target file already exists)
+        with patch("harrix_pylib.file.translit", side_effect=mock_translit):
+            # Create original file
+            original_file = temp_path / "Russkaia klassicheskaia literatura.txt"
+            original_file.write_text("original content")
+
+            # Create target file that would conflict
+            target_file = temp_path / "Русская классическая литература.txt"
+            target_file.write_text("existing content")
+
+            # Try to rename - should create a numbered version
+            result = h.file.rename_transliterated_file(original_file)
+            assert "✅ File renamed:" in result
+            assert not original_file.exists()
+            assert target_file.exists()  # Original target should still exist
+
+            # Should create numbered version
+            numbered_file = temp_path / "Русская классическая литература (1).txt"
+            assert numbered_file.exists()

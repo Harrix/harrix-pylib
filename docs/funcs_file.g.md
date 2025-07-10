@@ -24,6 +24,7 @@ lang: en
 - [Function `rename_fb2_file`](#function-rename_fb2_file)
 - [Function `rename_largest_images_to_featured`](#function-rename_largest_images_to_featured)
 - [Function `rename_pdf_file`](#function-rename_pdf_file)
+- [Function `rename_transliterated_file`](#function-rename_transliterated_file)
 - [Function `should_ignore_path`](#function-should_ignore_path)
 - [Function `tree_view_folder`](#function-tree_view_folder)
 
@@ -1637,6 +1638,417 @@ def rename_pdf_file(filename: Path | str) -> str:
 
     # Attempt to rename the file
     return attempt_rename(filename, new_name, original_name)
+```
+
+</details>
+
+## Function `rename_transliterated_file`
+
+```python
+def rename_transliterated_file(filename: Path | str) -> str
+```
+
+Rename files with transliterated Russian names to Cyrillic.
+
+This function detects if a filename is written in Latin transliteration of Russian
+and converts it to proper Cyrillic characters. It uses heuristics to determine
+if a filename is likely transliterated Russian rather than genuine English.
+
+Args:
+
+- `filename` (`Path | str`): The path to the file to be processed.
+
+Returns:
+
+- `str`: A status message indicating the result of the operation.
+
+Note:
+
+- The function modifies the filename in place if changes are made.
+- Requires 'transliterate' library for Russian transliteration.
+- Uses pattern matching to identify transliterated text.
+- Preserves file extension and avoids overwriting existing files.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+rename_transliterated_file("Strannaia istoriia doktora Dzhiekila i m - Robiert Luis Stivienson.pdf")
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def rename_transliterated_file(filename: Path | str) -> str:
+
+    def is_transliterated_russian(text: str) -> bool:
+        """Check if text appears to be transliterated Russian."""
+        if not text:
+            return False
+
+        # Convert to lowercase for analysis
+        text_lower = text.lower()
+
+        # Remove common non-alphabetic characters
+        clean_text = re.sub(r"[^a-zA-Z]", "", text_lower)
+
+        if len(clean_text) < 3:  # Too short to analyze
+            return False
+
+        # Common transliteration patterns that indicate Russian
+        russian_patterns = [
+            r"zh",  # ж
+            r"kh",  # х
+            r"ch",  # ч
+            r"sh",  # ш
+            r"shch",  # щ
+            r"sch",  # щ (alternative)
+            r"yu",  # ю
+            r"ya",  # я
+            r"yo",  # ё
+            r"ye",  # е
+            r"ts",  # ц
+            r"ck",  # к (sometimes)
+            r"iai",  # iai pattern
+            r"iei",  # iei pattern
+            r"iia",  # иа pattern
+            r"iie",  # ие pattern
+            r"ii",  # ии pattern
+            r"aia",  # ая pattern
+            r"ogo",  # ого pattern
+            r"ogo$",  # ого ending
+            r"aia$",  # ая ending
+            r"yie",  # ые pattern
+            r"ykh",  # ых pattern
+            r"ov",  # ов pattern
+            r"ev",  # ев pattern
+            r"at",  # ат pattern (govorit -> говорить)
+            r"it$",  # ит ending
+            r"et$",  # ет ending
+        ]
+
+        # Count Russian-specific patterns
+        russian_pattern_count = 0
+        for pattern in russian_patterns:
+            if re.search(pattern, text_lower):
+                russian_pattern_count += 1
+
+        # Common Russian endings in transliteration
+        russian_endings = [
+            r"ov$",
+            r"ova$",
+            r"ovich$",
+            r"ovna$",  # surnames
+            r"skii$",
+            r"skaia$",
+            r"skai$",  # adjectives
+            r"enko$",  # Ukrainian surnames
+            r"nik$",  # common endings
+            r"ost$",  # abstract nouns
+            r"stvo$",  # abstract nouns
+            r"aia$",  # feminine adjectives
+            r"yie$",  # plural adjectives
+            r"ami$",  # instrumental plural
+            r"ymi$",  # instrumental plural
+            r"ikh$",  # genitive plural
+            r"ykh$",  # genitive plural
+            r"at$",  # verb endings
+            r"it$",  # verb endings
+            r"et$",  # verb endings
+        ]
+
+        ending_matches = sum(1 for ending in russian_endings if re.search(ending, text_lower))
+
+        # Check for excessive vowel combinations typical in transliteration
+        vowel_combinations = len(re.findall(r"[aeiou]{2,}", text_lower))
+
+        # Check for letter combinations uncommon in English
+        uncommon_combinations = [
+            r"[bcdfghjklmnpqrstvwxz]{3,}",  # 3+ consonants in a row
+            r"[aeiou]{3,}",  # 3+ vowels in a row
+        ]
+
+        uncommon_count = sum(1 for pattern in uncommon_combinations if re.search(pattern, text_lower))
+
+        # Additional Russian-specific patterns
+        russian_words = [
+            r"\bkak\b",  # как
+            r"\btak\b",  # так
+            r"\beto\b",  # это
+            r"\bona\b",  # она
+            r"\boni\b",  # они
+            r"\bego\b",  # его
+            r"\beie\b",  # её
+            r"\bikh\b",  # их
+            r"\bnam\b",  # нам
+            r"\bvas\b",  # вас
+            r"\bnim\b",  # ним
+            r"\btem\b",  # тем
+            r"\btom\b",  # том
+            r"\bpod\b",  # под
+            r"\bnad\b",  # над
+            r"\bpro\b",  # про
+            r"\bpri\b",  # при
+            r"\biza\b",  # из-за
+            r"\bdlia\b",  # для
+            r"\bvse\b",  # все
+            r"\bvsia\b",  # вся
+            r"\bvso\b",  # всё
+            r"\bchto\b",  # что
+            r"\bkto\b",  # кто
+            r"\bgde\b",  # где
+            r"\bkogda\b",  # когда
+            r"\bpochemu\b",  # почему
+            r"\bkotoryi\b",  # который
+            r"\bkotoraia\b",  # которая
+            r"\bkotoroe\b",  # которое
+            r"\brussk",  # русск-
+            r"\brossii",  # России
+            r"\bmoskv",  # Москв-
+            r"\bpeter",  # Петер-
+            r"\bsovet",  # совет-
+            r"\bsoviet",  # совет-
+        ]
+
+        russian_word_count = sum(1 for pattern in russian_words if re.search(pattern, text_lower))
+
+        # Scoring system (made more lenient)
+        score = 0
+
+        # Russian patterns (strong indicator)
+        if russian_pattern_count >= 2:
+            score += 3
+        elif russian_pattern_count >= 1:
+            score += 2
+
+        # Russian endings
+        if ending_matches >= 1:
+            score += 2
+
+        # Russian words
+        if russian_word_count >= 2:
+            score += 3
+        elif russian_word_count >= 1:
+            score += 2
+
+        # Vowel combinations (moderate indicator)
+        if vowel_combinations >= 2:
+            score += 1
+
+        # Uncommon letter combinations
+        if uncommon_count >= 1:
+            score += 1
+
+        # Check for common English words (negative indicator)
+        common_english_words = [
+            "the",
+            "and",
+            "for",
+            "are",
+            "but",
+            "not",
+            "you",
+            "all",
+            "can",
+            "had",
+            "her",
+            "was",
+            "one",
+            "our",
+            "out",
+            "day",
+            "get",
+            "has",
+            "him",
+            "his",
+            "how",
+            "its",
+            "may",
+            "new",
+            "now",
+            "old",
+            "see",
+            "two",
+            "who",
+            "boy",
+            "did",
+            "man",
+            "car",
+            "run",
+            "big",
+            "end",
+            "far",
+            "fun",
+            "got",
+            "hot",
+            "let",
+            "lot",
+            "put",
+            "say",
+            "she",
+            "try",
+            "use",
+            "way",
+            "win",
+            "yes",
+            "yet",
+            "zoo",
+            "with",
+            "from",
+            "they",
+            "have",
+            "this",
+            "that",
+            "will",
+            "your",
+            "there",
+            "what",
+            "about",
+            "which",
+            "time",
+            "could",
+            "other",
+            "after",
+            "first",
+            "well",
+            "work",
+            "life",
+            "only",
+            "over",
+            "think",
+            "also",
+            "back",
+            "where",
+            "much",
+            "before",
+            "right",
+            "through",
+            "just",
+            "good",
+            "each",
+            "those",
+            "feel",
+            "seem",
+            "long",
+            "want",
+            "show",
+            "every",
+            "great",
+            "little",
+            "own",
+            "under",
+            "might",
+            "while",
+            "last",
+            "another",
+            "small",
+            "find",
+            "here",
+            "give",
+            "many",
+            "well",
+        ]
+
+        words = re.findall(r"\b[a-z]+\b", text_lower)
+        english_word_count = sum(1 for word in words if word in common_english_words)
+
+        if english_word_count >= 3:
+            score -= 3
+        elif english_word_count >= 2:
+            score -= 2
+        elif english_word_count >= 1:
+            score -= 1
+
+        # Additional check for typical English patterns
+        english_patterns = [
+            r"\b(script|data|analysis|mastering|hurricane|matrix|python|programming)\b",
+            r"\b(the|and|with|for|of|in|on|at|by|from)\b",
+            r"\b(great|good|best|new|old|big|small|long|short)\b",
+        ]
+
+        english_pattern_count = sum(1 for pattern in english_patterns if re.search(pattern, text_lower))
+        if english_pattern_count >= 2:
+            score -= 3
+        elif english_pattern_count >= 1:
+            score -= 2
+
+        # Final decision (made more lenient)
+        min_score = 2
+        return score >= min_score
+
+    def transliterate_to_cyrillic(text: str) -> str:
+        """Convert transliterated text to Cyrillic."""
+        try:
+            # Use reverse transliteration (English to Russian)
+            transliterated = translit(text, "ru", reversed=True)
+
+            # Check if transliteration produced meaningful result
+            if re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", transliterated):
+                return transliterated
+            return text
+        except Exception:
+            return text
+
+    def clean_filename(text: str) -> str:
+        """Clean text for use in filename."""
+        if not text:
+            return ""
+
+        # Remove or replace invalid filename characters
+        invalid_chars = r'[<>:"/\\|?*]'
+        text = re.sub(invalid_chars, "", text)
+
+        # Replace multiple spaces with single space
+        text = re.sub(r"\s+", " ", text)
+
+        return text.strip()
+
+    # Main function logic
+    filename = Path(filename)
+
+    if not filename.exists():
+        return f"❌ File {filename} does not exist."
+
+    original_stem = filename.stem
+    file_extension = filename.suffix
+
+    # Check if the filename appears to be transliterated Russian
+    if not is_transliterated_russian(original_stem):
+        return f"📝 File {filename.name} appears to be in English, left unchanged."
+
+    # Transliterate to Cyrillic
+    transliterated_stem = transliterate_to_cyrillic(original_stem)
+
+    # Check if transliteration actually changed something
+    if transliterated_stem == original_stem:
+        return f"📝 File {filename.name} could not be transliterated, left unchanged."
+
+    # Clean the transliterated name
+    clean_stem = clean_filename(transliterated_stem)
+    new_name = f"{clean_stem}{file_extension}"
+
+    # Create new path
+    new_path = filename.parent / new_name
+
+    # Avoid overwriting existing files
+    counter = 1
+    while new_path.exists() and new_path != filename:
+        name_without_ext = clean_stem
+        new_name = f"{name_without_ext} ({counter}){file_extension}"
+        new_path = filename.parent / new_name
+        counter += 1
+
+    # Rename the file
+    if new_path != filename:
+        try:
+            filename.rename(new_path)
+            return f"✅ File renamed: {filename.name} → {new_name}"
+        except Exception as e:
+            return f"❌ Error renaming file: {e!s}"
+
+    return f"📝 File {filename.name} left unchanged."
 ```
 
 </details>
