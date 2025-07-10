@@ -1531,34 +1531,34 @@ def rename_transliterated_file(filename: Path | str) -> str:
 
         # Common transliteration patterns that indicate Russian
         russian_patterns = [
-            r"zh",  # ж
-            r"kh",  # х  # noqa: RUF003
-            r"ch",  # ч
-            r"sh",  # ш
-            r"shch",  # щ
-            r"sch",  # щ (alternative)
-            r"yu",  # ю
-            r"ya",  # я
-            r"yo",  # ё
-            r"ye",  # е  # noqa: RUF003
-            r"ts",  # ц
-            r"ck",  # к (sometimes)
-            r"iai",  # iai pattern
-            r"iei",  # iei pattern
-            r"iia",  # иа pattern
-            r"iie",  # ие pattern
-            r"ii",  # ии pattern
-            r"aia",  # ая pattern
-            r"ogo",  # ого pattern  # noqa: RUF003
-            r"ogo$",  # ого ending  # noqa: RUF003
-            r"aia$",  # ая ending
-            r"yie",  # ые pattern
-            r"ykh",  # ых pattern
-            r"ov",  # ов pattern
-            r"ev",  # ев pattern
-            r"at",  # ат pattern (govorit -> говорить)
-            r"it$",  # ит ending
-            r"et$",  # ет ending
+            r"zh",
+            r"kh",  # noqa: RUF003
+            r"ch",
+            r"sh",
+            r"shch",
+            r"sch",
+            r"yu",
+            r"ya",
+            r"yo",
+            r"ye",  # noqa: RUF003
+            r"ts",
+            r"ck",
+            r"iai",
+            r"iei",
+            r"iia",
+            r"iie",
+            r"ii",
+            r"aia",
+            r"ogo",  # noqa: RUF003
+            r"ogo$",  # noqa: RUF003
+            r"aia$",
+            r"yie",
+            r"ykh",
+            r"ov",
+            r"ev",
+            r"at",
+            r"it$",
+            r"et$",
         ]
 
         # Count Russian-specific patterns
@@ -1606,42 +1606,42 @@ def rename_transliterated_file(filename: Path | str) -> str:
 
         # Additional Russian-specific patterns
         russian_words = [
-            r"\bkak\b",  # как
-            r"\btak\b",  # так
-            r"\beto\b",  # это
-            r"\bona\b",  # она
-            r"\boni\b",  # они
-            r"\bego\b",  # его  # noqa: RUF003
-            r"\beie\b",  # её
-            r"\bikh\b",  # их
-            r"\bnam\b",  # нам
-            r"\bvas\b",  # вас
-            r"\bnim\b",  # ним
-            r"\btem\b",  # тем
-            r"\btom\b",  # том
-            r"\bpod\b",  # под
-            r"\bnad\b",  # над
-            r"\bpro\b",  # про
-            r"\bpri\b",  # при
-            r"\biza\b",  # из-за
-            r"\bdlia\b",  # для
-            r"\bvse\b",  # все
-            r"\bvsia\b",  # вся
-            r"\bvso\b",  # всё
-            r"\bchto\b",  # что
-            r"\bkto\b",  # кто
-            r"\bgde\b",  # где
-            r"\bkogda\b",  # когда
-            r"\bpochemu\b",  # почему
-            r"\bkotoryi\b",  # который
-            r"\bkotoraia\b",  # которая
-            r"\bkotoroe\b",  # которое
-            r"\brussk",  # русск-
-            r"\brossii",  # России
-            r"\bmoskv",  # Москв-
-            r"\bpeter",  # Петер-
-            r"\bsovet",  # совет-
-            r"\bsoviet",  # совет-
+            r"\bkak\b",
+            r"\btak\b",
+            r"\beto\b",
+            r"\bona\b",
+            r"\boni\b",
+            r"\bego\b",  # noqa: RUF003
+            r"\beie\b",
+            r"\bikh\b",
+            r"\bnam\b",
+            r"\bvas\b",
+            r"\bnim\b",
+            r"\btem\b",
+            r"\btom\b",
+            r"\bpod\b",
+            r"\bnad\b",
+            r"\bpro\b",
+            r"\bpri\b",
+            r"\biza\b",
+            r"\bdlia\b",
+            r"\bvse\b",
+            r"\bvsia\b",
+            r"\bvso\b",
+            r"\bchto\b",
+            r"\bkto\b",
+            r"\bgde\b",
+            r"\bkogda\b",
+            r"\bpochemu\b",
+            r"\bkotoryi\b",
+            r"\bkotoraia\b",
+            r"\bkotoroe\b",
+            r"\brussk",
+            r"\brossii",
+            r"\bmoskv",
+            r"\bpeter",
+            r"\bsovet",
+            r"\bsoviet",
         ]
 
         russian_word_count = sum(1 for pattern in russian_words if re.search(pattern, text_lower))
