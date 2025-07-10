@@ -9,7 +9,7 @@ import zipfile
 from collections.abc import Callable, Iterator
 from pathlib import Path
 
-import PyPDF2
+import pypdf
 from transliterate import translit
 
 
@@ -991,7 +991,7 @@ def rename_pdf_file(filename: Path | str) -> str:
     Note:
 
     - The function modifies the filename in place if changes are made.
-    - Requires 'PyPDF2' or 'pypdf' library for PDF metadata extraction.
+    - Requires 'pypdf' or 'pypdf' library for PDF metadata extraction.
     - Requires 'transliterate' library for Russian transliteration.
     - Handles various PDF metadata formats and encodings.
     - Preserves Russian characters and avoids renaming if they would be lost.
@@ -1010,7 +1010,7 @@ def rename_pdf_file(filename: Path | str) -> str:
         """Extract author, title, and year from PDF file."""
         try:
             with Path.open(Path(file_path), "rb") as f:
-                pdf_reader = PyPDF2.PdfReader(f)
+                pdf_reader = pypdf.PdfReader(f)
                 metadata = pdf_reader.metadata
 
                 if not metadata:
@@ -1067,7 +1067,7 @@ def rename_pdf_file(filename: Path | str) -> str:
         """Extract metadata from PDF text content as fallback."""
         try:
             with Path.open(Path(file_path), "rb") as f:
-                pdf_reader = PyPDF2.PdfReader(f)
+                pdf_reader = pypdf.PdfReader(f)
 
                 # Extract text from first few pages
                 text = ""
