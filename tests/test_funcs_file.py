@@ -1336,7 +1336,7 @@ def test_rename_transliterated_file() -> None:
     """Test the rename_transliterated_file function with various scenarios."""
 
     # Mock the translit function since we don't want to depend on the actual library
-    def mock_translit(text: str, lang: str, *, reversed: bool = False) -> str:
+    def mock_translit(text: str, lang: str, *, reversed: bool = False) -> str:  # noqa: A002
         """Mock transliteration function."""
         if lang == "ru" and reversed:
             # Simple mock transliteration mappings
@@ -1351,7 +1351,7 @@ def test_rename_transliterated_file() -> None:
                 "Tolstoi Lev Nikolaevich": "Толстой Лев Николаевич",
                 "Hugh Howey-The Hurricane": "Hugh Howey-The Hurricane",  # Should not change
                 "matrix2script": "matrix2script",  # Should not change
-                "AI - Mastering.Data.Analysis.with.Python": "AI - Mastering.Data.Analysis.with.Python",  # Should not change
+                "AI - Mastering.Data.Analysis": "AI - Mastering.Data.Analysis",  # Should not change
             }
             return transliteration_map.get(text, text)
         return text
@@ -1374,7 +1374,7 @@ def test_rename_transliterated_file() -> None:
             # English files (should not be renamed)
             ("Hugh Howey-The Hurricane.epub", "unchanged", False),
             ("matrix2script.txt", "unchanged", False),
-            ("AI - Mastering.Data.Analysis.with.Python.pdf", "unchanged", False),
+            ("AI - Mastering.Data.Analysis.pdf", "unchanged", False),
             ("The Great Gatsby.pdf", "unchanged", False),
             ("data_analysis_script.py", "unchanged", False),
             # Edge cases

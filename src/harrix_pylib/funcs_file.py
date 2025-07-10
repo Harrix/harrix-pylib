@@ -1817,13 +1817,8 @@ def rename_transliterated_file(filename: Path | str) -> str:
     def transliterate_to_cyrillic(text: str) -> str:
         """Convert transliterated text to Cyrillic."""
         try:
-            # Use reverse transliteration (English to Russian)
             transliterated = translit(text, "ru", reversed=True)
-
-            # Check if transliteration produced meaningful result
-            if re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", transliterated):
-                return transliterated
-            return text
+            return transliterated if re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", transliterated) else text
         except Exception:
             return text
 
@@ -1880,9 +1875,10 @@ def rename_transliterated_file(filename: Path | str) -> str:
     if new_path != filename:
         try:
             filename.rename(new_path)
-            return f"✅ File renamed: {filename.name} → {new_name}"
         except Exception as e:
             return f"❌ Error renaming file: {e!s}"
+        else:
+            return f"✅ File renamed: {filename.name} → {new_name}"
 
     return f"📝 File {filename.name} left unchanged."
 
