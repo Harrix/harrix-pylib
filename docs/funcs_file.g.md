@@ -20,6 +20,7 @@ lang: en
 - [Function `open_file_or_folder`](#function-open_file_or_folder)
 - [Function `rename_fb2_file`](#function-rename_fb2_file)
 - [Function `rename_largest_images_to_featured`](#function-rename_largest_images_to_featured)
+- [Function `rename_pdf_file`](#function-rename_pdf_file)
 - [Function `should_ignore_path`](#function-should_ignore_path)
 - [Function `tree_view_folder`](#function-tree_view_folder)
 
@@ -509,7 +510,7 @@ Rename FB2 file based on metadata from file content.
 
 This function reads an FB2 file and extracts author, title, and year information
 from its XML metadata. The file is then renamed according to the pattern:
-"Author - Title - Year.fb2" (year is optional).
+"LastName FirstName - Title - Year.fb2" (year is optional).
 
 If metadata extraction fails, the function attempts to transliterate the filename
 from English to Russian, assuming it might be a transliterated Russian title.
@@ -569,23 +570,40 @@ def rename_fb2_file(filename: Path | str) -> str:
 
             # Extract author
             author = None
+            first_name = None
+            last_name = None
+
+            # Try to extract first and last names separately
             author_patterns = [
                 r"<first-name>(.*?)</first-name>.*?<last-name>(.*?)</last-name>",
                 r"<last-name>(.*?)</last-name>.*?<first-name>(.*?)</first-name>",
-                r"<author[^>]*>(.*?)</author>",
             ]
 
             for pattern in author_patterns:
                 match = re.search(pattern, desc_content, re.DOTALL)
                 if match:
-                    count_elements = 2
-                    if len(match.groups()) == count_elements:
+                    if "first-name" in pattern and pattern.index("first-name") < pattern.index("last-name"):
                         first_name = match.group(1).strip()
                         last_name = match.group(2).strip()
-                        author = f"{first_name} {last_name}"
                     else:
-                        author = match.group(1).strip()
+                        last_name = match.group(1).strip()
+                        first_name = match.group(2).strip()
                     break
+
+            # If we have both first and last names, format as "LastName FirstName"
+            if first_name and last_name:
+                author = f"{last_name} {first_name}"
+            else:
+                # Fallback to other patterns
+                fallback_patterns = [r"<author[^>]*>(.*?)</author>"]
+
+                for pattern in fallback_patterns:
+                    match = re.search(pattern, desc_content, re.DOTALL)
+                    if match:
+                        author_text = match.group(1).strip()
+                        # Try to parse "FirstName LastName" format and reverse it
+                        author = format_author_name(author_text)
+                        break
 
             # Extract title
             title = None
@@ -613,6 +631,29 @@ def rename_fb2_file(filename: Path | str) -> str:
             return None, None, None
         else:
             return author, title, year
+
+    def format_author_name(author_text: str) -> str:
+        """Format author name as 'LastName FirstName' if possible."""
+        if not author_text:
+            return ""
+
+        # Remove HTML tags and entities
+        author_text = re.sub(r"<[^>]+>", "", author_text)
+        author_text = re.sub(r"&[^;]+;", "", author_text)
+        author_text = author_text.strip()
+
+        # Split by spaces and try to identify first and last names
+        parts = author_text.split()
+
+        count_parts = 2
+        if len(parts) >= count_parts:
+            # Assume first part is first name, last part is last name
+            # If there are middle names, include them with the first name
+            first_name = " ".join(parts[:-1])
+            last_name = parts[-1]
+            return f"{last_name} {first_name}"
+        # If only one part, return as is
+        return author_text
 
     def clean_filename(text: str) -> str:
         """Clean text for use in filename."""
@@ -789,6 +830,343 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
 
     result_lines.append(f"Total files renamed: {renamed_count}")
     return "\n".join(result_lines)
+```
+
+</details>
+
+## Function `rename_pdf_file`
+
+```python
+def rename_pdf_file(filename: Path | str) -> str
+```
+
+Rename PDF file based on metadata from file content.
+
+This function reads a PDF file and extracts author, title, and year information
+from its metadata. The file is then renamed according to the pattern:
+"LastName FirstName - Title - Year.pdf" (year is optional).
+
+If metadata extraction fails, the function attempts to transliterate the filename
+from English to Russian, assuming it might be a transliterated Russian title.
+If transliteration doesn't improve the filename, it remains unchanged.
+
+Args:
+
+- `filename` (`Path | str`): The path to the PDF file to be processed.
+
+Returns:
+
+- `str`: A status message indicating the result of the operation.
+
+Note:
+
+- The function modifies the filename in place if changes are made.
+- Requires 'PyPDF2' or 'pypdf' library for PDF metadata extraction.
+- Requires 'transliterate' library for Russian transliteration.
+- Handles various PDF metadata formats and encodings.
+- Preserves Russian characters and avoids renaming if they would be lost.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+rename_pdf_file("C:/Books/unknown_book.pdf")
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def rename_pdf_file(filename: Path | str) -> str:
+
+    def extract_pdf_metadata(file_path: Path | str) -> tuple[str | None, str | None, str | None]:
+        """Extract author, title, and year from PDF file."""
+        try:
+            with Path.open(Path(file_path), "rb") as f:
+                pdf_reader = PyPDF2.PdfReader(f)
+                metadata = pdf_reader.metadata
+
+                if not metadata:
+                    return None, None, None
+
+                # Extract author
+                author = None
+                if metadata.author:
+                    author = format_author_name(str(metadata.author))
+
+                # Extract title
+                title = None
+                if metadata.title:
+                    title = str(metadata.title).strip()
+
+                # Extract year from creation date or modification date
+                year = None
+                date_fields = [metadata.creation_date, metadata.modification_date]
+
+                for date_field in date_fields:
+                    if date_field:
+                        try:
+                            # Handle different date formats
+                            if hasattr(date_field, "year"):
+                                year = str(date_field.year)
+                                break
+                            # Try to extract year from string representation
+                            date_str = str(date_field)
+                            year_match = re.search(r"(\d{4})", date_str)
+                            if year_match:
+                                year = year_match.group(1)
+                                break
+                        except Exception as e:
+                            print(f"Debug: Error extracting year from date field: {e}")
+                            continue
+
+                # Also try to extract year from subject
+                if not year:
+                    text_fields = [metadata.subject] if hasattr(metadata, "subject") and metadata.subject else []
+                    for field in text_fields:
+                        if field:
+                            year_match = re.search(r"(\d{4})", str(field))
+                            if year_match:
+                                year = year_match.group(1)
+                                break
+
+                return author, title, year
+
+        except Exception as e:
+            print(f"Debug: Error extracting PDF metadata: {e}")
+            return None, None, None
+
+    def extract_pdf_text_metadata(file_path: Path | str) -> tuple[str | None, str | None, str | None]:
+        """Extract metadata from PDF text content as fallback."""
+        try:
+            with Path.open(Path(file_path), "rb") as f:
+                pdf_reader = PyPDF2.PdfReader(f)
+
+                # Extract text from first few pages
+                text = ""
+                max_pages = min(3, len(pdf_reader.pages))
+
+                for page_num in range(max_pages):
+                    try:
+                        page = pdf_reader.pages[page_num]
+                        text += page.extract_text() + "\n"
+                    except Exception as e:
+                        print(f"Debug: Error extracting text from page {page_num}: {e}")
+                        continue
+
+                if not text.strip():
+                    return None, None, None
+
+                # Look for common patterns in academic papers and books
+                author = None
+                title = None
+                year = None
+
+                # Extract title (usually in first lines, often in caps or large font)
+                lines = text.split("\n")[:10]  # First 10 lines
+                for line in lines:
+                    line_modify = line.strip()
+                    min_length = 10
+                    max_length = 200
+                    if (
+                        len(line_modify) > min_length
+                        and len(line_modify) < max_length
+                        and not re.match(r"^\d+$", line_modify)
+                        and not re.match(r"^Page \d+", line_modify)
+                        and (not title or len(line_modify) > len(title))
+                    ):
+                        title = line_modify
+
+                # Extract author patterns
+                author_patterns = [
+                    r"(?:Author|By|Written by)[:\s]+([A-Za-zА-Яа-я\s\.]+)",  # ignore: HP001 # noqa: RUF001
+                    r"([A-Za-zА-Яа-я]+\s+[A-Za-zА-Яа-я]+)(?:\s*,\s*Ph\.?D\.?)?",  # ignore: HP001 # noqa: RUF001
+                ]
+
+                for pattern in author_patterns:
+                    match = re.search(pattern, text[:1000], re.IGNORECASE)
+                    if match:
+                        author = format_author_name(match.group(1))
+                        break
+
+                # Extract year
+                year_match = re.search(r"(?:Copyright|©|\b)(\d{4})\b", text[:2000])
+                if year_match:
+                    year = year_match.group(1)
+
+                return author, title, year
+
+        except Exception as e:
+            print(f"Debug: Error extracting text metadata: {e}")
+            return None, None, None
+
+    def format_author_name(author_text: str) -> str:
+        """Format author name as 'LastName FirstName' if possible."""
+        if not author_text:
+            return ""
+
+        # Remove extra whitespace and clean up
+        author_text = re.sub(r"\s+", " ", author_text.strip())
+
+        # Remove common suffixes and prefixes
+        author_text = re.sub(
+            r"\b(?:Dr\.?|Prof\.?|Ph\.?D\.?|M\.?D\.?|Mr\.?|Mrs\.?|Ms\.?)\s*", "", author_text, flags=re.IGNORECASE
+        )
+
+        # Split by spaces and try to identify first and last names
+        parts = author_text.split()
+
+        count_parts = 2
+        if len(parts) >= count_parts:
+            # Assume first part is first name, last part is last name
+            # If there are middle names, include them with the first name
+            first_name = " ".join(parts[:-1])
+            last_name = parts[-1]
+            return f"{last_name} {first_name}"
+
+        # If only one part, return as is
+        return author_text
+
+    def clean_filename(text: str) -> str:
+        """Clean text for use in filename."""
+        if not text:
+            return ""
+
+        # Remove extra whitespace
+        text = re.sub(r"\s+", " ", text.strip())
+
+        # Remove or replace invalid filename characters
+        invalid_chars = r'[<>:"/\\|?*]'
+        text = re.sub(invalid_chars, "", text)
+
+        # Remove problematic characters but preserve Cyrillic
+        text = re.sub(r"[^\w\s\-.,()[\]{}\u0430-\u044F\u0451\u0410-\u042F\u0401]", "", text)
+
+        # Limit length to avoid filesystem issues
+        max_length_filename = 200
+        if len(text) > max_length_filename:
+            text = text[:max_length_filename].rsplit(" ", 1)[0]  # Cut at word boundary
+
+        return text.strip()
+
+    def has_cyrillic(text: str) -> bool:
+        """Check if text contains Cyrillic characters."""
+        return bool(re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", text))
+
+    def transliterate_filename(filename_stem: str) -> str:
+        """Attempt to transliterate filename from English to Russian."""
+        try:
+            # Try reverse transliteration (English to Russian)
+            transliterated = translit(filename_stem, "ru", reversed=True)
+
+            # Check if transliteration made sense (contains Cyrillic characters)
+            if has_cyrillic(transliterated) and transliterated != filename_stem:
+                return transliterated
+        except Exception as e:
+            print(f"Debug: Error during transliteration: {e}")
+
+        return filename_stem
+
+    def would_lose_cyrillic(original: str, new: str) -> bool:
+        """Check if the new name would lose Cyrillic characters from original."""
+        return has_cyrillic(original) and not has_cyrillic(new)
+
+    def validate_file(filename: Path) -> str | None:
+        """Validate file exists and is PDF. Returns error message or None."""
+        if not filename.exists():
+            return f"❌ File {filename} does not exist."
+
+        if filename.suffix.lower() != ".pdf":
+            return f"❌ File {filename} is not a PDF file."
+
+        return None
+
+    def generate_new_name(author: str | None, title: str | None, year: str | None, original_name: str) -> str | None:
+        """Generate new filename based on metadata or transliteration."""
+        if author and title:
+            # Clean the extracted data
+            author = clean_filename(author)
+            title = clean_filename(title)
+
+            # Construct new filename
+            new_name = f"{author} - {title} - {year}.pdf" if year else f"{author} - {title}.pdf"
+
+            # Check if we would lose Cyrillic characters
+            new_stem = new_name.replace(".pdf", "")
+            if would_lose_cyrillic(original_name, new_stem):
+                return None
+
+            return new_name
+
+        # Try transliteration
+        transliterated = transliterate_filename(original_name)
+        if transliterated != original_name and has_cyrillic(transliterated):
+            return f"{transliterated}.pdf"
+
+        return None
+
+    def attempt_rename(filename: Path, new_name: str, original_name: str) -> str:
+        """Attempt to rename the file and return status message."""
+        new_name = clean_filename(new_name.replace(".pdf", "")) + ".pdf"
+        new_path = filename.parent / new_name
+
+        # Final check for Cyrillic character loss
+        final_stem = new_name.replace(".pdf", "")
+        if would_lose_cyrillic(original_name, final_stem):
+            return f"📝 File {filename.name} left unchanged (would lose Cyrillic characters)."
+
+        # Avoid overwriting existing files
+        counter = 1
+        while new_path.exists() and new_path != filename:
+            name_without_ext = new_name.replace(".pdf", "")
+            new_name = f"{name_without_ext} ({counter}).pdf"
+            new_path = filename.parent / new_name
+            counter += 1
+
+        if new_path != filename:
+            try:
+                filename.rename(new_path)
+            except Exception as e:
+                return f"❌ Error renaming file: {e!s}"
+            else:
+                return f"✅ File renamed: {filename.name} → {new_name}"
+
+        return f"❗ File {filename.name} left unchanged."
+
+    # Main function logic
+    filename = Path(filename)
+
+    # Early validation check
+    validation_error = validate_file(filename)
+    if validation_error:
+        return validation_error
+
+    original_name = filename.stem
+
+    # Extract metadata from PDF file
+    author, title, year = extract_pdf_metadata(filename)
+
+    # If primary metadata extraction failed, try text-based extraction
+    if not (author and title):
+        author_text, title_text, year_text = extract_pdf_text_metadata(filename)
+        author = author or author_text
+        title = title or title_text
+        year = year or year_text
+
+    # Generate new name
+    new_name = generate_new_name(author, title, year, original_name)
+
+    if not new_name:
+        return f"❗ File {filename.name} left unchanged."
+
+    # Check if we would lose Cyrillic characters before renaming
+    new_stem = new_name.replace(".pdf", "")
+    if would_lose_cyrillic(original_name, new_stem):
+        return f"📝 File {filename.name} left unchanged (would lose Cyrillic characters)."
+
+    # Attempt to rename the file
+    return attempt_rename(filename, new_name, original_name)
 ```
 
 </details>
