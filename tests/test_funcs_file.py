@@ -1037,3 +1037,110 @@ def test_rename_epub_file() -> None:
         assert "📝 File" in result
         assert "left unchanged" in result
         assert corrupted_epub.exists()
+
+
+def test_extract_zip_archive() -> None:
+    """Test the extract_zip_archive function with various scenarios."""
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Test 1: Non-existent file
+        non_existent = temp_path / "non_existent.zip"
+        result = h.file.extract_zip_archive(non_existent)
+        assert "❌ File" in result
+        assert "does not exist" in result
+
+        # Test 2: Not a file (directory)
+        test_dir = temp_path / "test_dir"
+        test_dir.mkdir()
+        result = h.file.extract_zip_archive(test_dir)
+        assert "❌" in result
+        assert "is not a file" in result
+
+        # Test 3: Not a ZIP file
+        txt_file = temp_path / "test.txt"
+        txt_file.write_text("test content")
+        result = h.file.extract_zip_archive(txt_file)
+        assert "❌" in result
+        assert "is not a ZIP file" in result
+
+        # Test 4: Empty ZIP file (corrupted)
+        empty_zip = temp_path / "empty.zip"
+        empty_zip.write_bytes(b"not a zip file")
+        result = h.file.extract_zip_archive(empty_zip)
+        assert "❌ Failed to extract" in result
+        assert empty_zip.exists()  # File should still exist after failed extraction
+
+        # Test 5: Valid ZIP file with single file
+        single_file_zip = temp_path / "single_file.zip"
+        with zipfile.ZipFile(single_file_zip, "w") as zf:
+            zf.writestr("test_file.txt", "Hello, World!")
+
+        result = h.file.extract_zip_archive(single_file_zip)
+        assert "✅ Archive single_file.zip extracted and original file deleted" in result
+        assert not single_file_zip.exists()  # Original ZIP should be deleted
+        assert (temp_path / "test_file.txt").exists()  # Extracted file should exist
+        assert (temp_path / "test_file.txt").read_text() == "Hello, World!"
+
+        # Test 6: Valid ZIP file with multiple files
+        multi_file_zip = temp_path / "multi_file.zip"
+        with zipfile.ZipFile(multi_file_zip, "w") as zf:
+            zf.writestr("file1.txt", "Content 1")
+            zf.writestr("file2.txt", "Content 2")
+            zf.writestr("subdir/file3.txt", "Content 3")
+
+        result = h.file.extract_zip_archive(multi_file_zip)
+        assert "✅ Archive multi_file.zip extracted and original file deleted" in result
+        assert not multi_file_zip.exists()  # Original ZIP should be deleted
+        assert (temp_path / "file1.txt").exists()
+        assert (temp_path / "file2.txt").exists()
+        assert (temp_path / "subdir" / "file3.txt").exists()
+        assert (temp_path / "file1.txt").read_text() == "Content 1"
+        assert (temp_path / "file2.txt").read_text() == "Content 2"
+        assert (temp_path / "subdir" / "file3.txt").read_text() == "Content 3"
+
+        # Test 7: ZIP file with nested directory structure
+        nested_zip = temp_path / "nested.zip"
+        with zipfile.ZipFile(nested_zip, "w") as zf:
+            zf.writestr("root_file.txt", "Root content")
+            zf.writestr("folder1/file_in_folder1.txt", "Folder1 content")
+            zf.writestr("folder1/subfolder/deep_file.txt", "Deep content")
+            zf.writestr("folder2/file_in_folder2.txt", "Folder2 content")
+
+        result = h.file.extract_zip_archive(nested_zip)
+        assert "✅ Archive nested.zip extracted and original file deleted" in result
+        assert not nested_zip.exists()
+        assert (temp_path / "root_file.txt").exists()
+        assert (temp_path / "folder1" / "file_in_folder1.txt").exists()
+        assert (temp_path / "folder1" / "subfolder" / "deep_file.txt").exists()
+        assert (temp_path / "folder2" / "file_in_folder2.txt").exists()
+
+        # Test 8: Test with Path object (not string)
+        path_test_zip = temp_path / "path_test.zip"
+        with zipfile.ZipFile(path_test_zip, "w") as zf:
+            zf.writestr("path_test.txt", "Path test content")
+
+        result = h.file.extract_zip_archive(path_test_zip)  # Pass Path object directly
+        assert "✅ Archive path_test.zip extracted and original file deleted" in result
+        assert not path_test_zip.exists()
+        assert (temp_path / "path_test.txt").exists()
+
+        # Test 9: Test with string path
+        string_test_zip = temp_path / "string_test.zip"
+        with zipfile.ZipFile(string_test_zip, "w") as zf:
+            zf.writestr("string_test.txt", "String test content")
+
+        result = h.file.extract_zip_archive(str(string_test_zip))  # Pass string path
+        assert "✅ Archive string_test.zip extracted and original file deleted" in result
+        assert not string_test_zip.exists()
+        assert (temp_path / "string_test.txt").exists()
+
+        # Test 10: Empty ZIP file (valid but empty)
+        empty_valid_zip = temp_path / "empty_valid.zip"
+        with zipfile.ZipFile(empty_valid_zip, "w") as zf:
+            pass  # Create empty but valid ZIP
+
+        result = h.file.extract_zip_archive(empty_valid_zip)
+        # Should succeed even with empty ZIP
+        assert "✅ Archive empty_valid.zip extracted and original file deleted" in result
+        assert not empty_valid_zip.exists()

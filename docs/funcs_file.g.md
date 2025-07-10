@@ -16,6 +16,7 @@ lang: en
 - [Function `check_featured_image`](#function-check_featured_image)
 - [Function `check_func`](#function-check_func)
 - [Function `clear_directory`](#function-clear_directory)
+- [Function `extract_zip_archive`](#function-extract_zip_archive)
 - [Function `find_max_folder_number`](#function-find_max_folder_number)
 - [Function `open_file_or_folder`](#function-open_file_or_folder)
 - [Function `rename_epub_file`](#function-rename_epub_file)
@@ -385,6 +386,89 @@ def clear_directory(path: Path | str) -> None:
     if path.is_dir():
         shutil.rmtree(path)
         path.mkdir(parents=True, exist_ok=True)
+```
+
+</details>
+
+## Function `extract_zip_archive`
+
+```python
+def extract_zip_archive(filename: Path | str) -> str
+```
+
+Extract ZIP archive to the folder where the archive is located and remove the archive file.
+
+This function extracts ZIP archives directly to the same directory where the
+archive file is located. After successful extraction, the original archive
+file is deleted.
+
+Args:
+
+- `filename` (`Path | str`): The path to the ZIP archive file to be extracted.
+
+Returns:
+
+- `str`: A status message indicating the result of the operation.
+
+Note:
+
+- Only supports ZIP format.
+- Uses built-in zipfile module.
+- Files are extracted directly to the archive's parent directory.
+- The original archive file is deleted after successful extraction.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+extract_zip_archive("C:/Downloads/archive.zip")
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def extract_zip_archive(filename: Path | str) -> str:
+
+    def extract_zip_file(file_path: Path, extract_to: Path) -> bool:
+        """Extract ZIP archive using built-in zipfile module."""
+        try:
+            with zipfile.ZipFile(file_path, "r") as zip_ref:
+                zip_ref.extractall(extract_to)
+            return True
+        except Exception:
+            return False
+
+    filename = Path(filename)
+
+    if not filename.exists():
+        return f"❌ File {filename} does not exist."
+
+    if not filename.is_file():
+        return f"❌ {filename} is not a file."
+
+    if filename.suffix.lower() != ".zip":
+        return f"❌ {filename.name} is not a ZIP file."
+
+    # Extract to the same directory where the archive is located
+    extract_to = filename.parent
+
+    try:
+        # Extract ZIP file directly to parent directory
+        if not extract_zip_file(filename, extract_to):
+            return f"❌ Failed to extract {filename.name}. Archive might be corrupted or password-protected."
+
+        # Remove original archive file
+        try:
+            filename.unlink()
+        except Exception as e:
+            return f"⚠️ Archive extracted successfully, but failed to delete original file: {e!s}"
+
+        return f"✅ Archive {filename.name} extracted and original file deleted."
+
+    except Exception as e:
+        return f"❌ Error extracting archive: {e!s}"
 ```
 
 </details>
@@ -1120,7 +1204,7 @@ Returns:
 Note:
 
 - The function modifies the filename in place if changes are made.
-- Requires 'PyPDF2' or 'pypdf' library for PDF metadata extraction.
+- Requires 'pypdf' or 'pypdf' library for PDF metadata extraction.
 - Requires 'transliterate' library for Russian transliteration.
 - Handles various PDF metadata formats and encodings.
 - Preserves Russian characters and avoids renaming if they would be lost.
@@ -1143,7 +1227,7 @@ def rename_pdf_file(filename: Path | str) -> str:
         """Extract author, title, and year from PDF file."""
         try:
             with Path.open(Path(file_path), "rb") as f:
-                pdf_reader = PyPDF2.PdfReader(f)
+                pdf_reader = pypdf.PdfReader(f)
                 metadata = pdf_reader.metadata
 
                 if not metadata:
@@ -1200,7 +1284,7 @@ def rename_pdf_file(filename: Path | str) -> str:
         """Extract metadata from PDF text content as fallback."""
         try:
             with Path.open(Path(file_path), "rb") as f:
-                pdf_reader = PyPDF2.PdfReader(f)
+                pdf_reader = pypdf.PdfReader(f)
 
                 # Extract text from first few pages
                 text = ""

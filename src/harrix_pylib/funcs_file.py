@@ -320,6 +320,76 @@ def clear_directory(path: Path | str) -> None:
         path.mkdir(parents=True, exist_ok=True)
 
 
+def extract_zip_archive(filename: Path | str) -> str:
+    """Extract ZIP archive to the folder where the archive is located and remove the archive file.
+
+    This function extracts ZIP archives directly to the same directory where the
+    archive file is located. After successful extraction, the original archive
+    file is deleted.
+
+    Args:
+
+    - `filename` (`Path | str`): The path to the ZIP archive file to be extracted.
+
+    Returns:
+
+    - `str`: A status message indicating the result of the operation.
+
+    Note:
+
+    - Only supports ZIP format.
+    - Uses built-in zipfile module.
+    - Files are extracted directly to the archive's parent directory.
+    - The original archive file is deleted after successful extraction.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    extract_zip_archive("C:/Downloads/archive.zip")
+    ```
+
+    """
+
+    def extract_zip_file(file_path: Path, extract_to: Path) -> bool:
+        """Extract ZIP archive using built-in zipfile module."""
+        try:
+            with zipfile.ZipFile(file_path, "r") as zip_ref:
+                zip_ref.extractall(extract_to)
+        except Exception:
+            return False
+        else:
+            return True
+
+    filename = Path(filename)
+
+    # Validate file existence and type
+    if not filename.exists():
+        return f"❌ File {filename} does not exist."
+
+    if not filename.is_file():
+        return f"❌ {filename} is not a file."
+
+    if filename.suffix.lower() != ".zip":
+        return f"❌ {filename.name} is not a ZIP file."
+
+    # Extract to the same directory where the archive is located
+    extract_to = filename.parent
+
+    # Extract ZIP file directly to parent directory
+    if not extract_zip_file(filename, extract_to):
+        return f"❌ Failed to extract {filename.name}. Archive might be corrupted or password-protected."
+
+    # Remove original archive file
+    try:
+        filename.unlink()
+    except Exception as e:
+        return f"⚠️ Archive extracted successfully, but failed to delete original file: {e!s}"
+    else:
+        return f"✅ Archive {filename.name} extracted and original file deleted."
+
+
 def find_max_folder_number(base_path: str, start_pattern: str) -> int:
     """Find the highest folder number in a given folder based on a pattern.
 
