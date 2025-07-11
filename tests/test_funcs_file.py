@@ -1,15 +1,12 @@
 """Tests for the functions in the file module of harrix_pylib."""
 
 import os
-import re
 import shutil
 import zipfile
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import pypdf
 import pytest
-from transliterate import translit
 
 import harrix_pylib as h
 
@@ -252,6 +249,15 @@ def test_tree_view_folder() -> None:
     assert h.file.tree_view_folder(folder_path) == tree_check
     tree_check = (current_folder / "tests/data/tree_view_folder__02.txt").read_text(encoding="utf8")
     assert h.file.tree_view_folder(folder_path, is_ignore_hidden_folders=True) == tree_check
+
+
+def test_list_files_simple() -> None:
+    current_folder = h.dev.get_project_root()
+    files_check = (current_folder / "tests/data/list_files_simple__01.txt").read_text(encoding="utf8")
+    folder_path = current_folder / "tests/data/tree_view_folder"
+    assert h.file.list_files_simple(folder_path) == files_check
+    files_check = (current_folder / "tests/data/list_files_simple__02.txt").read_text(encoding="utf8")
+    assert h.file.list_files_simple(folder_path, is_ignore_hidden_folders=True) == files_check
 
 
 def test_rename_fb2_file() -> None:

@@ -1,0 +1,10 @@
+.hidden/file1.txt
+.hidden/file2.txt
+.hidden/subfolder/file1.txt
+.hidden/subfolder/file2.txt
+folder1/file1.txt
+folder1/file2.txt
+folder1/subfolder/file1.txt
+folder1/subfolder/file2.txt
+folder2/file1.txt
+folder2/file2.txt

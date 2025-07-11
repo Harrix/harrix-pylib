@@ -426,6 +426,75 @@ def find_max_folder_number(base_path: str, start_pattern: str) -> int:
     return max_number
 
 
+def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = False) -> str:
+    """Generate a simple list of all files in a directory structure.
+
+    Example output:
+
+    ```text
+    file.txt
+    img/image.jpg
+    docs/readme.md
+    src/main.py
+    ```
+
+    Args:
+
+    - `path` (`Path | str`): The root folder path to start the listing from.
+    - `is_ignore_hidden_folders` (`bool`): If `True`, hidden folders and files (starting with a dot or
+      matching common ignore patterns like `.git`, `__pycache__`, `node_modules`, etc.) are ignored.
+      Defaults to `False`.
+
+    Returns:
+
+    - `str`: A string representation of all files with their relative paths.
+
+    Note:
+
+    - This function uses recursion to traverse folders. It handles `PermissionError`
+      by excluding folders without permission.
+    - Files are listed with their relative paths from the root directory.
+    - When `is_ignore_hidden_folders` is `True`, ignored folders are completely skipped.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    files = h.file.list_files_simple("C:/Notes")
+    print(files)
+
+    # Ignore hidden folders and files
+    files_clean = h.file.list_files_simple("C:/Notes", is_ignore_hidden_folders=True)
+    print(files_clean)
+    ```
+
+    """
+
+    def __list_files(path: Path | str, root_path: Path, *, is_ignore_hidden_folders: bool = False) -> Iterator[str]:
+        path = Path(path)
+        try:
+            contents = list(path.iterdir())
+        except PermissionError:
+            contents = []
+
+        for item in contents:
+            # Skip ignored items if flag is set
+            if is_ignore_hidden_folders and should_ignore_path(item.name):
+                continue
+
+            if item.is_file():
+                # Get relative path from root and normalize to forward slashes
+                relative_path = item.relative_to(root_path)
+                yield str(relative_path).replace("\\", "/")
+            elif item.is_dir():
+                # Recursively process subdirectories
+                yield from __list_files(item, root_path, is_ignore_hidden_folders=is_ignore_hidden_folders)
+
+    root_path = Path(path)
+    return "\n".join(sorted(__list_files(root_path, root_path, is_ignore_hidden_folders=is_ignore_hidden_folders)))
+
+
 def open_file_or_folder(path: Path | str) -> None:
     """Open a file or folder using the operating system's default application.
 
