@@ -1553,6 +1553,8 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
 def rename_transliterated_file(filename: Path | str) -> str:
     """Rename files with transliterated Russian names to Cyrillic.
 
+    **This function is not for production use.**
+
     This function detects if a filename is written in Latin transliteration of Russian
     and converts it to proper Cyrillic characters. It uses heuristics to determine
     if a filename is likely transliterated Russian rather than genuine English.
@@ -2050,97 +2052,97 @@ def rename_transliterated_file(filename: Path | str) -> str:
             # Multi-character patterns MUST go first (longest to shortest)
             return [
                 # 4+ character patterns
-                ("shch", "щ"),
-                ("sch", "щ"),
+                ("shch", "щ"),  # ignore: HP001
+                ("sch", "щ"),  # ignore: HP001
                 # 3 character patterns
-                ("kh", "х"),  # noqa: RUF001
-                ("zh", "ж"),
-                ("ch", "ч"),
-                ("sh", "ш"),
-                ("ts", "ц"),
-                ("yu", "ю"),
-                ("ya", "я"),
-                ("yo", "ё"),
-                ("ye", "е"),  # noqa: RUF001
-                ("ju", "ю"),
-                ("ja", "я"),
-                ("jo", "ё"),
-                ("je", "е"),  # noqa: RUF001
-                ("tz", "ц"),
-                ("cz", "ц"),
+                ("kh", "х"),  # noqa: RUF001  # ignore: HP001
+                ("zh", "ж"),  # ignore: HP001
+                ("ch", "ч"),  # ignore: HP001
+                ("sh", "ш"),  # ignore: HP001
+                ("ts", "ц"),  # ignore: HP001
+                ("yu", "ю"),  # ignore: HP001
+                ("ya", "я"),  # ignore: HP001
+                ("yo", "ё"),  # ignore: HP001
+                ("ye", "е"),  # noqa: RUF001  # ignore: HP001
+                ("ju", "ю"),  # ignore: HP001
+                ("ja", "я"),  # ignore: HP001
+                ("jo", "ё"),  # ignore: HP001
+                ("je", "е"),  # noqa: RUF001  # ignore: HP001
+                ("tz", "ц"),  # ignore: HP001
+                ("cz", "ц"),  # ignore: HP001
                 # 2 character patterns - endings and combinations
-                ("oj", "ой"),
-                ("ey", "ей"),
-                ("ay", "ай"),
-                ("oy", "ой"),
-                ("yi", "ый"),
-                ("ii", "ий"),
-                ("yj", "ый"),
-                ("ij", "ий"),
-                ("ck", "к"),
+                ("oj", "ой"),  # ignore: HP001
+                ("ey", "ей"),  # ignore: HP001
+                ("ay", "ай"),  # ignore: HP001
+                ("oy", "ой"),  # ignore: HP001
+                ("yi", "ый"),  # ignore: HP001
+                ("ii", "ий"),  # ignore: HP001
+                ("yj", "ый"),  # ignore: HP001
+                ("ij", "ий"),  # ignore: HP001
+                ("ck", "к"),  # ignore: HP001
                 # Specific word patterns (common words that are often messed up)
-                ("rekoj", "рекой"),
-                ("holmy", "холмы"),
-                ("yunyi", "юный"),
-                ("iosif", "иосиф"),
-                ("zelenye", "зеленые"),
-                ("derevev", "деревьев"),
-                ("teni", "тени"),
-                ("afriki", "африки"),
-                ("mann", "манн"),
-                ("tomas", "томас"),
-                ("tristan", "тристан"),
+                ("rekoj", "рекой"),  # ignore: HP001
+                ("holmy", "холмы"),  # ignore: HP001
+                ("yunyi", "юный"),  # ignore: HP001
+                ("iosif", "иосиф"),  # ignore: HP001
+                ("zelenye", "зеленые"),  # ignore: HP001
+                ("derevev", "деревьев"),  # ignore: HP001
+                ("teni", "тени"),  # ignore: HP001
+                ("afriki", "африки"),  # ignore: HP001
+                ("mann", "манн"),  # ignore: HP001
+                ("tomas", "томас"),  # ignore: HP001
+                ("tristan", "тристан"),  # ignore: HP001
                 # Common endings
-                ("ogo", "ого"),  # noqa: RUF001
-                ("ego", "его"),  # noqa: RUF001
-                ("aia", "ая"),
-                ("aya", "ая"),
-                ("yie", "ые"),
-                ("ykh", "ых"),
-                ("ikh", "их"),
-                ("ov", "ов"),
-                ("ova", "ова"),
-                ("ev", "ев"),
-                ("eva", "ева"),
-                ("skii", "ский"),
-                ("skij", "ский"),
-                ("sky", "ский"),
-                ("skiy", "ский"),
-                ("skaia", "ская"),
-                ("skaja", "ская"),
-                ("skaya", "ская"),
-                ("stvo", "ство"),
-                ("enie", "ение"),
-                ("anie", "ание"),
+                ("ogo", "ого"),  # noqa: RUF001  # ignore: HP001
+                ("ego", "его"),  # noqa: RUF001  # ignore: HP001
+                ("aia", "ая"),  # ignore: HP001
+                ("aya", "ая"),  # ignore: HP001
+                ("yie", "ые"),  # ignore: HP001
+                ("ykh", "ых"),  # ignore: HP001
+                ("ikh", "их"),  # ignore: HP001
+                ("ov", "ов"),  # ignore: HP001
+                ("ova", "ова"),  # ignore: HP001
+                ("ev", "ев"),  # ignore: HP001
+                ("eva", "ева"),  # ignore: HP001
+                ("skii", "ский"),  # ignore: HP001
+                ("skij", "ский"),  # ignore: HP001
+                ("sky", "ский"),  # ignore: HP001
+                ("skiy", "ский"),  # ignore: HP001
+                ("skaia", "ская"),  # ignore: HP001
+                ("skaja", "ская"),  # ignore: HP001
+                ("skaya", "ская"),  # ignore: HP001
+                ("stvo", "ство"),  # ignore: HP001
+                ("enie", "ение"),  # ignore: HP001
+                ("anie", "ание"),  # ignore: HP001
             ]
 
         def create_single_char_map() -> dict[str, str]:
             """Create single character mapping (applied last)."""
             return {
-                "a": "а",  # noqa: RUF001
-                "b": "б",  # noqa: RUF001
-                "v": "в",
-                "g": "г",  # noqa: RUF001
-                "d": "д",
-                "e": "е",  # noqa: RUF001
-                "z": "з",
-                "i": "и",
-                "k": "к",
-                "l": "л",
-                "m": "м",
-                "n": "н",
-                "o": "о",  # noqa: RUF001
-                "p": "п",
-                "r": "р",  # noqa: RUF001
-                "s": "с",  # noqa: RUF001
-                "t": "т",
-                "u": "у",  # noqa: RUF001
-                "f": "ф",
-                "h": "х",  # noqa: RUF001
-                "w": "в",
-                "x": "кс",
-                "q": "к",
-                "j": "й",
+                "a": "а",  # noqa: RUF001  # ignore: HP001
+                "b": "б",  # noqa: RUF001  # ignore: HP001
+                "v": "в",  # ignore: HP001
+                "g": "г",  # noqa: RUF001  # ignore: HP001
+                "d": "д",  # ignore: HP001
+                "e": "е",  # noqa: RUF001  # ignore: HP001
+                "z": "з",  # ignore: HP001
+                "i": "и",  # ignore: HP001
+                "k": "к",  # ignore: HP001
+                "l": "л",  # ignore: HP001
+                "m": "м",  # ignore: HP001
+                "n": "н",  # ignore: HP001
+                "o": "о",  # noqa: RUF001  # ignore: HP001
+                "p": "п",  # ignore: HP001
+                "r": "р",  # noqa: RUF001  # ignore: HP001
+                "s": "с",  # noqa: RUF001  # ignore: HP001
+                "t": "т",  # ignore: HP001
+                "u": "у",  # noqa: RUF001  # ignore: HP001
+                "f": "ф",  # ignore: HP001
+                "h": "х",  # noqa: RUF001  # ignore: HP001
+                "w": "в",  # ignore: HP001
+                "x": "кс",  # ignore: HP001
+                "q": "к",  # ignore: HP001
+                "j": "й",  # ignore: HP001
             }
 
         def apply_word_based_transliteration(text: str) -> str:
