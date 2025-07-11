@@ -1074,6 +1074,136 @@ def rename_fb2_file(filename: Path | str) -> str:
     return f"📝 File {filename.name} left unchanged."
 
 
+def rename_files_by_mapping(folder_path: Path | str, rename_mapping: dict[str, str]) -> str:
+    """Rename files recursively based on a mapping dictionary while respecting ignore patterns.
+
+    This function traverses the directory tree and renames files according to the provided
+    mapping dictionary. It processes all files recursively, including nested files, but
+    does not enter or process folders that should be ignored based on common ignore patterns.
+
+    Args:
+
+    - `folder_path` (`Path | str`): The root path to start renaming files from.
+    - `rename_mapping` (`dict[str, str]`): Dictionary mapping old filename to new filename.
+
+    Returns:
+
+    - `str`: A status message indicating the result of the operation with count of renamed files.
+
+    Note:
+
+    - Uses `should_ignore_path()` function to determine which folders to skip.
+    - Only renames files, not directories.
+    - If target filename already exists, the operation is skipped for that file.
+    - Preserves file extensions and paths.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    mapping = {
+        "old_file.txt": "new_file.txt",
+        "readme.md": "README.md",
+        "config.json": "settings.json"
+    }
+
+    result = rename_files_by_mapping("C:/Projects/my_project", mapping)
+    print(result)
+    ```
+
+    """
+
+    def collect_all_files(root_path: Path) -> list[Path]:
+        """Collect all files that should be processed, respecting ignore patterns."""
+        files = []
+
+        try:
+            for item in root_path.iterdir():
+                if item.is_dir():
+                    # Skip ignored folders
+                    if should_ignore_path(item):
+                        continue
+
+                    # Recursively collect files from subfolders
+                    files.extend(collect_all_files(item))
+                elif item.is_file():
+                    # Add file to list
+                    files.append(item)
+        except (OSError, PermissionError):
+            pass
+
+        return files
+
+    def rename_files_from_list(files: list[Path], mapping: dict[str, str]) -> tuple[int, int]:
+        """Rename files from the list based on mapping dictionary."""
+        renamed_count = 0
+        skipped_count = 0
+
+        for file_path in files:
+            old_name = file_path.name
+
+            # Check if filename is in mapping
+            if old_name in mapping:
+                new_name = mapping[old_name]
+                new_path = file_path.parent / new_name
+
+                # Skip if target file already exists
+                if new_path.exists():
+                    skipped_count += 1
+                    continue
+
+                try:
+                    file_path.rename(new_path)
+                    renamed_count += 1
+                except (OSError, PermissionError):
+                    # Skip files that can't be renamed due to permissions
+                    skipped_count += 1
+
+        return renamed_count, skipped_count
+
+    folder_path = Path(folder_path)
+
+    # Validate input path
+    if not folder_path.exists():
+        return f"❌ Folder {folder_path} does not exist."
+
+    if not folder_path.is_dir():
+        return f"❌ {folder_path} is not a directory."
+
+    # Validate rename mapping
+    if not rename_mapping:
+        return "❌ Rename mapping dictionary is empty."
+
+    try:
+        # Collect all files that should be processed
+        all_files = collect_all_files(folder_path)
+
+        if not all_files:
+            return f"📁 No files found to process in {folder_path.name}."
+
+        # Rename files based on mapping
+        renamed_count, skipped_count = rename_files_from_list(all_files, rename_mapping)
+
+        # Generate result message based on counts
+        if renamed_count == 0 and skipped_count == 0:
+            result_message = f"📁 No files matched the rename mapping in {folder_path.name}."
+        elif renamed_count == 0:
+            result_message = f"⚠️ No files were renamed in {folder_path.name}. {skipped_count} were skipped."
+        elif skipped_count == 0:
+            if renamed_count == 1:
+                result_message = f"✅ Renamed 1 file in {folder_path.name}."
+            else:
+                result_message = f"✅ Renamed {renamed_count} files in {folder_path.name}."
+        else:
+            result_message = f"✅ Renamed {renamed_count} files in {folder_path.name}. {skipped_count} were skipped."
+
+    except Exception as e:
+        return f"❌ Error renaming files: {e!s}"
+    else:
+        return result_message
+
+
 def rename_largest_images_to_featured(path: Path | str) -> str:
     """Find the largest image in each subdirectory of the given path and renames it to 'featured-image'.
 

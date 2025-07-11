@@ -6,7 +6,6 @@ import shutil
 import zipfile
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
 
 import pypdf
 import pytest
@@ -1330,3 +1329,171 @@ def test_remove_empty_folders() -> None:
         assert "✅ Removed 2 empty folders" in result
         assert not outer.exists()  # Should be removed after inner is removed
         assert not inner.exists()  # Should be removed first
+
+
+def test_rename_files_by_mapping() -> None:
+    """Test the rename_files_by_mapping function with various scenarios."""
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Create test directory structure
+        # Root level files
+        (temp_path / "old_file.txt").write_text("content1")
+        (temp_path / "readme.md").write_text("content2")
+        (temp_path / "config.json").write_text("content3")
+        (temp_path / "unchanged.txt").write_text("content4")
+
+        # Nested directory with files
+        nested_dir = temp_path / "subdir"
+        nested_dir.mkdir()
+        (nested_dir / "old_file.txt").write_text("nested content1")
+        (nested_dir / "another.py").write_text("nested content2")
+
+        # Deeper nested directory
+        deep_dir = nested_dir / "deep"
+        deep_dir.mkdir()
+        (deep_dir / "config.json").write_text("deep content")
+
+        # Directory that should be ignored
+        ignored_dir = temp_path / "__pycache__"
+        ignored_dir.mkdir()
+        (ignored_dir / "old_file.txt").write_text("ignored content")
+
+        # Hidden directory (should be ignored by default)
+        hidden_dir = temp_path / ".git"
+        hidden_dir.mkdir()
+        (hidden_dir / "readme.md").write_text("hidden content")
+
+        # Define rename mapping
+        rename_mapping = {"old_file.txt": "new_file.txt", "readme.md": "READMENEW.md", "config.json": "settings.json"}
+
+        # Test 1: Basic functionality
+        result = h.file.rename_files_by_mapping(temp_path, rename_mapping)
+
+        # Verify successful renames
+        assert "✅ Renamed" in result
+        assert "5 files" in result  # Should rename 4 files total
+
+        # Check that files were renamed correctly
+        assert (temp_path / "new_file.txt").exists()
+        assert (temp_path / "READMENEW.md").exists()
+        assert (temp_path / "settings.json").exists()
+        assert (nested_dir / "new_file.txt").exists()
+        assert (deep_dir / "settings.json").exists()
+
+        # Check that old files no longer exist
+        assert not (temp_path / "old_file.txt").exists()
+        assert not (temp_path / "readme.md").exists()
+        assert not (temp_path / "config.json").exists()
+        assert not (nested_dir / "old_file.txt").exists()
+        assert not (deep_dir / "config.json").exists()
+
+        # Check that unchanged files still exist
+        assert (temp_path / "unchanged.txt").exists()
+        assert (nested_dir / "another.py").exists()
+
+        # Check that ignored directories were not processed
+        assert (ignored_dir / "old_file.txt").exists()  # Should still exist
+        assert (hidden_dir / "readme.md").exists()  # Should still exist
+
+        # Verify content is preserved
+        assert (temp_path / "new_file.txt").read_text() == "content1"
+        assert (temp_path / "READMENEW.md").read_text() == "content2"
+        assert (temp_path / "settings.json").read_text() == "content3"
+
+        # Test 2: File already exists scenario
+        # Create a file that would conflict with rename
+        (temp_path / "conflict_target.txt").write_text("existing content")
+        (temp_path / "conflict_source.txt").write_text("source content")
+
+        result2 = h.file.rename_files_by_mapping(temp_path, {"conflict_source.txt": "conflict_target.txt"})
+
+        # Should skip the rename due to conflict
+        assert "skipped" in result2.lower()
+        assert (temp_path / "conflict_source.txt").exists()  # Original should still exist
+        assert (temp_path / "conflict_target.txt").read_text() == "existing content"  # Target unchanged
+
+        # Test 3: Non-existent directory
+        result3 = h.file.rename_files_by_mapping("/non/existent/path", {"a": "b"})
+        assert "❌" in result3
+        assert "does not exist" in result3
+
+        # Test 4: Empty mapping
+        result4 = h.file.rename_files_by_mapping(temp_path, {})
+        assert "❌" in result4
+        assert "empty" in result4.lower()
+
+        # Test 5: File instead of directory
+        test_file = temp_path / "test_file.txt"
+        test_file.write_text("test")
+        result5 = h.file.rename_files_by_mapping(test_file, {"a": "b"})
+        assert "❌" in result5
+        assert "not a directory" in result5
+
+        # Test 6: No matching files
+        result6 = h.file.rename_files_by_mapping(temp_path, {"nonexistent.txt": "new.txt"})
+        assert "No files matched" in result6
+
+        # Test 7: Multiple ignored directories
+        # Create more ignored directories
+        vscode_dir = temp_path / ".vscode"
+        vscode_dir.mkdir()
+        (vscode_dir / "old_file.txt").write_text("vscode content")
+
+        node_modules_dir = temp_path / "node_modules"
+        node_modules_dir.mkdir()
+        (node_modules_dir / "readme.md").write_text("node modules content")
+
+        # These should be ignored
+        h.file.rename_files_by_mapping(temp_path, {"old_file.txt": "ignored_test.txt"})
+        assert (vscode_dir / "old_file.txt").exists()  # Should still exist (ignored)
+        assert (node_modules_dir / "readme.md").exists()  # Should still exist (ignored)
+
+        # Test 8: Single file rename
+        single_file_dir = temp_path / "single_test"
+        single_file_dir.mkdir()
+        (single_file_dir / "single.txt").write_text("single content")
+
+        result8 = h.file.rename_files_by_mapping(single_file_dir, {"single.txt": "renamed_single.txt"})
+        assert "✅ Renamed 1 file" in result8
+        assert (single_file_dir / "renamed_single.txt").exists()
+        assert not (single_file_dir / "single.txt").exists()
+
+        # Test 9: Mixed success and skip scenario
+        mixed_dir = temp_path / "mixed_test"
+        mixed_dir.mkdir()
+        (mixed_dir / "file1.txt").write_text("content1")
+        (mixed_dir / "file2.txt").write_text("content2")
+        (mixed_dir / "target.txt").write_text("existing target")  # This will cause conflict
+
+        result9 = h.file.rename_files_by_mapping(
+            mixed_dir,
+            {
+                "file1.txt": "renamed1.txt",
+                "file2.txt": "target.txt",  # This will be skipped due to conflict
+            },
+        )
+
+        assert "✅ Renamed 1 file" in result9
+        assert "1 were skipped" in result9
+        assert (mixed_dir / "renamed1.txt").exists()
+        assert (mixed_dir / "file2.txt").exists()  # Should still exist (skipped)
+        assert (mixed_dir / "target.txt").read_text() == "existing target"  # Unchanged
+
+        # Test 10: Empty directory
+        empty_dir = temp_path / "empty_test"
+        empty_dir.mkdir()
+
+        result10 = h.file.rename_files_by_mapping(empty_dir, {"any.txt": "new.txt"})
+        assert "No files found to process" in result10
+
+        # Test 11: Directory with only ignored subdirectories
+        only_ignored_dir = temp_path / "only_ignored"
+        only_ignored_dir.mkdir()
+        cache_dir = only_ignored_dir / ".cache"
+        cache_dir.mkdir()
+        (cache_dir / "test.txt").write_text("cached content")
+
+        result11 = h.file.rename_files_by_mapping(only_ignored_dir, {"test.txt": "new_test.txt"})
+        assert "No files found to process" in result11
+        assert (cache_dir / "test.txt").exists()  # Should still exist (ignored)
