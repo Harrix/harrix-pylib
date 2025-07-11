@@ -1247,7 +1247,7 @@ import harrix_pylib as h
 
 mapping = {
     "old_file.txt": "new_file.txt",
-    "readme.md": "README.md",
+    "readme.md": "README_NEW.md",
     "config.json": "settings.json"
 }
 

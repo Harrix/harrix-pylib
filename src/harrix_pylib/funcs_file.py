@@ -1104,7 +1104,7 @@ def rename_files_by_mapping(folder_path: Path | str, rename_mapping: dict[str, s
 
     mapping = {
         "old_file.txt": "new_file.txt",
-        "readme.md": "README.md",
+        "readme.md": "README_NEW.md",
         "config.json": "settings.json"
     }
 
