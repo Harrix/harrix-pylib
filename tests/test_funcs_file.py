@@ -559,6 +559,47 @@ def test_rename_fb2_file() -> None:
         assert "Гомер - Илиада.fb2" in result
 
 
+def test_rename_file_spaces_to_hyphens() -> None:
+    """Test the h.file.rename_file_spaces_to_hyphens function with various scenarios."""
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Test 1: FB2 file with spaces in name
+        file_with_spaces = temp_path / "my book title.fb2"
+        file_with_spaces.write_text("Test content", encoding="utf-8")
+
+        result = h.file.rename_file_spaces_to_hyphens(file_with_spaces)
+        assert "✅ File renamed:" in result
+        assert "my-book-title.fb2" in result
+        assert (temp_path / "my-book-title.fb2").exists()
+        assert not file_with_spaces.exists()
+
+        # Test 2: PDF file with multiple spaces
+        file_multiple_spaces = temp_path / "author name - book title.pdf"
+        file_multiple_spaces.write_text("Test content", encoding="utf-8")
+
+        result = h.file.rename_file_spaces_to_hyphens(file_multiple_spaces)
+        assert "✅ File renamed:" in result
+        assert "author-name---book-title.pdf" in result
+        assert (temp_path / "author-name---book-title.pdf").exists()
+
+        # Test 3: TXT file with no spaces (should remain unchanged)
+        file_no_spaces = temp_path / "filename.txt"
+        file_no_spaces.write_text("Test content", encoding="utf-8")
+
+        result = h.file.rename_file_spaces_to_hyphens(file_no_spaces)
+        assert "📝 File" in result
+        assert "left unchanged" in result
+        assert "no spaces found" in result
+        assert file_no_spaces.exists()
+
+        # Test 4: Non-existent file
+        non_existent = temp_path / "non_existent.txt"
+        result = h.file.rename_file_spaces_to_hyphens(non_existent)
+        assert "❌ File" in result
+        assert "does not exist" in result
+
+
 def test_rename_epub_file() -> None:
     """Test rename_epub_file function with various scenarios."""
 

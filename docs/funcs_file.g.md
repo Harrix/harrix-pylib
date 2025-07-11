@@ -23,6 +23,7 @@ lang: en
 - [Function `remove_empty_folders`](#function-remove_empty_folders)
 - [Function `rename_epub_file`](#function-rename_epub_file)
 - [Function `rename_fb2_file`](#function-rename_fb2_file)
+- [Function `rename_file_spaces_to_hyphens`](#function-rename_file_spaces_to_hyphens)
 - [Function `rename_files_by_mapping`](#function-rename_files_by_mapping)
 - [Function `rename_largest_images_to_featured`](#function-rename_largest_images_to_featured)
 - [Function `rename_pdf_file`](#function-rename_pdf_file)
@@ -1287,6 +1288,83 @@ def rename_fb2_file(filename: Path | str) -> str:
                 return f"❌ Error renaming file: {e!s}"
             else:
                 return f"✅ File renamed: {filename.name} → {new_name}"
+
+    return f"📝 File {filename.name} left unchanged."
+```
+
+</details>
+
+## Function `rename_file_spaces_to_hyphens`
+
+```python
+def rename_file_spaces_to_hyphens(filename: Path | str) -> str
+```
+
+Rename file by replacing spaces with hyphens in the filename.
+
+This function takes any file and renames it by replacing all spaces in the filename
+with hyphens. The file extension remains unchanged.
+
+Args:
+
+- `filename` (`Path | str`): The path to the file to be processed.
+
+Returns:
+
+- `str`: A status message indicating the result of the operation.
+
+Note:
+
+- The function modifies the filename in place if changes are made.
+- Only renames files that contain spaces in their names.
+- Preserves the file extension and path.
+- Works with any file type.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+rename_file_spaces_to_hyphens("C:/Books/my book title.fb2")
+# Result: "my-book-title.fb2"
+
+rename_file_spaces_to_hyphens("C:/Documents/my document.pdf")
+# Result: "my-document.pdf"
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def rename_file_spaces_to_hyphens(filename: Path | str) -> str:
+    filename = Path(filename)
+
+    if not filename.exists():
+        return f"❌ File {filename} does not exist."
+
+    # Check if filename contains spaces
+    if " " not in filename.stem:
+        return f"📝 File {filename.name} left unchanged (no spaces found)."
+
+    # Create new name by replacing spaces with hyphens
+    new_stem = filename.stem.replace(" ", "-")
+    new_name = f"{new_stem}{filename.suffix}"
+    new_path = filename.parent / new_name
+
+    # Avoid overwriting existing files
+    counter = 1
+    while new_path.exists() and new_path != filename:
+        new_name = f"{new_stem} ({counter}){filename.suffix}"
+        new_path = filename.parent / new_name
+        counter += 1
+
+    if new_path != filename:
+        try:
+            filename.rename(new_path)
+        except Exception as e:
+            return f"❌ Error renaming file: {e!s}"
+        else:
+            return f"✅ File renamed: {filename.name} → {new_name}"
 
     return f"📝 File {filename.name} left unchanged."
 ```
