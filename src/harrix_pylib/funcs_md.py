@@ -2412,7 +2412,7 @@ def remove_yaml_content(markdown_text: str) -> str:
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
 
 
-def replace_section(filename: Path | str, replace_content: str, title_section: str = "## List of commands") -> str:
+def replace_section(filename: Path | str, replace_content: str, title_section: str = "## 📋 List of commands") -> str:
     r"""Replace a section in a file defined by `title_section` with the provided `replace_content`.
 
     This function searches for a section in a text file starting with `title_section` and
@@ -2423,7 +2423,7 @@ def replace_section(filename: Path | str, replace_content: str, title_section: s
 
     - `filename` (`Path | str`): The path to the file where the section needs to be replaced.
     - `replace_content` (`str`): The content to replace the section with.
-    - `title_section` (`str`, Defaults to `"## List of commands"`): The title of the section to be replaced.
+    - `title_section` (`str`, Defaults to `"## 📋 List of commands"`): The title of the section to be replaced.
 
     Returns:
 
@@ -2442,7 +2442,7 @@ def replace_section(filename: Path | str, replace_content: str, title_section: s
     import harrix_pylib as h
 
     new_content = "New list of commands:\n\n- new command1\n- new command2"
-    result_message = h.md.replace_section("C:/Notes/note.md", new_content, "## List of commands")
+    result_message = h.md.replace_section("C:/Notes/note.md", new_content, "## 📋 List of commands")
     ```
 
     """
@@ -2461,7 +2461,7 @@ def replace_section(filename: Path | str, replace_content: str, title_section: s
 def replace_section_content(
     markdown_text: str,
     replace_content: str,
-    title_section: str = "## List of commands",
+    title_section: str = "## 📋 List of commands",
 ) -> str:
     r"""Replace a section in the Markdown text defined by `title_section` with the provided `replace_content`.
 
@@ -2473,7 +2473,7 @@ def replace_section_content(
 
     - `markdown_text` (`str`): The Markdown text.
     - `replace_content` (`str`): The content to replace the section with.
-    - `title_section` (`str`, Defaults to `"## List of commands"`): The title of the section to be replaced.
+    - `title_section` (`str`, Defaults to `"## 📋 List of commands"`): The title of the section to be replaced.
 
     Returns:
 
@@ -2493,7 +2493,7 @@ def replace_section_content(
 
     new_content = "New list of commands:\n\n- new command1\n- new command2"
     text = Path('C:/Notes/note.md').read_text(encoding="utf8")
-    print(h.md.replace_section_content(text, new_content, "## List of commands"))
+    print(h.md.replace_section_content(text, new_content, "## 📋 List of commands"))
     ```
 
     """

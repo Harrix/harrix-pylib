@@ -1027,7 +1027,7 @@ def test_replace_section() -> None:
 
 Some content here
 
-## List of commands
+## 📋 List of commands
 
 - command1
 
@@ -1057,7 +1057,7 @@ More content here
 
 Some content here
 
-## List of commands
+## 📋 List of commands
 
 New list of commands:
 
@@ -1076,7 +1076,7 @@ More content here
 
 Some content here
 
-## List of commands
+## 📋 List of commands
 
 - command1
 
@@ -1110,7 +1110,7 @@ Text.
 
 Some content here
 
-## List of commands
+## 📋 List of commands
 
 - command1
 
@@ -1136,7 +1136,7 @@ def test_replace_section_content() -> None:
 
 Some content here
 
-## List of commands
+## 📋 List of commands
 
 - command1
 
@@ -1160,7 +1160,7 @@ More content here
 
 Some content here
 
-## List of commands
+## 📋 List of commands
 
 New list of commands:
 
@@ -1179,7 +1179,7 @@ More content here
 
 Some content here
 
-## List of commands
+## 📋 List of commands
 
 - command1
 
@@ -1207,7 +1207,7 @@ Text.
 
 Some content here
 
-## List of commands
+## 📋 List of commands
 
 - command1
 

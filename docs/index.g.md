@@ -11,7 +11,7 @@ lang: en
 🐍 Common **Python functions (3.10+)** library for my projects for [my projects](https://github.com/Harrix?tab=repositories).
 
 <details>
-<summary>📖 Contents</summary>
+<summary>📖 Contents ⬇️</summary>
 
 ## Contents
 

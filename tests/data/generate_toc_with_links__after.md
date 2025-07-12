@@ -7,7 +7,7 @@ lang: en
 # Installing VSCode
 
 <details>
-<summary>📖 Contents</summary>
+<summary>📖 Contents ⬇️</summary>
 
 ## Contents
 

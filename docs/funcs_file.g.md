@@ -7,7 +7,7 @@ lang: en
 # File `funcs_file.py`
 
 <details>
-<summary>📖 Contents</summary>
+<summary>📖 Contents ⬇️</summary>
 
 ## Contents
 
