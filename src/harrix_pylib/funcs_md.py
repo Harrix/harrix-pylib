@@ -1994,7 +1994,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             toc_lines.append(f"{'  ' * (level - 2)}- [{title_text}]({link})")
     toc = "\n".join(toc_lines)
     if lang == "ru":
-        toc = f"<details>\n<summary>📖 Содержание</summary>\n\n## Содержание\n\n{toc}\n\n</details>"  # ignore: HP001
+        toc = f"<details>\n<summary>📖 Содержание ⬇️</summary>\n\n## Содержание\n\n{toc}\n\n</details>"  # ignore: HP001
     else:
         toc = f"<details>\n<summary>📖 Contents ⬇️</summary>\n\n## Contents\n\n{toc}\n\n</details>"
 
@@ -2296,7 +2296,7 @@ def remove_toc_content(markdown_text: str) -> str:
             if (
                 next_line_idx < len(lines)
                 and "<summary>" in lines[next_line_idx]
-                and ("📖 Contents" in lines[next_line_idx] or "📖 Содержание" in lines[next_line_idx])  # ignore: HP001
+                and ("📖 Contents" in lines[next_line_idx] or "📖 Содержание ⬇️" in lines[next_line_idx])  # ignore: HP001
             ):
                 in_toc_section = True
                 toc_section_found = True
@@ -2794,7 +2794,7 @@ def sort_sections_content(markdown_text: str) -> str:
                 # Join these lines back together, check if there's <summary>
                 # with "Содержание"/"Contents" # ignore: HP001
                 block_text = "\n".join(look_ahead)
-                ru_summary = "<summary>📖 Содержание</summary>"  # ignore: HP001
+                ru_summary = "<summary>📖 Содержание ⬇️</summary>"  # ignore: HP001
                 en_summary = "<summary>📖 Contents ⬇️</summary>"
                 if ru_summary in block_text or en_summary in block_text:
                     skip_block = True
