@@ -1147,12 +1147,12 @@ def format_quotes_as_markdown_content(markdown_text: str) -> str:
     formatted_quotes: list[str] = []
     book_title: str | None = None
 
-    for quote in raw_quotes:
-        parts = quote.strip().split("\n\n")
+    for quote_text in raw_quotes:
+        parts = quote_text.strip().split("\n\n")
 
         min_count_parts = 2
         if len(parts) >= min_count_parts:
-            quote_text = parts[0]
+            quote_text_new = parts[0]
             source_info = parts[-1].split("\n")
 
             min_count_source_info = 2
@@ -1163,7 +1163,7 @@ def format_quotes_as_markdown_content(markdown_text: str) -> str:
                 if book_title is None:
                     book_title = title
 
-                formatted_quote_text = quote_text.replace("\n", "\n>\n> ")
+                formatted_quote_text = quote_text_new.replace("\n", "\n>\n> ")
 
                 formatted_quote = f"> {formatted_quote_text}\n>\n> -- _{author}, {title}_"
                 formatted_quotes.append(formatted_quote)
@@ -1399,10 +1399,10 @@ def generate_author_book(filename: Path | str) -> str | None:
     quotes = list(map(str.strip, filter(None, "\n".join(lines).split("\n---\n"))))
 
     quotes_fix = []
-    for quote in quotes:
-        lines_quote = quote.splitlines()
+    for quote_text in quotes:
+        lines_quote = quote_text.splitlines()
         if lines_quote[-1].startswith("> -- _"):
-            quotes_fix.append(quote)  # The quote has already been processed
+            quotes_fix.append(quote_text)  # The quote has already been processed
             continue
         if lines_quote[-1].startswith("-- "):
             title = lines_quote[-1][3:]
@@ -2233,71 +2233,45 @@ print(h.md.generate_toc_with_links_content(text))
 ```python
 def generate_toc_with_links_content(markdown_text: str) -> str:
 
-    def generate_id(text: str, existing_ids: set) -> str:
-        # Unicode ranges for emoji detection
-        emoticons_start = 0x1F600
-        emoticons_end = 0x1F64F
-        misc_symbols_start = 0x1F300
-        misc_symbols_end = 0x1F5FF
-        transport_symbols_start = 0x1F680
-        transport_symbols_end = 0x1F6FF
-        regional_indicators_start = 0x1F1E6
-        regional_indicators_end = 0x1F1FF
-        miscellaneous_symbols_start = 0x2600
-        miscellaneous_symbols_end = 0x26FF
-        dingbats_start = 0x2700
-        dingbats_end = 0x27BF
-
-        # Special Unicode characters
-        variation_selector_16 = 0xFE0F  # VS-16
-        ascii_limit = 127
-
-        # Remove HTML tags
-        text = re.sub(r"<[^>]+>", "", text)
-
-        # Convert to lowercase
+    def generate_id(text: str, existing_ids: set[str]) -> str:
+        """Convert a Markdown heading into the same anchor slug that GitHub produces."""
         text = text.lower()
+        result: list[str] = []
 
-        # First replace spaces with hyphens
-        text = text.replace(" ", "-")
+        for ch in text:
+            # Preserve Variation Selector-16 as URL-encoded "%EF%B8%8F"
+            if ch == "\ufe0f":
+                result.append(quote(ch))
+                continue
 
-        result = []
-        for char in text:
-            if char.isalnum() or char in "-_":
-                result.append(char)
-            elif ord(char) == variation_selector_16:
-                for b in char.encode("utf-8"):
-                    result.extend([f"%{b:02X}"])
-            elif ord(char) > ascii_limit:  # emoji / non-ASCII
-                code = ord(char)
-                if (
-                    emoticons_start <= code <= emoticons_end
-                    or misc_symbols_start <= code <= misc_symbols_end
-                    or transport_symbols_start <= code <= transport_symbols_end
-                    or regional_indicators_start <= code <= regional_indicators_end
-                    or miscellaneous_symbols_start <= code <= miscellaneous_symbols_end
-                    or dingbats_start <= code <= dingbats_end
-                ):
-                    continue  # skip emoji
-                for b in char.encode("utf-8"):  # encode other unicode characters
-                    result.extend([f"%{b:02X}"])
+            if ch.isspace():
+                result.append("-")
+                continue
 
-        text = "".join(result)
+            if ch.isalnum():  # Keep letters and digits
+                result.append(ch)
+                continue
 
-        # Compress consecutive hyphens
-        text = re.sub(r"-{2,}", "-", text)
+            if ch in "-_":  # Keep "-" and "_"
+                result.append(ch)
+                continue
 
-        # Remove hyphens at the END, but not at the beginning
-        text = re.sub(r"-+$", "", text)
+            # All other punctuation, emoji, “+”, em-dash, quotes, etc. are skipped
+            continue
+
+        slug = remove_yaml_and_code_content("".join(result))
+
+        # Remove trailing hyphens (GitHub drops only the tail, not the head)
+        slug = re.sub(r"-+$", "", slug)
 
         # Ensure uniqueness
-        original = text
+        base = slug
         i = 1
-        while text in existing_ids:
-            text = f"{original}-{i}"
+        while slug in existing_ids:
+            slug = f"{base}-{i}"
             i += 1
-        existing_ids.add(text)
-        return text
+        existing_ids.add(slug)
+        return slug
 
     yaml_md, _ = split_yaml_content(markdown_text)
     data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
