@@ -8,23 +8,24 @@ lang: en
 
 ![Featured image](https://raw.githubusercontent.com/Harrix/harrix-pylib/refs/heads/main/img/featured-image.svg)
 
-This is a **Python library** 🐍 containing common functions for working in Python (>= 3.10) for [my projects](https://github.com/Harrix?tab=repositories).
+🐍 Common **Python functions (3.10+)** library for my projects for [my projects](https://github.com/Harrix?tab=repositories).
 
 <details>
 <summary>📖 Contents</summary>
 
 ## Contents
 
-- [Install](#install)
-- [Quick start](#quick-start)
-- [List of functions](#list-of-functions)
+- [✨ Features](#-features)
+- [📦 Installation](#-installation)
+- [🏃 Quick start](#-quick-start)
+- [📚 List of functions](#-list-of-functions)
   - [File `funcs_dev.py`](#file-funcs_devpy)
   - [File `funcs_file.py`](#file-funcs_filepy)
   - [File `funcs_md.py`](#file-funcs_mdpy)
   - [File `funcs_py.py`](#file-funcs_pypy)
   - [File `markdown_checker.py`](#file-markdown_checkerpy)
   - [File `python_checker.py`](#file-python_checkerpy)
-- [License](#license)
+- [📄 License](#-license)
 
 </details>
 
@@ -34,12 +35,28 @@ GitHub: <https://github.com/Harrix/harrix-pylib>
 
 Documentation: [docs](https://github.com/Harrix/harrix-pylib/blob/main/docs/index.g.md)
 
-## Install
+## ✨ Features
 
-- pip: `pip install harrix-pylib`
-- uv: `uv add harrix-pylib`
+- 📁 **File Operations** - Directory management, file processing, archive handling
+- 📝 **Markdown Tools** - YAML processing, TOC generation, content manipulation
+- 🔧 **Development Utils** - Project setup, code formatting, documentation generation
+- 🛡️ **Code Checkers** - Custom validation rules for Python and Markdown (complements standard linters)
 
-## Quick start
+## 📦 Installation
+
+Using `pip`:
+
+```shell
+pip install harrix-pylib
+```
+
+Using `uv` (recommended):
+
+```shell
+uv add harrix-pylib
+```
+
+## 🏃 Quick start
 
 Examples of using the library:
 
@@ -63,7 +80,7 @@ tags: [VSCode, FAQ]
 print(md_clean)  # Installing VSCode
 ```
 
-## List of functions
+## 📚 List of functions
 
 ### File `funcs_dev.py`
 
@@ -176,6 +193,6 @@ Doc: [python_checker.g.md](https://github.com/Harrix/harrix-pylib/tree/main/docs
 | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Class [`PythonChecker`](https://github.com/Harrix/harrix-pylib/tree/main/docs/python_checker.g.md#class-pythonchecker) | Class for checking Python files for compliance with specified rules. |
 
-## License
+## 📄 License
 
-License: [MIT](https://github.com/Harrix/harrix-pylib/blob/main/LICENSE.md).
+This project is licensed under the [MIT License](https://github.com/Harrix/harrix-pylib/blob/main/LICENSE.md).
