@@ -58,7 +58,7 @@ def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_
     # Check if the yearly file exists
     if not year_file.exists():
         # Create new yearly file with front matter, year heading, TOC, and new entry
-        toc_section = "<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n</details>\n\n"
+        toc_section = "<details>\n<summary>📖 Contents ⬇️</summary>\n\n## Contents\n\n</details>\n\n"
         content = f"{beginning_of_md}\n# {year}\n\n{toc_section}{new_entry}"
         year_file.write_text(content, encoding="utf-8")
         return f"✅ File {year_file} created.", year_file
@@ -69,7 +69,7 @@ def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_
     year_match = re.search(r"^# \d{4}", content, re.MULTILINE)
     if not year_match:
         # If no year heading, add it with TOC and the new entry
-        toc_section = "<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n</details>\n\n"
+        toc_section = "<details>\n<summary>📖 Contents ⬇️</summary>\n\n## Contents\n\n</details>\n\n"
         updated_content = f"{content}\n\n# {year}\n\n{toc_section}{new_entry}"
     else:
         # Find the table of contents section
@@ -82,7 +82,7 @@ def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_
         else:
             # No TOC found, create one and add new entry after it
             year_pos = year_match.end()
-            toc_section = "\n\n<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n</details>\n\n"
+            toc_section = "\n\n<details>\n<summary>📖 Contents ⬇️</summary>\n\n## Contents\n\n</details>\n\n"
             updated_content = content[:year_pos] + toc_section + new_entry + content[year_pos:].lstrip()
 
     # Write the updated content back to the file
@@ -1996,7 +1996,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     if lang == "ru":
         toc = f"<details>\n<summary>📖 Содержание</summary>\n\n## Содержание\n\n{toc}\n\n</details>"  # ignore: HP001
     else:
-        toc = f"<details>\n<summary>📖 Contents</summary>\n\n## Contents\n\n{toc}\n\n</details>"
+        toc = f"<details>\n<summary>📖 Contents ⬇️</summary>\n\n## Contents\n\n{toc}\n\n</details>"
 
     # Delete old TOC and its header
     content_without_yaml = remove_yaml_content(remove_toc_content(markdown_text))
@@ -2660,7 +2660,7 @@ def sort_sections_content(markdown_text: str) -> str:
     - Sections marked with `<!-- top-section -->` are sorted alphabetically and placed first.
     - Date headings (like `## 2024-01-01`) are sorted in descending order.
     - Regular headings are sorted alphabetically.
-    - Preserves `<details>...</details>` blocks that contain `<summary>📖 Contents</summary>` (or in Russian).
+    - Preserves `<details>...</details>` blocks that contain `<summary>📖 Contents ⬇️</summary>` (or in Russian).
 
     Example:
 
@@ -2777,7 +2777,7 @@ def sort_sections_content(markdown_text: str) -> str:
         # --- Logic for <details> blocks ---
         if not in_code_block:
             if "<details>" in line.strip():
-                # check the next line - it might be <summary>📖 Contents</summary> (or in Russian)
+                # check the next line - it might be <summary>📖 Contents ⬇️</summary> (or in Russian)
                 # but sometimes summary might be a few lines ahead. For simplicity, check 1-2 lines ahead.
                 look_ahead = []
                 # collect maximum 3 lines (current line already exists)
@@ -2795,7 +2795,7 @@ def sort_sections_content(markdown_text: str) -> str:
                 # with "Содержание"/"Contents" # ignore: HP001
                 block_text = "\n".join(look_ahead)
                 ru_summary = "<summary>📖 Содержание</summary>"  # ignore: HP001
-                en_summary = "<summary>📖 Contents</summary>"
+                en_summary = "<summary>📖 Contents ⬇️</summary>"
                 if ru_summary in block_text or en_summary in block_text:
                     skip_block = True
 

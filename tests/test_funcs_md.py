@@ -32,7 +32,7 @@ def test_add_diary_entry_in_year() -> None:
         assert front_matter in content
         assert f"# {current_year}" in content
         assert "<details>" in content
-        assert "<summary>📖 Contents</summary>" in content
+        assert "<summary>📖 Contents ⬇️</summary>" in content
         assert "## Contents" in content
         assert "</details>" in content
 
