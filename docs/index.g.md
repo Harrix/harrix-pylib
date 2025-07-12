@@ -4,11 +4,11 @@ author-email: anton.b.sergienko@gmail.com
 lang: en
 ---
 
-# harrix-pylib
+# Harrix PyLib
 
 ![Featured image](https://raw.githubusercontent.com/Harrix/harrix-pylib/refs/heads/main/img/featured-image.svg)
 
-This is a **Python library** containing common functions for working in Python (>= 3.10) for [my projects](https://github.com/Harrix?tab=repositories).
+This is a **Python library** 🐍 containing common functions for working in Python (>= 3.10) for [my projects](https://github.com/Harrix?tab=repositories).
 
 <details>
 <summary>📖 Contents</summary>
