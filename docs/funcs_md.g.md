@@ -2234,43 +2234,68 @@ print(h.md.generate_toc_with_links_content(text))
 def generate_toc_with_links_content(markdown_text: str) -> str:
 
     def generate_id(text: str, existing_ids: set) -> str:
+        # Unicode ranges for emoji detection
+        emoticons_start = 0x1F600
+        emoticons_end = 0x1F64F
+        misc_symbols_start = 0x1F300
+        misc_symbols_end = 0x1F5FF
+        transport_symbols_start = 0x1F680
+        transport_symbols_end = 0x1F6FF
+        regional_indicators_start = 0x1F1E6
+        regional_indicators_end = 0x1F1FF
+        miscellaneous_symbols_start = 0x2600
+        miscellaneous_symbols_end = 0x26FF
+        dingbats_start = 0x2700
+        dingbats_end = 0x27BF
+
+        # Special Unicode characters
+        variation_selector_16 = 0xFE0F  # VS-16
+        ascii_limit = 127
+
         # Remove HTML tags
         text = re.sub(r"<[^>]+>", "", text)
 
         # Convert to lowercase
         text = text.lower()
 
-        # Replace spaces with hyphens
+        # First replace spaces with hyphens
         text = text.replace(" ", "-")
 
-        # Remove or replace special characters, but preserve emojis
-        # GitHub encodes emojis in URL-encoded format
         result = []
         for char in text:
-            if char.isalnum() or char == "-" or char == "_":
+            if char.isalnum() or char in "-_":
                 result.append(char)
-            elif ord(char) > 127:  # Non-ASCII characters (including emojis)
-                # Encode in URL-encoded format
-                encoded = char.encode("utf-8")
-                for byte in encoded:
-                    result.append(f"%{byte:02X}")
-            # Skip other characters
+            elif ord(char) == variation_selector_16:
+                for b in char.encode("utf-8"):
+                    result.extend([f"%{b:02X}"])
+            elif ord(char) > ascii_limit:  # emoji / non-ASCII
+                code = ord(char)
+                if (
+                    emoticons_start <= code <= emoticons_end
+                    or misc_symbols_start <= code <= misc_symbols_end
+                    or transport_symbols_start <= code <= transport_symbols_end
+                    or regional_indicators_start <= code <= regional_indicators_end
+                    or miscellaneous_symbols_start <= code <= miscellaneous_symbols_end
+                    or dingbats_start <= code <= dingbats_end
+                ):
+                    continue  # skip emoji
+                for b in char.encode("utf-8"):  # encode other unicode characters
+                    result.extend([f"%{b:02X}"])
 
         text = "".join(result)
 
-        # Remove multiple consecutive hyphens
-        text = re.sub(r"-+", "-", text)
+        # Compress consecutive hyphens
+        text = re.sub(r"-{2,}", "-", text)
 
-        # Remove hyphens at the beginning and end
-        text = text.strip("-")
+        # Remove hyphens at the END, but not at the beginning
+        text = re.sub(r"-+$", "", text)
 
         # Ensure uniqueness
-        original_text = text
-        counter = 1
+        original = text
+        i = 1
         while text in existing_ids:
-            text = f"{original_text}-{counter}"
-            counter += 1
-
+            text = f"{original}-{i}"
+            i += 1
         existing_ids.add(text)
         return text
 
