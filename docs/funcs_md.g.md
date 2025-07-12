@@ -2234,26 +2234,44 @@ print(h.md.generate_toc_with_links_content(text))
 def generate_toc_with_links_content(markdown_text: str) -> str:
 
     def generate_id(text: str, existing_ids: set) -> str:
-        # Convert text to lowercase
-        text = text.lower()
+        # Remove HTML tags
+        text = re.sub(r"<[^>]+>", "", text)
 
-        # Remove all non-word characters (e.g., punctuation, HTML)
-        text = text.replace("-", " ")
-        text = re.sub(r"[^\w\s]", "", text)
+        # Convert to lowercase
+        text = text.lower()
 
         # Replace spaces with hyphens
         text = text.replace(" ", "-")
 
-        # Ensure uniqueness by appending a number if necessary
+        # Remove or replace special characters, but preserve emojis
+        # GitHub encodes emojis in URL-encoded format
+        result = []
+        for char in text:
+            if char.isalnum() or char == "-" or char == "_":
+                result.append(char)
+            elif ord(char) > 127:  # Non-ASCII characters (including emojis)
+                # Encode in URL-encoded format
+                encoded = char.encode("utf-8")
+                for byte in encoded:
+                    result.append(f"%{byte:02X}")
+            # Skip other characters
+
+        text = "".join(result)
+
+        # Remove multiple consecutive hyphens
+        text = re.sub(r"-+", "-", text)
+
+        # Remove hyphens at the beginning and end
+        text = text.strip("-")
+
+        # Ensure uniqueness
         original_text = text
         counter = 1
         while text in existing_ids:
             text = f"{original_text}-{counter}"
             counter += 1
 
-        # Add the new unique ID to the set
         existing_ids.add(text)
-
         return text
 
     yaml_md, _ = split_yaml_content(markdown_text)
@@ -2287,7 +2305,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             toc_lines.append(f"{'  ' * (level - 2)}- [{title_text}]({link})")
     toc = "\n".join(toc_lines)
     if lang == "ru":
-        toc = f"<details>\n<summary>📖 Содержание</summary>\n\n## Содержание\n\n{toc}\n\n</details>"  # ignore: HP001
+        toc = f"<details>\n<summary>📖 Содержание ⬇️</summary>\n\n## Содержание\n\n{toc}\n\n</details>"  # ignore: HP001
     else:
         toc = f"<details>\n<summary>📖 Contents ⬇️</summary>\n\n## Contents\n\n{toc}\n\n</details>"
 
@@ -2643,7 +2661,9 @@ def remove_toc_content(markdown_text: str) -> str:
             if (
                 next_line_idx < len(lines)
                 and "<summary>" in lines[next_line_idx]
-                and ("📖 Contents" in lines[next_line_idx] or "📖 Содержание" in lines[next_line_idx])  # ignore: HP001
+                and (
+                    "📖 Contents" in lines[next_line_idx] or "📖 Содержание ⬇️" in lines[next_line_idx]
+                )  # ignore: HP001
             ):
                 in_toc_section = True
                 toc_section_found = True
@@ -3204,7 +3224,7 @@ def sort_sections_content(markdown_text: str) -> str:
                 # Join these lines back together, check if there's <summary>
                 # with "Содержание"/"Contents" # ignore: HP001
                 block_text = "\n".join(look_ahead)
-                ru_summary = "<summary>📖 Содержание</summary>"  # ignore: HP001
+                ru_summary = "<summary>📖 Содержание ⬇️</summary>"  # ignore: HP001
                 en_summary = "<summary>📖 Contents ⬇️</summary>"
                 if ru_summary in block_text or en_summary in block_text:
                     skip_block = True
