@@ -1201,6 +1201,75 @@ def generate_author_book(filename: Path | str) -> str | None:
     return "\n".join(lines_list)
 
 
+def generate_id(text: str, existing_ids: set[str]) -> str:
+    """Return exactly the same anchor slug GitHub creates for a Markdown heading.
+
+    This function generates unique anchor IDs for Markdown headings following GitHub's
+    algorithm. It converts text to lowercase, removes markdown formatting, handles
+    special characters, and ensures uniqueness by adding numeric suffixes when needed.
+
+    Args:
+
+    - `text` (`str`): The heading text to convert to an anchor ID.
+    - `existing_ids` (`set[str]`): Set of already existing IDs to ensure uniqueness.
+
+    Returns:
+
+    - `str`: The generated anchor ID slug that matches GitHub's format.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    existing_ids = set()
+    slug1 = h.md.generate_id("My Great Heading", existing_ids)
+    slug2 = h.md.generate_id("My Great Heading", existing_ids)
+    print(slug1)  # "my-great-heading"
+    print(slug2)  # "my-great-heading-1"
+    ```
+
+    """
+    text = text.lower()
+    text = remove_markdown_formatting_for_headings(text)
+
+    result: list[str] = []
+
+    for ch in text:
+        # Keep U+FE0F (VS-16) encoded - GitHub does this for emoji style
+        if ch == "\ufe0f":
+            result.append(quote(ch))
+            continue
+
+        if ch.isspace():  # space → hyphen
+            result.append("-")
+            continue
+
+        if ch.isalnum():  # letters and digits (any alphabet)
+            result.append(ch)
+            continue
+
+        if ch in "-_":  # keep "-" and "_"
+            result.append(ch)
+            continue
+
+        # All other characters (punctuation, emoji, "\", quotes, +, — …) are skipped
+        continue
+
+    slug = "".join(result)  # no collapsing of "--" and
+    # trailing hyphens are preserved
+
+    # Ensure uniqueness (GitHub always adds a *second* hyphen before the counter)
+    base = slug
+    idx = 1
+    while slug in existing_ids:
+        slug = f"{base}-{idx}"  # e.g.  "convert-quotes-to--1"
+        idx += 1
+
+    existing_ids.add(slug)
+    return slug
+
+
 def generate_image_captions(filename: Path | str) -> str:
     """Process a Markdown file to add captions to images based on their alt text.
 
@@ -1940,61 +2009,6 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     ```
 
     """
-
-    def remove_markdown_formatting(text: str) -> str:
-        """Remove markdown formatting from text."""
-        patterns = [
-            (r"\*\*([^*]+)\*\*", r"\1"),  # Remove bold
-            (r"\*([^*]+)\*", r"\1"),  # Remove italic
-            (r"~~([^~]+)~~", r"\1"),  # Remove strikethrough
-            (r"$$([^$$]+)\]$$[^)]+$$", r"\1"),  # Remove links, keep text
-            (r"<https?://[^>]+>", ""),  # Remove autolinks like <https://...>
-            (r"<http?://[^>]+>", ""),  # Remove autolinks like <http://...>
-        ]
-
-        return functools.reduce(lambda txt, pattern: re.sub(pattern[0], pattern[1], txt), patterns, text)
-
-    def generate_id(text: str, existing_ids: set[str]) -> str:
-        """Return exactly the same anchor slug GitHub creates for a Markdown heading."""
-        text = text.lower()
-        text = remove_markdown_formatting(text)
-
-        result: list[str] = []
-
-        for ch in text:
-            # Keep U+FE0F (VS-16) encoded - GitHub does this for emoji style
-            if ch == "\ufe0f":
-                result.append(quote(ch))
-                continue
-
-            if ch.isspace():  # space → hyphen
-                result.append("-")
-                continue
-
-            if ch.isalnum():  # letters and digits (any alphabet)
-                result.append(ch)
-                continue
-
-            if ch in "-_":  # keep "-" and "_"
-                result.append(ch)
-                continue
-
-            # All other characters (punctuation, emoji, "\", quotes, +, — …) are skipped
-            continue
-
-        slug = "".join(result)  # no collapsing of "--" and
-        # trailing hyphens are preserved
-
-        # Ensure uniqueness (GitHub always adds a *second* hyphen before the counter)
-        base = slug
-        idx = 1
-        while slug in existing_ids:
-            slug = f"{base}-{idx}"  # e.g.  "convert-quotes-to--1"
-            idx += 1
-
-        existing_ids.add(slug)
-        return slug
-
     yaml_md, _ = split_yaml_content(markdown_text)
     data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
     lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
@@ -2023,7 +2037,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             link = f"#{text_link}"
             title_text = title.strip()
             # Form the table of contents entry
-            toc_lines.append(f"{'  ' * (level - 2)}- [{remove_markdown_formatting(title_text)}]({link})")
+            toc_lines.append(f"{'  ' * (level - 2)}- [{remove_markdown_formatting_for_headings(title_text)}]({link})")
     toc = "\n".join(toc_lines)
     if lang == "ru":
         toc = f"<details>\n<summary>📖 Содержание ⬇️</summary>\n\n## Содержание\n\n{toc}\n\n</details>"  # ignore: HP001
@@ -2275,6 +2289,40 @@ def increase_heading_level_content(markdown_text: str) -> str:
             continue
         new_lines.append("#" + line if line.startswith("#") else line)
     return "\n".join(new_lines)
+
+
+def remove_markdown_formatting_for_headings(text: str) -> str:
+    """Remove markdown formatting from text.
+
+    Args:
+
+    - `text` (`str`): The input text containing markdown formatting to be removed.
+
+    Returns:
+
+    - `str`: The text with markdown formatting removed (bold, italic, strikethrough, links, and autolinks).
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    markdown_text = "**Bold text** and *italic text* with ~~strikethrough~~ and <https://example.com>"
+    clean_text = h.md.remove_markdown_formatting_for_headings(markdown_text)
+    print(clean_text)
+    ```
+
+    """
+    patterns = [
+        (r"\*\*([^*]+)\*\*", r"\1"),  # Remove bold
+        (r"\*([^*]+)\*", r"\1"),  # Remove italic
+        (r"~~([^~]+)~~", r"\1"),  # Remove strikethrough
+        (r"$$([^$$]+)\]$$[^)]+$$", r"\1"),  # Remove links, keep text
+        (r"<https?://[^>]+>", ""),  # Remove autolinks like <https://...>
+        (r"<http?://[^>]+>", ""),  # Remove autolinks like <http://...>
+    ]
+
+    return functools.reduce(lambda txt, pattern: re.sub(pattern[0], pattern[1], txt), patterns, text)
 
 
 def remove_toc_content(markdown_text: str) -> str:
