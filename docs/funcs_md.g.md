@@ -4,54 +4,54 @@ author-email: anton.b.sergienko@gmail.com
 lang: en
 ---
 
-# File `funcs_md.py`
+# 📄 File `funcs_md.py`
 
 <details>
 <summary>📖 Contents ⬇️</summary>
 
 ## Contents
 
-- [Function `add_diary_entry_in_year`](#function-add_diary_entry_in_year)
-- [Function `add_diary_new_dairy_in_year`](#function-add_diary_new_dairy_in_year)
-- [Function `add_diary_new_diary`](#function-add_diary_new_diary)
-- [Function `add_diary_new_dream`](#function-add_diary_new_dream)
-- [Function `add_diary_new_dream_in_year`](#function-add_diary_new_dream_in_year)
-- [Function `add_diary_new_note`](#function-add_diary_new_note)
-- [Function `add_note`](#function-add_note)
-- [Function `append_path_to_local_links_images_line`](#function-append_path_to_local_links_images_line)
-- [Function `combine_markdown_files`](#function-combine_markdown_files)
-- [Function `combine_markdown_files_recursively`](#function-combine_markdown_files_recursively)
-- [Function `delete_g_md_files_recursively`](#function-delete_g_md_files_recursively)
-- [Function `download_and_replace_images`](#function-download_and_replace_images)
-- [Function `download_and_replace_images_content`](#function-download_and_replace_images_content)
-- [Function `format_quotes_as_markdown_content`](#function-format_quotes_as_markdown_content)
-- [Function `format_yaml`](#function-format_yaml)
-- [Function `format_yaml_content`](#function-format_yaml_content)
-- [Function `generate_author_book`](#function-generate_author_book)
-- [Function `generate_image_captions`](#function-generate_image_captions)
-- [Function `generate_image_captions_content`](#function-generate_image_captions_content)
-- [Function `generate_short_note_toc_with_links`](#function-generate_short_note_toc_with_links)
-- [Function `generate_short_note_toc_with_links_content`](#function-generate_short_note_toc_with_links_content)
-- [Function `generate_summaries`](#function-generate_summaries)
-- [Function `generate_toc_with_links`](#function-generate_toc_with_links)
-- [Function `generate_toc_with_links_content`](#function-generate_toc_with_links_content)
-- [Function `get_yaml_content`](#function-get_yaml_content)
-- [Function `identify_code_blocks`](#function-identify_code_blocks)
-- [Function `identify_code_blocks_line`](#function-identify_code_blocks_line)
-- [Function `increase_heading_level_content`](#function-increase_heading_level_content)
-- [Function `remove_toc_content`](#function-remove_toc_content)
-- [Function `remove_yaml_and_code_content`](#function-remove_yaml_and_code_content)
-- [Function `remove_yaml_content`](#function-remove_yaml_content)
-- [Function `replace_section`](#function-replace_section)
-- [Function `replace_section_content`](#function-replace_section_content)
-- [Function `sort_sections`](#function-sort_sections)
-- [Function `sort_sections_content`](#function-sort_sections_content)
-- [Function `split_toc_content`](#function-split_toc_content)
-- [Function `split_yaml_content`](#function-split_yaml_content)
+- [🔧 Function `add_diary_entry_in_year`](#-function-add_diary_entry_in_year)
+- [🔧 Function `add_diary_new_dairy_in_year`](#-function-add_diary_new_dairy_in_year)
+- [🔧 Function `add_diary_new_diary`](#-function-add_diary_new_diary)
+- [🔧 Function `add_diary_new_dream`](#-function-add_diary_new_dream)
+- [🔧 Function `add_diary_new_dream_in_year`](#-function-add_diary_new_dream_in_year)
+- [🔧 Function `add_diary_new_note`](#-function-add_diary_new_note)
+- [🔧 Function `add_note`](#-function-add_note)
+- [🔧 Function `append_path_to_local_links_images_line`](#-function-append_path_to_local_links_images_line)
+- [🔧 Function `combine_markdown_files`](#-function-combine_markdown_files)
+- [🔧 Function `combine_markdown_files_recursively`](#-function-combine_markdown_files_recursively)
+- [🔧 Function `delete_g_md_files_recursively`](#-function-delete_g_md_files_recursively)
+- [🔧 Function `download_and_replace_images`](#-function-download_and_replace_images)
+- [🔧 Function `download_and_replace_images_content`](#-function-download_and_replace_images_content)
+- [🔧 Function `format_quotes_as_markdown_content`](#-function-format_quotes_as_markdown_content)
+- [🔧 Function `format_yaml`](#-function-format_yaml)
+- [🔧 Function `format_yaml_content`](#-function-format_yaml_content)
+- [🔧 Function `generate_author_book`](#-function-generate_author_book)
+- [🔧 Function `generate_image_captions`](#-function-generate_image_captions)
+- [🔧 Function `generate_image_captions_content`](#-function-generate_image_captions_content)
+- [🔧 Function `generate_short_note_toc_with_links`](#-function-generate_short_note_toc_with_links)
+- [🔧 Function `generate_short_note_toc_with_links_content`](#-function-generate_short_note_toc_with_links_content)
+- [🔧 Function `generate_summaries`](#-function-generate_summaries)
+- [🔧 Function `generate_toc_with_links`](#-function-generate_toc_with_links)
+- [🔧 Function `generate_toc_with_links_content`](#-function-generate_toc_with_links_content)
+- [🔧 Function `get_yaml_content`](#-function-get_yaml_content)
+- [🔧 Function `identify_code_blocks`](#-function-identify_code_blocks)
+- [🔧 Function `identify_code_blocks_line`](#-function-identify_code_blocks_line)
+- [🔧 Function `increase_heading_level_content`](#-function-increase_heading_level_content)
+- [🔧 Function `remove_toc_content`](#-function-remove_toc_content)
+- [🔧 Function `remove_yaml_and_code_content`](#-function-remove_yaml_and_code_content)
+- [🔧 Function `remove_yaml_content`](#-function-remove_yaml_content)
+- [🔧 Function `replace_section`](#-function-replace_section)
+- [🔧 Function `replace_section_content`](#-function-replace_section_content)
+- [🔧 Function `sort_sections`](#-function-sort_sections)
+- [🔧 Function `sort_sections_content`](#-function-sort_sections_content)
+- [🔧 Function `split_toc_content`](#-function-split_toc_content)
+- [🔧 Function `split_yaml_content`](#-function-split_yaml_content)
 
 </details>
 
-## Function `add_diary_entry_in_year`
+## 🔧 Function `add_diary_entry_in_year`
 
 ```python
 def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_content: str) -> tuple[str, Path]
@@ -138,7 +138,7 @@ def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_
 
 </details>
 
-## Function `add_diary_new_dairy_in_year`
+## 🔧 Function `add_diary_new_dairy_in_year`
 
 ```python
 def add_diary_new_dairy_in_year(path_dream: Path | str, beginning_of_md: str) -> tuple[str, Path]
@@ -178,7 +178,7 @@ def add_diary_new_dairy_in_year(path_dream: Path | str, beginning_of_md: str) ->
 
 </details>
 
-## Function `add_diary_new_diary`
+## 🔧 Function `add_diary_new_diary`
 
 ```python
 def add_diary_new_diary(path_diary: Path | str, beginning_of_md: str) -> tuple[str, Path]
@@ -239,7 +239,7 @@ def add_diary_new_diary(
 
 </details>
 
-## Function `add_diary_new_dream`
+## 🔧 Function `add_diary_new_dream`
 
 ```python
 def add_diary_new_dream(path_dream: Path | str, beginning_of_md: str) -> tuple[str, Path]
@@ -301,7 +301,7 @@ def add_diary_new_dream(
 
 </details>
 
-## Function `add_diary_new_dream_in_year`
+## 🔧 Function `add_diary_new_dream_in_year`
 
 ```python
 def add_diary_new_dream_in_year(path_dream: Path | str, beginning_of_md: str) -> tuple[str, Path]
@@ -341,7 +341,7 @@ def add_diary_new_dream_in_year(path_dream: Path | str, beginning_of_md: str) ->
 
 </details>
 
-## Function `add_diary_new_note`
+## 🔧 Function `add_diary_new_note`
 
 ```python
 def add_diary_new_note(base_path: Path | str, text: str) -> tuple[str, Path]
@@ -394,7 +394,7 @@ def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool
 
 </details>
 
-## Function `add_note`
+## 🔧 Function `add_note`
 
 ```python
 def add_note(base_path: Path | str, name: str, text: str) -> tuple[str, Path]
@@ -449,7 +449,7 @@ def add_note(base_path: Path | str, name: str, text: str, *, is_with_images: boo
 
 </details>
 
-## Function `append_path_to_local_links_images_line`
+## 🔧 Function `append_path_to_local_links_images_line`
 
 ```python
 def append_path_to_local_links_images_line(markdown_line: str, adding_path: str) -> str
@@ -500,7 +500,7 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
 
 </details>
 
-## Function `combine_markdown_files`
+## 🔧 Function `combine_markdown_files`
 
 ```python
 def combine_markdown_files(folder_path: Path | str) -> str
@@ -731,7 +731,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
 
 </details>
 
-## Function `combine_markdown_files_recursively`
+## 🔧 Function `combine_markdown_files_recursively`
 
 ```python
 def combine_markdown_files_recursively(folder_path: Path | str) -> str
@@ -871,7 +871,7 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_m
 
 </details>
 
-## Function `delete_g_md_files_recursively`
+## 🔧 Function `delete_g_md_files_recursively`
 
 ```python
 def delete_g_md_files_recursively(folder_path: Path | str) -> str
@@ -919,7 +919,7 @@ def delete_g_md_files_recursively(folder_path: Path | str) -> str:
 
 </details>
 
-## Function `download_and_replace_images`
+## 🔧 Function `download_and_replace_images`
 
 ```python
 def download_and_replace_images(filename: Path | str) -> str
@@ -976,7 +976,7 @@ def download_and_replace_images(filename: Path | str) -> str:
 
 </details>
 
-## Function `download_and_replace_images_content`
+## 🔧 Function `download_and_replace_images_content`
 
 ```python
 def download_and_replace_images_content(markdown_text: str, path_md: Path | str, image_folder: str = "img") -> str
@@ -1091,7 +1091,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
 
 </details>
 
-## Function `format_quotes_as_markdown_content`
+## 🔧 Function `format_quotes_as_markdown_content`
 
 ```python
 def format_quotes_as_markdown_content(markdown_text: str) -> str
@@ -1173,7 +1173,7 @@ def format_quotes_as_markdown_content(markdown_text: str) -> str:
 
 </details>
 
-## Function `format_yaml`
+## 🔧 Function `format_yaml`
 
 ```python
 def format_yaml(filename: Path | str) -> str
@@ -1224,7 +1224,7 @@ def format_yaml(filename: Path | str) -> str:
 
 </details>
 
-## Function `format_yaml_content`
+## 🔧 Function `format_yaml_content`
 
 ```python
 def format_yaml_content(markdown_text: str) -> str
@@ -1298,7 +1298,7 @@ def format_yaml_content(markdown_text: str) -> str:
 
 </details>
 
-## Function `generate_author_book`
+## 🔧 Function `generate_author_book`
 
 ```python
 def generate_author_book(filename: Path | str) -> str | None
@@ -1420,7 +1420,7 @@ def generate_author_book(filename: Path | str) -> str | None:
 
 </details>
 
-## Function `generate_image_captions`
+## 🔧 Function `generate_image_captions`
 
 ```python
 def generate_image_captions(filename: Path | str) -> str
@@ -1563,7 +1563,7 @@ def generate_image_captions(filename: Path | str) -> str:
 
 </details>
 
-## Function `generate_image_captions_content`
+## 🔧 Function `generate_image_captions_content`
 
 ```python
 def generate_image_captions_content(markdown_text: str) -> str
@@ -1760,7 +1760,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
 
 </details>
 
-## Function `generate_short_note_toc_with_links`
+## 🔧 Function `generate_short_note_toc_with_links`
 
 ```python
 def generate_short_note_toc_with_links(filename: Path | str) -> str
@@ -1829,7 +1829,7 @@ def generate_short_note_toc_with_links(filename: Path | str) -> str:
 
 </details>
 
-## Function `generate_short_note_toc_with_links_content`
+## 🔧 Function `generate_short_note_toc_with_links_content`
 
 ```python
 def generate_short_note_toc_with_links_content(markdown_text: str) -> str
@@ -1924,7 +1924,7 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
 
 </details>
 
-## Function `generate_summaries`
+## 🔧 Function `generate_summaries`
 
 ```python
 def generate_summaries(folder: Path | str) -> str
@@ -2140,7 +2140,7 @@ def generate_summaries(folder: Path | str) -> str:
 
 </details>
 
-## Function `generate_toc_with_links`
+## 🔧 Function `generate_toc_with_links`
 
 ```python
 def generate_toc_with_links(filename: Path | str) -> str
@@ -2195,7 +2195,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
 
 </details>
 
-## Function `generate_toc_with_links_content`
+## 🔧 Function `generate_toc_with_links_content`
 
 ```python
 def generate_toc_with_links_content(markdown_text: str) -> str
@@ -2354,7 +2354,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
 
 </details>
 
-## Function `get_yaml_content`
+## 🔧 Function `get_yaml_content`
 
 ```python
 def get_yaml_content(markdown_text: str) -> str
@@ -2421,7 +2421,7 @@ def get_yaml_content(markdown_text: str) -> str:
 
 </details>
 
-## Function `identify_code_blocks`
+## 🔧 Function `identify_code_blocks`
 
 ```python
 def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]
@@ -2486,7 +2486,7 @@ def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
 
 </details>
 
-## Function `identify_code_blocks_line`
+## 🔧 Function `identify_code_blocks_line`
 
 ```python
 def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]
@@ -2562,7 +2562,7 @@ def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
 
 </details>
 
-## Function `increase_heading_level_content`
+## 🔧 Function `increase_heading_level_content`
 
 ```python
 def increase_heading_level_content(markdown_text: str) -> str
@@ -2614,7 +2614,7 @@ def increase_heading_level_content(markdown_text: str) -> str:
 
 </details>
 
-## Function `remove_toc_content`
+## 🔧 Function `remove_toc_content`
 
 ```python
 def remove_toc_content(markdown_text: str) -> str
@@ -2675,8 +2675,8 @@ def remove_toc_content(markdown_text: str) -> str:
                 next_line_idx < len(lines)
                 and "<summary>" in lines[next_line_idx]
                 and (
-                    "📖 Contents" in lines[next_line_idx] or "📖 Содержание ⬇️" in lines[next_line_idx]
-                )  # ignore: HP001
+                    "📖 Contents" in lines[next_line_idx] or "📖 Содержание ⬇️" in lines[next_line_idx]  # ignore: HP001
+                )
             ):
                 in_toc_section = True
                 toc_section_found = True
@@ -2701,7 +2701,7 @@ def remove_toc_content(markdown_text: str) -> str:
 
 </details>
 
-## Function `remove_yaml_and_code_content`
+## 🔧 Function `remove_yaml_and_code_content`
 
 ```python
 def remove_yaml_and_code_content(markdown_text: str) -> str
@@ -2754,7 +2754,7 @@ def remove_yaml_and_code_content(markdown_text: str) -> str:
 
 </details>
 
-## Function `remove_yaml_content`
+## 🔧 Function `remove_yaml_content`
 
 ```python
 def remove_yaml_content(markdown_text: str) -> str
@@ -2815,7 +2815,7 @@ def remove_yaml_content(markdown_text: str) -> str:
 
 </details>
 
-## Function `replace_section`
+## 🔧 Function `replace_section`
 
 ```python
 def replace_section(filename: Path | str, replace_content: str, title_section: str = "## 📋 List of commands") -> str
@@ -2872,7 +2872,7 @@ def replace_section(filename: Path | str, replace_content: str, title_section: s
 
 </details>
 
-## Function `replace_section_content`
+## 🔧 Function `replace_section_content`
 
 ```python
 def replace_section_content(markdown_text: str, replace_content: str, title_section: str = "## 📋 List of commands") -> str
@@ -2973,7 +2973,7 @@ def replace_section_content(
 
 </details>
 
-## Function `sort_sections`
+## 🔧 Function `sort_sections`
 
 ```python
 def sort_sections(filename: Path | str) -> str
@@ -3077,7 +3077,7 @@ def sort_sections(filename: Path | str) -> str:
 
 </details>
 
-## Function `sort_sections_content`
+## 🔧 Function `sort_sections_content`
 
 ```python
 def sort_sections_content(markdown_text: str) -> str
@@ -3308,7 +3308,7 @@ def sort_sections_content(markdown_text: str) -> str:
 
 </details>
 
-## Function `split_toc_content`
+## 🔧 Function `split_toc_content`
 
 ```python
 def split_toc_content(markdown_text: str) -> tuple[str, str]
@@ -3368,7 +3368,7 @@ def split_toc_content(markdown_text: str) -> tuple[str, str]:
 
 </details>
 
-## Function `split_yaml_content`
+## 🔧 Function `split_yaml_content`
 
 ```python
 def split_yaml_content(markdown_text: str) -> tuple[str, str]

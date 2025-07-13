@@ -118,14 +118,20 @@ class ExampleClass:
 
         # Check content of test_file.g.md
         test_file_content = test_file_docs.read_text(encoding="utf8")
-        assert "# File `test_file.py`" in test_file_content, "Test file documentation should start with its name."
+        assert "# 📄 File `test_file.py`" in test_file_content, (
+            "Test file documentation should start with its name and emoji."
+        )
         assert "```python" in test_file_content, "Should contain code blocks."
         assert "<details>" in test_file_content, "Should contain details tags for code sections."
         assert "<summary>Code:</summary>" in test_file_content, "Should contain summary tags for code sections."
-        assert "## Function `example_function`" in test_file_content, "Example function should be documented."
-        assert "## Class `ExampleClass`" in test_file_content, "Example class should be documented."
-        assert "### Method `__init__`" in test_file_content, "Class method should be documented."
-        assert "### Method `example_method`" in test_file_content, "Another class method should be documented."
+        assert "## 🔧 Function `example_function`" in test_file_content, (
+            "Example function should be documented with emoji."
+        )
+        assert "## 🏛️ Class `ExampleClass`" in test_file_content, "Example class should be documented with emoji."
+        assert "### ⚙️ Method `__init__`" in test_file_content, "Class method should be documented with emoji."
+        assert "### ⚙️ Method `example_method`" in test_file_content, (
+            "Another class method should be documented with emoji."
+        )
 
         # Check the result string
         assert "File test_file.py is processed." in result, "Result should indicate processing of the test file."
@@ -164,24 +170,24 @@ class ExampleClass:
         md_content = h.py.generate_md_docs_content(str(test_file))
 
         # Assertions
-        assert "# File `test_file.py`" in md_content, "Doc should start with file name."
+        assert "# 📄 File `test_file.py`" in md_content, "Doc should start with file name and emoji."
         assert "```python" in md_content, "Doc should contain code blocks."
         assert "<details>" in md_content, "Doc should have details tags for code sections."
         assert "<summary>Code:</summary>" in md_content, "Doc should have summary tags for code sections."
 
-        assert "## Function `example_function`" in md_content, "Example function should be documented."
+        assert "## 🔧 Function `example_function`" in md_content, "Example function should be documented with emoji."
         assert "def example_function(a: int, b: int) -> int" in md_content, "Function signature should be present."
         assert "Adds two integers and returns the sum" in md_content, "Function docstring should be included."
 
-        assert "## Class `ExampleClass`" in md_content, "Example class should be documented."
+        assert "## 🏛️ Class `ExampleClass`" in md_content, "Example class should be documented with emoji."
         assert "class ExampleClass" in md_content, "Class signature should be present."
         assert "A class for demonstration" in md_content, "Class docstring should be included."
 
-        assert "### Method `__init__`" in md_content, "Class __init__ method should be documented."
+        assert "### ⚙️ Method `__init__`" in md_content, "Class __init__ method should be documented with emoji."
         assert "def __init__(self, value: str)" in md_content, "Method signature should be present."
         assert "Initialize the class" in md_content, "Method docstring should be included."
 
-        assert "### Method `example_method`" in md_content, "Class method should be documented."
+        assert "### ⚙️ Method `example_method`" in md_content, "Class method should be documented with emoji."
         assert "def example_method(self)" in md_content, "Method signature should be present."
         assert "A method that does nothing" in md_content, "Method docstring should be included."
 

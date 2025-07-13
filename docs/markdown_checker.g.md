@@ -4,34 +4,34 @@ author-email: anton.b.sergienko@gmail.com
 lang: en
 ---
 
-# File `markdown_checker.py`
+# 📄 File `markdown_checker.py`
 
 <details>
 <summary>📖 Contents ⬇️</summary>
 
 ## Contents
 
-- [Class `MarkdownChecker`](#class-markdownchecker)
-  - [Method `__init__`](#method-__init__)
-  - [Method `__call__`](#method-__call__)
-  - [Method `check`](#method-check)
-  - [Method `check_directory`](#method-check_directory)
-  - [Method `find_markdown_files`](#method-find_markdown_files)
-  - [Method `_check_all_rules`](#method-_check_all_rules)
-  - [Method `_check_content_rules`](#method-_check_content_rules)
-  - [Method `_check_filename_rules`](#method-_check_filename_rules)
-  - [Method `_check_yaml_rules`](#method-_check_yaml_rules)
-  - [Method `_determine_project_root`](#method-_determine_project_root)
-  - [Method `_find_yaml_block_end_line`](#method-_find_yaml_block_end_line)
-  - [Method `_find_yaml_end_line`](#method-_find_yaml_end_line)
-  - [Method `_find_yaml_field_column`](#method-_find_yaml_field_column)
-  - [Method `_find_yaml_field_line_in_original`](#method-_find_yaml_field_line_in_original)
-  - [Method `_format_error`](#method-_format_error)
-  - [Method `_get_relative_path`](#method-_get_relative_path)
+- [🏛️ Class `MarkdownChecker`](#%EF%B8%8F-class-markdownchecker)
+  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
+  - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
+  - [⚙️ Method `check`](#%EF%B8%8F-method-check)
+  - [⚙️ Method `check_directory`](#%EF%B8%8F-method-check_directory)
+  - [⚙️ Method `find_markdown_files`](#%EF%B8%8F-method-find_markdown_files)
+  - [⚙️ Method `_check_all_rules`](#%EF%B8%8F-method-_check_all_rules)
+  - [⚙️ Method `_check_content_rules`](#%EF%B8%8F-method-_check_content_rules)
+  - [⚙️ Method `_check_filename_rules`](#%EF%B8%8F-method-_check_filename_rules)
+  - [⚙️ Method `_check_yaml_rules`](#%EF%B8%8F-method-_check_yaml_rules)
+  - [⚙️ Method `_determine_project_root`](#%EF%B8%8F-method-_determine_project_root)
+  - [⚙️ Method `_find_yaml_block_end_line`](#%EF%B8%8F-method-_find_yaml_block_end_line)
+  - [⚙️ Method `_find_yaml_end_line`](#%EF%B8%8F-method-_find_yaml_end_line)
+  - [⚙️ Method `_find_yaml_field_column`](#%EF%B8%8F-method-_find_yaml_field_column)
+  - [⚙️ Method `_find_yaml_field_line_in_original`](#%EF%B8%8F-method-_find_yaml_field_line_in_original)
+  - [⚙️ Method `_format_error`](#%EF%B8%8F-method-_format_error)
+  - [⚙️ Method `_get_relative_path`](#%EF%B8%8F-method-_get_relative_path)
 
 </details>
 
-## Class `MarkdownChecker`
+## 🏛️ Class `MarkdownChecker`
 
 ```python
 class MarkdownChecker
@@ -391,7 +391,7 @@ class MarkdownChecker:
 
 </details>
 
-### Method `__init__`
+### ⚙️ Method `__init__`
 
 ```python
 def __init__(self, project_root: Path | str | None = None) -> None
@@ -415,7 +415,7 @@ def __init__(self, project_root: Path | str | None = None) -> None:
 
 </details>
 
-### Method `__call__`
+### ⚙️ Method `__call__`
 
 ```python
 def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]
@@ -433,7 +433,7 @@ def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> li
 
 </details>
 
-### Method `check`
+### ⚙️ Method `check`
 
 ```python
 def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]
@@ -461,7 +461,7 @@ def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[
 
 </details>
 
-### Method `check_directory`
+### ⚙️ Method `check_directory`
 
 ```python
 def check_directory(self, directory: Path | str, exclude_rules: set | None = None, additional_ignore_patterns: list[str] | None = None) -> dict[str, list[str]]
@@ -501,7 +501,7 @@ def check_directory(
 
 </details>
 
-### Method `find_markdown_files`
+### ⚙️ Method `find_markdown_files`
 
 ```python
 def find_markdown_files(self, directory: Path | str, additional_ignore_patterns: list[str] | None = None) -> Generator[Path, None, None]
@@ -544,7 +544,7 @@ def find_markdown_files(
 
 </details>
 
-### Method `_check_all_rules`
+### ⚙️ Method `_check_all_rules`
 
 ```python
 def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, None]
@@ -585,7 +585,7 @@ def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, N
 
 </details>
 
-### Method `_check_content_rules`
+### ⚙️ Method `_check_content_rules`
 
 ```python
 def _check_content_rules(self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set) -> Generator[str, None, None]
@@ -645,7 +645,7 @@ def _check_content_rules(
 
 </details>
 
-### Method `_check_filename_rules`
+### ⚙️ Method `_check_filename_rules`
 
 ```python
 def _check_filename_rules(self, filename: Path, rules: set) -> Generator[str, None, None]
@@ -676,7 +676,7 @@ def _check_filename_rules(self, filename: Path, rules: set) -> Generator[str, No
 
 </details>
 
-### Method `_check_yaml_rules`
+### ⚙️ Method `_check_yaml_rules`
 
 ```python
 def _check_yaml_rules(self, filename: Path, yaml_content: str, all_lines: list[str], rules: set) -> Generator[str, None, None]
@@ -727,7 +727,7 @@ def _check_yaml_rules(
 
 </details>
 
-### Method `_determine_project_root`
+### ⚙️ Method `_determine_project_root`
 
 ```python
 def _determine_project_root(self, project_root: Path | str | None) -> Path
@@ -756,7 +756,7 @@ def _determine_project_root(self, project_root: Path | str | None) -> Path:
 
 </details>
 
-### Method `_find_yaml_block_end_line`
+### ⚙️ Method `_find_yaml_block_end_line`
 
 ```python
 def _find_yaml_block_end_line(self, all_lines: list[str]) -> int
@@ -780,7 +780,7 @@ def _find_yaml_block_end_line(self, all_lines: list[str]) -> int:
 
 </details>
 
-### Method `_find_yaml_end_line`
+### ⚙️ Method `_find_yaml_end_line`
 
 ```python
 def _find_yaml_end_line(self, lines: list[str]) -> int
@@ -808,7 +808,7 @@ def _find_yaml_end_line(self, lines: list[str]) -> int:
 
 </details>
 
-### Method `_find_yaml_field_column`
+### ⚙️ Method `_find_yaml_field_column`
 
 ```python
 def _find_yaml_field_column(self, all_lines: list[str], line_num: int, field: str) -> int
@@ -831,7 +831,7 @@ def _find_yaml_field_column(self, all_lines: list[str], line_num: int, field: st
 
 </details>
 
-### Method `_find_yaml_field_line_in_original`
+### ⚙️ Method `_find_yaml_field_line_in_original`
 
 ```python
 def _find_yaml_field_line_in_original(self, all_lines: list[str], field: str) -> int
@@ -859,7 +859,7 @@ def _find_yaml_field_line_in_original(self, all_lines: list[str], field: str) ->
 
 </details>
 
-### Method `_format_error`
+### ⚙️ Method `_format_error`
 
 ```python
 def _format_error(self, error_code: str, message: str, filename: Path) -> str
@@ -897,7 +897,7 @@ def _format_error(self, error_code: str, message: str, filename: Path, *, line_n
 
 </details>
 
-### Method `_get_relative_path`
+### ⚙️ Method `_get_relative_path`
 
 ```python
 def _get_relative_path(self, filename: Path) -> str

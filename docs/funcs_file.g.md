@@ -4,35 +4,35 @@ author-email: anton.b.sergienko@gmail.com
 lang: en
 ---
 
-# File `funcs_file.py`
+# 📄 File `funcs_file.py`
 
 <details>
 <summary>📖 Contents ⬇️</summary>
 
 ## Contents
 
-- [Function `all_to_parent_folder`](#function-all_to_parent_folder)
-- [Function `apply_func`](#function-apply_func)
-- [Function `check_featured_image`](#function-check_featured_image)
-- [Function `check_func`](#function-check_func)
-- [Function `clear_directory`](#function-clear_directory)
-- [Function `extract_zip_archive`](#function-extract_zip_archive)
-- [Function `find_max_folder_number`](#function-find_max_folder_number)
-- [Function `list_files_simple`](#function-list_files_simple)
-- [Function `open_file_or_folder`](#function-open_file_or_folder)
-- [Function `remove_empty_folders`](#function-remove_empty_folders)
-- [Function `rename_epub_file`](#function-rename_epub_file)
-- [Function `rename_fb2_file`](#function-rename_fb2_file)
-- [Function `rename_file_spaces_to_hyphens`](#function-rename_file_spaces_to_hyphens)
-- [Function `rename_files_by_mapping`](#function-rename_files_by_mapping)
-- [Function `rename_largest_images_to_featured`](#function-rename_largest_images_to_featured)
-- [Function `rename_pdf_file`](#function-rename_pdf_file)
-- [Function `should_ignore_path`](#function-should_ignore_path)
-- [Function `tree_view_folder`](#function-tree_view_folder)
+- [🔧 Function `all_to_parent_folder`](#-function-all_to_parent_folder)
+- [🔧 Function `apply_func`](#-function-apply_func)
+- [🔧 Function `check_featured_image`](#-function-check_featured_image)
+- [🔧 Function `check_func`](#-function-check_func)
+- [🔧 Function `clear_directory`](#-function-clear_directory)
+- [🔧 Function `extract_zip_archive`](#-function-extract_zip_archive)
+- [🔧 Function `find_max_folder_number`](#-function-find_max_folder_number)
+- [🔧 Function `list_files_simple`](#-function-list_files_simple)
+- [🔧 Function `open_file_or_folder`](#-function-open_file_or_folder)
+- [🔧 Function `remove_empty_folders`](#-function-remove_empty_folders)
+- [🔧 Function `rename_epub_file`](#-function-rename_epub_file)
+- [🔧 Function `rename_fb2_file`](#-function-rename_fb2_file)
+- [🔧 Function `rename_file_spaces_to_hyphens`](#-function-rename_file_spaces_to_hyphens)
+- [🔧 Function `rename_files_by_mapping`](#-function-rename_files_by_mapping)
+- [🔧 Function `rename_largest_images_to_featured`](#-function-rename_largest_images_to_featured)
+- [🔧 Function `rename_pdf_file`](#-function-rename_pdf_file)
+- [🔧 Function `should_ignore_path`](#-function-should_ignore_path)
+- [🔧 Function `tree_view_folder`](#-function-tree_view_folder)
 
 </details>
 
-## Function `all_to_parent_folder`
+## 🔧 Function `all_to_parent_folder`
 
 ```python
 def all_to_parent_folder(path: Path | str) -> str
@@ -118,7 +118,7 @@ def all_to_parent_folder(path: Path | str) -> str:
 
 </details>
 
-## Function `apply_func`
+## 🔧 Function `apply_func`
 
 ```python
 def apply_func(path: Path | str, ext: str, func: Callable) -> str
@@ -212,7 +212,7 @@ def apply_func(path: Path | str, ext: str, func: Callable) -> str:
 
 </details>
 
-## Function `check_featured_image`
+## 🔧 Function `check_featured_image`
 
 ```python
 def check_featured_image(path: Path | str) -> tuple[bool, str]
@@ -272,7 +272,7 @@ def check_featured_image(path: Path | str) -> tuple[bool, str]:
 
 </details>
 
-## Function `check_func`
+## 🔧 Function `check_func`
 
 ```python
 def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -> list
@@ -346,7 +346,7 @@ def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -
 
 </details>
 
-## Function `clear_directory`
+## 🔧 Function `clear_directory`
 
 ```python
 def clear_directory(path: Path | str) -> None
@@ -394,7 +394,7 @@ def clear_directory(path: Path | str) -> None:
 
 </details>
 
-## Function `extract_zip_archive`
+## 🔧 Function `extract_zip_archive`
 
 ```python
 def extract_zip_archive(filename: Path | str) -> str
@@ -475,7 +475,7 @@ def extract_zip_archive(filename: Path | str) -> str:
 
 </details>
 
-## Function `find_max_folder_number`
+## 🔧 Function `find_max_folder_number`
 
 ```python
 def find_max_folder_number(base_path: str, start_pattern: str) -> int
@@ -522,7 +522,7 @@ def find_max_folder_number(base_path: str, start_pattern: str) -> int:
 
 </details>
 
-## Function `list_files_simple`
+## 🔧 Function `list_files_simple`
 
 ```python
 def list_files_simple(path: Path | str) -> str
@@ -602,7 +602,7 @@ def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = Fals
 
 </details>
 
-## Function `open_file_or_folder`
+## 🔧 Function `open_file_or_folder`
 
 ```python
 def open_file_or_folder(path: Path | str) -> None
@@ -667,7 +667,7 @@ def open_file_or_folder(path: Path | str) -> None:
 
 </details>
 
-## Function `remove_empty_folders`
+## 🔧 Function `remove_empty_folders`
 
 ```python
 def remove_empty_folders(folder_path: Path | str, additional_patterns: list[str] | None = None) -> str
@@ -795,7 +795,7 @@ def remove_empty_folders(
 
 </details>
 
-## Function `rename_epub_file`
+## 🔧 Function `rename_epub_file`
 
 ```python
 def rename_epub_file(filename: Path | str) -> str
@@ -1053,7 +1053,7 @@ def rename_epub_file(filename: Path | str) -> str:
 
 </details>
 
-## Function `rename_fb2_file`
+## 🔧 Function `rename_fb2_file`
 
 ```python
 def rename_fb2_file(filename: Path | str) -> str
@@ -1294,7 +1294,7 @@ def rename_fb2_file(filename: Path | str) -> str:
 
 </details>
 
-## Function `rename_file_spaces_to_hyphens`
+## 🔧 Function `rename_file_spaces_to_hyphens`
 
 ```python
 def rename_file_spaces_to_hyphens(filename: Path | str) -> str
@@ -1371,7 +1371,7 @@ def rename_file_spaces_to_hyphens(filename: Path | str) -> str:
 
 </details>
 
-## Function `rename_files_by_mapping`
+## 🔧 Function `rename_files_by_mapping`
 
 ```python
 def rename_files_by_mapping(folder_path: Path | str, rename_mapping: dict[str, str]) -> str
@@ -1512,7 +1512,7 @@ def rename_files_by_mapping(folder_path: Path | str, rename_mapping: dict[str, s
 
 </details>
 
-## Function `rename_largest_images_to_featured`
+## 🔧 Function `rename_largest_images_to_featured`
 
 ```python
 def rename_largest_images_to_featured(path: Path | str) -> str
@@ -1605,7 +1605,7 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
 
 </details>
 
-## Function `rename_pdf_file`
+## 🔧 Function `rename_pdf_file`
 
 ```python
 def rename_pdf_file(filename: Path | str) -> str
@@ -2010,7 +2010,7 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
 
 </details>
 
-## Function `should_ignore_path`
+## 🔧 Function `should_ignore_path`
 
 ```python
 def should_ignore_path(path: Path | str, additional_patterns: list[str] | None = None) -> bool
@@ -2091,7 +2091,7 @@ def should_ignore_path(
 
 </details>
 
-## Function `tree_view_folder`
+## 🔧 Function `tree_view_folder`
 
 ```python
 def tree_view_folder(path: Path | str) -> str

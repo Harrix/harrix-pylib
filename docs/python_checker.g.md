@@ -4,31 +4,31 @@ author-email: anton.b.sergienko@gmail.com
 lang: en
 ---
 
-# File `python_checker.py`
+# 📄 File `python_checker.py`
 
 <details>
 <summary>📖 Contents ⬇️</summary>
 
 ## Contents
 
-- [Class `PythonChecker`](#class-pythonchecker)
-  - [Method `__init__`](#method-__init__)
-  - [Method `__call__`](#method-__call__)
-  - [Method `check`](#method-check)
-  - [Method `_check_all_rules`](#method-_check_all_rules)
-  - [Method `_check_content_rules`](#method-_check_content_rules)
-  - [Method `_determine_project_root`](#method-_determine_project_root)
-  - [Method `_find_russian_letters_position`](#method-_find_russian_letters_position)
-  - [Method `_format_error`](#method-_format_error)
-  - [Method `_get_file_ignored_rules`](#method-_get_file_ignored_rules)
-  - [Method `_get_relative_path`](#method-_get_relative_path)
-  - [Method `_has_russian_letters`](#method-_has_russian_letters)
-  - [Method `_parse_rules_string`](#method-_parse_rules_string)
-  - [Method `_should_ignore_line`](#method-_should_ignore_line)
+- [🏛️ Class `PythonChecker`](#%EF%B8%8F-class-pythonchecker)
+  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
+  - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
+  - [⚙️ Method `check`](#%EF%B8%8F-method-check)
+  - [⚙️ Method `_check_all_rules`](#%EF%B8%8F-method-_check_all_rules)
+  - [⚙️ Method `_check_content_rules`](#%EF%B8%8F-method-_check_content_rules)
+  - [⚙️ Method `_determine_project_root`](#%EF%B8%8F-method-_determine_project_root)
+  - [⚙️ Method `_find_russian_letters_position`](#%EF%B8%8F-method-_find_russian_letters_position)
+  - [⚙️ Method `_format_error`](#%EF%B8%8F-method-_format_error)
+  - [⚙️ Method `_get_file_ignored_rules`](#%EF%B8%8F-method-_get_file_ignored_rules)
+  - [⚙️ Method `_get_relative_path`](#%EF%B8%8F-method-_get_relative_path)
+  - [⚙️ Method `_has_russian_letters`](#%EF%B8%8F-method-_has_russian_letters)
+  - [⚙️ Method `_parse_rules_string`](#%EF%B8%8F-method-_parse_rules_string)
+  - [⚙️ Method `_should_ignore_line`](#%EF%B8%8F-method-_should_ignore_line)
 
 </details>
 
-## Class `PythonChecker`
+## 🏛️ Class `PythonChecker`
 
 ```python
 class PythonChecker
@@ -322,7 +322,7 @@ class PythonChecker:
 
 </details>
 
-### Method `__init__`
+### ⚙️ Method `__init__`
 
 ```python
 def __init__(self, project_root: Path | str | None = None) -> None
@@ -346,7 +346,7 @@ def __init__(self, project_root: Path | str | None = None) -> None:
 
 </details>
 
-### Method `__call__`
+### ⚙️ Method `__call__`
 
 ```python
 def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]
@@ -373,7 +373,7 @@ def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> li
 
 </details>
 
-### Method `check`
+### ⚙️ Method `check`
 
 ```python
 def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]
@@ -401,7 +401,7 @@ def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[
 
 </details>
 
-### Method `_check_all_rules`
+### ⚙️ Method `_check_all_rules`
 
 ```python
 def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, None]
@@ -439,7 +439,7 @@ def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, N
 
 </details>
 
-### Method `_check_content_rules`
+### ⚙️ Method `_check_content_rules`
 
 ```python
 def _check_content_rules(self, filename: Path, lines: list[str], rules: set) -> Generator[str, None, None]
@@ -477,7 +477,7 @@ def _check_content_rules(self, filename: Path, lines: list[str], rules: set) -> 
 
 </details>
 
-### Method `_determine_project_root`
+### ⚙️ Method `_determine_project_root`
 
 ```python
 def _determine_project_root(self, project_root: Path | str | None) -> Path
@@ -514,7 +514,7 @@ def _determine_project_root(self, project_root: Path | str | None) -> Path:
 
 </details>
 
-### Method `_find_russian_letters_position`
+### ⚙️ Method `_find_russian_letters_position`
 
 ```python
 def _find_russian_letters_position(self, text: str) -> int
@@ -541,7 +541,7 @@ def _find_russian_letters_position(self, text: str) -> int:
 
 </details>
 
-### Method `_format_error`
+### ⚙️ Method `_format_error`
 
 ```python
 def _format_error(self, error_code: str, message: str, filename: Path) -> str
@@ -579,7 +579,7 @@ def _format_error(self, error_code: str, message: str, filename: Path, *, line_n
 
 </details>
 
-### Method `_get_file_ignored_rules`
+### ⚙️ Method `_get_file_ignored_rules`
 
 ```python
 def _get_file_ignored_rules(self, lines: list[str]) -> set[str]
@@ -614,7 +614,7 @@ def _get_file_ignored_rules(self, lines: list[str]) -> set[str]:
 
 </details>
 
-### Method `_get_relative_path`
+### ⚙️ Method `_get_relative_path`
 
 ```python
 def _get_relative_path(self, filename: Path) -> str
@@ -644,7 +644,7 @@ def _get_relative_path(self, filename: Path) -> str:
 
 </details>
 
-### Method `_has_russian_letters`
+### ⚙️ Method `_has_russian_letters`
 
 ```python
 def _has_russian_letters(self, text: str) -> bool
@@ -670,7 +670,7 @@ def _has_russian_letters(self, text: str) -> bool:
 
 </details>
 
-### Method `_parse_rules_string`
+### ⚙️ Method `_parse_rules_string`
 
 ```python
 def _parse_rules_string(self, rules_str: str) -> set[str]
@@ -696,7 +696,7 @@ def _parse_rules_string(self, rules_str: str) -> set[str]:
 
 </details>
 
-### Method `_should_ignore_line`
+### ⚙️ Method `_should_ignore_line`
 
 ```python
 def _should_ignore_line(self, line: str, rule_code: str) -> bool

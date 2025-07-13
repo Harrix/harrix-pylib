@@ -4,23 +4,23 @@ author-email: anton.b.sergienko@gmail.com
 lang: en
 ---
 
-# File `funcs_py.py`
+# 📄 File `funcs_py.py`
 
 <details>
 <summary>📖 Contents ⬇️</summary>
 
 ## Contents
 
-- [Function `create_uv_new_project`](#function-create_uv_new_project)
-- [Function `extract_functions_and_classes`](#function-extract_functions_and_classes)
-- [Function `generate_md_docs`](#function-generate_md_docs)
-- [Function `generate_md_docs_content`](#function-generate_md_docs_content)
-- [Function `lint_and_fix_python_code`](#function-lint_and_fix_python_code)
-- [Function `sort_py_code`](#function-sort_py_code)
+- [🔧 Function `create_uv_new_project`](#-function-create_uv_new_project)
+- [🔧 Function `extract_functions_and_classes`](#-function-extract_functions_and_classes)
+- [🔧 Function `generate_md_docs`](#-function-generate_md_docs)
+- [🔧 Function `generate_md_docs_content`](#-function-generate_md_docs_content)
+- [🔧 Function `lint_and_fix_python_code`](#-function-lint_and_fix_python_code)
+- [🔧 Function `sort_py_code`](#-function-sort_py_code)
 
 </details>
 
-## Function `create_uv_new_project`
+## 🔧 Function `create_uv_new_project`
 
 ```python
 def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str
@@ -119,7 +119,7 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
 
 </details>
 
-## Function `extract_functions_and_classes`
+## 🔧 Function `extract_functions_and_classes`
 
 ```python
 def extract_functions_and_classes(filename: Path | str) -> str
@@ -249,7 +249,7 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
 
 </details>
 
-## Function `generate_md_docs`
+## 🔧 Function `generate_md_docs`
 
 ```python
 def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> str
@@ -380,7 +380,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
 
 </details>
 
-## Function `generate_md_docs_content`
+## 🔧 Function `generate_md_docs_content`
 
 ```python
 def generate_md_docs_content(file_path: Path | str) -> str
@@ -488,7 +488,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
     tree = ast.parse(source)
 
     markdown_lines = []
-    markdown_lines.append(f"# File `{file_path.name}`\n")
+    markdown_lines.append(f"# 📄 File `{file_path.name}`\n")
 
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.ClassDef):
@@ -497,7 +497,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             class_signature = get_class_signature(node)
             class_code = get_node_code(node, source_lines)
             # Add the class name and its signature
-            markdown_lines.append(f"## Class `{class_name}`\n")
+            markdown_lines.append(f"## 🏛️ Class `{class_name}`\n")
             markdown_lines.append("```python")
             markdown_lines.append(f"{class_signature}")
             markdown_lines.append("```\n")
@@ -521,7 +521,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
                     method_signature = get_function_signature(class_node)
                     method_code = get_node_code(class_node, source_lines)
                     # Add the method name and its signature
-                    markdown_lines.append(f"### Method `{method_name}`\n")
+                    markdown_lines.append(f"### ⚙️ Method `{method_name}`\n")
                     markdown_lines.append("```python")
                     markdown_lines.append(f"{method_signature}")
                     markdown_lines.append("```\n")
@@ -542,7 +542,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             func_docstring = ast.get_docstring(node)
             func_signature = get_function_signature(node)
             func_code = get_node_code(node, source_lines)
-            markdown_lines.append(f"## Function `{func_name}`\n")
+            markdown_lines.append(f"## 🔧 Function `{func_name}`\n")
             markdown_lines.append("```python")
             markdown_lines.append(f"{func_signature}")
             markdown_lines.append("```\n")
@@ -563,7 +563,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
 
 </details>
 
-## Function `lint_and_fix_python_code`
+## 🔧 Function `lint_and_fix_python_code`
 
 ```python
 def lint_and_fix_python_code(py_content: str) -> str
@@ -636,7 +636,7 @@ def lint_and_fix_python_code(py_content: str) -> str:
 
 </details>
 
-## Function `sort_py_code`
+## 🔧 Function `sort_py_code`
 
 ```python
 def sort_py_code(filename: str) -> None

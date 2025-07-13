@@ -438,7 +438,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
     tree = ast.parse(source)
 
     markdown_lines = []
-    markdown_lines.append(f"# File `{file_path.name}`\n")
+    markdown_lines.append(f"# 📄 File `{file_path.name}`\n")
 
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.ClassDef):
@@ -447,7 +447,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             class_signature = get_class_signature(node)
             class_code = get_node_code(node, source_lines)
             # Add the class name and its signature
-            markdown_lines.append(f"## Class `{class_name}`\n")
+            markdown_lines.append(f"## 🏛️ Class `{class_name}`\n")
             markdown_lines.append("```python")
             markdown_lines.append(f"{class_signature}")
             markdown_lines.append("```\n")
@@ -471,7 +471,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
                     method_signature = get_function_signature(class_node)
                     method_code = get_node_code(class_node, source_lines)
                     # Add the method name and its signature
-                    markdown_lines.append(f"### Method `{method_name}`\n")
+                    markdown_lines.append(f"### ⚙️ Method `{method_name}`\n")
                     markdown_lines.append("```python")
                     markdown_lines.append(f"{method_signature}")
                     markdown_lines.append("```\n")
@@ -492,7 +492,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             func_docstring = ast.get_docstring(node)
             func_signature = get_function_signature(node)
             func_code = get_node_code(node, source_lines)
-            markdown_lines.append(f"## Function `{func_name}`\n")
+            markdown_lines.append(f"## 🔧 Function `{func_name}`\n")
             markdown_lines.append("```python")
             markdown_lines.append(f"{func_signature}")
             markdown_lines.append("```\n")

@@ -4,23 +4,23 @@ author-email: anton.b.sergienko@gmail.com
 lang: en
 ---
 
-# File `funcs_dev.py`
+# 📄 File `funcs_dev.py`
 
 <details>
 <summary>📖 Contents ⬇️</summary>
 
 ## Contents
 
-- [Function `get_project_root`](#function-get_project_root)
-- [Function `load_config`](#function-load_config)
-- [Function `run_command`](#function-run_command)
-- [Function `run_powershell_script`](#function-run_powershell_script)
-- [Function `run_powershell_script_as_admin`](#function-run_powershell_script_as_admin)
-- [Function `write_in_output_txt`](#function-write_in_output_txt)
+- [🔧 Function `get_project_root`](#-function-get_project_root)
+- [🔧 Function `load_config`](#-function-load_config)
+- [🔧 Function `run_command`](#-function-run_command)
+- [🔧 Function `run_powershell_script`](#-function-run_powershell_script)
+- [🔧 Function `run_powershell_script_as_admin`](#-function-run_powershell_script_as_admin)
+- [🔧 Function `write_in_output_txt`](#-function-write_in_output_txt)
 
 </details>
 
-## Function `get_project_root`
+## 🔧 Function `get_project_root`
 
 ```python
 def get_project_root() -> Path
@@ -87,7 +87,7 @@ def get_project_root() -> Path:
 
 </details>
 
-## Function `load_config`
+## 🔧 Function `load_config`
 
 ```python
 def load_config(filename: str) -> dict
@@ -150,7 +150,7 @@ def load_config(filename: str) -> dict:
 
 </details>
 
-## Function `run_command`
+## 🔧 Function `run_command`
 
 ```python
 def run_command(command: str) -> str
@@ -225,7 +225,7 @@ def run_command(
 
 </details>
 
-## Function `run_powershell_script`
+## 🔧 Function `run_powershell_script`
 
 ```python
 def run_powershell_script(commands: str) -> str
@@ -292,7 +292,7 @@ def run_powershell_script(commands: str) -> str:
 
 </details>
 
-## Function `run_powershell_script_as_admin`
+## 🔧 Function `run_powershell_script_as_admin`
 
 ```python
 def run_powershell_script_as_admin(commands: str) -> str
@@ -402,7 +402,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
 
 </details>
 
-## Function `write_in_output_txt`
+## 🔧 Function `write_in_output_txt`
 
 ```python
 def write_in_output_txt() -> Callable

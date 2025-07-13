@@ -2329,8 +2329,8 @@ def remove_toc_content(markdown_text: str) -> str:
                 next_line_idx < len(lines)
                 and "<summary>" in lines[next_line_idx]
                 and (
-                    "📖 Contents" in lines[next_line_idx] or "📖 Содержание ⬇️" in lines[next_line_idx]
-                )  # ignore: HP001
+                    "📖 Contents" in lines[next_line_idx] or "📖 Содержание ⬇️" in lines[next_line_idx]  # ignore: HP001
+                )
             ):
                 in_toc_section = True
                 toc_section_found = True
