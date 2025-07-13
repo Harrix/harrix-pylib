@@ -162,6 +162,7 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
 
     # List of entries for the table
     entries = []
+    existing_ids = set()  # Track existing IDs to avoid duplicates
 
     # Process classes
     for class_node in classes:
@@ -176,7 +177,10 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
 
         # Format the class entry with link
         if is_add_link_demo and domain:
-            class_link = f"{domain}/tree/main/docs/{filename.stem}.g.md#🏛️-class-{class_name.lower()}"
+            # Generate GitHub-compatible anchor using the same logic as GitHub
+            heading_text = f"🏛️ Class `{class_name}`"
+            anchor = h.md.generate_id(heading_text, existing_ids)
+            class_link = f"{domain}/blob/main/docs/{filename.stem}.g.md#{anchor}"
             if base_classes_str:
                 name = f"🏛️ Class [`{class_name} ({base_classes_str})`]({class_link})"
             else:
@@ -196,7 +200,10 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
 
         # Format the function entry with link
         if is_add_link_demo and domain:
-            func_link = f"{domain}/tree/main/docs/{filename.stem}.g.md#🔧-function-{func_name.lower()}"
+            # Generate GitHub-compatible anchor using the same logic as GitHub
+            heading_text = f"🔧 Function `{func_name}`"
+            anchor = h.md.generate_id(heading_text, existing_ids)
+            func_link = f"{domain}/blob/main/docs/{filename.stem}.g.md#{anchor}"
             name = f"🔧 [`{func_name}`]({func_link})"
         else:
             name = f"🔧 `{func_name}`"
@@ -207,7 +214,7 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
     output_lines = []
     output_lines.append(f"### 📄 File `{filename.name}`\n")
     if is_add_link_demo:
-        link = f"{domain}/tree/main/docs/{filename.stem}.g.md"
+        link = f"{domain}/blob/main/docs/{filename.stem}.g.md"
         output_lines.append(f"Doc: [{filename.stem}.g.md]({link})\n")
     output_lines.append("| Function/Class | Description |")
     output_lines.append("|----------------|-------------|")
