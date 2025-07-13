@@ -1,5 +1,6 @@
 """Functions for working with Markdown files."""
 
+import functools
 import re
 from collections.abc import Iterator, Sequence
 from datetime import datetime, timezone
@@ -1942,53 +1943,53 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
 
     def remove_markdown_formatting(text: str) -> str:
         """Remove markdown formatting from text."""
-        # Remove markdown formatting first
-        text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)  # Remove bold
-        text = re.sub(r'\*([^*]+)\*', r'\1', text)  # Remove italic
-        text = re.sub(r'~~([^~]+)~~', r'\1', text)  # Remove strikethrough
-        text = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', text)  # Remove links, keep text
-        text = re.sub(r'<https?://[^>]+>', '', text)  # Remove autolinks like <https://...>
-        text = re.sub(r'<http?://[^>]+>', '', text)  # Remove autolinks like <http://...>
-        return text
+        patterns = [
+            (r"\*\*([^*]+)\*\*", r"\1"),  # Remove bold
+            (r"\*([^*]+)\*", r"\1"),  # Remove italic
+            (r"~~([^~]+)~~", r"\1"),  # Remove strikethrough
+            (r"$$([^$$]+)\]$$[^)]+$$", r"\1"),  # Remove links, keep text
+            (r"<https?://[^>]+>", ""),  # Remove autolinks like <https://...>
+            (r"<http?://[^>]+>", ""),  # Remove autolinks like <http://...>
+        ]
+
+        return functools.reduce(lambda txt, pattern: re.sub(pattern[0], pattern[1], txt), patterns, text)
 
     def generate_id(text: str, existing_ids: set[str]) -> str:
-        """
-        Return exactly the same anchor slug GitHub creates for a Markdown heading.
-        """
+        """Return exactly the same anchor slug GitHub creates for a Markdown heading."""
         text = text.lower()
         text = remove_markdown_formatting(text)
 
         result: list[str] = []
 
         for ch in text:
-            # Keep U+FE0F (VS-16) encoded – GitHub does this for emoji style
-            if ch == "\uFE0F":
-                result.append(quote(ch))          # %EF%B8%8F
+            # Keep U+FE0F (VS-16) encoded - GitHub does this for emoji style
+            if ch == "\ufe0f":
+                result.append(quote(ch))
                 continue
 
-            if ch.isspace():                      # space → hyphen
+            if ch.isspace():  # space → hyphen
                 result.append("-")
                 continue
 
-            if ch.isalnum():                      # letters and digits (any alphabet)
+            if ch.isalnum():  # letters and digits (any alphabet)
                 result.append(ch)
                 continue
 
-            if ch in "-_":                        # keep "-" and "_"
+            if ch in "-_":  # keep "-" and "_"
                 result.append(ch)
                 continue
 
             # All other characters (punctuation, emoji, "\", quotes, +, — …) are skipped
             continue
 
-        slug = "".join(result)                    # no collapsing of "--" and
-                                                # trailing hyphens are preserved
+        slug = "".join(result)  # no collapsing of "--" and
+        # trailing hyphens are preserved
 
         # Ensure uniqueness (GitHub always adds a *second* hyphen before the counter)
         base = slug
         idx = 1
         while slug in existing_ids:
-            slug = f"{base}-{idx}"                # e.g.  "convert-quotes-to--1"
+            slug = f"{base}-{idx}"  # e.g.  "convert-quotes-to--1"
             idx += 1
 
         existing_ids.add(slug)

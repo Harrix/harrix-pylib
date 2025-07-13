@@ -2233,43 +2233,57 @@ print(h.md.generate_toc_with_links_content(text))
 ```python
 def generate_toc_with_links_content(markdown_text: str) -> str:
 
+    def remove_markdown_formatting(text: str) -> str:
+        """Remove markdown formatting from text."""
+        patterns = [
+            (r"\*\*([^*]+)\*\*", r"\1"),  # Remove bold
+            (r"\*([^*]+)\*", r"\1"),  # Remove italic
+            (r"~~([^~]+)~~", r"\1"),  # Remove strikethrough
+            (r"$$([^$$]+)\]$$[^)]+$$", r"\1"),  # Remove links, keep text
+            (r"<https?://[^>]+>", ""),  # Remove autolinks like <https://...>
+            (r"<http?://[^>]+>", ""),  # Remove autolinks like <http://...>
+        ]
+
+        return functools.reduce(lambda txt, pattern: re.sub(pattern[0], pattern[1], txt), patterns, text)
+
     def generate_id(text: str, existing_ids: set[str]) -> str:
-        """Convert a Markdown heading into the same anchor slug that GitHub produces."""
+        """Return exactly the same anchor slug GitHub creates for a Markdown heading."""
         text = text.lower()
+        text = remove_markdown_formatting(text)
+
         result: list[str] = []
 
         for ch in text:
-            # Preserve Variation Selector-16 as URL-encoded "%EF%B8%8F"
+            # Keep U+FE0F (VS-16) encoded - GitHub does this for emoji style
             if ch == "\ufe0f":
                 result.append(quote(ch))
                 continue
 
-            if ch.isspace():
+            if ch.isspace():  # space → hyphen
                 result.append("-")
                 continue
 
-            if ch.isalnum():  # Keep letters and digits
+            if ch.isalnum():  # letters and digits (any alphabet)
                 result.append(ch)
                 continue
 
-            if ch in "-_":  # Keep "-" and "_"
+            if ch in "-_":  # keep "-" and "_"
                 result.append(ch)
                 continue
 
-            # All other punctuation, emoji, “+”, em-dash, quotes, etc. are skipped
+            # All other characters (punctuation, emoji, "\", quotes, +, — …) are skipped
             continue
 
-        slug = remove_yaml_and_code_content("".join(result))
+        slug = "".join(result)  # no collapsing of "--" and
+        # trailing hyphens are preserved
 
-        # Remove trailing hyphens (GitHub drops only the tail, not the head)
-        slug = re.sub(r"-+$", "", slug)
-
-        # Ensure uniqueness
+        # Ensure uniqueness (GitHub always adds a *second* hyphen before the counter)
         base = slug
-        i = 1
+        idx = 1
         while slug in existing_ids:
-            slug = f"{base}-{i}"
-            i += 1
+            slug = f"{base}-{idx}"  # e.g.  "convert-quotes-to--1"
+            idx += 1
+
         existing_ids.add(slug)
         return slug
 
@@ -2301,7 +2315,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             link = f"#{text_link}"
             title_text = title.strip()
             # Form the table of contents entry
-            toc_lines.append(f"{'  ' * (level - 2)}- [{title_text}]({link})")
+            toc_lines.append(f"{'  ' * (level - 2)}- [{remove_markdown_formatting(title_text)}]({link})")
     toc = "\n".join(toc_lines)
     if lang == "ru":
         toc = f"<details>\n<summary>📖 Содержание ⬇️</summary>\n\n## Содержание\n\n{toc}\n\n</details>"  # ignore: HP001
