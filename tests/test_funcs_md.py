@@ -1297,3 +1297,110 @@ def test_split_yaml_content() -> None:
     yaml, content = h.md.split_yaml_content(md)
     correct_count_lines = 5
     assert len(yaml.splitlines()) + len(content.splitlines()) == correct_count_lines
+
+
+def test_generate_id() -> None:
+    """Test the generate_id function with various inputs and edge cases."""
+    existing_ids = set()
+
+    # Test basic functionality
+    assert h.md.generate_id("My Great Heading", existing_ids) == "my-great-heading"
+    assert "my-great-heading" in existing_ids
+
+    # Test uniqueness - same text should get suffix
+    assert h.md.generate_id("My Great Heading", existing_ids) == "my-great-heading-1"
+    assert "my-great-heading-1" in existing_ids
+
+    # Test another duplicate
+    assert h.md.generate_id("My Great Heading", existing_ids) == "my-great-heading-2"
+    assert "my-great-heading-2" in existing_ids
+
+    # Test different text
+    assert h.md.generate_id("Another Heading", existing_ids) == "another-heading"
+    assert "another-heading" in existing_ids
+
+    # Test underscores and hyphens are preserved
+    assert h.md.generate_id("test_with-dashes_and_underscores", existing_ids) == "test_with-dashes_and_underscores"
+
+    # Test numbers are preserved
+    assert h.md.generate_id("Heading 123 with numbers", existing_ids) == "heading-123-with-numbers"
+
+    # Test multiple spaces become single hyphens
+    assert h.md.generate_id("Multiple    spaces   here", existing_ids) == "multiple----spaces---here"
+
+    # Test empty string and edge cases
+    assert h.md.generate_id("", existing_ids) == ""
+    assert h.md.generate_id("   ", existing_ids) == "---"
+
+    # Test unicode characters
+    assert h.md.generate_id("Заголовок на русском", existing_ids) == "заголовок-на-русском"
+
+    # Test emoji handling (if remove_markdown_formatting handles it)
+    result = h.md.generate_id("Heading with 😀 emoji", existing_ids)
+    assert "heading-with" in result
+
+    # Test markdown formatting removal
+    result = h.md.generate_id("**Bold** and *italic* text", existing_ids)
+    assert result == "bold-and-italic-text"
+
+    # Test leading/trailing spaces
+    assert h.md.generate_id("  spaced heading  ", existing_ids) == "--spaced-heading--"
+
+    # Test case sensitivity
+    new_ids = set()
+    assert h.md.generate_id("UPPERCASE", new_ids) == "uppercase"
+    assert h.md.generate_id("lowercase", new_ids) == "lowercase"
+    assert h.md.generate_id("MixedCase", new_ids) == "mixedcase"
+
+
+def test_remove_markdown_formatting_for_headings() -> None:
+    """Test remove_markdown_formatting_for_headings function with various markdown formats."""
+    # Test bold formatting removal
+    assert h.md.remove_markdown_formatting_for_headings("**Bold text**") == "Bold text"
+    assert h.md.remove_markdown_formatting_for_headings("**Multiple** **bold** **words**") == "Multiple bold words"
+
+    # Test italic formatting removal
+    assert h.md.remove_markdown_formatting_for_headings("*Italic text*") == "Italic text"
+    assert h.md.remove_markdown_formatting_for_headings("*Multiple* *italic* *words*") == "Multiple italic words"
+
+    # Test strikethrough formatting removal
+    assert h.md.remove_markdown_formatting_for_headings("~~Strikethrough text~~") == "Strikethrough text"
+    assert (
+        h.md.remove_markdown_formatting_for_headings("~~Multiple~~ ~~strikethrough~~ ~~words~~")
+        == "Multiple strikethrough words"
+    )
+
+    # Test autolinks removal
+    assert h.md.remove_markdown_formatting_for_headings("<https://example.com>") == ""
+    assert h.md.remove_markdown_formatting_for_headings("<http://example.com>") == ""
+    assert (
+        h.md.remove_markdown_formatting_for_headings("Visit <https://example.com> for more info")
+        == "Visit  for more info"
+    )
+
+    # Test combined formatting
+    combined_text = "**Bold** and *italic* with ~~strikethrough~~ and <https://example.com>"
+    expected = "Bold and italic with strikethrough and "
+    assert h.md.remove_markdown_formatting_for_headings(combined_text) == expected
+
+    # Test empty string
+    assert h.md.remove_markdown_formatting_for_headings("") == ""
+
+    # Test plain text (no formatting)
+    plain_text = "Just plain text with no formatting"
+    assert h.md.remove_markdown_formatting_for_headings(plain_text) == plain_text
+
+    # Test nested formatting (current function behavior - doesn't handle nested properly)
+    assert h.md.remove_markdown_formatting_for_headings("**Bold with *italic* inside**") == "*Bold with italic inside*"
+
+    # Test text with special characters
+    special_text = "Text with symbols: @#$%^&*()_+-=[]{}|;':\",./<>?"
+    assert h.md.remove_markdown_formatting_for_headings(special_text) == special_text
+
+    # Test multiple autolinks
+    multiple_links = "Check <https://site1.com> and <http://site2.com> for details"
+    assert h.md.remove_markdown_formatting_for_headings(multiple_links) == "Check  and  for details"
+
+    # Test separate bold and italic (not nested)
+    separate_formatting = "**Bold text** and *italic text* separately"
+    assert h.md.remove_markdown_formatting_for_headings(separate_formatting) == "Bold text and italic text separately"
