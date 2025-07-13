@@ -1,7 +1,7 @@
-### File `extract_functions_and_classes__before.txt`
+### 📄 File `extract_functions_and_classes__before.txt`
 
 | Function/Class | Description |
 |----------------|-------------|
-| Class `Cat (Animal)` | Represents a domestic cat, inheriting from the `Animal` base class. |
-| `add` | Adds two integers. |
-| `multiply` | Multiples two integers. |
+| 🏛️ Class `Cat (Animal)` | Represents a domestic cat, inheriting from the `Animal` base class. |
+| 🔧 `add` | Adds two integers. |
+| 🔧 `multiply` | Multiples two integers. |
