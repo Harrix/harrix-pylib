@@ -140,13 +140,13 @@ Returns:
 Example output:
 
 ```text
-### File `extract_functions_and_classes__before.py`
+### 📄 File `extract_functions_and_classes__before.py`
 
 | Function/Class | Description |
 |----------------|-------------|
-| Class `Cat (Animal)` | Represents a domestic cat, inheriting from the `Animal` base class. |
-| `add` | Adds two integers. |
-| `multiply` | Multiples two integers. |
+| 🏛️ Class `Cat (Animal)` | Represents a domestic cat, inheriting from the `Animal` base class. |
+| 🔧 `add` | Adds two integers. |
+| 🔧 `multiply` | Multiples two integers. |
 ```
 
 Examples:
@@ -204,13 +204,13 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
 
         # Format the class entry with link
         if is_add_link_demo and domain:
-            class_link = f"{domain}/tree/main/docs/{filename.stem}.g.md#class-{class_name.lower()}"
+            class_link = f"{domain}/tree/main/docs/{filename.stem}.g.md#🏛️-class-{class_name.lower()}"
             if base_classes_str:
-                name = f"Class [`{class_name} ({base_classes_str})`]({class_link})"
+                name = f"🏛️ Class [`{class_name} ({base_classes_str})`]({class_link})"
             else:
-                name = f"Class [`{class_name}`]({class_link})"
+                name = f"🏛️ Class [`{class_name}`]({class_link})"
         else:
-            name = f"Class `{class_name} ({base_classes_str})`" if base_classes_str else f"Class `{class_name}`"
+            name = f"🏛️ Class `{class_name} ({base_classes_str})`" if base_classes_str else f"🏛️ Class `{class_name}`"
 
         description = summary
         entries.append((name, description))
@@ -224,16 +224,16 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
 
         # Format the function entry with link
         if is_add_link_demo and domain:
-            func_link = f"{domain}/tree/main/docs/{filename.stem}.g.md#function-{func_name.lower()}"
-            name = f"[`{func_name}`]({func_link})"
+            func_link = f"{domain}/tree/main/docs/{filename.stem}.g.md#🔧-function-{func_name.lower()}"
+            name = f"🔧 [`{func_name}`]({func_link})"
         else:
-            name = f"`{func_name}`"
+            name = f"🔧 `{func_name}`"
 
         entries.append((name, summary))
 
     # Create Markdown table
     output_lines = []
-    output_lines.append(f"### File `{filename.name}`\n")
+    output_lines.append(f"### 📄 File `{filename.name}`\n")
     if is_add_link_demo:
         link = f"{domain}/tree/main/docs/{filename.stem}.g.md"
         output_lines.append(f"Doc: [{filename.stem}.g.md]({link})\n")
