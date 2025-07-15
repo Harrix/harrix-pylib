@@ -272,10 +272,10 @@ def test_list_files_simple() -> None:
 
         # Test with is_only_files=True - should only return files from current directory
         result = h.file.list_files_simple(temp_path, is_only_files=True)
-        expected_files = ["file1.txt", "file2.md"]
         result_files = result.split("\n") if result else []
 
-        assert len(result_files) == 2
+        count_files = 2
+        assert len(result_files) == count_files
         assert "file1.txt" in result_files
         assert "file2.md" in result_files
         assert "nested_file.txt" not in result_files
@@ -291,7 +291,8 @@ def test_list_files_simple() -> None:
         ]
         result_all_files = result_all.split("\n") if result_all else []
 
-        assert len(result_all_files) == 4
+        count_files = 4
+        assert len(result_all_files) == count_files
         for expected_file in expected_all_files:
             assert expected_file in result_all_files
 
