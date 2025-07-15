@@ -259,6 +259,42 @@ def test_list_files_simple() -> None:
     files_check = (current_folder / "tests/data/list_files_simple__02.txt").read_text(encoding="utf8")
     assert h.file.list_files_simple(folder_path, is_ignore_hidden_folders=True) == files_check
 
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Create test structure
+        (temp_path / "file1.txt").touch()
+        (temp_path / "file2.md").touch()
+        (temp_path / "subfolder").mkdir()
+        (temp_path / "subfolder" / "nested_file.txt").touch()
+        (temp_path / "subfolder" / "another_folder").mkdir()
+        (temp_path / "subfolder" / "another_folder" / "deep_file.py").touch()
+
+        # Test with is_only_files=True - should only return files from current directory
+        result = h.file.list_files_simple(temp_path, is_only_files=True)
+        expected_files = ["file1.txt", "file2.md"]
+        result_files = result.split("\n") if result else []
+
+        assert len(result_files) == 2
+        assert "file1.txt" in result_files
+        assert "file2.md" in result_files
+        assert "nested_file.txt" not in result_files
+        assert "deep_file.py" not in result_files
+
+        # Test with is_only_files=False (default) - should return all files recursively
+        result_all = h.file.list_files_simple(temp_path, is_only_files=False)
+        expected_all_files = [
+            "file1.txt",
+            "file2.md",
+            "subfolder/nested_file.txt",
+            "subfolder/another_folder/deep_file.py",
+        ]
+        result_all_files = result_all.split("\n") if result_all else []
+
+        assert len(result_all_files) == 4
+        for expected_file in expected_all_files:
+            assert expected_file in result_all_files
+
 
 def test_rename_fb2_file() -> None:
     """Test the h.file.rename_fb2_file function with various scenarios."""

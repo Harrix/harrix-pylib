@@ -426,7 +426,7 @@ def find_max_folder_number(base_path: str, start_pattern: str) -> int:
     return max_number
 
 
-def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = False) -> str:
+def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = False, is_only_files: bool = False) -> str:
     """Generate a simple list of all files in a directory structure.
 
     Example output:
@@ -444,6 +444,8 @@ def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = Fals
     - `is_ignore_hidden_folders` (`bool`): If `True`, hidden folders and files (starting with a dot or
       matching common ignore patterns like `.git`, `__pycache__`, `node_modules`, etc.) are ignored.
       Defaults to `False`.
+    - `is_only_files` (`bool`): If `True`, only files from the current directory are listed without
+      entering subdirectories. Defaults to `False`.
 
     Returns:
 
@@ -455,6 +457,7 @@ def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = Fals
       by excluding folders without permission.
     - Files are listed with their relative paths from the root directory.
     - When `is_ignore_hidden_folders` is `True`, ignored folders are completely skipped.
+    - When `is_only_files` is `True`, only files from the current directory are processed.
 
     Example:
 
@@ -467,11 +470,17 @@ def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = Fals
     # Ignore hidden folders and files
     files_clean = h.file.list_files_simple("C:/Notes", is_ignore_hidden_folders=True)
     print(files_clean)
+
+    # Only files from current directory
+    files_current = h.file.list_files_simple("C:/Notes", is_only_files=True)
+    print(files_current)
     ```
 
     """
 
-    def __list_files(path: Path | str, root_path: Path, *, is_ignore_hidden_folders: bool = False) -> Iterator[str]:
+    def __list_files(
+        path: Path | str, root_path: Path, *, is_ignore_hidden_folders: bool = False, is_only_files: bool = False
+    ) -> Iterator[str]:
         path = Path(path)
         try:
             contents = list(path.iterdir())
@@ -487,12 +496,20 @@ def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = Fals
                 # Get relative path from root and normalize to forward slashes
                 relative_path = item.relative_to(root_path)
                 yield str(relative_path).replace("\\", "/")
-            elif item.is_dir():
-                # Recursively process subdirectories
-                yield from __list_files(item, root_path, is_ignore_hidden_folders=is_ignore_hidden_folders)
+            elif item.is_dir() and not is_only_files:
+                # Recursively process subdirectories only if is_only_files is False
+                yield from __list_files(
+                    item, root_path, is_ignore_hidden_folders=is_ignore_hidden_folders, is_only_files=is_only_files
+                )
 
     root_path = Path(path)
-    return "\n".join(sorted(__list_files(root_path, root_path, is_ignore_hidden_folders=is_ignore_hidden_folders)))
+    return "\n".join(
+        sorted(
+            __list_files(
+                root_path, root_path, is_ignore_hidden_folders=is_ignore_hidden_folders, is_only_files=is_only_files
+            )
+        )
+    )
 
 
 def open_file_or_folder(path: Path | str) -> None:
