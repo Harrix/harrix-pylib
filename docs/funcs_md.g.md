@@ -3062,6 +3062,9 @@ Args:
 
 - `filename` (`Path` | `str`): The path to the Markdown file to be processed. Can be either a `Path`
   object or a string representing the file path.
+- `is_sort_section_from_yaml` (`bool`): Whether to check YAML front matter for `sort-section: true`
+  before sorting. If `True`, sorting only occurs when YAML contains `sort-section: true`.
+  If `False`, sorting is always performed. Defaults to `False`.
 
 Returns:
 
@@ -3074,13 +3077,19 @@ Notes:
   and code blocks are delimited by triple backticks (```).
 - If there's no YAML front matter, the entire document is considered content.
 - The sorting of sections is done alphabetically, ignoring any code blocks or other formatting within the section.
+- When `is_sort_section_from_yaml=True`, the YAML parameter `sort-section` must be set to `true`
+  for sorting to occur.
 
 Example:
 
 ```python
 import harrix_pylib as h
 
+# Always sort sections
 h.md.sort_sections("C:/Notes/note.md")
+
+# Only sort if YAML contains sort-section: true
+h.md.sort_sections("C:/Notes/note.md", is_sort_section_from_yaml=True)
 ```
 
 Before sorting:
@@ -3089,6 +3098,7 @@ Before sorting:
 ---
 categories: [it, program]
 tags: [VSCode, FAQ]
+sort-section: true
 ---
 
 # Installing VSCode
@@ -3112,6 +3122,7 @@ After sorting:
 ---
 categories: [it, program]
 tags: [VSCode, FAQ]
+sort-section: true
 ---
 
 # Installing VSCode
@@ -3133,12 +3144,12 @@ Example text.
 <summary>Code:</summary>
 
 ```python
-def sort_sections(filename: Path | str) -> str:
+def sort_sections(filename: Path | str, *, is_sort_section_from_yaml: bool = False) -> str:
     filename = Path(filename)
     with filename.open(encoding="utf-8") as f:
         document = f.read()
 
-    document_new = sort_sections_content(document)
+    document_new = sort_sections_content(document, is_sort_section_from_yaml=is_sort_section_from_yaml)
 
     if document != document_new:
         with filename.open("w", encoding="utf-8") as file:
@@ -3161,6 +3172,9 @@ then regular headings alphabetically.
 Args:
 
 - `markdown_text` (`str`): The Markdown text to process.
+- `is_sort_section_from_yaml` (`bool`): Whether to check YAML front matter for `sort-section: true`
+  before sorting. If `True`, sorting only occurs when YAML contains `sort-section: true`.
+  If `False`, sorting is always performed. Defaults to `False`.
 
 Returns:
 
@@ -3172,6 +3186,8 @@ Note:
 - Date headings (like `## 2024-01-01`) are sorted in descending order.
 - Regular headings are sorted alphabetically.
 - Preserves `<details>...</details>` blocks that contain `<summary>📖 Contents ⬇️</summary>` (or in Russian).
+- When `is_sort_section_from_yaml=True`, the YAML parameter `sort-section` must be set to `true`
+  for sorting to occur.
 
 Example:
 
@@ -3179,6 +3195,10 @@ Example:
 import harrix_pylib as h
 
 markdown = '''
+---
+sort-section: true
+---
+
 # Main Title
 
 ## 2023-01-01
@@ -3194,7 +3214,12 @@ Alpha content
 This will appear first
 '''
 
+# Always sort sections
 sorted_markdown = h.md.sort_sections_content(markdown)
+print(sorted_markdown)
+
+# Only sort if YAML contains sort-section: true
+sorted_markdown = h.md.sort_sections_content(markdown, is_sort_section_from_yaml=True)
 print(sorted_markdown)
 ```
 
@@ -3202,7 +3227,23 @@ print(sorted_markdown)
 <summary>Code:</summary>
 
 ```python
-def sort_sections_content(markdown_text: str) -> str:
+def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool = False) -> str:
+    # If is_sort_section_from_yaml is True, check YAML for sort-section parameter
+    if is_sort_section_from_yaml:
+        yaml_md, _ = split_yaml_content(markdown_text)
+        if yaml_md:
+            try:
+                data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+                sort_section = data_yaml.get("sort-section") if data_yaml else False
+                # Only proceed with sorting if sort-section is explicitly set to true
+                if not sort_section:
+                    return markdown_text
+            except yaml.YAMLError:
+                # If YAML parsing fails, don't sort
+                return markdown_text
+        else:
+            # No YAML front matter, don't sort
+            return markdown_text
 
     def is_date_heading(section_text: str) -> datetime | None:
         """Return datetime if the first line of the section (## XXX) is a date, otherwise None."""
