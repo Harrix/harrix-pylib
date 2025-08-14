@@ -43,6 +43,7 @@ Install the following software:
 
 CLI commands after installation:
 
+- `.venv\Scripts\Activate.ps1` — activate virtual environment
 - `uv self update` — update uv itself.
 - `uv sync --upgrade` — update all project libraries (sometimes you need to call twice).
 - `isort .` — sort imports.
