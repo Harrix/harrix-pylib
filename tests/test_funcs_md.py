@@ -1230,6 +1230,8 @@ New list of commands:
 
 def test_sort_sections() -> None:
     current_folder = h.dev.get_project_root()
+
+    # Test default behavior (always sort)
     md = Path(current_folder / "tests/data/sort_sections__before.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/sort_sections__after.md").read_text(encoding="utf8")
 
@@ -1241,13 +1243,69 @@ def test_sort_sections() -> None:
 
     assert md_after == md_applied
 
+    # Test with is_sort_section_from_yaml=True and sort-section: true (should sort)
+    md_yaml_true = Path(current_folder / "tests/data/sort_sections_yaml_true__before.md").read_text(encoding="utf8")
+    md_yaml_after = Path(current_folder / "tests/data/sort_sections_yaml_true__after.md").read_text(encoding="utf8")
+
+    with TemporaryDirectory() as temp_folder:
+        temp_filename = Path(temp_folder) / "temp_yaml_true.md"
+        temp_filename.write_text(md_yaml_true, encoding="utf-8")
+        h.md.sort_sections(temp_filename, is_sort_section_from_yaml=True)
+        md_applied_yaml_true = temp_filename.read_text(encoding="utf8")
+
+    assert md_yaml_after == md_applied_yaml_true
+
+    # Test with is_sort_section_from_yaml=True and sort-section: false (should NOT sort)
+    md_yaml_false = Path(current_folder / "tests/data/sort_sections_yaml_false__before.md").read_text(encoding="utf8")
+
+    with TemporaryDirectory() as temp_folder:
+        temp_filename = Path(temp_folder) / "temp_yaml_false.md"
+        temp_filename.write_text(md_yaml_false, encoding="utf-8")
+        h.md.sort_sections(temp_filename, is_sort_section_from_yaml=True)
+        md_applied_yaml_false = temp_filename.read_text(encoding="utf8")
+
+    # Should remain unchanged when sort-section: false
+    assert md_yaml_false == md_applied_yaml_false
+
+    # Test with is_sort_section_from_yaml=True and no sort-section parameter (should NOT sort)
+    md_yaml_none = Path(current_folder / "tests/data/sort_sections_yaml_none__before.md").read_text(encoding="utf8")
+
+    with TemporaryDirectory() as temp_folder:
+        temp_filename = Path(temp_folder) / "temp_yaml_none.md"
+        temp_filename.write_text(md_yaml_none, encoding="utf-8")
+        h.md.sort_sections(temp_filename, is_sort_section_from_yaml=True)
+        md_applied_yaml_none = temp_filename.read_text(encoding="utf8")
+
+    # Should remain unchanged when sort-section parameter is missing
+    assert md_yaml_none == md_applied_yaml_none
+
 
 def test_sort_sections_content() -> None:
     current_folder = h.dev.get_project_root()
+
+    # Test default behavior (always sort)
     md = Path(current_folder / "tests/data/sort_sections__before.md").read_text(encoding="utf8")
     md_after = Path(current_folder / "tests/data/sort_sections__after.md").read_text(encoding="utf8")
     md_applied = h.md.sort_sections_content(md)
     assert md_after == md_applied
+
+    # Test with is_sort_section_from_yaml=True and sort-section: true (should sort)
+    md_yaml_true = Path(current_folder / "tests/data/sort_sections_yaml_true__before.md").read_text(encoding="utf8")
+    md_yaml_after = Path(current_folder / "tests/data/sort_sections_yaml_true__after.md").read_text(encoding="utf8")
+    md_applied_yaml_true = h.md.sort_sections_content(md_yaml_true, is_sort_section_from_yaml=True)
+    assert md_yaml_after == md_applied_yaml_true
+
+    # Test with is_sort_section_from_yaml=True and sort-section: false (should NOT sort)
+    md_yaml_false = Path(current_folder / "tests/data/sort_sections_yaml_false__before.md").read_text(encoding="utf8")
+    md_applied_yaml_false = h.md.sort_sections_content(md_yaml_false, is_sort_section_from_yaml=True)
+    # Should remain unchanged when sort-section: false
+    assert md_yaml_false == md_applied_yaml_false
+
+    # Test with is_sort_section_from_yaml=True and no sort-section parameter (should NOT sort)
+    md_yaml_none = Path(current_folder / "tests/data/sort_sections_yaml_none__before.md").read_text(encoding="utf8")
+    md_applied_yaml_none = h.md.sort_sections_content(md_yaml_none, is_sort_section_from_yaml=True)
+    # Should remain unchanged when sort-section parameter is missing
+    assert md_yaml_none == md_applied_yaml_none
 
 
 def test_split_toc_content_basic() -> None:
