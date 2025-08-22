@@ -1285,3 +1285,98 @@ def test_rename_files_by_mapping() -> None:
         result11 = h.file.rename_files_by_mapping(only_ignored_dir, {"test.txt": "new_test.txt"})
         assert "No files found to process" in result11
         assert (cache_dir / "test.txt").exists()  # Should still exist (ignored)
+
+
+def test_collect_text_files_to_markdown():
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Create test files with different content types
+
+        # Simple text file
+        file1 = temp_path / "file1.txt"
+        file1.write_text("Hello World\nThis is a test file", encoding="utf-8")
+
+        # Python file with backticks
+        file2 = temp_path / "subfolder" / "script.py"
+        file2.parent.mkdir()
+        file2.write_text("def test():\n    ```python\n    print('test')\n    ```\n    return True", encoding="utf-8")
+
+        # File with many backticks
+        file3 = temp_path / "markdown.md"
+        file3.write_text("# Title\n````markdown\nSome code\n````\n`````\nMore code\n`````", encoding="utf-8")
+
+        # File without extension
+        file4 = temp_path / "README"
+        file4.write_text("This is a README file", encoding="utf-8")
+
+        # File with cp1251 encoding (create a simple ASCII file for testing fallback)
+        file5 = temp_path / "cp1251.txt"
+        # Write with invalid UTF-8 to trigger UnicodeDecodeError
+        with open(file5, "wb") as f:
+            f.write(b"\xff\xfe\x41\x00\x42\x00")  # Invalid UTF-8 bytes
+
+        file_paths = [file1, file2, file3, file4]
+
+        # Test without base_dir
+        result = h.file.collect_text_files_to_markdown(file_paths)
+
+        # Verify structure - use forward slashes to match function output
+        file1_normalized = str(file1).replace("\\", "/")
+        file2_normalized = str(file2).replace("\\", "/")
+        file3_normalized = str(file3).replace("\\", "/")
+        file4_normalized = str(file4).replace("\\", "/")
+
+        assert f"File `{file1_normalized}`:" in result
+        assert f"File `{file2_normalized}`:" in result
+        assert f"File `{file3_normalized}`:" in result
+        assert f"File `{file4_normalized}`:" in result
+
+        # Verify content is included
+        assert "Hello World" in result
+        assert "def test():" in result
+        assert "# Title" in result
+        assert "This is a README file" in result
+
+        # Verify file extensions are detected
+        assert "```txt" in result  # for file1
+        assert "```py" in result  # for file2
+        assert "```md" in result  # for file3
+        assert "```txt" in result  # for file4 (no extension defaults to txt)
+
+        # Test with base_dir
+        result_with_base = h.file.collect_text_files_to_markdown(file_paths, temp_path)
+
+        # Verify relative paths are used
+        assert f"File `{file1.name}`:" in result_with_base
+        assert f"File `subfolder/{file2.name}`:" in result_with_base
+        assert f"File `{file3.name}`:" in result_with_base
+
+        # Test with string paths
+        string_paths = [str(p) for p in file_paths]
+        result_string = h.file.collect_text_files_to_markdown(string_paths, str(temp_path))
+        assert result_string == result_with_base
+
+        # Test empty file list
+        empty_result = h.file.collect_text_files_to_markdown([])
+        assert empty_result == ""
+
+        # Test single file
+        single_result = h.file.collect_text_files_to_markdown([file1])
+        assert f"File `{file1_normalized}`:" in single_result
+        assert "Hello World" in single_result
+        assert single_result.count("File `") == 1
+
+        # Test file outside base_dir (should use absolute path)
+        other_temp = TemporaryDirectory()
+        try:
+            other_path = Path(other_temp.name)
+            other_file = other_path / "other.txt"
+            other_file.write_text("Outside base dir", encoding="utf-8")
+
+            mixed_result = h.file.collect_text_files_to_markdown([file1, other_file], temp_path)
+            assert f"File `{file1.name}`:" in mixed_result  # relative path
+            other_file_normalized = str(other_file).replace("\\", "/")
+            assert f"File `{other_file_normalized}`:" in mixed_result  # absolute path
+        finally:
+            other_temp.cleanup()

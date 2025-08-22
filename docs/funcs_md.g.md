@@ -699,7 +699,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
         combined_yaml["attribution"] = all_attributions
 
     # Fix final YAML
-    list_keys = ["lang", "related-id", "date", "update", "permalink", "permalink-source", "sort-section"]
+    list_keys = ["related-id", "date", "update", "permalink", "permalink-source", "sort-section"]
     for key in list_keys:
         combined_yaml.pop(key, None)
     if "lang" in combined_yaml and isinstance(combined_yaml["lang"], list):

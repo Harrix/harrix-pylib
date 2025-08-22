@@ -320,6 +320,70 @@ def clear_directory(path: Path | str) -> None:
         path.mkdir(parents=True, exist_ok=True)
 
 
+def collect_text_files_to_markdown(file_paths: list[str | Path], base_dir: str | Path | None = None) -> str:
+    """Create a markdown document containing the contents of text files.
+
+    Args:
+
+    - `file_paths` (`list[str | Path]`): A list of file paths (absolute or relative) to text files.
+    - `base_dir` (`str | Path | None`, *optional*): A base directory to strip from file paths
+      in the output. Defaults to `None`.
+
+    Returns:
+
+    - `str`: A markdown string containing all files with fenced code blocks,
+      safe for files that already contain backticks.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    files = [
+        "C:/folder/folder2/1.txt",
+        "C:/folder/folder2/2.py",
+        "C:/folder/folder3/recover.sql"
+    ]
+    base = "C:/folder"
+
+    result = h.file.collect_text_files_to_markdown(files, base)
+    print(result)
+    ```
+
+    """
+    base_dir = Path(base_dir).resolve() if base_dir else None
+    markdown_parts = []
+
+    for path in file_paths:
+        path = Path(path).resolve()
+        rel_path = str(path.relative_to(base_dir)) if base_dir and base_dir in path.parents else str(path)
+        rel_path = rel_path.replace("\\", "/")
+
+        try:
+            content = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            content = path.read_text(encoding="cp1251")
+
+        # Find the maximum number of consecutive backticks in the entire content
+        max_backticks = 0
+        current_backticks = 0
+
+        for char in content:
+            if char == "`":
+                current_backticks += 1
+                max_backticks = max(max_backticks, current_backticks)
+            else:
+                current_backticks = 0
+
+        fence = "`" * max(3, max_backticks + 1)
+        ext = path.suffix.lstrip(".") or "txt"
+
+        lines = content.splitlines()
+        markdown_parts.append(f"File `{rel_path}`:\n\n{fence}{ext}\n" + "\n".join(lines) + f"\n{fence}\n")
+
+    return "\n".join(markdown_parts)
+
+
 def extract_zip_archive(filename: Path | str) -> str:
     """Extract ZIP archive to the folder where the archive is located and remove the archive file.
 
