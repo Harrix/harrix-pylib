@@ -1318,7 +1318,7 @@ def test_collect_text_files_to_markdown() -> None:
 
         file_paths = [file1, file2, file3, file4]
 
-        # Test without base_dir
+        # Test without base_folder
         result = h.file.collect_text_files_to_markdown(file_paths)
 
         # Verify structure - use forward slashes to match function output
@@ -1344,7 +1344,7 @@ def test_collect_text_files_to_markdown() -> None:
         assert "```md" in result  # for file3
         assert "```txt" in result  # for file4 (no extension defaults to txt)
 
-        # Test with base_dir
+        # Test with base_folder
         result_with_base = h.file.collect_text_files_to_markdown(file_paths, temp_path)
 
         # Verify relative paths are used
@@ -1367,7 +1367,7 @@ def test_collect_text_files_to_markdown() -> None:
         assert "Hello World" in single_result
         assert single_result.count("File `") == 1
 
-        # Test file outside base_dir (should use absolute path)
+        # Test file outside base_folder (should use absolute path)
         other_temp = TemporaryDirectory()
         try:
             other_path = Path(other_temp.name)

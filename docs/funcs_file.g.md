@@ -398,7 +398,7 @@ def clear_directory(path: Path | str) -> None:
 ## 🔧 Function `collect_text_files_to_markdown`
 
 ```python
-def collect_text_files_to_markdown(file_paths: list[str | Path], base_dir: str | Path | None = None) -> str
+def collect_text_files_to_markdown(file_paths: list[str | Path], base_folder: str | Path | None = None) -> str
 ```
 
 Create a markdown document containing the contents of text files.
@@ -406,7 +406,7 @@ Create a markdown document containing the contents of text files.
 Args:
 
 - `file_paths` (`list[str | Path]`): A list of file paths (absolute or relative) to text files.
-- `base_dir` (`str | Path | None`, _optional_): A base directory to strip from file paths
+- `base_folder` (`str | Path | None`, _optional_): A base directory to strip from file paths
   in the output. Defaults to `None`.
 
 Returns:
@@ -434,15 +434,15 @@ print(result)
 <summary>Code:</summary>
 
 ```python
-def collect_text_files_to_markdown(file_paths: list[str | Path], base_dir: str | Path | None = None) -> str:
-    base_dir = Path(base_dir).resolve() if base_dir else None
+def collect_text_files_to_markdown(file_paths: list[str | Path], base_folder: str | Path | None = None) -> str:
+    base_folder = Path(base_folder).resolve() if base_folder else None
     markdown_parts = []
 
     for path in file_paths:
         path_resolve = Path(path).resolve()
         rel_path = (
-            str(path_resolve.relative_to(base_dir))
-            if base_dir and base_dir in path_resolve.parents
+            str(path_resolve.relative_to(base_folder))
+            if base_folder and base_folder in path_resolve.parents
             else str(path_resolve)
         )
         rel_path = rel_path.replace("\\", "/")
