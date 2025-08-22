@@ -1287,7 +1287,7 @@ def test_rename_files_by_mapping() -> None:
         assert (cache_dir / "test.txt").exists()  # Should still exist (ignored)
 
 
-def test_collect_text_files_to_markdown():
+def test_collect_text_files_to_markdown() -> None:
     with TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
 
@@ -1313,7 +1313,7 @@ def test_collect_text_files_to_markdown():
         # File with cp1251 encoding (create a simple ASCII file for testing fallback)
         file5 = temp_path / "cp1251.txt"
         # Write with invalid UTF-8 to trigger UnicodeDecodeError
-        with open(file5, "wb") as f:
+        with Path.open(file5, "wb") as f:
             f.write(b"\xff\xfe\x41\x00\x42\x00")  # Invalid UTF-8 bytes
 
         file_paths = [file1, file2, file3, file4]

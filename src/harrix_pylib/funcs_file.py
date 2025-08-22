@@ -355,14 +355,18 @@ def collect_text_files_to_markdown(file_paths: list[str | Path], base_dir: str |
     markdown_parts = []
 
     for path in file_paths:
-        path = Path(path).resolve()
-        rel_path = str(path.relative_to(base_dir)) if base_dir and base_dir in path.parents else str(path)
+        path_resolve = Path(path).resolve()
+        rel_path = (
+            str(path_resolve.relative_to(base_dir))
+            if base_dir and base_dir in path_resolve.parents
+            else str(path_resolve)
+        )
         rel_path = rel_path.replace("\\", "/")
 
         try:
-            content = path.read_text(encoding="utf-8")
+            content = path_resolve.read_text(encoding="utf-8")
         except UnicodeDecodeError:
-            content = path.read_text(encoding="cp1251")
+            content = path_resolve.read_text(encoding="cp1251")
 
         # Find the maximum number of consecutive backticks in the entire content
         max_backticks = 0
@@ -376,7 +380,7 @@ def collect_text_files_to_markdown(file_paths: list[str | Path], base_dir: str |
                 current_backticks = 0
 
         fence = "`" * max(3, max_backticks + 1)
-        ext = path.suffix.lstrip(".") or "txt"
+        ext = path_resolve.suffix.lstrip(".") or "txt"
 
         lines = content.splitlines()
         markdown_parts.append(f"File `{rel_path}`:\n\n{fence}{ext}\n" + "\n".join(lines) + f"\n{fence}\n")
