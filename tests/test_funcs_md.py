@@ -998,6 +998,28 @@ More text here."""
     assert h.md.increase_heading_level_content(md_text) == expected
 
 
+def test_decrease_heading_level_content() -> None:
+    md_text = """## Heading
+This is some text.
+
+### Subheading
+More text here.
+
+# Single heading
+Should remain unchanged."""
+
+    expected = """# Heading
+This is some text.
+
+## Subheading
+More text here.
+
+# Single heading
+Should remain unchanged."""
+
+    assert h.md.decrease_heading_level_content(md_text) == expected
+
+
 def test_remove_toc_content() -> None:
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/generate_toc_with_links__after.md").read_text(encoding="utf8")

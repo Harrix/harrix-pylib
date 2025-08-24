@@ -21,6 +21,7 @@ lang: en
 - [🔧 Function `append_path_to_local_links_images_line`](#-function-append_path_to_local_links_images_line)
 - [🔧 Function `combine_markdown_files`](#-function-combine_markdown_files)
 - [🔧 Function `combine_markdown_files_recursively`](#-function-combine_markdown_files_recursively)
+- [🔧 Function `decrease_heading_level_content`](#-function-decrease_heading_level_content)
 - [🔧 Function `delete_g_md_files_recursively`](#-function-delete_g_md_files_recursively)
 - [🔧 Function `download_and_replace_images`](#-function-download_and_replace_images)
 - [🔧 Function `download_and_replace_images_content`](#-function-download_and_replace_images_content)
@@ -867,6 +868,69 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_m
                 result_lines.append(f"❌ Error processing {folder}: {e}")
 
     return "\n".join(result_lines)
+```
+
+</details>
+
+## 🔧 Function `decrease_heading_level_content`
+
+```python
+def decrease_heading_level_content(markdown_text: str) -> str
+```
+
+Decrease the heading level of Markdown content.
+
+This function processes a Markdown text and decreases the level of all headings
+(lines starting with '#') outside of code blocks by removing one '#' character.
+If a heading has only one '#', it remains unchanged to avoid creating invalid headings.
+
+Args:
+
+- `markdown_text` (`str`): The Markdown text to process.
+
+Returns:
+
+- `str`: The updated Markdown text with decreased heading levels. The YAML header,
+  if present, is preserved and included at the beginning of the output.
+
+Note:
+
+- Code blocks are detected using the helper function `identify_code_blocks` and are not modified.
+- Headings with only one '#' (h1) remain unchanged to maintain valid Markdown structure.
+
+Example:
+
+```python
+from pathlib import Path
+
+import harrix_pylib as h
+
+md = "## Title\n\nText### Subtitle\n\nText"
+print(h.md.decrease_heading_level_content(md))
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def decrease_heading_level_content(markdown_text: str) -> str:
+    new_lines = []
+    lines = markdown_text.split("\n")
+    for line, is_code_block in identify_code_blocks(lines):
+        if is_code_block:
+            new_lines.append(line)
+            continue
+
+        if line.startswith("#"):
+            # Remove one '#' if there are at least 2, otherwise keep as is
+            if line.startswith("##"):
+                new_lines.append(line[1:])
+            else:
+                new_lines.append(line)  # Keep single '#' headings unchanged
+        else:
+            new_lines.append(line)
+
+    return "\n".join(new_lines)
 ```
 
 </details>
