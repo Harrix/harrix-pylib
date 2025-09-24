@@ -2943,7 +2943,7 @@ def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool
 
     while True:
         try:
-            idx, (line, in_code_block) = next(line_iter)
+            _, (line, in_code_block) = next(line_iter)
         except StopIteration:
             break
 
@@ -2957,7 +2957,7 @@ def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool
                 look_ahead.append(line)
                 for _ in range(2):
                     try:
-                        idx2, (line2, in_code_block2) = next(line_iter)
+                        _, (line2, _) = next(line_iter)
                         look_ahead.append(line2)
                         if "</summary>" in line2:
                             break

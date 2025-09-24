@@ -146,7 +146,7 @@ class MarkdownChecker:
             all_lines = content.splitlines()
             yaml_end_line = self._find_yaml_end_line(all_lines)
 
-            yaml_part, markdown_part = h.md.split_yaml_content(content)
+            yaml_part, _ = h.md.split_yaml_content(content)
 
             yield from self._check_yaml_rules(filename, yaml_part, all_lines, rules)
             yield from self._check_content_rules(filename, all_lines, yaml_end_line, rules)
