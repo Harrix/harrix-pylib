@@ -415,7 +415,7 @@ def extract_zip_archive(filename: Path | str) -> str:
     ```python
     import harrix_pylib as h
 
-    extract_zip_archive("C:/Downloads/archive.zip")
+    result = h.file.extract_zip_archive("C:/Downloads/archive.zip")
     ```
 
     """
@@ -666,8 +666,8 @@ def remove_empty_folders(
     ```python
     import harrix_pylib as h
 
-    remove_empty_folders("C:/Projects/my_project")
-    remove_empty_folders("C:/Downloads", additional_patterns=["temp", "cache"])
+    h.file.remove_empty_folders("C:/Projects/my_project")
+    h.file.remove_empty_folders("C:/Downloads", additional_patterns=["temp", "cache"])
     ```
 
     """
@@ -781,7 +781,7 @@ def rename_epub_file(filename: Path | str) -> str:
     ```python
     import harrix_pylib as h
 
-    rename_epub_file("C:/Books/unknown_book.epub")
+    h.file.rename_epub_file("C:/Books/unknown_book.epub")
     ```
 
     """
@@ -1028,7 +1028,7 @@ def rename_fb2_file(filename: Path | str) -> str:
     ```python
     import harrix_pylib as h
 
-    rename_fb2_file("C:/Books/unknown_book.fb2")
+    h.file.rename_fb2_file("C:/Books/unknown_book.fb2")
     ```
 
     """
@@ -1254,10 +1254,10 @@ def rename_file_spaces_to_hyphens(filename: Path | str) -> str:
     ```python
     import harrix_pylib as h
 
-    rename_file_spaces_to_hyphens("C:/Books/my book title.fb2")
+    h.file.rename_file_spaces_to_hyphens("C:/Books/my book title.fb2")
     # Result: "my-book-title.fb2"
 
-    rename_file_spaces_to_hyphens("C:/Documents/my document.pdf")
+    h.file.rename_file_spaces_to_hyphens("C:/Documents/my document.pdf")
     # Result: "my-document.pdf"
     ```
 
@@ -1328,7 +1328,7 @@ def rename_files_by_mapping(folder_path: Path | str, rename_mapping: dict[str, s
         "config.json": "settings.json"
     }
 
-    result = rename_files_by_mapping("C:/Projects/my_project", mapping)
+    result = h.file.rename_files_by_mapping("C:/Projects/my_project", mapping)
     print(result)
     ```
 
@@ -1447,7 +1447,7 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
     import harrix_pylib as h
     from pathlib import Path
 
-    result = h.rename_largest_images_to_featured("C:/articles/")
+    result = h.file.rename_largest_images_to_featured("C:/articles/")
     print(result)
     ```
 
@@ -1540,8 +1540,8 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
     ```python
     import harrix_pylib as h
 
-    rename_pdf_file("C:/Books/unknown_book.pdf")
-    rename_pdf_file("C:/Books/unknown_book.pdf", verbose=True)  # With debug output
+    h.file.rename_pdf_file("C:/Books/unknown_book.pdf")
+    h.file.rename_pdf_file("C:/Books/unknown_book.pdf", verbose=True)  # With debug output
     ```
 
     """
@@ -1930,7 +1930,7 @@ def should_ignore_path(
     print(result2)
 
     path3 = Path("temp")
-    result3 = h.should_ignore_path(path3, additional_patterns=["temp", "logs"])
+    result3 = h.file.should_ignore_path(path3, additional_patterns=["temp", "logs"])
     print(result3)
     ```
 

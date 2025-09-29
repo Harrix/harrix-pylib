@@ -506,7 +506,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-extract_zip_archive("C:/Downloads/archive.zip")
+result = h.file.extract_zip_archive("C:/Downloads/archive.zip")
 ```
 
 <details>
@@ -799,8 +799,8 @@ Example:
 ```python
 import harrix_pylib as h
 
-remove_empty_folders("C:/Projects/my_project")
-remove_empty_folders("C:/Downloads", additional_patterns=["temp", "cache"])
+h.file.remove_empty_folders("C:/Projects/my_project")
+h.file.remove_empty_folders("C:/Downloads", additional_patterns=["temp", "cache"])
 ```
 
 <details>
@@ -927,7 +927,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-rename_epub_file("C:/Books/unknown_book.epub")
+h.file.rename_epub_file("C:/Books/unknown_book.epub")
 ```
 
 <details>
@@ -1185,7 +1185,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-rename_fb2_file("C:/Books/unknown_book.fb2")
+h.file.rename_fb2_file("C:/Books/unknown_book.fb2")
 ```
 
 <details>
@@ -1422,10 +1422,10 @@ Example:
 ```python
 import harrix_pylib as h
 
-rename_file_spaces_to_hyphens("C:/Books/my book title.fb2")
+h.file.rename_file_spaces_to_hyphens("C:/Books/my book title.fb2")
 # Result: "my-book-title.fb2"
 
-rename_file_spaces_to_hyphens("C:/Documents/my document.pdf")
+h.file.rename_file_spaces_to_hyphens("C:/Documents/my document.pdf")
 # Result: "my-document.pdf"
 ```
 
@@ -1507,7 +1507,7 @@ mapping = {
     "config.json": "settings.json"
 }
 
-result = rename_files_by_mapping("C:/Projects/my_project", mapping)
+result = h.file.rename_files_by_mapping("C:/Projects/my_project", mapping)
 print(result)
 ```
 
@@ -1637,7 +1637,7 @@ Example:
 import harrix_pylib as h
 from pathlib import Path
 
-result = h.rename_largest_images_to_featured("C:/articles/")
+result = h.file.rename_largest_images_to_featured("C:/articles/")
 print(result)
 ```
 
@@ -1741,8 +1741,8 @@ Example:
 ```python
 import harrix_pylib as h
 
-rename_pdf_file("C:/Books/unknown_book.pdf")
-rename_pdf_file("C:/Books/unknown_book.pdf", verbose=True)  # With debug output
+h.file.rename_pdf_file("C:/Books/unknown_book.pdf")
+h.file.rename_pdf_file("C:/Books/unknown_book.pdf", verbose=True)  # With debug output
 ```
 
 <details>
@@ -2140,7 +2140,7 @@ result2 = h.should_ignore_path(path2)
 print(result2)
 
 path3 = Path("temp")
-result3 = h.should_ignore_path(path3, additional_patterns=["temp", "logs"])
+result3 = h.file.should_ignore_path(path3, additional_patterns=["temp", "logs"])
 print(result3)
 ```
 
