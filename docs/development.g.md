@@ -50,15 +50,15 @@ Install the following software:
 CLI commands after installation:
 
 - `.venv\Scripts\Activate.ps1` — activate virtual environment
+- `isort .` — sort imports.
+- `pytest -m slow` — run pytest with slow tests.
+- `ruff check --fix` — lint and fix the project's Python files.
+- `ruff check` — lint the project's Python files.
+- `ruff format` — format the project's Python files.
+- `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
 - `uv self update` — update uv itself.
 - `uv sync --upgrade` — update all project libraries (sometimes you need to call twice).
-- `isort .` — sort imports.
-- `ruff format` — format the project's Python files.
-- `ruff check` — lint the project's Python files.
-- `ruff check --fix` — lint and fix the project's Python files.
-- `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
 - `vermin src` — determines the minimum version of Python. However, if the version is below 3.10, we stick with 3.10 because Python 3.10 annotations are used.
-- `pytest -m slow` — run pytest with slow tests.
 
 ## Adding a new function
 
