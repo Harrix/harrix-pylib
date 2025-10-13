@@ -1380,7 +1380,7 @@ Returns:
 
 Example:
 
-Given a file like `C:/test/Name_Surname/Title_of_book.md` with content:
+Given a file like `C:/test/Name-Surname/Title-of-book.md` with content:
 
 ```markdown
 # Title of book
@@ -1430,7 +1430,7 @@ Example:
 import harrix_pylib as h
 from pathlib import Path
 
-filename = Path("C:/test/Name_Surname/Title_of_book.md")
+filename = Path("C:/test/Name-Surname/Title-of-book.md")
 
 result = h.md.generate_author_book(filename)
 print(result)
