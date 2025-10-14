@@ -135,6 +135,8 @@ def load_config(filename: str) -> dict:
     def process_snippet(value: object) -> object:
         if isinstance(value, str) and value.startswith("snippet:"):
             snippet_path = Path(get_project_root()) / value.split("snippet:", 1)[1].strip()
+            if not snippet_path.exists():
+                return ""
             with snippet_path.open("r", encoding="utf-8") as snippet_file:
                 return snippet_file.read()
         return value

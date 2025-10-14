@@ -222,3 +222,123 @@ def test_python_checker() -> None:
         )  # ignore: HP001
         errors = checker.check(file_ignored_multiple_directives_file)
         assert len(errors) == 0
+
+        # Test HP002: Old-style docstring with Args
+        old_style_args_file = temp_path / "old_style_args.py"
+        old_style_args_file.write_text(
+            '''def func(a: int, b: int) -> int:
+    """Add two integers.
+
+    Args:
+        a (int): First integer.
+        b (int): Second integer.
+
+    Returns:
+        int: Sum of a and b.
+
+    """
+    return a + b
+''',
+            encoding="utf-8",
+        )
+        errors = checker.check(old_style_args_file)
+        assert any("HP002" in error for error in errors)
+
+        # Test HP002: Old-style docstring with Returns
+        old_style_returns_file = temp_path / "old_style_returns.py"
+        old_style_returns_file.write_text(
+            '''def func() -> str:
+    """Get greeting.
+
+    Returns:
+        str: Greeting message.
+
+    """
+    return "Hello"
+''',
+            encoding="utf-8",
+        )
+        errors = checker.check(old_style_returns_file)
+        assert any("HP002" in error for error in errors)
+
+        # Test HP002: Old-style docstring with Attributes
+        old_style_attributes_file = temp_path / "old_style_attributes.py"
+        old_style_attributes_file.write_text(
+            '''class Cat:
+    """Represent a cat.
+
+    Attributes:
+        name (str): Cat name.
+        age (int): Cat age.
+
+    """
+    pass
+''',
+            encoding="utf-8",
+        )
+        errors = checker.check(old_style_attributes_file)
+        assert any("HP002" in error for error in errors)
+
+        # Test HP002: New-style docstring (should not trigger HP002)
+        new_style_file = temp_path / "new_style.py"
+        new_style_file.write_text(
+            '''def func(a: int, b: int) -> int:
+    """Add two integers.
+
+    Args:
+
+    - `a` (`int`): First integer.
+    - `b` (`int`): Second integer.
+
+    Returns:
+
+    - `int`: Sum of a and b.
+
+    """
+    return a + b
+''',
+            encoding="utf-8",
+        )
+        errors = checker.check(new_style_file)
+        assert not any("HP002" in error for error in errors)
+
+        # Test HP002: Ignore directive works
+        old_style_ignored_file = temp_path / "old_style_ignored.py"
+        old_style_ignored_file.write_text(
+            '''def func(a: int) -> int:
+    """Function with old style.
+
+    Args:  # ignore: HP002
+        a (int): Parameter.
+
+    Returns:  # ignore: HP002
+        int: Result.
+
+    """
+    return a
+''',
+            encoding="utf-8",
+        )
+        errors = checker.check(old_style_ignored_file)
+        assert not any("HP002" in error for error in errors)
+
+        # Test HP002: File-ignore directive works
+        old_style_file_ignored_file = temp_path / "old_style_file_ignored.py"
+        old_style_file_ignored_file.write_text(
+            '''# file-ignore: HP002
+def func(a: int) -> int:
+    """Function with old style.
+
+    Args:
+        a (int): Parameter.
+
+    Returns:
+        int: Result.
+
+    """
+    return a
+''',
+            encoding="utf-8",
+        )
+        errors = checker.check(old_style_file_ignored_file)
+        assert not any("HP002" in error for error in errors)

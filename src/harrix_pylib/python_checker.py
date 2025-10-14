@@ -12,6 +12,7 @@ class PythonChecker:
     Rules:
 
     - **HP001** - Presence of Russian letters in the code.
+    - **HP002** - Old-style docstring formatting (non-Markdown style).
 
     Examples for ignore directives:
 
@@ -27,6 +28,7 @@ class PythonChecker:
     # Rule constants for easier maintenance
     RULES: ClassVar[dict[str, str]] = {
         "HP001": "Presence of Russian letters in the code",
+        "HP002": "Old-style docstring formatting (non-Markdown style)",
     }
 
     # Comment pattern for ignoring checks on specific lines
@@ -118,17 +120,90 @@ class PythonChecker:
         - `str`: Error message for each content-related issue found.
 
         """
-        if "HP001" not in rules:
-            return
-
         for line_num, line in enumerate(lines, 1):
-            # Check if this line should be ignored for P001
-            if self._should_ignore_line(line, "HP001"):
-                continue
-
-            if self._has_russian_letters(line):
+            # Check HP001: Russian letters
+            if "HP001" in rules and not self._should_ignore_line(line, "HP001") and self._has_russian_letters(line):
                 col = self._find_russian_letters_position(line)
                 yield self._format_error("HP001", self.RULES["HP001"], filename, line_num=line_num, col=col)
+
+        # Check HP002: Old-style docstrings
+        if "HP002" in rules:
+            yield from self._check_old_style_docstrings(filename, lines)
+
+    def _check_old_style_docstrings(self, filename: Path, lines: list[str]) -> Generator[str, None, None]:
+        """Check for old-style docstring formatting.
+
+        Args:
+
+        - `filename` (`Path`): Path to the Python file being checked.
+        - `lines` (`list[str]`): All lines from the file.
+
+        Yields:
+
+        - `str`: Error message for each old-style docstring issue found.
+
+        """
+        # Docstring section keywords to check
+        docstring_keywords = [
+            "Args:",
+            "Returns:",
+            "Yields:",
+            "Raises:",
+            "Attributes:",
+            "Note:",
+            "Notes:",
+            "Example:",
+            "Examples:",
+        ]
+
+        in_docstring = False
+        single_line_docstring = 2
+
+        for line_num, line in enumerate(lines, 1):
+            # Check if this line should be ignored for HP002
+            if self._should_ignore_line(line, "HP002"):
+                continue
+
+            stripped_line = line.strip()
+
+            # Detect docstring start
+            if '"""' in stripped_line or "'''" in stripped_line:
+                # Count quotes to determine if we're entering or exiting
+                triple_double = stripped_line.count('"""')
+                triple_single = stripped_line.count("'''")
+
+                if triple_double == 1 or triple_single == 1:
+                    in_docstring = not in_docstring
+                elif single_line_docstring in {triple_double, triple_single}:
+                    # Single line docstring
+                    in_docstring = False
+
+            # Check for old-style patterns only within docstrings
+            if in_docstring:
+                for keyword in docstring_keywords:
+                    if (stripped_line == keyword or stripped_line.endswith(keyword)) and line_num < len(lines):
+                        next_line = lines[line_num]  # line_num is 1-based, but list is 0-based
+                        next_line_stripped = next_line.strip()
+
+                        # Old style: keyword followed immediately by indented content (no empty line)
+                        # Check if it looks like old-style formatting:
+                        # 1. "param_name (type): description" for Args/Attributes
+                        # 2. "type: description" for Returns/Yields
+                        # 3. Just indented text without markdown list format
+                        # If next line starts with whitespace and has content, it's likely old style
+                        if (
+                            next_line_stripped
+                            and not next_line_stripped.startswith("-")
+                            and next_line
+                            and next_line[0] in (" ", "\t")
+                        ):
+                            # Additional check: new style would have empty line or start with "-"
+                            yield self._format_error(
+                                "HP002",
+                                self.RULES["HP002"],
+                                filename,
+                                line_num=line_num,
+                            )
 
     def _determine_project_root(self, project_root: Path | str | None) -> Path:
         """Determine the project root directory.
