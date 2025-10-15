@@ -50,10 +50,68 @@ def test_markdown_checker() -> None:
         lowercase_md_file.write_text("---\nlang: en\n---\n# Test markdown content", encoding="utf-8")
         errors = checker.check(lowercase_md_file)
         assert any("H006" in error for error in errors)
+        assert any("Markdown" in error for error in errors)
+
+        # Test H006: Various incorrect word forms
+        # Test LaTeX variations
+        latex_file = temp_path / "latex_test.md"
+        latex_file.write_text("---\nlang: en\n---\n# Using latex and Latex", encoding="utf-8")
+        errors = checker.check(latex_file)
+        assert any("H006" in error and "latex" in error for error in errors)
+
+        # Test tech terms (HTML, CSS, PHP, etc.)
+        tech_file = temp_path / "tech_test.md"
+        tech_file.write_text("---\nlang: en\n---\nFile formats: html, css, pdf, svg, xml", encoding="utf-8")
+        errors = checker.check(tech_file)
+        assert any("H006" in error for error in errors)
+        assert len([e for e in errors if "H006" in e]) >= 5  # noqa: PLR2004
+
+        # Test programming languages
+        lang_file = temp_path / "lang_test.md"
+        lang_file.write_text("---\nlang: en\n---\nLanguages: c++, java, javascript, pascal", encoding="utf-8")
+        errors = checker.check(lang_file)
+        assert any("H006" in error and "c++" in error for error in errors)
+        assert any("H006" in error and "java" in error for error in errors)
+
+        # Test GitHub and Git
+        git_file = temp_path / "git_test.md"
+        git_file.write_text("---\nlang: en\n---\nUse Github and git", encoding="utf-8")
+        errors = checker.check(git_file)
+        assert any("H006" in error and "Github" in error for error in errors)
+        assert any("H006" in error and "git" in error for error in errors)
+
+        # Test Russian phrases
+        ru_file = temp_path / "ru_test.md"
+        ru_file.write_text("---\nlang: ru\n---\nЭто web приложение и web документ", encoding="utf-8")  # noqa: RUF001
+        errors = checker.check(ru_file)
+        assert any("H006" in error for error in errors)
+
+        # Test that code blocks are ignored
+        code_block_file = temp_path / "code_block_test.md"
+        code_block_file.write_text(
+            "---\nlang: en\n---\n# Test\n```python\nmarkdown = 'test'\nhtml = 'code'\n```\nOutside code",
+            encoding="utf-8",
+        )
+        errors = checker.check(code_block_file)
+        # Should not flag markdown and html inside code blocks
+        assert not any("markdown" in error and "```" in str(code_block_file.read_text()) for error in errors)
+
+        # Test that inline code is ignored
+        inline_code_file = temp_path / "inline_code_test.md"
+        inline_code_file.write_text(
+            "---\nlang: en\n---\nUse `markdown` in code, but markdown outside", encoding="utf-8"
+        )
+        errors = checker.check(inline_code_file)
+        # Should find only one error (the one outside backticks)
+        markdown_errors = [e for e in errors if "H006" in e and "markdown" in e]
+        assert len(markdown_errors) == 1
 
         # Test valid file with no errors
         valid_file = temp_path / "valid.md"
-        valid_file.write_text("---\nlang: en\n---\n# Test Markdown content", encoding="utf-8")
+        valid_file.write_text(
+            "---\nlang: en\n---\n# Test Markdown content with HTML, CSS, PDF, JavaScript, C++, GitHub, Git",
+            encoding="utf-8",
+        )
         errors = checker.check(valid_file)
         assert len(errors) == 0
 

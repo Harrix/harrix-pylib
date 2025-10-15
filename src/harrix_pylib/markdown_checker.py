@@ -20,7 +20,7 @@ class MarkdownChecker:
     - **H003** - YAML is missing.
     - **H004** - The lang field is missing in YAML.
     - **H005** - In YAML, lang is not set to `en` or `ru`.
-    - **H006** - Markdown is written with a small letter.
+    - **H006** - Incorrect word form used (e.g., "markdown" instead of "Markdown", "latex" instead of "LaTeX").
 
     """
 
@@ -31,7 +31,100 @@ class MarkdownChecker:
         "H003": "YAML is missing",
         "H004": "The lang field is missing in YAML",
         "H005": "In YAML, lang is not set to en or ru",
-        "H006": "Markdown is written with a small letter",
+        "H006": "Incorrect word form used",
+    }
+
+    # Dictionary of incorrect word forms that should be flagged
+    # Key: incorrect form, Value: suggested correct form
+    INCORRECT_WORDS: ClassVar[dict[str, str]] = {
+        # LaTeX variations
+        "Latex": "LaTeX",
+        "latex": "LaTeX",
+        # Email
+        "e-mail": "email",
+        # CMS with Cyrillic letters (that look like Latin)
+        "cms": "CMS",
+        "СЬS": "CMS",  # noqa: RUF001
+        "СMS": "CMS",  # noqa: RUF001
+        "СМS": "CMS",  # noqa: RUF001
+        "сms": "CMS",  # noqa: RUF001
+        "смs": "CMS",  # noqa: RUF001
+        "СМС": "CMS",  # noqa: RUF001
+        "смс": "CMS",
+        # File extensions and tech terms
+        "css": "CSS",
+        "html": "HTML",
+        "pdf": "PDF",
+        "php": "PHP",
+        "svg": "SVG",
+        "xml": "XML",
+        "odf": "ODF",
+        "odt": "ODT",
+        "dll": "DLL",
+        "Dll": "DLL",
+        "exe": "EXE",
+        "qml": "QML",
+        # Web document variations
+        "web документ": "веб-документ",
+        "Web документ": "веб-документ",
+        "WEB документ": "веб-документ",
+        # Web application variations
+        "web приложение": "веб-приложение",
+        "Web приложение": "веб-приложение",
+        "WEB приложение": "веб-приложение",
+        "web приложения": "веб-приложения",
+        "Web приложения": "веб-приложения",
+        "WEB приложения": "веб-приложения",
+        # Programming languages with Cyrillic letters
+        "c++": "C++",
+        "с++": "C++",  # noqa: RUF001
+        "С++": "C++",  # noqa: RUF001
+        "с#": "C#",  # noqa: RUF001
+        "С#": "C#",  # noqa: RUF001
+        "сpp": "cpp",  # noqa: RUF001
+        "срр": "cpp",  # noqa: RUF001
+        "pascal": "Pascal",
+        # C++ standards
+        "c++11": "C++11",
+        "с++11": "C++11",  # noqa: RUF001
+        "С++11": "C++11",  # noqa: RUF001
+        "c++17": "C++17",
+        "с++17": "C++17",  # noqa: RUF001
+        "С++17": "C++17",  # noqa: RUF001
+        "c++20": "C++20",
+        "с++20": "C++20",  # noqa: RUF001
+        "С++20": "C++20",  # noqa: RUF001
+        # OK variations
+        "ok": "OK",
+        "Ok": "OK",
+        "ОК": "OK",  # noqa: RUF001
+        "ок": "OK",
+        # ID variations
+        "id": "ID",
+        "Id": "ID",
+        # JavaScript variations
+        "javaScript": "JavaScript",
+        "Javascript": "JavaScript",
+        "javascript": "JavaScript",
+        # PHP
+        "Php": "PHP",
+        # Cyrillic characters
+        "Йе": "Qt",
+        "йе": "Qt",
+        # Qt
+        "qt": "Qt",
+        # Android and Java
+        "android": "Android",
+        "java": "Java",
+        # APK
+        "apk": "APK",
+        # Markdown
+        "markdon": "Markdown",
+        "markdown": "Markdown",
+        # Git and GitHub
+        "Github": "GitHub",
+        "github": "GitHub",
+        "git": "Git",
     }
 
     def __init__(self, project_root: Path | str | None = None) -> None:
@@ -193,14 +286,29 @@ class MarkdownChecker:
                 if not in_code:
                     clean_line += segment
 
-            words = [word.strip(".") for word in re.findall(r"\b[\w/\\.-]+\b", clean_line)]
+            # Check for incorrect words
+            for incorrect_word, correct_word in self.INCORRECT_WORDS.items():
+                # Escape special regex characters in the word
+                escaped_word = re.escape(incorrect_word)
 
-            if "markdown" in words:
-                # Find position of "markdown" in the original line
-                markdown_match = re.search(r"\bmarkdown\b", line.lower())
-                col = markdown_match.start() + 1 if markdown_match else 1
+                # Check if word contains only alphanumeric and underscore characters
+                # If yes, use word boundaries; otherwise use lookahead/lookbehind
+                if re.match(r"^[\w]+$", incorrect_word):
+                    # Standard word with word boundaries
+                    pattern = rf"\b{escaped_word}\b"
+                else:
+                    # Word with special characters - use lookahead/lookbehind
+                    # to ensure it's not part of a larger word
+                    pattern = rf"(?<![a-zA-Zа-яА-ЯёЁ0-9_]){escaped_word}(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001
 
-                yield self._format_error("H006", self.RULES["H006"], filename, line_num=actual_line_num, col=col)
+                # Search in clean_line for the incorrect word
+                if re.search(pattern, clean_line):
+                    # Find position in the original line
+                    match = re.search(pattern, line)
+                    col = match.start() + 1 if match else 1
+
+                    error_message = f'{self.RULES["H006"]}: "{incorrect_word}" should be "{correct_word}"'
+                    yield self._format_error("H006", error_message, filename, line_num=actual_line_num, col=col)
 
     def _check_filename_rules(self, filename: Path, rules: set) -> Generator[str, None, None]:
         """Check filename-related rules.
@@ -289,7 +397,8 @@ class MarkdownChecker:
         """Find the line number where YAML block ends (1-based).
 
         Returns:
-            Line number after YAML block, or 1 if no YAML.
+
+        - `int`: Line number after YAML block, or 1 if no YAML.
 
         """
         if not lines or lines[0].strip() != "---":
