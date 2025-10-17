@@ -106,6 +106,21 @@ def test_markdown_checker() -> None:
         markdown_errors = [e for e in errors if "H006" in e and "markdown" in e]
         assert len(markdown_errors) == 1
 
+        # Test that URLs in markdown links and angle brackets are ignored
+        url_test_file = temp_path / "url_test.md"
+        url_test_file.write_text(
+            "---\nlang: en\n---\n"
+            "[GnuPG](https://gpg4win.org/download.html) and <https://example.com/test.html>\n"
+            "But html outside URL should be caught",
+            encoding="utf-8",
+        )
+        errors = checker.check(url_test_file)
+        # Should find only one error (html outside URL)
+        html_errors = [e for e in errors if "H006" in e and "html" in e]
+        assert len(html_errors) == 1
+        # And it should be on the second line (line with "But html")
+        assert any(":5:" in e for e in html_errors)
+
         # Test valid file with no errors
         valid_file = temp_path / "valid.md"
         valid_file.write_text(
