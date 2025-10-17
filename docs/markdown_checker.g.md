@@ -153,7 +153,6 @@ class MarkdownChecker:
         "markdown": "Markdown",
         # Git and GitHub
         "Github": "GitHub",
-        "github": "GitHub",
         "git": "Git",
     }
 
@@ -315,6 +314,12 @@ class MarkdownChecker:
             for segment, in_code in h.md.identify_code_blocks_line(line):
                 if not in_code:
                     clean_line += segment
+
+            # Remove URLs from markdown links [text](url) and angle brackets <url>
+            # Remove content in parentheses after square brackets (markdown links)
+            clean_line = re.sub(r"\]\([^)]*\)", "]()", clean_line)
+            # Remove content in angle brackets
+            clean_line = re.sub(r"<[^>]*>", "<>", clean_line)
 
             # Check for incorrect words
             for incorrect_word, correct_word in self.INCORRECT_WORDS.items():
@@ -741,6 +746,12 @@ def _check_content_rules(
             for segment, in_code in h.md.identify_code_blocks_line(line):
                 if not in_code:
                     clean_line += segment
+
+            # Remove URLs from markdown links [text](url) and angle brackets <url>
+            # Remove content in parentheses after square brackets (markdown links)
+            clean_line = re.sub(r"\]\([^)]*\)", "]()", clean_line)
+            # Remove content in angle brackets
+            clean_line = re.sub(r"<[^>]*>", "<>", clean_line)
 
             # Check for incorrect words
             for incorrect_word, correct_word in self.INCORRECT_WORDS.items():
