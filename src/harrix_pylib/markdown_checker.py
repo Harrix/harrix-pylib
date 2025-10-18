@@ -123,6 +123,7 @@ class MarkdownChecker:
         "markdown": "Markdown",
         # Git and GitHub
         "Github": "GitHub",
+        "github": "GitHub",
         "git": "Git",
     }
 
@@ -138,30 +139,59 @@ class MarkdownChecker:
         self.all_rules = set(self.RULES.keys())
         self.project_root = self._determine_project_root(project_root)
 
-    def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]:
+    def __call__(
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
         """Check Markdown file for compliance with specified rules."""
-        return self.check(filename, exclude_rules)
+        return self.check(filename, select=select, exclude_rules=exclude_rules)
 
-    def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]:
+    def check(
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
         """Check Markdown file for compliance with specified rules.
 
         Args:
 
         - `filename` (`Path | str`): Path to the Markdown file to check.
-        - `exclude_rules` (`set | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+        - `select` (`set[str] | None`): Set of rule codes to check. If specified, only these rules will be checked.
+          Defaults to `None` (check all rules).
+        - `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+          If both `select` and `exclude_rules` are specified, `select` is applied first, then `exclude_rules`
+          filters from the selected rules.
 
         Returns:
 
         - `list[str]`: List of error messages found during checking.
 
+        Examples:
+
+        ```python
+        checker = MarkdownChecker()
+
+        # Check all rules
+        errors = checker.check("file.md")
+
+        # Check only specific rules (like ruff --select)
+        errors = checker.check("file.md", select={"H001", "H002"})
+
+        # Check all rules except specified (like ruff --ignore)
+        errors = checker.check("file.md", exclude_rules={"H006"})
+
+        # Combine: select specific rules and exclude some from them
+        errors = checker.check("file.md", select={"H001", "H002", "H003"}, exclude_rules={"H002"})
+        ```
+
         """
         filename = Path(filename)
-        return list(self._check_all_rules(filename, self.all_rules - (exclude_rules or set())))
+        active_rules = self._determine_active_rules(select, exclude_rules)
+        return list(self._check_all_rules(filename, active_rules))
 
     def check_directory(
         self,
         directory: Path | str,
-        exclude_rules: set | None = None,
+        *,
+        select: set[str] | None = None,
+        exclude_rules: set[str] | None = None,
         additional_ignore_patterns: list[str] | None = None,
     ) -> dict[str, list[str]]:
         """Check all Markdown files in directory for compliance with specified rules.
@@ -169,7 +199,9 @@ class MarkdownChecker:
         Args:
 
         - `directory` (`Path | str`): Directory to search for Markdown files.
-        - `exclude_rules` (`set | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+        - `select` (`set[str] | None`): Set of rule codes to check. If specified, only these rules will be checked.
+          Defaults to `None` (check all rules).
+        - `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
         - `additional_ignore_patterns` (`list[str] | None`): Additional patterns to ignore. Defaults to `None`.
 
         Returns:
@@ -180,7 +212,7 @@ class MarkdownChecker:
         results = {}
 
         for md_file in self.find_markdown_files(directory, additional_ignore_patterns):
-            errors = self.check(md_file, exclude_rules)
+            errors = self.check(md_file, select=select, exclude_rules=exclude_rules)
             if errors:  # Only include files with errors
                 results[str(md_file)] = errors
 
@@ -372,6 +404,31 @@ class MarkdownChecker:
 
         except yaml.YAMLError as e:
             yield self._format_error("H000", f"YAML parsing error: {e}", filename, line_num=1)
+
+    def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]:
+        """Determine which rules should be active based on select and exclude parameters.
+
+        Args:
+
+        - `select` (`set[str] | None`): Set of rule codes to check. If None, all rules are considered.
+        - `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking.
+
+        Returns:
+
+        - `set[str]`: Set of active rule codes to apply.
+
+        """
+        # Start with selected rules or all rules
+        if select is not None:
+            active = select & self.all_rules  # Intersect with valid rules
+        else:
+            active = self.all_rules.copy()
+
+        # Remove excluded rules
+        if exclude_rules is not None:
+            active -= exclude_rules
+
+        return active
 
     def _determine_project_root(self, project_root: Path | str | None) -> Path:
         """Determine the project root directory."""

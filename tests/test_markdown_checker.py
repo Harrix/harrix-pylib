@@ -150,6 +150,30 @@ def test_markdown_checker() -> None:
         call_excluded_errors = checker(file_with_issues, exclude_rules={"H001"})
         assert len(call_excluded_errors) < len(all_errors)
 
+        # Test select parameter - check only specific rules
+        select_errors = checker.check(file_with_issues, select={"H001", "H002"})
+        assert all("H001" in e or "H002" in e for e in select_errors)
+        assert not any("H005" in e or "H006" in e for e in select_errors)
+
+        # Test select with only one rule
+        only_h001 = checker.check(file_with_issues, select={"H001"})
+        assert all("H001" in e for e in only_h001)
+        assert len(only_h001) > 0
+
+        # Test select with non-existent rule (should be ignored)
+        select_with_invalid = checker.check(file_with_issues, select={"H001", "H999"})
+        assert all("H001" in e for e in select_with_invalid)
+        assert not any("H999" in e for e in select_with_invalid)
+
+        # Test combining select and exclude_rules
+        combined_errors = checker.check(file_with_issues, select={"H001", "H002", "H005"}, exclude_rules={"H005"})
+        assert all("H001" in e or "H002" in e for e in combined_errors)
+        assert not any("H005" in e or "H006" in e for e in combined_errors)
+
+        # Test select with __call__ method
+        call_select_errors = checker(file_with_issues, select={"H001"})
+        assert all("H001" in e for e in call_select_errors)
+
         # Test YAML parsing error
         invalid_yaml_file = temp_path / "invalid_yaml.md"
         invalid_yaml_file.write_text("---\nlang: en\ninvalid: yaml: content\n---\n# Content", encoding="utf-8")
