@@ -21,6 +21,8 @@ class MarkdownChecker:
     - **H004** - The lang field is missing in YAML.
     - **H005** - In YAML, lang is not set to `en` or `ru`.
     - **H006** - Incorrect word form used (e.g., "markdown" instead of "Markdown", "latex" instead of "LaTeX").
+    - **H007** - Incorrect code block language identifier
+      (e.g., "console" instead of "shell", "py" instead of "python").
 
     """
 
@@ -32,6 +34,7 @@ class MarkdownChecker:
         "H004": "The lang field is missing in YAML",
         "H005": "In YAML, lang is not set to en or ru",
         "H006": "Incorrect word form used",
+        "H007": "Incorrect code block language identifier",
     }
 
     # Dictionary of incorrect word forms that should be flagged
@@ -274,9 +277,68 @@ class MarkdownChecker:
 
             yield from self._check_yaml_rules(filename, yaml_part, all_lines, rules)
             yield from self._check_content_rules(filename, all_lines, yaml_end_line, rules)
+            yield from self._check_code_rules(filename, all_lines, yaml_end_line, rules)
 
         except Exception as e:
             yield self._format_error("H000", f"Exception error: {e}", filename)
+
+    def _check_code_rules(
+        self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set
+    ) -> Generator[str, None, None]:
+        """Check code block language identifier rules.
+
+        Args:
+
+        - `filename` (`Path`): Path to the Markdown file being checked.
+        - `all_lines` (`list[str]`): All lines from the original file.
+        - `yaml_end_line` (`int`): Line number where YAML block ends (1-based).
+        - `rules` (`set`): Set of rule codes to apply during checking.
+
+        Yields:
+
+        - `str`: Error message for each code block language issue found.
+
+        """
+        if "H007" not in rules:
+            return
+
+        # Get content lines (after YAML)
+        content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
+
+        # Use identify_code_blocks to determine which lines are code block delimiters
+        code_block_info = list(h.md.identify_code_blocks(content_lines))
+
+        # Dictionary of incorrect language identifiers and their correct replacements
+        incorrect_languages = {
+            "console": "shell",
+            "py": "python",
+        }
+
+        for i, (line, is_code_block) in enumerate(code_block_info):
+            # Check if this is a code block delimiter line (starts with ```)
+            if not is_code_block:
+                continue
+
+            # Check if line starts with ``` and has a language identifier
+            match = re.match(r"^(`{3,})(\w+)?", line)
+            if not match:
+                continue
+
+            language = match.group(2)
+            if not language:
+                continue
+
+            # Check if the language identifier is incorrect
+            if language in incorrect_languages:
+                # Calculate actual line number in the original file
+                actual_line_num = (yaml_end_line - 1) + i + 1  # Convert to 1-based
+
+                # Find column position of the language identifier
+                col = match.start(2) + 1  # +1 for 1-based column numbering
+
+                correct_language = incorrect_languages[language]
+                error_message = f'{self.RULES["H007"]}: "{language}" should be "{correct_language}"'
+                yield self._format_error("H007", error_message, filename, line_num=actual_line_num, col=col)
 
     def _check_content_rules(
         self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set
@@ -419,10 +481,7 @@ class MarkdownChecker:
 
         """
         # Start with selected rules or all rules
-        if select is not None:
-            active = select & self.all_rules  # Intersect with valid rules
-        else:
-            active = self.all_rules.copy()
+        active = select & self.all_rules if select is not None else self.all_rules.copy()
 
         # Remove excluded rules
         if exclude_rules is not None:

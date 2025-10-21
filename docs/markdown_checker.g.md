@@ -18,9 +18,11 @@ lang: en
   - [⚙️ Method `check_directory`](#%EF%B8%8F-method-check_directory)
   - [⚙️ Method `find_markdown_files`](#%EF%B8%8F-method-find_markdown_files)
   - [⚙️ Method `_check_all_rules`](#%EF%B8%8F-method-_check_all_rules)
+  - [⚙️ Method `_check_code_rules`](#%EF%B8%8F-method-_check_code_rules)
   - [⚙️ Method `_check_content_rules`](#%EF%B8%8F-method-_check_content_rules)
   - [⚙️ Method `_check_filename_rules`](#%EF%B8%8F-method-_check_filename_rules)
   - [⚙️ Method `_check_yaml_rules`](#%EF%B8%8F-method-_check_yaml_rules)
+  - [⚙️ Method `_determine_active_rules`](#%EF%B8%8F-method-_determine_active_rules)
   - [⚙️ Method `_determine_project_root`](#%EF%B8%8F-method-_determine_project_root)
   - [⚙️ Method `_find_yaml_block_end_line`](#%EF%B8%8F-method-_find_yaml_block_end_line)
   - [⚙️ Method `_find_yaml_end_line`](#%EF%B8%8F-method-_find_yaml_end_line)
@@ -47,11 +49,13 @@ Rules:
 - **H004** - The lang field is missing in YAML.
 - **H005** - In YAML, lang is not set to `en` or `ru`.
 - **H006** - Incorrect word form used (e.g., "markdown" instead of "Markdown", "latex" instead of "LaTeX").
+- **H007** - Incorrect code block language identifier
+  (e.g., "console" instead of "shell", "py" instead of "python").
 
 <details>
 <summary>Code:</summary>
 
-```python
+````python
 class MarkdownChecker:
 
     # Rule constants for easier maintenance
@@ -62,6 +66,7 @@ class MarkdownChecker:
         "H004": "The lang field is missing in YAML",
         "H005": "In YAML, lang is not set to en or ru",
         "H006": "Incorrect word form used",
+        "H007": "Incorrect code block language identifier",
     }
 
     # Dictionary of incorrect word forms that should be flagged
@@ -153,6 +158,7 @@ class MarkdownChecker:
         "markdown": "Markdown",
         # Git and GitHub
         "Github": "GitHub",
+        "github": "GitHub",
         "git": "Git",
     }
 
@@ -168,30 +174,59 @@ class MarkdownChecker:
         self.all_rules = set(self.RULES.keys())
         self.project_root = self._determine_project_root(project_root)
 
-    def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]:
+    def __call__(
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
         """Check Markdown file for compliance with specified rules."""
-        return self.check(filename, exclude_rules)
+        return self.check(filename, select=select, exclude_rules=exclude_rules)
 
-    def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]:
+    def check(
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
         """Check Markdown file for compliance with specified rules.
 
         Args:
 
         - `filename` (`Path | str`): Path to the Markdown file to check.
-        - `exclude_rules` (`set | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+        - `select` (`set[str] | None`): Set of rule codes to check. If specified, only these rules will be checked.
+          Defaults to `None` (check all rules).
+        - `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+          If both `select` and `exclude_rules` are specified, `select` is applied first, then `exclude_rules`
+          filters from the selected rules.
 
         Returns:
 
         - `list[str]`: List of error messages found during checking.
 
+        Examples:
+
+        ```python
+        checker = MarkdownChecker()
+
+        # Check all rules
+        errors = checker.check("file.md")
+
+        # Check only specific rules (like ruff --select)
+        errors = checker.check("file.md", select={"H001", "H002"})
+
+        # Check all rules except specified (like ruff --ignore)
+        errors = checker.check("file.md", exclude_rules={"H006"})
+
+        # Combine: select specific rules and exclude some from them
+        errors = checker.check("file.md", select={"H001", "H002", "H003"}, exclude_rules={"H002"})
+        ```
+
         """
         filename = Path(filename)
-        return list(self._check_all_rules(filename, self.all_rules - (exclude_rules or set())))
+        active_rules = self._determine_active_rules(select, exclude_rules)
+        return list(self._check_all_rules(filename, active_rules))
 
     def check_directory(
         self,
         directory: Path | str,
-        exclude_rules: set | None = None,
+        *,
+        select: set[str] | None = None,
+        exclude_rules: set[str] | None = None,
         additional_ignore_patterns: list[str] | None = None,
     ) -> dict[str, list[str]]:
         """Check all Markdown files in directory for compliance with specified rules.
@@ -199,7 +234,9 @@ class MarkdownChecker:
         Args:
 
         - `directory` (`Path | str`): Directory to search for Markdown files.
-        - `exclude_rules` (`set | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+        - `select` (`set[str] | None`): Set of rule codes to check. If specified, only these rules will be checked.
+          Defaults to `None` (check all rules).
+        - `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
         - `additional_ignore_patterns` (`list[str] | None`): Additional patterns to ignore. Defaults to `None`.
 
         Returns:
@@ -210,7 +247,7 @@ class MarkdownChecker:
         results = {}
 
         for md_file in self.find_markdown_files(directory, additional_ignore_patterns):
-            errors = self.check(md_file, exclude_rules)
+            errors = self.check(md_file, select=select, exclude_rules=exclude_rules)
             if errors:  # Only include files with errors
                 results[str(md_file)] = errors
 
@@ -272,9 +309,68 @@ class MarkdownChecker:
 
             yield from self._check_yaml_rules(filename, yaml_part, all_lines, rules)
             yield from self._check_content_rules(filename, all_lines, yaml_end_line, rules)
+            yield from self._check_code_rules(filename, all_lines, yaml_end_line, rules)
 
         except Exception as e:
             yield self._format_error("H000", f"Exception error: {e}", filename)
+
+    def _check_code_rules(
+        self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set
+    ) -> Generator[str, None, None]:
+        """Check code block language identifier rules.
+
+        Args:
+
+        - `filename` (`Path`): Path to the Markdown file being checked.
+        - `all_lines` (`list[str]`): All lines from the original file.
+        - `yaml_end_line` (`int`): Line number where YAML block ends (1-based).
+        - `rules` (`set`): Set of rule codes to apply during checking.
+
+        Yields:
+
+        - `str`: Error message for each code block language issue found.
+
+        """
+        if "H007" not in rules:
+            return
+
+        # Get content lines (after YAML)
+        content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
+
+        # Use identify_code_blocks to determine which lines are code block delimiters
+        code_block_info = list(h.md.identify_code_blocks(content_lines))
+
+        # Dictionary of incorrect language identifiers and their correct replacements
+        incorrect_languages = {
+            "console": "shell",
+            "py": "python",
+        }
+
+        for i, (line, is_code_block) in enumerate(code_block_info):
+            # Check if this is a code block delimiter line (starts with ```)
+            if not is_code_block:
+                continue
+
+            # Check if line starts with ``` and has a language identifier
+            match = re.match(r"^(`{3,})(\w+)?", line)
+            if not match:
+                continue
+
+            language = match.group(2)
+            if not language:
+                continue
+
+            # Check if the language identifier is incorrect
+            if language in incorrect_languages:
+                # Calculate actual line number in the original file
+                actual_line_num = (yaml_end_line - 1) + i + 1  # Convert to 1-based
+
+                # Find column position of the language identifier
+                col = match.start(2) + 1  # +1 for 1-based column numbering
+
+                correct_language = incorrect_languages[language]
+                error_message = f'{self.RULES["H007"]}: "{language}" should be "{correct_language}"'
+                yield self._format_error("H007", error_message, filename, line_num=actual_line_num, col=col)
 
     def _check_content_rules(
         self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set
@@ -403,6 +499,28 @@ class MarkdownChecker:
         except yaml.YAMLError as e:
             yield self._format_error("H000", f"YAML parsing error: {e}", filename, line_num=1)
 
+    def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]:
+        """Determine which rules should be active based on select and exclude parameters.
+
+        Args:
+
+        - `select` (`set[str] | None`): Set of rule codes to check. If None, all rules are considered.
+        - `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking.
+
+        Returns:
+
+        - `set[str]`: Set of active rule codes to apply.
+
+        """
+        # Start with selected rules or all rules
+        active = select & self.all_rules if select is not None else self.all_rules.copy()
+
+        # Remove excluded rules
+        if exclude_rules is not None:
+            active -= exclude_rules
+
+        return active
+
     def _determine_project_root(self, project_root: Path | str | None) -> Path:
         """Determine the project root directory."""
         if project_root:
@@ -501,7 +619,7 @@ class MarkdownChecker:
         except ValueError:
             # File is outside project root
             return str(filename.resolve())
-```
+````
 
 </details>
 
@@ -532,7 +650,7 @@ def __init__(self, project_root: Path | str | None = None) -> None:
 ### ⚙️ Method `__call__`
 
 ```python
-def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]
+def __call__(self, filename: Path | str) -> list[str]
 ```
 
 Check Markdown file for compliance with specified rules.
@@ -541,8 +659,10 @@ Check Markdown file for compliance with specified rules.
 <summary>Code:</summary>
 
 ```python
-def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]:
-        return self.check(filename, exclude_rules)
+def __call__(
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
+        return self.check(filename, select=select, exclude_rules=exclude_rules)
 ```
 
 </details>
@@ -550,7 +670,7 @@ def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> li
 ### ⚙️ Method `check`
 
 ```python
-def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]
+def check(self, filename: Path | str) -> list[str]
 ```
 
 Check Markdown file for compliance with specified rules.
@@ -558,19 +678,44 @@ Check Markdown file for compliance with specified rules.
 Args:
 
 - `filename` (`Path | str`): Path to the Markdown file to check.
-- `exclude_rules` (`set | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+- `select` (`set[str] | None`): Set of rule codes to check. If specified, only these rules will be checked.
+  Defaults to `None` (check all rules).
+- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+  If both `select` and `exclude_rules` are specified, `select` is applied first, then `exclude_rules`
+  filters from the selected rules.
 
 Returns:
 
 - `list[str]`: List of error messages found during checking.
 
+Examples:
+
+```python
+checker = MarkdownChecker()
+
+# Check all rules
+errors = checker.check("file.md")
+
+# Check only specific rules (like ruff --select)
+errors = checker.check("file.md", select={"H001", "H002"})
+
+# Check all rules except specified (like ruff --ignore)
+errors = checker.check("file.md", exclude_rules={"H006"})
+
+# Combine: select specific rules and exclude some from them
+errors = checker.check("file.md", select={"H001", "H002", "H003"}, exclude_rules={"H002"})
+```
+
 <details>
 <summary>Code:</summary>
 
 ```python
-def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]:
+def check(
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
         filename = Path(filename)
-        return list(self._check_all_rules(filename, self.all_rules - (exclude_rules or set())))
+        active_rules = self._determine_active_rules(select, exclude_rules)
+        return list(self._check_all_rules(filename, active_rules))
 ```
 
 </details>
@@ -578,7 +723,7 @@ def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[
 ### ⚙️ Method `check_directory`
 
 ```python
-def check_directory(self, directory: Path | str, exclude_rules: set | None = None, additional_ignore_patterns: list[str] | None = None) -> dict[str, list[str]]
+def check_directory(self, directory: Path | str) -> dict[str, list[str]]
 ```
 
 Check all Markdown files in directory for compliance with specified rules.
@@ -586,7 +731,9 @@ Check all Markdown files in directory for compliance with specified rules.
 Args:
 
 - `directory` (`Path | str`): Directory to search for Markdown files.
-- `exclude_rules` (`set | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+- `select` (`set[str] | None`): Set of rule codes to check. If specified, only these rules will be checked.
+  Defaults to `None` (check all rules).
+- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
 - `additional_ignore_patterns` (`list[str] | None`): Additional patterns to ignore. Defaults to `None`.
 
 Returns:
@@ -600,13 +747,15 @@ Returns:
 def check_directory(
         self,
         directory: Path | str,
-        exclude_rules: set | None = None,
+        *,
+        select: set[str] | None = None,
+        exclude_rules: set[str] | None = None,
         additional_ignore_patterns: list[str] | None = None,
     ) -> dict[str, list[str]]:
         results = {}
 
         for md_file in self.find_markdown_files(directory, additional_ignore_patterns):
-            errors = self.check(md_file, exclude_rules)
+            errors = self.check(md_file, select=select, exclude_rules=exclude_rules)
             if errors:  # Only include files with errors
                 results[str(md_file)] = errors
 
@@ -692,10 +841,81 @@ def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, N
 
             yield from self._check_yaml_rules(filename, yaml_part, all_lines, rules)
             yield from self._check_content_rules(filename, all_lines, yaml_end_line, rules)
+            yield from self._check_code_rules(filename, all_lines, yaml_end_line, rules)
 
         except Exception as e:
             yield self._format_error("H000", f"Exception error: {e}", filename)
 ```
+
+</details>
+
+### ⚙️ Method `_check_code_rules`
+
+```python
+def _check_code_rules(self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set) -> Generator[str, None, None]
+```
+
+Check code block language identifier rules.
+
+Args:
+
+- `filename` (`Path`): Path to the Markdown file being checked.
+- `all_lines` (`list[str]`): All lines from the original file.
+- `yaml_end_line` (`int`): Line number where YAML block ends (1-based).
+- `rules` (`set`): Set of rule codes to apply during checking.
+
+Yields:
+
+- `str`: Error message for each code block language issue found.
+
+<details>
+<summary>Code:</summary>
+
+````python
+def _check_code_rules(
+        self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set
+    ) -> Generator[str, None, None]:
+        if "H007" not in rules:
+            return
+
+        # Get content lines (after YAML)
+        content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
+
+        # Use identify_code_blocks to determine which lines are code block delimiters
+        code_block_info = list(h.md.identify_code_blocks(content_lines))
+
+        # Dictionary of incorrect language identifiers and their correct replacements
+        incorrect_languages = {
+            "console": "shell",
+            "py": "python",
+        }
+
+        for i, (line, is_code_block) in enumerate(code_block_info):
+            # Check if this is a code block delimiter line (starts with ```)
+            if not is_code_block:
+                continue
+
+            # Check if line starts with ``` and has a language identifier
+            match = re.match(r"^(`{3,})(\w+)?", line)
+            if not match:
+                continue
+
+            language = match.group(2)
+            if not language:
+                continue
+
+            # Check if the language identifier is incorrect
+            if language in incorrect_languages:
+                # Calculate actual line number in the original file
+                actual_line_num = (yaml_end_line - 1) + i + 1  # Convert to 1-based
+
+                # Find column position of the language identifier
+                col = match.start(2) + 1  # +1 for 1-based column numbering
+
+                correct_language = incorrect_languages[language]
+                error_message = f'{self.RULES["H007"]}: "{language}" should be "{correct_language}"'
+                yield self._format_error("H007", error_message, filename, line_num=actual_line_num, col=col)
+````
 
 </details>
 
@@ -858,6 +1078,40 @@ def _check_yaml_rules(
 
         except yaml.YAMLError as e:
             yield self._format_error("H000", f"YAML parsing error: {e}", filename, line_num=1)
+```
+
+</details>
+
+### ⚙️ Method `_determine_active_rules`
+
+```python
+def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]
+```
+
+Determine which rules should be active based on select and exclude parameters.
+
+Args:
+
+- `select` (`set[str] | None`): Set of rule codes to check. If None, all rules are considered.
+- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking.
+
+Returns:
+
+- `set[str]`: Set of active rule codes to apply.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]:
+        # Start with selected rules or all rules
+        active = select & self.all_rules if select is not None else self.all_rules.copy()
+
+        # Remove excluded rules
+        if exclude_rules is not None:
+            active -= exclude_rules
+
+        return active
 ```
 
 </details>

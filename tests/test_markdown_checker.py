@@ -5,6 +5,8 @@ from tempfile import TemporaryDirectory
 
 import harrix_pylib as h
 
+EXPECTED_H007_ERRORS = 2
+
 
 def test_markdown_checker() -> None:
     """Test MarkdownChecker for all rules and scenarios."""
@@ -187,3 +189,38 @@ def test_markdown_checker() -> None:
         # Test with string path
         string_path_errors = checker.check(str(valid_file))
         assert len(string_path_errors) == 0
+
+        # Test H007: Incorrect code block language identifiers
+        code_lang_file = temp_path / "code_lang_test.md"
+        code_lang_file.write_text(
+            (
+                "---\nlang: en\n---\n"
+                "# Code blocks\n"
+                "```console\n$ echo test\n```\n"
+                "```py\nprint('test')\n```\n"
+                "```shell\n$ echo correct\n```\n"
+                "```python\nprint('correct')\n```"
+            ),
+            encoding="utf-8",
+        )
+        errors = checker.check(code_lang_file)
+        # Should find 2 H007 errors for console and py
+        h007_errors = [e for e in errors if "H007" in e]
+        assert len(h007_errors) == EXPECTED_H007_ERRORS
+        assert any("console" in error and "shell" in error for error in h007_errors)
+        assert any("py" in error and "python" in error for error in h007_errors)
+
+        # Test H007: Only check H007 rule
+        h007_only_errors = checker.check(code_lang_file, select={"H007"})
+        assert len(h007_only_errors) == EXPECTED_H007_ERRORS
+        assert all("H007" in error for error in h007_only_errors)
+
+        # Test H007: Exclude H007 rule
+        no_h007_errors = checker.check(code_lang_file, exclude_rules={"H007"})
+        assert not any("H007" in error for error in no_h007_errors)
+
+        # Test H007: Code blocks without language should not trigger H007
+        no_lang_file = temp_path / "no_lang_code.md"
+        no_lang_file.write_text("---\nlang: en\n---\n# Code without language\n```\nJust text\n```", encoding="utf-8")
+        errors = checker.check(no_lang_file, select={"H007"})
+        assert len(errors) == 0
