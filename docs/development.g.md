@@ -4,7 +4,7 @@ author-email: anton.b.sergienko@gmail.com
 lang: en
 ---
 
-# Development
+# ⚙️ Development
 
 <details>
 <summary>📖 Contents ⬇️</summary>
