@@ -47,13 +47,13 @@ class MarkdownChecker:
         "e-mail": "email",
         # CMS with Cyrillic letters (that look like Latin)
         "cms": "CMS",
-        "СЬS": "CMS",  # noqa: RUF001
-        "СMS": "CMS",  # noqa: RUF001
-        "СМS": "CMS",  # noqa: RUF001
-        "сms": "CMS",  # noqa: RUF001
-        "смs": "CMS",  # noqa: RUF001
-        "СМС": "CMS",  # noqa: RUF001
-        "смс": "CMS",
+        "СЬS": "CMS",  # noqa: RUF001 # ignore: HP001
+        "СMS": "CMS",  # noqa: RUF001 # ignore: HP001
+        "СМS": "CMS",  # noqa: RUF001 # ignore: HP001
+        "сms": "CMS",  # noqa: RUF001 # ignore: HP001
+        "смs": "CMS",  # noqa: RUF001 # ignore: HP001
+        "СМС": "CMS",  # noqa: RUF001 # ignore: HP001
+        "смс": "CMS",  # ignore: HP001
         # File extensions and tech terms
         "css": "CSS",
         "html": "HTML",
@@ -68,40 +68,40 @@ class MarkdownChecker:
         "exe": "EXE",
         "qml": "QML",
         # Web document variations
-        "web документ": "веб-документ",
-        "Web документ": "веб-документ",
-        "WEB документ": "веб-документ",
+        "web документ": "веб-документ",  # ignore: HP001
+        "Web документ": "веб-документ",  # ignore: HP001
+        "WEB документ": "веб-документ",  # ignore: HP001
         # Web application variations
-        "web приложение": "веб-приложение",
-        "Web приложение": "веб-приложение",
-        "WEB приложение": "веб-приложение",
-        "web приложения": "веб-приложения",
-        "Web приложения": "веб-приложения",
-        "WEB приложения": "веб-приложения",
+        "web приложение": "веб-приложение",  # ignore: HP001
+        "Web приложение": "веб-приложение",  # ignore: HP001
+        "WEB приложение": "веб-приложение",  # ignore: HP001
+        "web приложения": "веб-приложения",  # ignore: HP001
+        "Web приложения": "веб-приложения",  # ignore: HP001
+        "WEB приложения": "веб-приложения",  # ignore: HP001
         # Programming languages with Cyrillic letters
         "c++": "C++",
-        "с++": "C++",  # noqa: RUF001
-        "С++": "C++",  # noqa: RUF001
-        "с#": "C#",  # noqa: RUF001
-        "С#": "C#",  # noqa: RUF001
-        "сpp": "cpp",  # noqa: RUF001
-        "срр": "cpp",  # noqa: RUF001
+        "с++": "C++",  # noqa: RUF001 # ignore: HP001
+        "С++": "C++",  # noqa: RUF001 # ignore: HP001
+        "с#": "C#",  # noqa: RUF001 # ignore: HP001
+        "С#": "C#",  # noqa: RUF001 # ignore: HP001
+        "сpp": "cpp",  # noqa: RUF001 # ignore: HP001
+        "срр": "cpp",  # noqa: RUF001 # ignore: HP001
         "pascal": "Pascal",
         # C++ standards
         "c++11": "C++11",
-        "с++11": "C++11",  # noqa: RUF001
-        "С++11": "C++11",  # noqa: RUF001
+        "с++11": "C++11",  # noqa: RUF001 # ignore: HP001
+        "С++11": "C++11",  # noqa: RUF001 # ignore: HP001
         "c++17": "C++17",
-        "с++17": "C++17",  # noqa: RUF001
-        "С++17": "C++17",  # noqa: RUF001
+        "с++17": "C++17",  # noqa: RUF001 # ignore: HP001
+        "С++17": "C++17",  # noqa: RUF001 # ignore: HP001
         "c++20": "C++20",
-        "с++20": "C++20",  # noqa: RUF001
-        "С++20": "C++20",  # noqa: RUF001
+        "с++20": "C++20",  # noqa: RUF001  # ignore: HP001
+        "С++20": "C++20",  # noqa: RUF001  # ignore: HP001
         # OK variations
         "ok": "OK",
         "Ok": "OK",
-        "ОК": "OK",  # noqa: RUF001
-        "ок": "OK",
+        "ОК": "OK",  # noqa: RUF001 # ignore: HP001
+        "ок": "OK",  # ignore: HP001
         # ID variations
         "id": "ID",
         "Id": "ID",
@@ -112,8 +112,8 @@ class MarkdownChecker:
         # PHP
         "Php": "PHP",
         # Cyrillic characters
-        "Йе": "Qt",
-        "йе": "Qt",
+        "Йе": "Qt",  # ignore: HP001
+        "йе": "Qt",  # ignore: HP001
         # Qt
         "qt": "Qt",
         # Android and Java
@@ -398,7 +398,7 @@ class MarkdownChecker:
                 else:
                     # Word with special characters - use lookahead/lookbehind
                     # to ensure it's not part of a larger word
-                    pattern = rf"(?<![a-zA-Zа-яА-ЯёЁ0-9_]){escaped_word}(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001
+                    pattern = rf"(?<![a-zA-Zа-яА-ЯёЁ0-9_]){escaped_word}(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001 # ignore: HP001
 
                 # Search in clean_line for the incorrect word
                 if re.search(pattern, clean_line):
