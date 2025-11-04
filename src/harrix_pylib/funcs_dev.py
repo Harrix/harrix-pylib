@@ -411,30 +411,30 @@ def write_in_output_txt(*, is_show_output: bool = True) -> Callable:
     """
 
     def decorator(func: Callable) -> Callable:
-        output_lines = []
+        class Wrapper:
+            def __init__(self) -> None:
+                self.output_lines = []
 
-        def wrapper(*args: Any, **kwargs: Any) -> None:
-            output_lines.clear()
-            start_time = time.time()
-            func(*args, **kwargs)
-            end_time = time.time()
-            elapsed_time = end_time - start_time
-            wrapper.add_line(f"Execution time: {elapsed_time:.4f} seconds")
-            temp_path = get_project_root() / "temp"
-            if not temp_path.exists():
-                temp_path.mkdir(parents=True, exist_ok=True)
-            file = Path(temp_path / "output.txt")
-            output_text = "\n".join(output_lines) if output_lines else ""
+            def __call__(self, *args: Any, **kwargs: Any) -> None:
+                self.output_lines.clear()
+                start_time = time.time()
+                func(*args, **kwargs)
+                end_time = time.time()
+                elapsed_time = end_time - start_time
+                self.add_line(f"Execution time: {elapsed_time:.4f} seconds")
+                temp_path = get_project_root() / "temp"
+                if not temp_path.exists():
+                    temp_path.mkdir(parents=True, exist_ok=True)
+                file = Path(temp_path / "output.txt")
+                output_text = "\n".join(self.output_lines) if self.output_lines else ""
+                file.write_text(output_text, encoding="utf8")
+                if is_show_output:
+                    h.file.open_file_or_folder(file)
 
-            file.write_text(output_text, encoding="utf8")
-            if is_show_output:
-                h.file.open_file_or_folder(file)
+            def add_line(self, line: str) -> None:
+                self.output_lines.append(line)
+                print(line)
 
-        def add_line(line: str) -> None:
-            output_lines.append(line)
-            print(line)
-
-        wrapper.add_line = add_line
-        return wrapper
+        return Wrapper()
 
     return decorator

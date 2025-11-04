@@ -171,26 +171,26 @@ def test_rename_largest_images_to_featured() -> None:
 
         # Create test image files with different sizes
         # Subdir1 - small.jpg (1KB), medium.png (2KB), large.jpg (3KB)
-        with Path.open(subdir1 / "small.jpg", "wb") as f:
+        with (subdir1 / "small.jpg").open("wb") as f:
             f.write(b"0" * 1024)
-        with Path.open(subdir1 / "medium.png", "wb") as f:
+        with (subdir1 / "medium.png").open("wb") as f:
             f.write(b"0" * 2048)
-        with Path.open(subdir1 / "large.jpg", "wb") as f:
+        with (subdir1 / "large.jpg").open("wb") as f:
             f.write(b"0" * 3072)
 
         # Subdir2 - only one image
-        with Path.open(subdir2 / "only_image.png", "wb") as f:
+        with (subdir2 / "only_image.png").open("wb") as f:
             f.write(b"0" * 1024)
 
         # Subdir4 - with existing featured-image.jpg
-        with Path.open(subdir4 / "image1.jpg", "wb") as f:
+        with (subdir4 / "image1.jpg").open("wb") as f:
             f.write(b"0" * 1024)
-        with Path.open(subdir4 / "featured-image.jpg", "wb") as f:
+        with (subdir4 / "featured-image.jpg").open("wb") as f:
             f.write(b"0" * 512)
 
         # Create a test file to test file path handling
         test_file = temp_path / "test_file.txt"
-        with Path.open(test_file, "w") as f:
+        with test_file.open("w") as f:
             f.write("test")
 
         # Test 1: Run the function with the temp directory
@@ -222,7 +222,7 @@ def test_rename_largest_images_to_featured() -> None:
         # Create a new subdirectory with an image for this test
         string_test_dir = temp_path / "string_test"
         string_test_dir.mkdir()
-        with Path.open(string_test_dir / "image.jpg", "wb") as f:
+        with (string_test_dir / "image.jpg").open("wb") as f:
             f.write(b"0" * 1024)
 
         # Use string path
@@ -1313,8 +1313,8 @@ def test_collect_text_files_to_markdown() -> None:
         # File with cp1251 encoding (create a simple ASCII file for testing fallback)
         file5 = temp_path / "cp1251.txt"
         # Write with invalid UTF-8 to trigger UnicodeDecodeError
-        with Path.open(file5, "wb") as f:
-            f.write(b"\xff\xfe\x41\x00\x42\x00")  # Invalid UTF-8 bytes
+        with file5.open("wb") as f:
+            f.write(b"\xff\xfe\x41\x00\x42\x00")
 
         file_paths = [file1, file2, file3, file4]
 

@@ -1126,7 +1126,8 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
         try:
             download_timeout = 10
             response = requests.get(remote_url, timeout=download_timeout)
-            if response.status_code != codes.ok:
+            codes_ok = 200
+            if response.status_code != codes_ok:
                 return markdown_line  # If download failed, return the original line.
             # Save the image content to the candidate file.
             with candidate_file.open("wb") as file:

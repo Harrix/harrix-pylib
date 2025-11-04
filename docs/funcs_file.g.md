@@ -1758,8 +1758,8 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
             if file_path.stat().st_size < min_file_size:  # Too small to be valid PDF
                 return False
 
-            with Path.open(file_path, "rb") as f:
-                header = f.read(8)
+            with Path(file_path).open("rb") as f:
+                header: bytes = f.read(8)
                 return header.startswith(b"%PDF-")
         except Exception:
             return False
@@ -1767,7 +1767,7 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
     def extract_pdf_metadata(file_path: Path | str) -> tuple[str | None, str | None, str | None]:
         """Extract author, title, and year from PDF file with better error handling."""
         try:
-            with Path.open(Path(file_path), "rb") as f:
+            with Path(file_path).open("rb") as f:
                 # Check file size
                 f.seek(0, 2)  # Go to end
                 file_size = f.tell()
@@ -1780,7 +1780,7 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
                     return None, None, None
 
                 # Check PDF header
-                header = f.read(8)
+                header: bytes = f.read(8)
                 f.seek(0)
                 if not header.startswith(b"%PDF-"):
                     if is_verbose:
@@ -1863,7 +1863,7 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
     def extract_pdf_text_metadata(file_path: Path | str) -> tuple[str | None, str | None, str | None]:
         """Extract metadata from PDF text content as fallback."""
         try:
-            with Path.open(Path(file_path), "rb") as f:
+            with Path(file_path).open("rb") as f:
                 pdf_reader = pypdf.PdfReader(f, strict=False)
 
                 # Check if file is encrypted
