@@ -23,7 +23,12 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = ["isort>=5.13.2", "pytest>=8.3.4", "vermin>=1.6.0"]
+dev = [
+    "isort>=5.13.2",
+    "pytest>=8.3.4",
+    "ty>=0.0.1a25",
+    "vermin>=1.6.0",
+]
 
 # Disabling some pydocstyle rules that conflict with Markdown-style documentation.
 # We use Markdown for docstrings instead of traditional reST/Napoleon/Google formats:
