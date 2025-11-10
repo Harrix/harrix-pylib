@@ -936,6 +936,48 @@ def test_generate_toc_with_links() -> None:
 
     assert md_after == md_applied
 
+    md_contents_false = """---
+contents: false
+lang: en
+---
+
+# Title
+
+<details>
+<summary>📖 Contents ⬇️</summary>
+
+## Contents
+
+- [Section](#section)
+
+</details>
+
+## Section
+Text
+"""
+
+    expected_contents_false = """---
+contents: false
+lang: en
+---
+
+# Title
+
+## Section
+Text
+"""
+    expected_contents_false = expected_contents_false.rstrip("\n") + "\n"
+
+    assert h.md.generate_toc_with_links_content(md_contents_false) == expected_contents_false
+
+    with TemporaryDirectory() as temp_folder:
+        temp_file = Path(temp_folder) / "note.md"
+        temp_file.write_text(md_contents_false, encoding="utf-8")
+
+        h.md.generate_toc_with_links(temp_file)
+
+        assert temp_file.read_text(encoding="utf-8") == expected_contents_false
+
 
 def test_generate_toc_with_links_content() -> None:
     current_folder = h.dev.get_project_root()
