@@ -571,6 +571,9 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
         combined_yaml.pop(key, None)
     if "lang" in combined_yaml and isinstance(combined_yaml["lang"], list):
         combined_yaml["lang"] = "en" if "en" in combined_yaml["lang"] else combined_yaml["lang"][0]
+    contents_value = combined_yaml.get("contents")
+    if contents_value is False or contents_value == [False]:
+        combined_yaml.pop("contents", None)
     adding_path = "/".join(md_file.parent.parts[len(folder_path.parts) :])
 
     # Prepare the final content
