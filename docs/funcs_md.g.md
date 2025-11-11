@@ -2379,6 +2379,8 @@ print(h.md.generate_toc_with_links_content(text))
 def generate_toc_with_links_content(markdown_text: str) -> str:
     yaml_md, _ = split_yaml_content(markdown_text)
     data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+    if isinstance(data_yaml, dict) and data_yaml.get("contents") is False:
+        return remove_toc_content(markdown_text)
     lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
 
     # Generate TOC
