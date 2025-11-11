@@ -557,6 +557,9 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
                     all_attributions.extend(value)
                 else:
                     all_attributions.append(value)
+            elif key == "contents" and value is False:
+                # Skip contents: false
+                continue
             else:
                 # For all other fields, use standard merging
                 merge_yaml_values(key, value, combined_yaml)
