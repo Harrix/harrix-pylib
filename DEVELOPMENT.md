@@ -5,15 +5,15 @@
 
 ## Contents
 
-- [Deploy on an empty machine](#deploy-on-an-empty-machine)
+- [🚀 Deploy on an empty machine](#-deploy-on-an-empty-machine)
   - [Prerequisites](#prerequisites)
   - [Installation steps](#installation-steps)
-- [CLI commands](#cli-commands)
-- [Adding a new function](#adding-a-new-function)
+- [💻 CLI commands](#-cli-commands)
+- [➕ Adding a new function](#-adding-a-new-function)
 
 </details>
 
-## Deploy on an empty machine
+## 🚀 Deploy on an empty machine
 
 ### Prerequisites
 
@@ -39,7 +39,7 @@ Install the following software:
 
 4. Run `uv sync`.
 
-## CLI commands
+## 💻 CLI commands
 
 CLI commands after installation:
 
@@ -55,7 +55,7 @@ CLI commands after installation:
 - `uv sync --upgrade` — update all project libraries (sometimes you need to call twice).
 - `vermin src` — determines the minimum version of Python. However, if the version is below 3.10, we stick with 3.10 because Python 3.10 annotations are used.
 
-## Adding a new function
+## ➕ Adding a new function
 
 - Install [harrix-swiss-knife](https://github.com/Harrix/harrix-swiss-knife).
 - Add the function in `src/harrix_pylib/funcs_<module>.py`.
