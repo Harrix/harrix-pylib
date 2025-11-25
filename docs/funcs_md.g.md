@@ -2420,30 +2420,68 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     else:
         toc = f"<details>\n<summary>📖 Contents ⬇️</summary>\n\n## Contents\n\n{toc}\n\n</details>"
 
+    # Find position of old TOC before removing it
+    content_without_yaml = remove_yaml_content(markdown_text)
+    lines = content_without_yaml.splitlines()
+    old_toc_position = None
+
+    for i, line in enumerate(lines):
+        # Check for TOC opening tag (TOC cannot be inside code blocks)
+        if line.strip() == "<details>":
+            next_line_idx = i + 1
+            if (
+                next_line_idx < len(lines)
+                and "<summary>" in lines[next_line_idx]
+                and (
+                    "📖 Contents" in lines[next_line_idx] or "📖 Содержание ⬇️" in lines[next_line_idx]  # ignore: HP001
+                )
+            ):
+                old_toc_position = i
+                break
+
     # Delete old TOC and its header
     content_without_yaml = remove_yaml_content(remove_toc_content(markdown_text))
 
     # Paste TOC
-    is_stop_searching_place_toc = False
-    is_first_paragraph = False
-    new_lines = []
-    lines = content_without_yaml.splitlines()
+    if old_toc_position is not None:
+        # Insert TOC at the old position
+        new_lines = []
+        lines = content_without_yaml.splitlines()
+        # If old position was at the end or beyond, append TOC
+        if old_toc_position >= len(lines):
+            new_lines = [*lines, toc]
+        else:
+            for i, line in enumerate(lines):
+                if i == old_toc_position:
+                    # Insert TOC before the line at this position
+                    new_lines.append(toc)
+                    new_lines.append(line)
+                else:
+                    new_lines.append(line)
+        content_without_yaml = "\n".join(new_lines)
+    else:
+        # Use old logic if TOC was not found
+        is_stop_searching_place_toc = False
+        is_first_paragraph = False
+        new_lines = []
+        lines = content_without_yaml.splitlines()
 
-    for line, is_code_block in identify_code_blocks(lines):
-        new_lines.append(line)
-        if is_code_block:
-            continue
-        if line.startswith("##"):
-            if not is_stop_searching_place_toc and len(toc_lines) > 1:
-                new_lines.insert(len(new_lines) - 1, toc + "\n")
-            is_stop_searching_place_toc = True
-        if is_stop_searching_place_toc or line.startswith(("# ", "![")) or not line.strip():
-            continue
-        if line and not is_first_paragraph and len(toc_lines) > 1:
-            new_lines.append("\n" + toc)
-            is_first_paragraph = True
-            is_stop_searching_place_toc = True
-    content_without_yaml = "\n".join(new_lines)
+        for line, is_code_block in identify_code_blocks(lines):
+            new_lines.append(line)
+            if is_code_block:
+                continue
+            if line.startswith("##"):
+                if not is_stop_searching_place_toc and len(toc_lines) > 1:
+                    new_lines.insert(len(new_lines) - 1, toc + "\n")
+                is_stop_searching_place_toc = True
+            if is_stop_searching_place_toc or line.startswith(("# ", "![")) or not line.strip():
+                continue
+            if line and not is_first_paragraph and len(toc_lines) > 1:
+                new_lines.append("\n" + toc)
+                is_first_paragraph = True
+                is_stop_searching_place_toc = True
+        content_without_yaml = "\n".join(new_lines)
+
     if content_without_yaml[-1] != "\n":
         content_without_yaml += "\n"
 
