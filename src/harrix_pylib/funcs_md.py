@@ -2132,12 +2132,13 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
         lines = content_without_yaml.splitlines()
         # If old position was at the end or beyond, append TOC
         if old_toc_position >= len(lines):
-            new_lines = [*lines, toc]
+            new_lines = [*lines, toc + "\n\n"]
         else:
             for i, line in enumerate(lines):
                 if i == old_toc_position:
                     # Insert TOC before the line at this position
-                    new_lines.append(toc)
+                    # Add \n\n after TOC to ensure two empty lines after </details>
+                    new_lines.append(toc + "\n\n")
                     new_lines.append(line)
                 else:
                     new_lines.append(line)
