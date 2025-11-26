@@ -1,10 +1,10 @@
 """Tests for the functions in the md module of harrix_pylib."""
 
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import pendulum
 import pytest
 
 import harrix_pylib as h
@@ -21,7 +21,7 @@ def test_add_diary_entry_in_year() -> None:
         message, file_path = h.md.add_diary_entry_in_year(temp_path, front_matter, entry_content)
 
         # Assertions for Test 1
-        current_year = pendulum.now().strftime("%Y")
+        current_year = datetime.now(timezone.utc).strftime("%Y")
         expected_file_path = temp_path / f"{current_year}.md"
         assert file_path == expected_file_path
         assert expected_file_path.exists()
@@ -37,8 +37,8 @@ def test_add_diary_entry_in_year() -> None:
         assert "</details>" in content
 
         # Check entry format
-        current_date = pendulum.now().strftime("%Y-%m-%d")
-        current_time = pendulum.now().strftime("%H:%M")
+        current_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        current_time = datetime.now(timezone.utc).strftime("%H:%M")
         assert f"## {current_date}" in content
         assert f"### {current_time}" in content
         assert entry_content in content
@@ -63,7 +63,7 @@ def test_add_diary_new_dairy_in_year() -> None:
     front_matter = "---\ntitle: Test Diary\n---\n"
 
     # Assertions for Test 1
-    current_year = pendulum.now().strftime("%Y")
+    current_year = datetime.now(timezone.utc).strftime("%Y")
 
     # Test 1: Test add_diary_new_dairy_in_year
     # Create a new temporary directory to test with a fresh file
@@ -102,7 +102,7 @@ lang: ru
         assert "File" in result_msg
 
         # Extract the date components from the result path for testing
-        current_date = pendulum.now()
+        current_date = datetime.now(timezone.utc)
         year = current_date.strftime("%Y")
         month = current_date.strftime("%m")
         day = current_date.strftime("%Y-%m-%d")
@@ -127,7 +127,7 @@ lang: ru
             content = file.read()
             assert beginning_of_md in content
             assert f"# {day}\n\n" in content
-            assert f"## {pendulum.now().strftime('%H:%M')}\n\n" in content
+            assert f"## {datetime.now(timezone.utc).strftime('%H:%M')}\n\n" in content
 
         # Test without images
         is_with_images = False
@@ -146,7 +146,7 @@ lang: ru
             content = file.read()
             assert beginning_of_md in content
             assert f"# {day}\n\n" in content
-            assert f"## {pendulum.now().strftime('%H:%M')}\n\n" in content
+            assert f"## {datetime.now(timezone.utc).strftime('%H:%M')}\n\n" in content
 
 
 def test_add_diary_new_dream() -> None:
@@ -169,7 +169,7 @@ lang: ru
         assert "File" in result_msg
 
         # Extract the date components from the result path for testing
-        current_date = pendulum.now()
+        current_date = datetime.now(timezone.utc)
         year = current_date.strftime("%Y")
         month = current_date.strftime("%m")
         day = current_date.strftime("%Y-%m-%d")
@@ -194,7 +194,7 @@ lang: ru
             content = file.read()
             assert beginning_of_md in content
             assert f"# {day}" in content
-            assert f"## {pendulum.now().strftime('%H:%M')}" in content
+            assert f"## {datetime.now(timezone.utc).strftime('%H:%M')}" in content
             count_i_dont_remember = 16
             assert content.count("`` — I don't remember.\n") == count_i_dont_remember
 
@@ -215,7 +215,7 @@ lang: ru
             content = file.read()
             assert beginning_of_md in content
             assert f"# {day}" in content
-            assert f"## {pendulum.now().strftime('%H:%M')}" in content
+            assert f"## {datetime.now(timezone.utc).strftime('%H:%M')}" in content
             count_i_dont_remember = 16
             assert content.count("`` — I don't remember.\n") == count_i_dont_remember
 
@@ -226,7 +226,7 @@ def test_add_diary_new_dream_in_year() -> None:
         temp_path = Path(temp_dir)
         front_matter = "---\ntitle: Test Diary\n---\n"
 
-        current_year = pendulum.now().strftime("%Y")
+        current_year = datetime.now(timezone.utc).strftime("%Y")
         expected_file_path = temp_path / f"{current_year}.md"
 
         # Test 1: Test add_diary_new_dream_in_year
@@ -272,7 +272,7 @@ def test_add_diary_new_note() -> None:
         assert "File" in result_msg
 
         # Extract the date components from the result path for testing
-        current_date = pendulum.now()
+        current_date = datetime.now(timezone.utc)
         year = current_date.strftime("%Y")
         month = current_date.strftime("%m")
         day = current_date.strftime("%Y-%m-%d")
@@ -787,7 +787,7 @@ def test_generate_short_note_toc_with_links_content() -> None:
 
 def test_generate_summaries() -> None:
     # Get the current year for testing
-    current_year = pendulum.now().year
+    current_year = datetime.now(timezone.utc).year
 
     # Create a temporary directory for testing
     with TemporaryDirectory() as temp_dir:

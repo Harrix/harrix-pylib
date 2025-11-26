@@ -93,7 +93,7 @@ print(message)
 
 ```python
 def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_content: str) -> tuple[str, Path]:
-    current_date = pendulum.now()
+    current_date = datetime.now(timezone.utc)
     year = current_date.strftime("%Y")
 
     path_dream = Path(path_dream)
@@ -235,8 +235,8 @@ def add_diary_new_diary(
     path_diary: Path | str, beginning_of_md: str, *, is_with_images: bool = False
 ) -> tuple[str, Path]:
     text = f"{beginning_of_md}\n\n"
-    text += f"# {pendulum.now().strftime('%Y-%m-%d')}\n\n"
-    text += f"## {pendulum.now().strftime('%H:%M')}\n\n"
+    text += f"# {datetime.now(timezone.utc).strftime('%Y-%m-%d')}\n\n"
+    text += f"## {datetime.now(timezone.utc).strftime('%H:%M')}\n\n"
     return add_diary_new_note(path_diary, text, is_with_images=is_with_images)
 ```
 
@@ -296,8 +296,8 @@ def add_diary_new_dream(
     path_dream: Path | str, beginning_of_md: str, *, is_with_images: bool = False
 ) -> tuple[str, Path]:
     text = f"{beginning_of_md}\n"
-    text += f"# {pendulum.now().strftime('%Y-%m-%d')}\n\n"
-    text += f"## {pendulum.now().strftime('%H:%M')}\n\n"
+    text += f"# {datetime.now(timezone.utc).strftime('%Y-%m-%d')}\n\n"
+    text += f"## {datetime.now(timezone.utc).strftime('%H:%M')}\n\n"
     text += ("`` — I don't remember.\n\n" * 16)[:-1]
     return add_diary_new_note(path_dream, text, is_with_images=is_with_images)
 ```
@@ -379,7 +379,7 @@ result_msg, result_path = h.md.add_diary_new_note("C:/Diary/", text, is_with_ima
 
 ```python
 def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool) -> tuple[str, Path]:
-    current_date = pendulum.now()
+    current_date = datetime.now(timezone.utc)
     year = current_date.strftime("%Y")
     month = current_date.strftime("%m")
     day = current_date.strftime("%Y-%m-%d")
@@ -2128,7 +2128,7 @@ def generate_summaries(folder: Path | str) -> str:
     dir_name = path.name
 
     # Get the current year
-    current_year = pendulum.now().year
+    current_year = datetime.now(timezone.utc).year
 
     # Dictionary to store counts and entries by year
     year_counts = {}
@@ -2449,12 +2449,13 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
         lines = content_without_yaml.splitlines()
         # If old position was at the end or beyond, append TOC
         if old_toc_position >= len(lines):
-            new_lines = [*lines, toc]
+            new_lines = [*lines, toc + "\n\n"]
         else:
             for i, line in enumerate(lines):
                 if i == old_toc_position:
                     # Insert TOC before the line at this position
-                    new_lines.append(toc)
+                    # Add \n\n after TOC to ensure two empty lines after </details>
+                    new_lines.append(toc + "\n\n")
                     new_lines.append(line)
                 else:
                     new_lines.append(line)
@@ -3354,30 +3355,18 @@ def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool
             # No YAML front matter, don't sort
             return markdown_text
 
-    def is_date_heading(section_text: str) -> pendulum.DateTime | None:
+    def is_date_heading(section_text: str) -> datetime | None:
         """Return datetime if the first line of the section (## XXX) is a date, otherwise None."""
 
-        def _try_parse_date(date_str: str, pattern: str) -> pendulum.DateTime | None:
+        def _try_parse_date(date_str: str, pattern: str) -> datetime | None:
             """Try to parse a date string with a given pattern, return None if it fails."""
             try:
                 # Special handling for year-only pattern
                 if pattern == "%Y":
-                    # For year-only, create a date at the start of the year
+                    # For year-only, create an aware UTC datetime at the start of the year
                     year = int(date_str)
-                    return pendulum.datetime(year, 1, 1, tz=pendulum.UTC)
-                # Convert strftime patterns to pendulum format tokens
-                pattern_map = {
-                    "%Y": "YYYY",
-                    "%m": "MM",
-                    "%d": "DD",
-                    "%H": "HH",
-                    "%M": "mm",
-                }
-                pendulum_pattern = pattern
-                for strftime_token, pendulum_token in pattern_map.items():
-                    pendulum_pattern = pendulum_pattern.replace(strftime_token, pendulum_token)
-                # Directly return the timezone-aware datetime in one line
-                return pendulum.from_format(date_str, pendulum_pattern, tz=pendulum.UTC)
+                    return datetime(year, 1, 1, tzinfo=timezone.utc)
+                return datetime.strptime(date_str, pattern).replace(tzinfo=timezone.utc)
             except (ValueError, TypeError):
                 return None
 
