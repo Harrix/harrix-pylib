@@ -5,7 +5,7 @@ description = "Common functions for working in Python"
 readme = "README.md"
 license = { file = "LICENSE.md" }
 authors = [{ name = "Anton Sergienko", email = "anton.b.sergienko@gmail.com" }]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "libcst>=1.6.0",
     "pypdf>=5.7.0",

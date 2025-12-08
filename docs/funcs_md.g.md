@@ -93,7 +93,7 @@ print(message)
 
 ```python
 def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_content: str) -> tuple[str, Path]:
-    current_date = datetime.now(timezone.utc)
+    current_date = datetime.now(UTC)
     year = current_date.strftime("%Y")
 
     path_dream = Path(path_dream)
@@ -235,8 +235,8 @@ def add_diary_new_diary(
     path_diary: Path | str, beginning_of_md: str, *, is_with_images: bool = False
 ) -> tuple[str, Path]:
     text = f"{beginning_of_md}\n\n"
-    text += f"# {datetime.now(timezone.utc).strftime('%Y-%m-%d')}\n\n"
-    text += f"## {datetime.now(timezone.utc).strftime('%H:%M')}\n\n"
+    text += f"# {datetime.now(UTC).strftime('%Y-%m-%d')}\n\n"
+    text += f"## {datetime.now(UTC).strftime('%H:%M')}\n\n"
     return add_diary_new_note(path_diary, text, is_with_images=is_with_images)
 ```
 
@@ -296,8 +296,8 @@ def add_diary_new_dream(
     path_dream: Path | str, beginning_of_md: str, *, is_with_images: bool = False
 ) -> tuple[str, Path]:
     text = f"{beginning_of_md}\n"
-    text += f"# {datetime.now(timezone.utc).strftime('%Y-%m-%d')}\n\n"
-    text += f"## {datetime.now(timezone.utc).strftime('%H:%M')}\n\n"
+    text += f"# {datetime.now(UTC).strftime('%Y-%m-%d')}\n\n"
+    text += f"## {datetime.now(UTC).strftime('%H:%M')}\n\n"
     text += ("`` — I don't remember.\n\n" * 16)[:-1]
     return add_diary_new_note(path_dream, text, is_with_images=is_with_images)
 ```
@@ -379,7 +379,7 @@ result_msg, result_path = h.md.add_diary_new_note("C:/Diary/", text, is_with_ima
 
 ```python
 def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool) -> tuple[str, Path]:
-    current_date = datetime.now(timezone.utc)
+    current_date = datetime.now(UTC)
     year = current_date.strftime("%Y")
     month = current_date.strftime("%m")
     day = current_date.strftime("%Y-%m-%d")
@@ -2128,7 +2128,7 @@ def generate_summaries(folder: Path | str) -> str:
     dir_name = path.name
 
     # Get the current year
-    current_year = datetime.now(timezone.utc).year
+    current_year = datetime.now(UTC).year
 
     # Dictionary to store counts and entries by year
     year_counts = {}
@@ -3365,8 +3365,8 @@ def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool
                 if pattern == "%Y":
                     # For year-only, create an aware UTC datetime at the start of the year
                     year = int(date_str)
-                    return datetime(year, 1, 1, tzinfo=timezone.utc)
-                return datetime.strptime(date_str, pattern).replace(tzinfo=timezone.utc)
+                    return datetime(year, 1, 1, tzinfo=UTC)
+                return datetime.strptime(date_str, pattern).replace(tzinfo=UTC)
             except (ValueError, TypeError):
                 return None
 
