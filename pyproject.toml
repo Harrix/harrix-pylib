@@ -70,7 +70,7 @@ lint.ignore = [
     "BLE001",
     "PERF203",
     "PLR0913",
-    "PLR0911"
+    "PLR0911",
 ]
 line-length = 120
 
