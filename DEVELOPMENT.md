@@ -58,14 +58,16 @@ CLI commands after installation:
 ## ➕ Adding a new function
 
 - Install [harrix-swiss-knife](https://github.com/Harrix/harrix-swiss-knife).
-- Add the function in `src/harrix_pylib/funcs_<module>.py`.
+- Add the function in `src/harrix_pylib/<module>.py`.
 - Write a docstring in Markdown style.
 - Add an example in Markdown style.
-- Add a test in `tests/funcs_<module>.py`.
+- Add a test in `tests/<module>.py`.
 - Run `pytest`.
+- Run `ty check`.
 - Run `ruff check`.
 - Check error messages in Cursor.
 - From `harrix-swiss-knife`, call the command `Python` → `isort, ruff format, sort, make docs in PY files` and select folder `harrix-pylib`.
+- From `harrix-swiss-knife`, call the command `Python` → `Check PY in ...` and select folder `harrix-pylib`.
 - Create a commit `➕ Add function <function>()`.
 - From `harrix-swiss-knife`, call the command `Python` → `Publish Python library to PyPI`
   and select folder `harrix-pylib`.
