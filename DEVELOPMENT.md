@@ -69,5 +69,4 @@ CLI commands after installation:
 - From `harrix-swiss-knife`, call the command `Python` → `isort, ruff format, sort, make docs in PY files` and select folder `harrix-pylib`.
 - From `harrix-swiss-knife`, call the command `Python` → `Check PY in ...` and select folder `harrix-pylib`.
 - Create a commit `➕ Add function <function>()`.
-- From `harrix-swiss-knife`, call the command `Python` → `Publish Python library to PyPI`
-  and select folder `harrix-pylib`.
+- From `harrix-swiss-knife`, call the command `Python` → `Publish Python library to PyPI` and select folder `harrix-pylib`.
