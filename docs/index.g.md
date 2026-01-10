@@ -8,7 +8,7 @@ lang: en
 
 ![Featured image](https://raw.githubusercontent.com/Harrix/harrix-pylib/refs/heads/main/img/featured-image.svg)
 
-🐍 Common **Python functions (3.10+)** library for my projects for [my projects](https://github.com/Harrix?tab=repositories).
+🐍 Common **Python functions (3.11+)** library for my projects for [my projects](https://github.com/Harrix?tab=repositories).
 
 <details>
 <summary>📖 Contents ⬇️</summary>
