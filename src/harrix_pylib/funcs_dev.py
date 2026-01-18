@@ -136,6 +136,52 @@ def load_config(filename: str, *, is_temp: bool = False) -> dict:
     return config
 
 
+def save_config(config: dict, filename: str, *, is_temp: bool = False) -> None:
+    """Save configuration to a JSON file.
+
+    Args:
+
+    - `config` (`dict`): Configuration dictionary to save.
+    - `filename` (`str`): Path to the JSON configuration file.
+    - `is_temp` (`bool`): If `True`, save to the temporary config file (`config-temp.json`)
+      instead of the main config file. Defaults to `False`.
+
+    Examples:
+
+    ```python
+    import harrix_pylib as h
+
+    config = {"path_github": "C:/GitHub"}
+    h.dev.save_config(config, "config.json")
+    ```
+
+    ```python
+    from pathlib import Path
+
+    import harrix_pylib as h
+
+    config = {"pi": 3.14}
+    h.dev.save_config(config, "config.json")
+    ```
+
+    ```python
+    import harrix_pylib as h
+
+    config = {"path_github": "C:/GitHub/Temp"}
+    h.dev.save_config(config, "config.json", is_temp=True)
+    ```
+
+    """
+    if is_temp:
+        path_obj = Path(filename)
+        temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
+        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path(".") else temp_filename
+
+    config_file = Path(get_project_root()) / filename
+    with config_file.open("w", encoding="utf-8") as file:
+        json.dump(config, file, indent=2, ensure_ascii=False)
+
+
 def run_command(
     command: str,
     *,

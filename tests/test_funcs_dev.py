@@ -1,5 +1,6 @@
 """Tests for the functions in the dev module of harrix_pylib."""
 
+import json
 import platform
 import shutil
 import subprocess
@@ -42,6 +43,37 @@ def test_load_config() -> None:
         assert config_temp2["path_github"] == "C:/GitHub/Temp"
     finally:
         # Clean up temporary config file
+        config_temp_path.unlink(missing_ok=True)
+
+
+def test_save_config() -> None:
+    """Test saving configuration to JSON file."""
+    config_path = Path(h.dev.get_project_root() / "tests/data/config-save.json")
+    config_temp_path = Path(h.dev.get_project_root() / "tests/data/config-save-temp.json")
+
+    test_config = {"path_github": "C:/GitHub/Test", "version": "1.0"}
+    test_config_temp = {"path_github": "C:/GitHub/Temp/Test", "version": "2.0"}
+
+    try:
+        # Test saving main config
+        h.dev.save_config(test_config, str(config_path))
+        assert config_path.exists()
+        loaded_config = json.loads(config_path.read_text(encoding="utf8"))
+        assert loaded_config == test_config
+
+        # Test saving temp config with is_temp=True
+        h.dev.save_config(test_config_temp, str(config_path), is_temp=True)
+        assert config_temp_path.exists()
+        loaded_config_temp = json.loads(config_temp_path.read_text(encoding="utf8"))
+        assert loaded_config_temp == test_config_temp
+
+        # Test saving temp config with relative path
+        h.dev.save_config(test_config_temp, "tests/data/config-save.json", is_temp=True)
+        loaded_config_temp2 = json.loads(config_temp_path.read_text(encoding="utf8"))
+        assert loaded_config_temp2 == test_config_temp
+    finally:
+        # Clean up test config files
+        config_path.unlink(missing_ok=True)
         config_temp_path.unlink(missing_ok=True)
 
 
