@@ -20,7 +20,7 @@ def test_get_project_root() -> None:
 
 
 def test_load_config() -> None:
-    config = h.dev.load_config(str(h.dev.get_project_root() / "tests/data/config.json"))
+    config = h.dev.config_load(str(h.dev.get_project_root() / "tests/data/config.json"))
     assert config["path_github"] == "C:/GitHub"
 
     config_path = Path(h.dev.get_project_root() / "tests/data/config.json")
@@ -31,15 +31,15 @@ def test_load_config() -> None:
 
     try:
         # Test loading main config (default behavior)
-        config = h.dev.load_config(str(config_path))
+        config = h.dev.config_load(str(config_path))
         assert config["path_github"] == "C:/GitHub"
 
         # Test loading temp config with is_temp=True
-        config_temp = h.dev.load_config(str(config_path), is_temp=True)
+        config_temp = h.dev.config_load(str(config_path), is_temp=True)
         assert config_temp["path_github"] == "C:/GitHub/Temp"
 
         # Test loading temp config with relative path
-        config_temp2 = h.dev.load_config("tests/data/config.json", is_temp=True)
+        config_temp2 = h.dev.config_load("tests/data/config.json", is_temp=True)
         assert config_temp2["path_github"] == "C:/GitHub/Temp"
     finally:
         # Clean up temporary config file
@@ -56,19 +56,19 @@ def test_save_config() -> None:
 
     try:
         # Test saving main config
-        h.dev.save_config(test_config, str(config_path))
+        h.dev.config_save(test_config, str(config_path))
         assert config_path.exists()
         loaded_config = json.loads(config_path.read_text(encoding="utf8"))
         assert loaded_config == test_config
 
         # Test saving temp config with is_temp=True
-        h.dev.save_config(test_config_temp, str(config_path), is_temp=True)
+        h.dev.config_save(test_config_temp, str(config_path), is_temp=True)
         assert config_temp_path.exists()
         loaded_config_temp = json.loads(config_temp_path.read_text(encoding="utf8"))
         assert loaded_config_temp == test_config_temp
 
         # Test saving temp config with relative path
-        h.dev.save_config(test_config_temp, "tests/data/config-save.json", is_temp=True)
+        h.dev.config_save(test_config_temp, "tests/data/config-save.json", is_temp=True)
         loaded_config_temp2 = json.loads(config_temp_path.read_text(encoding="utf8"))
         assert loaded_config_temp2 == test_config_temp
     finally:
@@ -86,29 +86,29 @@ def test_update_config_value() -> None:
 
     try:
         # Create initial config file
-        h.dev.save_config(initial_config, str(config_path))
+        h.dev.config_save(initial_config, str(config_path))
 
         # Test updating simple key
-        h.dev.update_config_value("path_github", "C:/GitHub/Updated", str(config_path))
-        config = h.dev.load_config(str(config_path))
+        h.dev.config_update_value("path_github", "C:/GitHub/Updated", str(config_path))
+        config = h.dev.config_load(str(config_path))
         assert config["path_github"] == "C:/GitHub/Updated"
         assert config["version"] == "1.0"  # Other values should remain unchanged
 
         # Test updating nested key using dot notation
-        h.dev.update_config_value("database.host", "remote-host", str(config_path))
-        config = h.dev.load_config(str(config_path))
+        h.dev.config_update_value("database.host", "remote-host", str(config_path))
+        config = h.dev.config_load(str(config_path))
         assert config["database"]["host"] == "remote-host"
         assert config["database"]["port"] == 5432  # Other nested values should remain unchanged
 
         # Test updating with is_temp=True
-        h.dev.save_config(initial_config, str(config_path), is_temp=True)
-        h.dev.update_config_value("version", "2.0", str(config_path), is_temp=True)
-        config_temp = h.dev.load_config(str(config_path), is_temp=True)
+        h.dev.config_save(initial_config, str(config_path), is_temp=True)
+        h.dev.config_update_value("version", "2.0", str(config_path), is_temp=True)
+        config_temp = h.dev.config_load(str(config_path), is_temp=True)
         assert config_temp["version"] == "2.0"
 
         # Test updating with relative path
-        h.dev.update_config_value("path_github", "C:/GitHub/Relative", "tests/data/config-update.json")
-        config2 = h.dev.load_config(str(config_path))
+        h.dev.config_update_value("path_github", "C:/GitHub/Relative", "tests/data/config-update.json")
+        config2 = h.dev.config_load(str(config_path))
         assert config2["path_github"] == "C:/GitHub/Relative"
     finally:
         # Clean up test config files

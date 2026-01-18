@@ -69,7 +69,7 @@ def get_project_root() -> Path:
     return caller_file.parent
 
 
-def load_config(filename: str, *, is_temp: bool = False) -> dict:
+def config_load(filename: str, *, is_temp: bool = False) -> dict:
     """Load configuration from a JSON file.
 
     Args:
@@ -87,7 +87,7 @@ def load_config(filename: str, *, is_temp: bool = False) -> dict:
     ```python
     import harrix-pylib as h
 
-    config = h.dev.load_config("config.json")
+    config = h.dev.config_load("config.json")
     ```
 
     ```python
@@ -98,14 +98,14 @@ def load_config(filename: str, *, is_temp: bool = False) -> dict:
     root_path = h.dev.get_project_root()
     Path(root_path / "config.json").write_text('{"pi": 3.14}', encoding="utf8")
 
-    config = h.dev.load_config("config.json")
+    config = h.dev.config_load("config.json")
     print(config["pi"])  # 3.14
     ```
 
     ```python
     import harrix_pylib as h
 
-    config = h.dev.load_config("config.json", is_temp=True)
+    config = h.dev.config_load("config.json", is_temp=True)
     ```
 
     """
@@ -136,7 +136,7 @@ def load_config(filename: str, *, is_temp: bool = False) -> dict:
     return config
 
 
-def save_config(config: dict, filename: str, *, is_temp: bool = False) -> None:
+def config_save(config: dict, filename: str, *, is_temp: bool = False) -> None:
     """Save configuration to a JSON file.
 
     Args:
@@ -152,7 +152,7 @@ def save_config(config: dict, filename: str, *, is_temp: bool = False) -> None:
     import harrix_pylib as h
 
     config = {"path_github": "C:/GitHub"}
-    h.dev.save_config(config, "config.json")
+    h.dev.config_save(config, "config.json")
     ```
 
     ```python
@@ -161,14 +161,14 @@ def save_config(config: dict, filename: str, *, is_temp: bool = False) -> None:
     import harrix_pylib as h
 
     config = {"pi": 3.14}
-    h.dev.save_config(config, "config.json")
+    h.dev.config_save(config, "config.json")
     ```
 
     ```python
     import harrix_pylib as h
 
     config = {"path_github": "C:/GitHub/Temp"}
-    h.dev.save_config(config, "config.json", is_temp=True)
+    h.dev.config_save(config, "config.json", is_temp=True)
     ```
 
     """
@@ -182,7 +182,7 @@ def save_config(config: dict, filename: str, *, is_temp: bool = False) -> None:
         json.dump(config, file, indent=2, ensure_ascii=False)
 
 
-def update_config_value(key: str, value: object, filename: str, *, is_temp: bool = False) -> None:
+def config_update_value(key: str, value: object, filename: str, *, is_temp: bool = False) -> None:
     """Update a single configuration value and save it to a JSON file.
 
     This function loads the configuration file, updates the specified key with the new value,
@@ -202,30 +202,30 @@ def update_config_value(key: str, value: object, filename: str, *, is_temp: bool
     ```python
     import harrix_pylib as h
 
-    h.dev.update_config_value("path_github", "C:/GitHub/New", "config.json")
+    h.dev.config_update_value("path_github", "C:/GitHub/New", "config.json")
     ```
 
     ```python
     import harrix_pylib as h
 
-    h.dev.update_config_value("version", "2.0", "config.json")
+    h.dev.config_update_value("version", "2.0", "config.json")
     ```
 
     ```python
     import harrix_pylib as h
 
     # Update nested key
-    h.dev.update_config_value("database.host", "localhost", "config.json")
+    h.dev.config_update_value("database.host", "localhost", "config.json")
     ```
 
     ```python
     import harrix_pylib as h
 
-    h.dev.update_config_value("path_github", "C:/GitHub/Temp", "config.json", is_temp=True)
+    h.dev.config_update_value("path_github", "C:/GitHub/Temp", "config.json", is_temp=True)
     ```
 
     """
-    config = load_config(filename, is_temp=is_temp)
+    config = config_load(filename, is_temp=is_temp)
 
     # Handle nested keys (e.g., "section.key")
     keys = key.split(".")
@@ -241,7 +241,7 @@ def update_config_value(key: str, value: object, filename: str, *, is_temp: bool
     current[keys[-1]] = value
 
     # Save the updated config
-    save_config(config, filename, is_temp=is_temp)
+    config_save(config, filename, is_temp=is_temp)
 
 
 def run_command(
