@@ -112,7 +112,7 @@ def config_load(filename: str, *, is_temp: bool = False) -> dict:
     if is_temp:
         path_obj = Path(filename)
         temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
-        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path(".") else temp_filename
+        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path() else temp_filename
 
     config_file = Path(get_project_root()) / filename
     with config_file.open("r", encoding="utf-8") as file:
@@ -175,7 +175,7 @@ def config_save(config: dict, filename: str, *, is_temp: bool = False) -> None:
     if is_temp:
         path_obj = Path(filename)
         temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
-        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path(".") else temp_filename
+        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path() else temp_filename
 
     config_file = Path(get_project_root()) / filename
     with config_file.open("w", encoding="utf-8") as file:
@@ -231,9 +231,7 @@ def config_update_value(key: str, value: object, filename: str, *, is_temp: bool
     keys = key.split(".")
     current = config
     for k in keys[:-1]:
-        if k not in current:
-            current[k] = {}
-        elif not isinstance(current[k], dict):
+        if k not in current or not isinstance(current[k], dict):
             current[k] = {}
         current = current[k]
 

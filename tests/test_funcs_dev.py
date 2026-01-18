@@ -19,7 +19,7 @@ def test_get_project_root() -> None:
     assert (path / "tests").is_dir()
 
 
-def test_load_config() -> None:
+def test_config_load() -> None:
     config = h.dev.config_load(str(h.dev.get_project_root() / "tests/data/config.json"))
     assert config["path_github"] == "C:/GitHub"
 
@@ -46,7 +46,7 @@ def test_load_config() -> None:
         config_temp_path.unlink(missing_ok=True)
 
 
-def test_save_config() -> None:
+def test_config_save() -> None:
     """Test saving configuration to JSON file."""
     config_path = Path(h.dev.get_project_root() / "tests/data/config-save.json")
     config_temp_path = Path(h.dev.get_project_root() / "tests/data/config-save-temp.json")
@@ -77,7 +77,7 @@ def test_save_config() -> None:
         config_temp_path.unlink(missing_ok=True)
 
 
-def test_update_config_value() -> None:
+def test_config_update_value() -> None:
     """Test updating a single configuration value in JSON file."""
     config_path = Path(h.dev.get_project_root() / "tests/data/config-update.json")
     config_temp_path = Path(h.dev.get_project_root() / "tests/data/config-update-temp.json")
@@ -98,7 +98,8 @@ def test_update_config_value() -> None:
         h.dev.config_update_value("database.host", "remote-host", str(config_path))
         config = h.dev.config_load(str(config_path))
         assert config["database"]["host"] == "remote-host"
-        assert config["database"]["port"] == 5432  # Other nested values should remain unchanged
+        port = 5432
+        assert config["database"]["port"] == port  # Other nested values should remain unchanged
 
         # Test updating with is_temp=True
         h.dev.config_save(initial_config, str(config_path), is_temp=True)
