@@ -11,12 +11,220 @@ lang: en
 
 ## Contents
 
+- [🔧 Function `config_load`](#-function-config_load)
+- [🔧 Function `config_save`](#-function-config_save)
+- [🔧 Function `config_update_value`](#-function-config_update_value)
 - [🔧 Function `get_project_root`](#-function-get_project_root)
-- [🔧 Function `load_config`](#-function-load_config)
 - [🔧 Function `run_command`](#-function-run_command)
 - [🔧 Function `run_powershell_script`](#-function-run_powershell_script)
 - [🔧 Function `run_powershell_script_as_admin`](#-function-run_powershell_script_as_admin)
 - [🔧 Function `write_in_output_txt`](#-function-write_in_output_txt)
+
+</details>
+
+## 🔧 Function `config_load`
+
+```python
+def config_load(filename: str) -> dict
+```
+
+Load configuration from a JSON file.
+
+Args:
+
+- `filename` (`str`): Path to the JSON configuration file. Defaults to `None`.
+- `is_temp` (`bool`): If `True`, load the temporary config file (`config-temp.json`)
+  instead of the main config file. Defaults to `False`.
+
+Returns:
+
+- `dict`: Configuration loaded from the file.
+
+Examples:
+
+```python
+import harrix-pylib as h
+
+config = h.dev.config_load("config.json")
+```
+
+```python
+from pathlib import Path
+
+import harrix_pylib as h
+
+root_path = h.dev.get_project_root()
+Path(root_path / "config.json").write_text('{"pi": 3.14}', encoding="utf8")
+
+config = h.dev.config_load("config.json")
+print(config["pi"])  # 3.14
+```
+
+```python
+import harrix_pylib as h
+
+config = h.dev.config_load("config.json", is_temp=True)
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def config_load(filename: str, *, is_temp: bool = False) -> dict:
+    if is_temp:
+        path_obj = Path(filename)
+        temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
+        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path() else temp_filename
+
+    config_file = Path(get_project_root()) / filename
+    with config_file.open("r", encoding="utf-8") as file:
+        config = json.load(file)
+
+    def process_snippet(value: object) -> object:
+        if isinstance(value, str) and value.startswith("snippet:"):
+            snippet_path = Path(get_project_root()) / value.split("snippet:", 1)[1].strip()
+            if not snippet_path.exists():
+                return ""
+            with snippet_path.open("r", encoding="utf-8") as snippet_file:
+                return snippet_file.read()
+        return value
+
+    for key, value in config.items():
+        if isinstance(value, dict):
+            config[key] = {k: process_snippet(v) for k, v in value.items()}
+        else:
+            config[key] = process_snippet(value)
+
+    return config
+```
+
+</details>
+
+## 🔧 Function `config_save`
+
+```python
+def config_save(config: dict, filename: str) -> None
+```
+
+Save configuration to a JSON file.
+
+Args:
+
+- `config` (`dict`): Configuration dictionary to save.
+- `filename` (`str`): Path to the JSON configuration file.
+- `is_temp` (`bool`): If `True`, save to the temporary config file (`config-temp.json`)
+  instead of the main config file. Defaults to `False`.
+
+Examples:
+
+```python
+import harrix_pylib as h
+
+config = {"path_github": "C:/GitHub"}
+h.dev.config_save(config, "config.json")
+```
+
+```python
+from pathlib import Path
+
+import harrix_pylib as h
+
+config = {"pi": 3.14}
+h.dev.config_save(config, "config.json")
+```
+
+```python
+import harrix_pylib as h
+
+config = {"path_github": "C:/GitHub/Temp"}
+h.dev.config_save(config, "config.json", is_temp=True)
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def config_save(config: dict, filename: str, *, is_temp: bool = False) -> None:
+    if is_temp:
+        path_obj = Path(filename)
+        temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
+        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path() else temp_filename
+
+    config_file = Path(get_project_root()) / filename
+    with config_file.open("w", encoding="utf-8") as file:
+        json.dump(config, file, indent=2, ensure_ascii=False)
+```
+
+</details>
+
+## 🔧 Function `config_update_value`
+
+```python
+def config_update_value(key: str, value: object, filename: str) -> None
+```
+
+Update a single configuration value and save it to a JSON file.
+
+This function loads the configuration file, updates the specified key with the new value,
+and saves the updated configuration back to the file.
+
+Args:
+
+- `key` (`str`): Configuration key to update. Supports nested keys using dot notation
+  (e.g., `"section.key"` for nested dictionaries).
+- `value` (`object`): New value to set for the configuration key.
+- `filename` (`str`): Path to the JSON configuration file.
+- `is_temp` (`bool`): If `True`, update the temporary config file (`config-temp.json`)
+  instead of the main config file. Defaults to `False`.
+
+Examples:
+
+```python
+import harrix_pylib as h
+
+h.dev.config_update_value("path_github", "C:/GitHub/New", "config.json")
+```
+
+```python
+import harrix_pylib as h
+
+h.dev.config_update_value("version", "2.0", "config.json")
+```
+
+```python
+import harrix_pylib as h
+
+# Update nested key
+h.dev.config_update_value("database.host", "localhost", "config.json")
+```
+
+```python
+import harrix_pylib as h
+
+h.dev.config_update_value("path_github", "C:/GitHub/Temp", "config.json", is_temp=True)
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def config_update_value(key: str, value: object, filename: str, *, is_temp: bool = False) -> None:
+    config = config_load(filename, is_temp=is_temp)
+
+    # Handle nested keys (e.g., "section.key")
+    keys = key.split(".")
+    current = config
+    for k in keys[:-1]:
+        if k not in current or not isinstance(current[k], dict):
+            current[k] = {}
+        current = current[k]
+
+    # Set the value
+    current[keys[-1]] = value
+
+    # Save the updated config
+    config_save(config, filename, is_temp=is_temp)
+```
 
 </details>
 
@@ -83,71 +291,6 @@ def get_project_root() -> Path:
 
     # Fallback to caller file's parent if no .venv found
     return caller_file.parent
-```
-
-</details>
-
-## 🔧 Function `load_config`
-
-```python
-def load_config(filename: str) -> dict
-```
-
-Load configuration from a JSON file.
-
-Args:
-
-- `filename` (`str`): Path to the JSON configuration file. Defaults to `None`.
-
-Returns:
-
-- `dict`: Configuration loaded from the file.
-
-Examples:
-
-```python
-import harrix-pylib as h
-
-config = h.dev.load_config("config.json")
-```
-
-```python
-from pathlib import Path
-
-import harrix_pylib as h
-
-root_path = h.dev.get_project_root()
-Path(root_path / "config.json").write_text('{"pi": 3.14}', encoding="utf8")
-
-config = h.dev.load_config("config.json")
-print(config["pi"])  # 3.14
-```
-
-<details>
-<summary>Code:</summary>
-
-```python
-def load_config(filename: str) -> dict:
-    config_file = Path(get_project_root()) / filename
-    with config_file.open("r", encoding="utf-8") as file:
-        config = json.load(file)
-
-    def process_snippet(value: object) -> object:
-        if isinstance(value, str) and value.startswith("snippet:"):
-            snippet_path = Path(get_project_root()) / value.split("snippet:", 1)[1].strip()
-            if not snippet_path.exists():
-                return ""
-            with snippet_path.open("r", encoding="utf-8") as snippet_file:
-                return snippet_file.read()
-        return value
-
-    for key, value in config.items():
-        if isinstance(value, dict):
-            config[key] = {k: process_snippet(v) for k, v in value.items()}
-        else:
-            config[key] = process_snippet(value)
-
-    return config
 ```
 
 </details>

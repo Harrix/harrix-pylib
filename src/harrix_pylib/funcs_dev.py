@@ -13,62 +13,6 @@ from typing import Any
 import harrix_pylib as h
 
 
-def get_project_root() -> Path:
-    """Find the root folder of the current project.
-
-    This function traverses up the folder tree from the caller's file location looking for a folder
-    containing a `.venv` folder, which is assumed to indicate the project root. The function
-    automatically detects the file that called it, making it work correctly both with PyPI
-    installations and editable installs.
-
-    Returns:
-
-    - `Path`: The path to the project's root folder.
-
-    Example:
-
-    ```python
-    import harrix_pylib as h
-
-    root_path = h.dev.get_project_root()
-    print(root_path)
-    ```
-
-    """
-    # Get the current stack frames
-    current_frame = inspect.currentframe()
-    if current_frame is None:
-        # Fallback when frame inspection is not available
-        return Path.cwd()
-
-    # Walk through the call stack to find the first frame outside harrix_pylib
-    frame = current_frame.f_back
-    while frame:
-        caller_file = Path(frame.f_globals["__file__"]).resolve()
-
-        # If the caller is not from harrix_pylib, use this frame
-        if "harrix_pylib" not in str(caller_file):
-            break
-
-        frame = frame.f_back
-
-    # If we didn't find a frame outside harrix_pylib, use the last frame
-    if frame is None:
-        frame = current_frame.f_back
-        if frame is None:
-            # Fallback when caller frame is not available
-            return Path.cwd()
-        caller_file = Path(frame.f_globals["__file__"]).resolve()
-
-    # Traverse up the folder tree looking for .venv
-    for parent in caller_file.parents:
-        if (parent / ".venv").exists():
-            return parent
-
-    # Fallback to caller file's parent if no .venv found
-    return caller_file.parent
-
-
 def config_load(filename: str, *, is_temp: bool = False) -> dict:
     """Load configuration from a JSON file.
 
@@ -240,6 +184,62 @@ def config_update_value(key: str, value: object, filename: str, *, is_temp: bool
 
     # Save the updated config
     config_save(config, filename, is_temp=is_temp)
+
+
+def get_project_root() -> Path:
+    """Find the root folder of the current project.
+
+    This function traverses up the folder tree from the caller's file location looking for a folder
+    containing a `.venv` folder, which is assumed to indicate the project root. The function
+    automatically detects the file that called it, making it work correctly both with PyPI
+    installations and editable installs.
+
+    Returns:
+
+    - `Path`: The path to the project's root folder.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    root_path = h.dev.get_project_root()
+    print(root_path)
+    ```
+
+    """
+    # Get the current stack frames
+    current_frame = inspect.currentframe()
+    if current_frame is None:
+        # Fallback when frame inspection is not available
+        return Path.cwd()
+
+    # Walk through the call stack to find the first frame outside harrix_pylib
+    frame = current_frame.f_back
+    while frame:
+        caller_file = Path(frame.f_globals["__file__"]).resolve()
+
+        # If the caller is not from harrix_pylib, use this frame
+        if "harrix_pylib" not in str(caller_file):
+            break
+
+        frame = frame.f_back
+
+    # If we didn't find a frame outside harrix_pylib, use the last frame
+    if frame is None:
+        frame = current_frame.f_back
+        if frame is None:
+            # Fallback when caller frame is not available
+            return Path.cwd()
+        caller_file = Path(frame.f_globals["__file__"]).resolve()
+
+    # Traverse up the folder tree looking for .venv
+    for parent in caller_file.parents:
+        if (parent / ".venv").exists():
+            return parent
+
+    # Fallback to caller file's parent if no .venv found
+    return caller_file.parent
 
 
 def run_command(
