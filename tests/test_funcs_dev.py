@@ -77,6 +77,45 @@ def test_save_config() -> None:
         config_temp_path.unlink(missing_ok=True)
 
 
+def test_update_config_value() -> None:
+    """Test updating a single configuration value in JSON file."""
+    config_path = Path(h.dev.get_project_root() / "tests/data/config-update.json")
+    config_temp_path = Path(h.dev.get_project_root() / "tests/data/config-update-temp.json")
+
+    initial_config = {"path_github": "C:/GitHub", "version": "1.0", "database": {"host": "localhost", "port": 5432}}
+
+    try:
+        # Create initial config file
+        h.dev.save_config(initial_config, str(config_path))
+
+        # Test updating simple key
+        h.dev.update_config_value("path_github", "C:/GitHub/Updated", str(config_path))
+        config = h.dev.load_config(str(config_path))
+        assert config["path_github"] == "C:/GitHub/Updated"
+        assert config["version"] == "1.0"  # Other values should remain unchanged
+
+        # Test updating nested key using dot notation
+        h.dev.update_config_value("database.host", "remote-host", str(config_path))
+        config = h.dev.load_config(str(config_path))
+        assert config["database"]["host"] == "remote-host"
+        assert config["database"]["port"] == 5432  # Other nested values should remain unchanged
+
+        # Test updating with is_temp=True
+        h.dev.save_config(initial_config, str(config_path), is_temp=True)
+        h.dev.update_config_value("version", "2.0", str(config_path), is_temp=True)
+        config_temp = h.dev.load_config(str(config_path), is_temp=True)
+        assert config_temp["version"] == "2.0"
+
+        # Test updating with relative path
+        h.dev.update_config_value("path_github", "C:/GitHub/Relative", "tests/data/config-update.json")
+        config2 = h.dev.load_config(str(config_path))
+        assert config2["path_github"] == "C:/GitHub/Relative"
+    finally:
+        # Clean up test config files
+        config_path.unlink(missing_ok=True)
+        config_temp_path.unlink(missing_ok=True)
+
+
 @pytest.mark.skipif(
     (
         subprocess.run(

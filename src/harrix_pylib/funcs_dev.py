@@ -182,6 +182,68 @@ def save_config(config: dict, filename: str, *, is_temp: bool = False) -> None:
         json.dump(config, file, indent=2, ensure_ascii=False)
 
 
+def update_config_value(key: str, value: object, filename: str, *, is_temp: bool = False) -> None:
+    """Update a single configuration value and save it to a JSON file.
+
+    This function loads the configuration file, updates the specified key with the new value,
+    and saves the updated configuration back to the file.
+
+    Args:
+
+    - `key` (`str`): Configuration key to update. Supports nested keys using dot notation
+      (e.g., `"section.key"` for nested dictionaries).
+    - `value` (`object`): New value to set for the configuration key.
+    - `filename` (`str`): Path to the JSON configuration file.
+    - `is_temp` (`bool`): If `True`, update the temporary config file (`config-temp.json`)
+      instead of the main config file. Defaults to `False`.
+
+    Examples:
+
+    ```python
+    import harrix_pylib as h
+
+    h.dev.update_config_value("path_github", "C:/GitHub/New", "config.json")
+    ```
+
+    ```python
+    import harrix_pylib as h
+
+    h.dev.update_config_value("version", "2.0", "config.json")
+    ```
+
+    ```python
+    import harrix_pylib as h
+
+    # Update nested key
+    h.dev.update_config_value("database.host", "localhost", "config.json")
+    ```
+
+    ```python
+    import harrix_pylib as h
+
+    h.dev.update_config_value("path_github", "C:/GitHub/Temp", "config.json", is_temp=True)
+    ```
+
+    """
+    config = load_config(filename, is_temp=is_temp)
+
+    # Handle nested keys (e.g., "section.key")
+    keys = key.split(".")
+    current = config
+    for k in keys[:-1]:
+        if k not in current:
+            current[k] = {}
+        elif not isinstance(current[k], dict):
+            current[k] = {}
+        current = current[k]
+
+    # Set the value
+    current[keys[-1]] = value
+
+    # Save the updated config
+    save_config(config, filename, is_temp=is_temp)
+
+
 def run_command(
     command: str,
     *,
