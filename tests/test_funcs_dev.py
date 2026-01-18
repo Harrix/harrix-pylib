@@ -3,6 +3,7 @@
 import platform
 import shutil
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -20,6 +21,28 @@ def test_get_project_root() -> None:
 def test_load_config() -> None:
     config = h.dev.load_config(str(h.dev.get_project_root() / "tests/data/config.json"))
     assert config["path_github"] == "C:/GitHub"
+
+    config_path = Path(h.dev.get_project_root() / "tests/data/config.json")
+    config_temp_path = Path(h.dev.get_project_root() / "tests/data/config-temp.json")
+
+    # Create temporary config file
+    config_temp_path.write_text('{"path_github": "C:/GitHub/Temp"}', encoding="utf8")
+
+    try:
+        # Test loading main config (default behavior)
+        config = h.dev.load_config(str(config_path))
+        assert config["path_github"] == "C:/GitHub"
+
+        # Test loading temp config with is_temp=True
+        config_temp = h.dev.load_config(str(config_path), is_temp=True)
+        assert config_temp["path_github"] == "C:/GitHub/Temp"
+
+        # Test loading temp config with relative path
+        config_temp2 = h.dev.load_config("tests/data/config.json", is_temp=True)
+        assert config_temp2["path_github"] == "C:/GitHub/Temp"
+    finally:
+        # Clean up temporary config file
+        config_temp_path.unlink(missing_ok=True)
 
 
 @pytest.mark.skipif(

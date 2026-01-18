@@ -69,12 +69,14 @@ def get_project_root() -> Path:
     return caller_file.parent
 
 
-def load_config(filename: str) -> dict:
+def load_config(filename: str, *, is_temp: bool = False) -> dict:
     """Load configuration from a JSON file.
 
     Args:
 
     - `filename` (`str`): Path to the JSON configuration file. Defaults to `None`.
+    - `is_temp` (`bool`): If `True`, load the temporary config file (`config-temp.json`)
+      instead of the main config file. Defaults to `False`.
 
     Returns:
 
@@ -100,7 +102,18 @@ def load_config(filename: str) -> dict:
     print(config["pi"])  # 3.14
     ```
 
+    ```python
+    import harrix_pylib as h
+
+    config = h.dev.load_config("config.json", is_temp=True)
+    ```
+
     """
+    if is_temp:
+        path_obj = Path(filename)
+        temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
+        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path(".") else temp_filename
+
     config_file = Path(get_project_root()) / filename
     with config_file.open("r", encoding="utf-8") as file:
         config = json.load(file)
