@@ -602,10 +602,7 @@ def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> st
     new_yaml_md = f"---\n{yaml_dumped}---"
 
     # Reconstruct document
-    if content_md:
-        document_new = f"{new_yaml_md}\n\n{content_md}"
-    else:
-        document_new = f"{new_yaml_md}\n"
+    document_new = f"{new_yaml_md}\n\n{content_md}" if content_md else f"{new_yaml_md}\n"
 
     # Save if changed
     if document != document_new:
