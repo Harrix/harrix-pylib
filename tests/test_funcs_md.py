@@ -745,6 +745,63 @@ def test_generate_image_captions_content() -> None:
     assert md_after == h.md.generate_image_captions_content(md)
 
 
+def test_append_yaml_tag() -> None:
+    """Test adding YAML tag to a Markdown file."""
+    md_before = """---
+categories: [it, program]
+tags: [VSCode, FAQ]
+---
+
+# Title
+
+Content here.
+"""
+
+    md_after_expected = """---
+categories: [it, program]
+tags: [VSCode, FAQ]
+author: Anton Sergienko
+---
+
+# Title
+
+Content here.
+"""
+
+    with TemporaryDirectory() as temp_folder:
+        temp_filename = Path(temp_folder) / "test.md"
+        temp_filename.write_text(md_before, encoding="utf-8")
+
+        result = h.md.append_yaml_tag(temp_filename, ("author", "Anton Sergienko"))
+        assert "✅ File" in result
+
+        md_after_actual = temp_filename.read_text(encoding="utf-8")
+        assert md_after_expected == md_after_actual
+
+        # Test updating existing tag
+        result2 = h.md.append_yaml_tag(temp_filename, ("author", "John Doe"))
+        assert "✅ File" in result2
+
+        md_after_updated = temp_filename.read_text(encoding="utf-8")
+        assert "author: John Doe" in md_after_updated
+
+        # Test adding tag to file without YAML
+        md_no_yaml = "# Title\n\nContent here.\n"
+        temp_filename2 = Path(temp_folder) / "test_no_yaml.md"
+        temp_filename2.write_text(md_no_yaml, encoding="utf-8")
+
+        result3 = h.md.append_yaml_tag(temp_filename2, ("author", "Anton Sergienko"))
+        assert "✅ File" in result3
+
+        md_after_no_yaml = temp_filename2.read_text(encoding="utf-8")
+        assert "author: Anton Sergienko" in md_after_no_yaml
+        assert "# Title" in md_after_no_yaml
+
+        # Test with same value (should not change)
+        result4 = h.md.append_yaml_tag(temp_filename2, ("author", "Anton Sergienko"))
+        assert result4 == "File is not changed."
+
+
 def test_generate_short_note_toc_with_links() -> None:
     current_folder = h.dev.get_project_root()
 

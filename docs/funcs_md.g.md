@@ -19,6 +19,7 @@ lang: en
 - [🔧 Function `add_diary_new_note`](#-function-add_diary_new_note)
 - [🔧 Function `add_note`](#-function-add_note)
 - [🔧 Function `append_path_to_local_links_images_line`](#-function-append_path_to_local_links_images_line)
+- [🔧 Function `append_yaml_tag`](#-function-append_yaml_tag)
 - [🔧 Function `combine_markdown_files`](#-function-combine_markdown_files)
 - [🔧 Function `combine_markdown_files_recursively`](#-function-combine_markdown_files_recursively)
 - [🔧 Function `decrease_heading_level_content`](#-function-decrease_heading_level_content)
@@ -499,6 +500,119 @@ def append_path_to_local_links_images_line(markdown_line: str, adding_path: str)
     adding_path = adding_path.replace("\\", "/")
     adding_path = adding_path.removesuffix("/")
     return re.sub(r"\[(.*?)\]\(((?!http).*?)\)", replace_path_in_links, markdown_line)
+```
+
+</details>
+
+## 🔧 Function `append_yaml_tag`
+
+```python
+def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> str
+```
+
+Append a YAML tag to a Markdown file and save it.
+
+This function reads a Markdown file, adds or updates a YAML tag in the front matter,
+and saves the modified file back to disk.
+
+Args:
+
+- `filename` (`Path | str`): The path to the Markdown file to be processed.
+- `tuple_yaml_tag` (`tuple[str, str]`): Tuple of YAML tag. Example: `("author", "Anton Sergienko")`.
+
+Returns:
+
+- `str`: A status message indicating whether the file was modified or not.
+
+Note:
+
+- The function modifies the file in place if changes are made.
+- If the file doesn't have YAML front matter, it will be added.
+- If the YAML tag already exists, it will be updated with the new value.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+h.md.append_yaml_tag("C:/Notes/note.md", ("author", "Anton Sergienko"))
+```
+
+Before processing:
+
+```markdown
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
+---
+
+# Title
+
+Content here.
+```
+
+After processing:
+
+```markdown
+---
+categories: [it, program]
+tags: [VSCode, FAQ]
+author: Anton Sergienko
+---
+
+# Title
+
+Content here.
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> str:
+    expected_tuple_length = 2
+    if not isinstance(tuple_yaml_tag, tuple) or len(tuple_yaml_tag) != expected_tuple_length:
+        return "Invalid tuple_yaml_tag format. Expected tuple[str, str]."
+
+    filename = Path(filename)
+    if not filename.exists():
+        return f"File {filename} does not exist."
+
+    with filename.open(encoding="utf-8") as f:
+        document = f.read()
+
+    yaml_md, content_md = split_yaml_content(document)
+
+    # Load existing YAML or create empty dict
+    if yaml_md:
+        yaml_content = yaml_md.replace("---\n", "").replace("\n---", "").strip()
+        data_yaml = yaml.safe_load(yaml_content) if yaml_content else {}
+    else:
+        data_yaml = {}
+
+    # Check if tag already exists with the same value
+    if tuple_yaml_tag[0] in data_yaml and data_yaml[tuple_yaml_tag[0]] == tuple_yaml_tag[1]:
+        return "File is not changed."
+
+    # Add or update the YAML tag
+    data_yaml[tuple_yaml_tag[0]] = tuple_yaml_tag[1]
+
+    # Reconstruct YAML front matter
+    yaml_dumped = yaml.safe_dump(data_yaml, allow_unicode=True, sort_keys=False, default_flow_style=None)
+    new_yaml_md = f"---\n{yaml_dumped}---"
+
+    # Reconstruct document
+    if content_md:
+        document_new = f"{new_yaml_md}\n\n{content_md}"
+    else:
+        document_new = f"{new_yaml_md}\n"
+
+    # Save if changed
+    if document != document_new:
+        with filename.open("w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ File {filename} applied."
+    return "File is not changed."
 ```
 
 </details>
