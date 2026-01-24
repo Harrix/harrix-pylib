@@ -463,7 +463,7 @@ def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> st
     data_yaml[tuple_yaml_tag[0]] = tuple_yaml_tag[1]
 
     # Reconstruct YAML front matter
-    yaml_dumped = yaml.safe_dump(data_yaml, allow_unicode=True, sort_keys=False, default_flow_style=None)
+    yaml_dumped = yaml.safe_dump(data_yaml, allow_unicode=True, sort_keys=False, default_flow_style=False)
     new_yaml_md = f"---\n{yaml_dumped}---"
 
     # Reconstruct document

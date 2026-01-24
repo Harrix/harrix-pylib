@@ -758,8 +758,12 @@ Content here.
 """
 
     md_after_expected = """---
-categories: [it, program]
-tags: [VSCode, FAQ]
+categories:
+- it
+- program
+tags:
+- VSCode
+- FAQ
 author: Anton Sergienko
 ---
 
