@@ -1054,6 +1054,87 @@ def test_get_yaml_content() -> None:
     assert len(yaml.splitlines()) == correct_count_lines
 
 
+def test_get_set_variables_from_yaml() -> None:
+    """Test collecting YAML variables from all markdown files in folder recursively."""
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Create test files with different YAML variables
+        file1_content = """---
+title: Test File 1
+tags: [python, test]
+categories: [it, program]
+date: 2024-01-01
+---
+
+# Test Content 1
+This is test content."""
+        (temp_path / "file1.md").write_text(file1_content, encoding="utf-8")
+
+        file2_content = """---
+title: Test File 2
+author: John Doe
+tags: [markdown]
+published: true
+---
+
+# Test Content 2
+This is another test content."""
+        (temp_path / "file2.md").write_text(file2_content, encoding="utf-8")
+
+        # Create a subfolder with more files
+        subfolder = temp_path / "subfolder"
+        subfolder.mkdir()
+
+        file3_content = """---
+title: Test File 3
+date: 2024-01-02
+lang: en
+---
+
+# Test Content 3
+This is content in subfolder."""
+        (subfolder / "file3.md").write_text(file3_content, encoding="utf-8")
+
+        # Create a file without YAML
+        file4_content = """# Test Content 4
+This file has no YAML."""
+        (temp_path / "file4.md").write_text(file4_content, encoding="utf-8")
+
+        # Create a hidden folder (should be ignored)
+        hidden_folder = temp_path / ".hidden"
+        hidden_folder.mkdir()
+        hidden_file_content = """---
+title: Hidden File
+secret: true
+---
+
+# Hidden Content"""
+        (hidden_folder / "hidden.md").write_text(hidden_file_content, encoding="utf-8")
+
+        # Call the function
+        variables = h.md.get_set_variables_from_yaml(temp_path)
+
+        # Check that all unique variables are collected
+        expected_variables = ["author", "categories", "date", "lang", "published", "tags", "title"]
+        assert variables == expected_variables
+
+        # Verify that variables from hidden folder are not included
+        assert "secret" not in variables
+
+        # Test with empty folder
+        with TemporaryDirectory() as empty_dir:
+            empty_variables = h.md.get_set_variables_from_yaml(empty_dir)
+            assert empty_variables == []
+
+        # Test with folder containing only files without YAML
+        with TemporaryDirectory() as no_yaml_dir:
+            no_yaml_path = Path(no_yaml_dir)
+            (no_yaml_path / "file.md").write_text("# No YAML", encoding="utf-8")
+            no_yaml_variables = h.md.get_set_variables_from_yaml(no_yaml_path)
+            assert no_yaml_variables == []
+
+
 def test_identify_code_blocks() -> None:
     md = Path(h.dev.get_project_root() / "tests/data/generate_image_captions__before.md").read_text(encoding="utf8")
     _, content = h.md.split_yaml_content(md)
