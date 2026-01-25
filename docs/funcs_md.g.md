@@ -38,6 +38,7 @@ lang: en
 - [🔧 Function `generate_summaries`](#-function-generate_summaries)
 - [🔧 Function `generate_toc_with_links`](#-function-generate_toc_with_links)
 - [🔧 Function `generate_toc_with_links_content`](#-function-generate_toc_with_links_content)
+- [🔧 Function `get_set_variables_from_yaml`](#-function-get_set_variables_from_yaml)
 - [🔧 Function `get_yaml_content`](#-function-get_yaml_content)
 - [🔧 Function `identify_code_blocks`](#-function-identify_code_blocks)
 - [🔧 Function `identify_code_blocks_line`](#-function-identify_code_blocks_line)
@@ -2598,6 +2599,90 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
         content_without_yaml += "\n"
 
     return yaml_md + "\n\n" + content_without_yaml
+```
+
+</details>
+
+## 🔧 Function `get_set_variables_from_yaml`
+
+```python
+def get_set_variables_from_yaml(folder_path: Path | str) -> list[str]
+```
+
+Generate a sorted list of all variables from YAML from all Markdown files in folder recursively.
+
+Args:
+
+- `folder_path` (`Path | str`): Path to the folder containing Markdown files.
+
+Returns:
+
+- `list[str]`: Sorted list of all variables from YAML from all Markdown files.
+  Example: `['categories', 'date', 'tags']`.
+
+Note:
+
+- Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
+  are ignored during processing.
+- Hidden files and folders (those with names starting with a dot) are ignored during processing.
+- The function recursively searches all subfolders.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+md_folder = "./tests/data"
+variables = h.md.get_set_variables_from_yaml(md_folder)
+print(variables)
+# ['categories', 'date', 'tags']
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def get_set_variables_from_yaml(folder_path: Path | str) -> list[str]:
+    folder_path = Path(folder_path)
+    res = set()
+
+    # Recursively find all .md files
+    for md_file in folder_path.rglob("*.md"):
+        # Check if file should be processed
+        if not md_file.is_file():
+            continue
+
+        # Check if any part of the path should be ignored
+        should_skip = False
+        for part in md_file.parts:
+            if h.file.should_ignore_path(part):
+                should_skip = True
+                break
+
+        if should_skip:
+            continue
+
+        try:
+            # Read markdown file
+            markdown_text = md_file.read_text(encoding="utf-8")
+
+            # Get YAML content
+            yaml_content = get_yaml_content(markdown_text)
+
+            # Parse YAML if it exists
+            if yaml_content:
+                yaml_text = yaml_content.replace("---\n", "").replace("\n---", "").strip()
+                if yaml_text:
+                    data_yaml = yaml.safe_load(yaml_text)
+                    if isinstance(data_yaml, dict):
+                        # Add all keys to the set
+                        for key in data_yaml:
+                            res.add(key)
+        except (OSError, yaml.YAMLError, UnicodeDecodeError):
+            # Skip files with errors (e.g., encoding issues, invalid YAML)
+            continue
+
+    return sorted(res)
 ```
 
 </details>

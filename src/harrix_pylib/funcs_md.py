@@ -2271,63 +2271,6 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     return yaml_md + "\n\n" + content_without_yaml
 
 
-def get_yaml_content(markdown_text: str) -> str:
-    r"""Get YAML from text of the Markdown file.
-
-    Markdown before processing:
-
-    ```markdown
-    ---
-    categories: [it, program]
-    tags: [VSCode, FAQ]
-    ---
-
-    # Installing VSCode
-
-    ```
-
-    Text after processing:
-
-    ```markdown
-    ---
-    categories: [it, program]
-    tags: [VSCode, FAQ]
-    ---
-    ```
-
-    Args:
-
-    - `markdown_text` (str): Text of the Markdown file.
-
-    Returns:
-
-    - `str`: YAML from the Markdown file.
-
-    Examples:
-
-    ```python
-    import harrix-pylib as h
-
-    yaml_content = h.md.get_yaml_content("---\ncategories: [it]\n---\n\nText")
-    print(yaml_content)  # Text
-    ```
-
-    ```python
-    from pathlib import Path
-    import harrix-pylib as h
-
-    md = Path("article.md").read_text(encoding="utf8")
-    yaml_content = h.md.get_yaml_content(md)
-    print(yaml_content)
-    ```
-
-    """
-    find = re.search(r"^---(.|\n)*?---\n", markdown_text.lstrip(), re.DOTALL)
-    if find:
-        return find.group().rstrip()
-    return ""
-
-
 def get_set_variables_from_yaml(folder_path: Path | str) -> list[str]:
     """Generate a sorted list of all variables from YAML from all Markdown files in folder recursively.
 
@@ -2399,6 +2342,63 @@ def get_set_variables_from_yaml(folder_path: Path | str) -> list[str]:
             continue
 
     return sorted(res)
+
+
+def get_yaml_content(markdown_text: str) -> str:
+    r"""Get YAML from text of the Markdown file.
+
+    Markdown before processing:
+
+    ```markdown
+    ---
+    categories: [it, program]
+    tags: [VSCode, FAQ]
+    ---
+
+    # Installing VSCode
+
+    ```
+
+    Text after processing:
+
+    ```markdown
+    ---
+    categories: [it, program]
+    tags: [VSCode, FAQ]
+    ---
+    ```
+
+    Args:
+
+    - `markdown_text` (str): Text of the Markdown file.
+
+    Returns:
+
+    - `str`: YAML from the Markdown file.
+
+    Examples:
+
+    ```python
+    import harrix-pylib as h
+
+    yaml_content = h.md.get_yaml_content("---\ncategories: [it]\n---\n\nText")
+    print(yaml_content)  # Text
+    ```
+
+    ```python
+    from pathlib import Path
+    import harrix-pylib as h
+
+    md = Path("article.md").read_text(encoding="utf8")
+    yaml_content = h.md.get_yaml_content(md)
+    print(yaml_content)
+    ```
+
+    """
+    find = re.search(r"^---(.|\n)*?---\n", markdown_text.lstrip(), re.DOTALL)
+    if find:
+        return find.group().rstrip()
+    return ""
 
 
 def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
