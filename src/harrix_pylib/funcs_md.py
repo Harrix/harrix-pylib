@@ -1996,7 +1996,7 @@ def generate_summaries(folder: Path | str) -> str:
                         if rating_match:
                             extracted_rating = rating_match.group(1)
 
-                valid_entries.append((heading, extracted_rating if extracted_rating else ""))
+                valid_entries.append((heading, extracted_rating or ""))
 
         # Check if this is a pure year file (like "2023.md") or a special category file (like "Before-2013.md")
         length_str_year = 4
