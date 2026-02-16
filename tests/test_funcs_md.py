@@ -21,7 +21,8 @@ def test_add_diary_entry_in_year() -> None:
         message, file_path = h.md.add_diary_entry_in_year(temp_path, front_matter, entry_content)
 
         # Assertions for Test 1
-        current_year = datetime.now(UTC).strftime("%Y")
+        now_local = datetime.now(UTC).astimezone()
+        current_year = now_local.strftime("%Y")
         expected_file_path = temp_path / f"{current_year}.md"
         assert file_path == expected_file_path
         assert expected_file_path.exists()
@@ -36,9 +37,9 @@ def test_add_diary_entry_in_year() -> None:
         assert "## Contents" in content
         assert "</details>" in content
 
-        # Check entry format
-        current_date = datetime.now(UTC).strftime("%Y-%m-%d")
-        current_time = datetime.now(UTC).strftime("%H:%M")
+        # Check entry format (uses local time)
+        current_date = now_local.strftime("%Y-%m-%d")
+        current_time = now_local.strftime("%H:%M")
         assert f"## {current_date}" in content
         assert f"### {current_time}" in content
         assert entry_content in content
@@ -62,8 +63,8 @@ def test_add_diary_new_dairy_in_year() -> None:
     # Test setup
     front_matter = "---\ntitle: Test Diary\n---\n"
 
-    # Assertions for Test 1
-    current_year = datetime.now(UTC).strftime("%Y")
+    # Assertions for Test 1 (uses local time)
+    current_year = datetime.now(UTC).astimezone().strftime("%Y")
 
     # Test 1: Test add_diary_new_dairy_in_year
     # Create a new temporary directory to test with a fresh file
@@ -101,11 +102,12 @@ lang: ru
         # Check if the message indicates file creation
         assert "File" in result_msg
 
-        # Extract the date components from the result path for testing
-        current_date = datetime.now(UTC)
-        year = current_date.strftime("%Y")
-        month = current_date.strftime("%m")
-        day = current_date.strftime("%Y-%m-%d")
+        # Extract the date components from the result path for testing (uses local time)
+        now_local = datetime.now(UTC).astimezone()
+        year = now_local.strftime("%Y")
+        month = now_local.strftime("%m")
+        day = now_local.strftime("%Y-%m-%d")
+        current_time = now_local.strftime("%H:%M")
 
         # Check if the diary structure is created correctly
         diary_year_path = base_path / year
@@ -127,7 +129,7 @@ lang: ru
             content = file.read()
             assert beginning_of_md in content
             assert f"# {day}\n\n" in content
-            assert f"## {datetime.now(UTC).strftime('%H:%M')}\n\n" in content
+            assert f"## {current_time}\n\n" in content
 
         # Test without images
         is_with_images = False
@@ -146,7 +148,7 @@ lang: ru
             content = file.read()
             assert beginning_of_md in content
             assert f"# {day}\n\n" in content
-            assert f"## {datetime.now(UTC).strftime('%H:%M')}\n\n" in content
+            assert f"## {current_time}\n\n" in content
 
 
 def test_add_diary_new_dream() -> None:
@@ -168,11 +170,12 @@ lang: ru
         # Check if the message indicates file creation
         assert "File" in result_msg
 
-        # Extract the date components from the result path for testing
-        current_date = datetime.now(UTC)
-        year = current_date.strftime("%Y")
-        month = current_date.strftime("%m")
-        day = current_date.strftime("%Y-%m-%d")
+        # Extract the date components from the result path for testing (uses local time)
+        now_local = datetime.now(UTC).astimezone()
+        year = now_local.strftime("%Y")
+        month = now_local.strftime("%m")
+        day = now_local.strftime("%Y-%m-%d")
+        current_time = now_local.strftime("%H:%M")
 
         # Check if the diary structure is created correctly
         diary_year_path = base_path / year
@@ -194,7 +197,7 @@ lang: ru
             content = file.read()
             assert beginning_of_md in content
             assert f"# {day}" in content
-            assert f"## {datetime.now(UTC).strftime('%H:%M')}" in content
+            assert f"## {current_time}" in content
             count_i_dont_remember = 16
             assert content.count("`` — I don't remember.\n") == count_i_dont_remember
 
@@ -215,7 +218,7 @@ lang: ru
             content = file.read()
             assert beginning_of_md in content
             assert f"# {day}" in content
-            assert f"## {datetime.now(UTC).strftime('%H:%M')}" in content
+            assert f"## {current_time}" in content
             count_i_dont_remember = 16
             assert content.count("`` — I don't remember.\n") == count_i_dont_remember
 
@@ -226,7 +229,7 @@ def test_add_diary_new_dream_in_year() -> None:
         temp_path = Path(temp_dir)
         front_matter = "---\ntitle: Test Diary\n---\n"
 
-        current_year = datetime.now(UTC).strftime("%Y")
+        current_year = datetime.now(UTC).astimezone().strftime("%Y")
         expected_file_path = temp_path / f"{current_year}.md"
 
         # Test 1: Test add_diary_new_dream_in_year
@@ -265,8 +268,9 @@ def test_add_diary_new_cases_in_year() -> None:
         temp_path = Path(temp_dir)
         front_matter = "---\ntitle: Test Cases\n---\n"
 
-        current_year = datetime.now(UTC).strftime("%Y")
-        current_year_month = datetime.now(UTC).strftime("%Y-%m")
+        now_local = datetime.now(UTC).astimezone()
+        current_year = now_local.strftime("%Y")
+        current_year_month = now_local.strftime("%Y-%m")
         expected_file_path = temp_path / f"{current_year}.md"
 
         # Test 1: Create a new file when it doesn't exist
@@ -354,11 +358,11 @@ def test_add_diary_new_note() -> None:
         # Check if the message indicates file creation
         assert "File" in result_msg
 
-        # Extract the date components from the result path for testing
-        current_date = datetime.now(UTC)
-        year = current_date.strftime("%Y")
-        month = current_date.strftime("%m")
-        day = current_date.strftime("%Y-%m-%d")
+        # Extract the date components from the result path for testing (uses local time)
+        now_local = datetime.now(UTC).astimezone()
+        year = now_local.strftime("%Y")
+        month = now_local.strftime("%m")
+        day = now_local.strftime("%Y-%m-%d")
 
         # Check if the diary structure is created correctly
         diary_year_path = base_path / year

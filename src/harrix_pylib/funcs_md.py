@@ -45,7 +45,7 @@ def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_
     ```
 
     """
-    current_date = datetime.now(UTC)
+    current_date = datetime.now(UTC).astimezone()
     year = current_date.strftime("%Y")
 
     path_dream = Path(path_dream)
@@ -108,7 +108,7 @@ def add_diary_new_cases_in_year(path_cases: Path | str, beginning_of_md: str) ->
     - `tuple[str, Path]`: A message indicating success/failure and the path to the yearly file.
 
     """
-    current_date = datetime.now(UTC)
+    current_date = datetime.now(UTC).astimezone()
     year = current_date.strftime("%Y")
     year_month = current_date.strftime("%Y-%m")
 
@@ -218,9 +218,10 @@ def add_diary_new_diary(
     ```
 
     """
+    current_date = datetime.now(UTC).astimezone()
     text = f"{beginning_of_md}\n\n"
-    text += f"# {datetime.now(UTC).strftime('%Y-%m-%d')}\n\n"
-    text += f"## {datetime.now(UTC).strftime('%H:%M')}\n\n"
+    text += f"# {current_date.strftime('%Y-%m-%d')}\n\n"
+    text += f"## {current_date.strftime('%H:%M')}\n\n"
     return add_diary_new_note(path_diary, text, is_with_images=is_with_images)
 
 
@@ -269,9 +270,10 @@ def add_diary_new_dream(
     ```
 
     """
+    current_date = datetime.now(UTC).astimezone()
     text = f"{beginning_of_md}\n"
-    text += f"# {datetime.now(UTC).strftime('%Y-%m-%d')}\n\n"
-    text += f"## {datetime.now(UTC).strftime('%H:%M')}\n\n"
+    text += f"# {current_date.strftime('%Y-%m-%d')}\n\n"
+    text += f"## {current_date.strftime('%H:%M')}\n\n"
     text += ("`` — I don't remember.\n\n" * 16)[:-1]
     return add_diary_new_note(path_dream, text, is_with_images=is_with_images)
 
@@ -331,7 +333,7 @@ def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool
     ```
 
     """
-    current_date = datetime.now(UTC)
+    current_date = datetime.now(UTC).astimezone()
     year = current_date.strftime("%Y")
     month = current_date.strftime("%m")
     day = current_date.strftime("%Y-%m-%d")
