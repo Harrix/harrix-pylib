@@ -259,6 +259,89 @@ def test_add_diary_new_dream_in_year() -> None:
             assert "Text." in dairy_content
 
 
+def test_add_diary_new_cases_in_year() -> None:
+    # Test setup
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        front_matter = "---\ntitle: Test Cases\n---\n"
+
+        current_year = datetime.now(UTC).strftime("%Y")
+        current_year_month = datetime.now(UTC).strftime("%Y-%m")
+        expected_file_path = temp_path / f"{current_year}.md"
+
+        # Test 1: Create a new file when it doesn't exist
+        cases_message, cases_file_path = h.md.add_diary_new_cases_in_year(temp_path, front_matter)
+
+        # Assertions for Test 1
+        assert cases_file_path == expected_file_path
+        assert expected_file_path.exists()
+        assert "created" in cases_message
+
+        # Read the content
+        cases_content = expected_file_path.read_text(encoding="utf-8")
+        assert front_matter in cases_content
+        assert f"# {current_year}" in cases_content
+        assert f"## {current_year_month}" in cases_content
+
+        # Check that it contains 16 empty list items
+        count_cases = 16
+        assert cases_content.count("- \n") == count_cases
+
+        # Test 2: Add cases to an existing month section (should insert at the top)
+        cases_message2, cases_file_path2 = h.md.add_diary_new_cases_in_year(temp_path, front_matter)
+
+        # Assertions for Test 2
+        assert cases_file_path2 == expected_file_path
+        assert "updated" in cases_message2
+
+        # Read the updated content
+        updated_content = expected_file_path.read_text(encoding="utf-8")
+        # Should now have 32 items (16 + 16)
+        count_total_cases = 32
+        assert updated_content.count("- \n") == count_total_cases
+
+        # Verify that new items are inserted right after the month header
+        # The month section should start with the header, then the new items, then the old items
+        month_section_start = updated_content.find(f"## {current_year_month}")
+        assert month_section_start != -1
+        # After the header and newline, there should be new items
+        after_header = updated_content[month_section_start:]
+        # Count items in the first occurrence (should be 16 new ones)
+        first_items_section = after_header.split("\n\n")[1] if "\n\n" in after_header else ""
+        assert first_items_section.count("- \n") >= count_cases
+
+    # Test 3: Create a new month section in an existing file
+    # Create a file with a different month section
+    with TemporaryDirectory() as temp_dir2:
+        temp_path2 = Path(temp_dir2)
+        year_file = temp_path2 / f"{current_year}.md"
+        # Create file with a different month section
+        # Use December of current year - if current month is December, test will add to existing section
+        # (which is still valid), otherwise it will create a new month section
+        previous_month = f"{current_year}-12"
+        existing_content = f"{front_matter}\n# {current_year}\n\n## {previous_month}\n\n- \n- \n"
+        year_file.write_text(existing_content, encoding="utf-8")
+
+        # Add cases for current month (should create new month section)
+        cases_message3, cases_file_path3 = h.md.add_diary_new_cases_in_year(temp_path2, front_matter)
+
+        # Assertions for Test 3
+        assert cases_file_path3 == year_file
+        assert "updated" in cases_message3
+
+        # Read the updated content
+        updated_content3 = year_file.read_text(encoding="utf-8")
+        # Should have the new month section
+        assert f"## {current_year_month}" in updated_content3
+        # Should still have the previous month section
+        assert f"## {previous_month}" in updated_content3
+        # Should have 16 new items for current month
+        # The new month section should be inserted after the year header
+        # Count total items - should have 2 from previous month + 16 from new month
+        total_items = updated_content3.count("- \n")
+        assert total_items >= count_cases  # At least 16 new items
+
+
 def test_add_diary_new_note() -> None:
     with TemporaryDirectory() as temp_dir:
         base_path = Path(temp_dir)

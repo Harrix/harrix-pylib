@@ -12,6 +12,7 @@ lang: en
 ## Contents
 
 - [🔧 Function `add_diary_entry_in_year`](#-function-add_diary_entry_in_year)
+- [🔧 Function `add_diary_new_cases_in_year`](#-function-add_diary_new_cases_in_year)
 - [🔧 Function `add_diary_new_dairy_in_year`](#-function-add_diary_new_dairy_in_year)
 - [🔧 Function `add_diary_new_diary`](#-function-add_diary_new_diary)
 - [🔧 Function `add_diary_new_dream`](#-function-add_diary_new_dream)
@@ -138,6 +139,70 @@ def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_
 
     # Write the updated content back to the file
     year_file.write_text(updated_content, encoding="utf-8")
+    return f"✅ File {year_file} updated.", year_file
+```
+
+</details>
+
+## 🔧 Function `add_diary_new_cases_in_year`
+
+```python
+def add_diary_new_cases_in_year(path_cases: Path | str, beginning_of_md: str) -> tuple[str, Path]
+```
+
+Add new case entries to the yearly cases file.
+
+Cases are organized by year and month (## YYYY-MM). Each addition creates 16 empty
+list items. If the month section does not exist, it is created with empty items.
+If it exists, new items are inserted at the top of the month section.
+
+Args:
+
+- `path_cases` (`Path | str`): The base path where the yearly cases file is stored.
+- `beginning_of_md` (`str`): The YAML front matter to include if creating a new file.
+
+Returns:
+
+- `tuple[str, Path]`: A message indicating success/failure and the path to the yearly file.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def add_diary_new_cases_in_year(path_cases: Path | str, beginning_of_md: str) -> tuple[str, Path]:
+    current_date = datetime.now(UTC)
+    year = current_date.strftime("%Y")
+    year_month = current_date.strftime("%Y-%m")
+
+    path_cases = Path(path_cases)
+    year_file = path_cases / f"{year}.md"
+
+    cases_count = 16
+    new_items = "".join("- \n" for _ in range(cases_count))
+    new_month_section = f"## {year_month}\n\n{new_items}\n"
+
+    if not year_file.exists():
+        path_cases.mkdir(parents=True, exist_ok=True)
+        content = f"{beginning_of_md}\n# {year}\n\n{new_month_section}"
+        year_file.write_text(content, encoding="utf-8")
+        return f"✅ File {year_file} created.", year_file
+
+    content = year_file.read_text(encoding="utf-8")
+    month_pattern = re.compile(r"^## " + re.escape(year_month) + r"\s*\n+", re.MULTILINE)
+    month_match = month_pattern.search(content)
+
+    if month_match:
+        insert_pos = month_match.end()
+        content = content[:insert_pos] + new_items + content[insert_pos:]
+    else:
+        year_match = re.search(r"^# " + re.escape(year) + r"(?:\s|$)", content, re.MULTILINE)
+        if year_match:
+            insert_pos = year_match.end()
+            content = content[:insert_pos] + "\n\n" + new_month_section + content[insert_pos:].lstrip()
+        else:
+            content = content.rstrip() + "\n\n# " + year + "\n\n" + new_month_section
+
+    year_file.write_text(content, encoding="utf-8")
     return f"✅ File {year_file} updated.", year_file
 ```
 
