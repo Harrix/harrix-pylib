@@ -336,8 +336,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
         final_content = beginning_of_md + "\n" + docs
         final_content = h.md.generate_toc_with_links_content(final_content)
         final_content = h.md.generate_image_captions_content(final_content)
-        with filename_docs.open("w", encoding="utf8", newline="\n") as f:
-            f.write(final_content)
+        filename_docs.write_text(final_content, encoding="utf8")
 
         list_funcs_all += list_funcs + "\n\n"
 
@@ -364,8 +363,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
                 final_content = h.md.generate_toc_with_links_content(final_content)
                 final_content = h.md.generate_image_captions_content(final_content)
 
-                with (docs_folder / "index.g.md").open("w", encoding="utf8", newline="\n") as f:
-                    f.write(final_content)
+                (docs_folder / "index.g.md").write_text(final_content, encoding="utf8")
                 result_lines.append(f"File {md_file.name} copied as index.g.md")
             else:
                 # Convert filename to lowercase for other MD files and add .g.md
@@ -380,9 +378,8 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
                 final_content = h.md.generate_toc_with_links_content(final_content)
                 final_content = h.md.generate_image_captions_content(final_content)
 
-                # Write to docs folder (newline="\n" to avoid CRLF on Windows)
-                with target_path.open("w", encoding="utf8", newline="\n") as f:
-                    f.write(final_content)
+                # Write to docs folder
+                target_path.write_text(final_content, encoding="utf8")
                 result_lines.append(f"File {md_file.name} copied as {target_filename}")
 
     return "\n".join(result_lines)
@@ -878,8 +875,8 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
     if is_use_ruff_format:
         new_code = lint_and_fix_python_code(new_code)
 
-    # Write the sorted code back to the file (newline="\n" to avoid CRLF on Windows)
-    with Path(filename).open("w", encoding="utf-8", newline="\n") as f:
+    # Write the sorted code back to the file
+    with Path(filename).open("w", encoding="utf-8") as f:
         f.write(new_code)
 ```
 
