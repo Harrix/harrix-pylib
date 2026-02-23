@@ -2662,7 +2662,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
                 is_stop_searching_place_toc = True
         content_without_yaml = "\n".join(new_lines)
 
-    if content_without_yaml[-1] != "\n":
+    if content_without_yaml and content_without_yaml[-1] != "\n":
         content_without_yaml += "\n"
 
     return yaml_md + "\n\n" + content_without_yaml
