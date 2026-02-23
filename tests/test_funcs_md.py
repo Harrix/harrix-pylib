@@ -1134,6 +1134,19 @@ def test_generate_toc_with_links_content() -> None:
     assert md_after == h.md.generate_toc_with_links_content(md)
 
 
+def test_generate_toc_with_links_content_no_headers() -> None:
+    """File without headers must not raise 'string index out of range'."""
+    md_only_yaml = """---
+title: Note
+lang: en
+---
+
+"""
+    result = h.md.generate_toc_with_links_content(md_only_yaml)
+    assert result.startswith("---")
+    assert "\n\n" in result
+
+
 def test_get_yaml_content() -> None:
     md = Path(h.dev.get_project_root() / "tests/data/get_yaml_content.md").read_text(encoding="utf8")
     yaml = h.md.get_yaml_content(md)
