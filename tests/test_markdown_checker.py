@@ -312,6 +312,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(single_empty_file, select={"H012"})
         assert not errors
 
+        # Two consecutive empty lines inside code block should not trigger H012
+        code_block_double_empty_file = temp_path / "code_block_double_empty.md"
+        code_block_double_empty_file.write_text(
+            "---\nlang: en\n---\n\nText\n\n```python\ndef a():\n    pass\n\n\ndef b():\n    pass\n```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(code_block_double_empty_file, select={"H012"})
+        assert not errors
+
         # =====================================================================
         # H023: No empty line between paragraphs
         # =====================================================================
