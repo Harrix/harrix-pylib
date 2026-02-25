@@ -231,7 +231,9 @@ def test_markdown_checker() -> None:
         # H008: Trailing whitespace
         # =====================================================================
         trailing_ws_file = temp_path / "trailing_ws.md"
-        trailing_ws_file.write_text("---\nlang: en\n---\n\nLine with trailing space   \nNormal line\n", encoding="utf-8")
+        trailing_ws_file.write_text(
+            "---\nlang: en\n---\n\nLine with trailing space   \nNormal line\n", encoding="utf-8"
+        )
         errors = checker.check(trailing_ws_file, select={"H008"})
         assert any("H008" in e for e in errors)
 
@@ -281,9 +283,7 @@ def test_markdown_checker() -> None:
         # H012: Two consecutive empty lines
         # =====================================================================
         double_empty_file = temp_path / "double_empty.md"
-        double_empty_file.write_text(
-            "---\nlang: en\n---\n\nParagraph 1\n\n\nParagraph 2\n", encoding="utf-8"
-        )
+        double_empty_file.write_text("---\nlang: en\n---\n\nParagraph 1\n\n\nParagraph 2\n", encoding="utf-8")
         errors = checker.check(double_empty_file, select={"H012"})
         assert any("H012" in e for e in errors)
 
@@ -331,9 +331,7 @@ def test_markdown_checker() -> None:
 
         # Colon before image should not trigger H014
         colon_img_file = temp_path / "colon_img.md"
-        colon_img_file.write_text(
-            "---\nlang: en\n---\n\nHere is the image:\n\n![Alt](image.png)\n", encoding="utf-8"
-        )
+        colon_img_file.write_text("---\nlang: en\n---\n\nHere is the image:\n\n![Alt](image.png)\n", encoding="utf-8")
         errors = checker.check(colon_img_file, select={"H014"})
         assert not errors
 
@@ -349,12 +347,14 @@ def test_markdown_checker() -> None:
         assert len([e for e in errors if "H015" in e]) >= 2  # noqa: PLR2004
 
         # Check each punctuation case
-        for i, (punct, content) in enumerate([
-            (" ,", "---\nlang: en\n---\n\nWrong ,comma.\n"),
-            (" ;", "---\nlang: en\n---\n\nWrong ;semicolon.\n"),
-            (" :", "---\nlang: en\n---\n\nWrong :colon.\n"),
-            (" ?", "---\nlang: en\n---\n\nWrong ?question.\n"),
-        ]):
+        for i, (punct, content) in enumerate(
+            [
+                (" ,", "---\nlang: en\n---\n\nWrong ,comma.\n"),
+                (" ;", "---\nlang: en\n---\n\nWrong ;semicolon.\n"),
+                (" :", "---\nlang: en\n---\n\nWrong :colon.\n"),
+                (" ?", "---\nlang: en\n---\n\nWrong ?question.\n"),
+            ]
+        ):
             p_file = temp_path / f"punct_{i}.md"
             p_file.write_text(content, encoding="utf-8")
             errors = checker.check(p_file, select={"H015"})
@@ -402,9 +402,7 @@ def test_markdown_checker() -> None:
 
         # Three dots inside code block should not trigger H017
         dots_in_code_file = temp_path / "dots_in_code.md"
-        dots_in_code_file.write_text(
-            "---\nlang: en\n---\n\n```python\nresult = [...]\n```\n", encoding="utf-8"
-        )
+        dots_in_code_file.write_text("---\nlang: en\n---\n\n```python\nresult = [...]\n```\n", encoding="utf-8")
         errors = checker.check(dots_in_code_file, select={"H017"})
         assert not errors
 
@@ -443,17 +441,13 @@ def test_markdown_checker() -> None:
         # H019: HTML tags in markdown content
         # =====================================================================
         html_tag_file = temp_path / "html_tag.md"
-        html_tag_file.write_text(
-            "---\nlang: en\n---\n\nThis is <strong>bold</strong> text.\n", encoding="utf-8"
-        )
+        html_tag_file.write_text("---\nlang: en\n---\n\nThis is <strong>bold</strong> text.\n", encoding="utf-8")
         errors = checker.check(html_tag_file, select={"H019"})
         assert any("H019" in e for e in errors)
 
         # HTML in code block should not trigger H019
         html_in_code_file = temp_path / "html_in_code.md"
-        html_in_code_file.write_text(
-            "---\nlang: en\n---\n\n```html\n<strong>Bold</strong>\n```\n", encoding="utf-8"
-        )
+        html_in_code_file.write_text("---\nlang: en\n---\n\n```html\n<strong>Bold</strong>\n```\n", encoding="utf-8")
         errors = checker.check(html_in_code_file, select={"H019"})
         assert not errors
 
@@ -468,17 +462,13 @@ def test_markdown_checker() -> None:
         # H020: Image caption starts with lowercase
         # =====================================================================
         lower_caption_file = temp_path / "lower_caption.md"
-        lower_caption_file.write_text(
-            "---\nlang: en\n---\n\n![lowercase caption](image.png)\n", encoding="utf-8"
-        )
+        lower_caption_file.write_text("---\nlang: en\n---\n\n![lowercase caption](image.png)\n", encoding="utf-8")
         errors = checker.check(lower_caption_file, select={"H020"})
         assert any("H020" in e for e in errors)
 
         # Uppercase caption should not trigger H020
         upper_caption_file = temp_path / "upper_caption.md"
-        upper_caption_file.write_text(
-            "---\nlang: en\n---\n\n![Uppercase caption](image.png)\n", encoding="utf-8"
-        )
+        upper_caption_file.write_text("---\nlang: en\n---\n\n![Uppercase caption](image.png)\n", encoding="utf-8")
         errors = checker.check(upper_caption_file, select={"H020"})
         assert not errors
 
@@ -492,17 +482,13 @@ def test_markdown_checker() -> None:
         # H021: Lowercase letter after sentence-ending punctuation
         # =====================================================================
         lower_after_dot_file = temp_path / "lower_after_dot.md"
-        lower_after_dot_file.write_text(
-            "---\nlang: en\n---\n\nFirst sentence. second sentence.\n", encoding="utf-8"
-        )
+        lower_after_dot_file.write_text("---\nlang: en\n---\n\nFirst sentence. second sentence.\n", encoding="utf-8")
         errors = checker.check(lower_after_dot_file, select={"H021"})
         assert any("H021" in e for e in errors)
 
         # Uppercase after period should not trigger H021
         upper_after_dot_file = temp_path / "upper_after_dot.md"
-        upper_after_dot_file.write_text(
-            "---\nlang: en\n---\n\nFirst sentence. Second sentence.\n", encoding="utf-8"
-        )
+        upper_after_dot_file.write_text("---\nlang: en\n---\n\nFirst sentence. Second sentence.\n", encoding="utf-8")
         errors = checker.check(upper_after_dot_file, select={"H021"})
         assert not errors
 
@@ -516,9 +502,7 @@ def test_markdown_checker() -> None:
         # H022: Non-breaking space
         # =====================================================================
         nbsp_file = temp_path / "nbsp_test.md"
-        nbsp_file.write_text(
-            "---\nlang: en\n---\n\nText with\u00a0non-breaking space.\n", encoding="utf-8"
-        )
+        nbsp_file.write_text("---\nlang: en\n---\n\nText with\u00a0non-breaking space.\n", encoding="utf-8")
         errors = checker.check(nbsp_file, select={"H022"})
         assert any("H022" in e for e in errors)
 
@@ -541,16 +525,12 @@ def test_markdown_checker() -> None:
         # Check all incorrect dash types in code
         for dash_char in ["\u2015", "\u2014", "\u2012", "\u2212", "\u2010"]:
             dash_file = temp_path / f"dash_{ord(dash_char)}.md"
-            dash_file.write_text(
-                f"---\nlang: en\n---\n\n```shell\ncommand{dash_char}flag\n```\n", encoding="utf-8"
-            )
+            dash_file.write_text(f"---\nlang: en\n---\n\n```shell\ncommand{dash_char}flag\n```\n", encoding="utf-8")
             errors = checker.check(dash_file, select={"H023"})
             assert any("H023" in e for e in errors), f"Expected H023 for dash U+{ord(dash_char):04X}"
 
         # Normal dash in code should not trigger H023
         normal_dash_code_file = temp_path / "normal_dash_code.md"
-        normal_dash_code_file.write_text(
-            "---\nlang: en\n---\n\n```shell\ncommand --flag\n```\n", encoding="utf-8"
-        )
+        normal_dash_code_file.write_text("---\nlang: en\n---\n\n```shell\ncommand --flag\n```\n", encoding="utf-8")
         errors = checker.check(normal_dash_code_file, select={"H023"})
         assert not errors

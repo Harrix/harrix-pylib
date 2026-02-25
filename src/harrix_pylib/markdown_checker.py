@@ -247,6 +247,25 @@ class MarkdownChecker:
             elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
                 yield from self.find_markdown_files(item, additional_ignore_patterns)
 
+    def _check_all_lines_rules(
+        self, filename: Path, line: str, line_num: int, rules: set
+    ) -> Generator[str, None, None]:
+        """Check rules that apply to all lines including code blocks."""
+        # H008: Trailing whitespace
+        if "H008" in rules and line != line.rstrip():
+            col = len(line.rstrip()) + 1
+            yield self._format_error("H008", self.RULES["H008"], filename, line_num=line_num, col=col)
+
+        # H010: Tab character
+        if "H010" in rules and "\t" in line:
+            col = line.index("\t") + 1
+            yield self._format_error("H010", self.RULES["H010"], filename, line_num=line_num, col=col)
+
+        # H022: Non-breaking space
+        if "H022" in rules and "\u00a0" in line:
+            col = line.index("\u00a0") + 1
+            yield self._format_error("H022", self.RULES["H022"], filename, line_num=line_num, col=col)
+
     def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, None]:
         """Generate all errors found during checking."""
         yield from self._check_filename_rules(filename, rules)
@@ -265,32 +284,121 @@ class MarkdownChecker:
             yield self._format_error("H000", f"Exception error: {e}", filename)
 
     # =========================================================================
-    # YAML Rules (H003-H005)
+    # Code Block Rules (H007, H023)
     # =========================================================================
 
-    def _check_yaml_rules(
-        self, filename: Path, yaml_content: str, all_lines: list[str], rules: set
+    def _check_code_rules(
+        self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set
     ) -> Generator[str, None, None]:
-        """Check YAML-related rules."""
-        try:
-            data = yaml.safe_load(yaml_content.replace("---\n", "").replace("\n---", "")) if yaml_content else None
+        """Check code block related rules."""
+        content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
+        code_block_info = list(h.md.identify_code_blocks(content_lines))
 
-            if not data and "H003" in rules:
-                yield self._format_error("H003", self.RULES["H003"], filename, line_num=1)
+        in_code_block = False
+        for i, (line, is_code_block) in enumerate(code_block_info):
+            actual_line_num = (yaml_end_line - 1) + i + 1
+
+            # H007: Incorrect code block language identifier
+            if "H007" in rules and line.strip().startswith("```"):
+                match = re.match(r"^(`{3,})(\w+)?", line)
+                if match:
+                    language = match.group(2)
+                    if language and language in self.INCORRECT_LANGUAGES:
+                        col = match.start(2) + 1
+                        correct = self.INCORRECT_LANGUAGES[language]
+                        error_msg = f'{self.RULES["H007"]}: "{language}" should be "{correct}"'
+                        yield self._format_error("H007", error_msg, filename, line_num=actual_line_num, col=col)
+
+            # Track code block state
+            if line.strip().startswith("```"):
+                in_code_block = not in_code_block
+                continue
+
+            # H023: Incorrect dash characters in code blocks
+            if "H023" in rules and in_code_block:
+                for char, name in self.INCORRECT_CODE_DASHES.items():
+                    if char in line:
+                        col = line.index(char) + 1
+                        error_msg = f'{self.RULES["H023"]}: found "{char}" ({name}) in code block'
+                        yield self._format_error("H023", error_msg, filename, line_num=actual_line_num, col=col)
+
+    def _check_colon_before_code(
+        self, filename: Path, line: str, line_num: int, content_lines: list[str], line_index: int, code_block_info: list
+    ) -> Generator[str, None, None]:
+        """Check for missing colon before code block (H013)."""
+        if line_index + 2 >= len(code_block_info):
+            return
+
+        # Check if next non-empty line is a code block start
+        next_line_info = code_block_info[line_index + 1] if line_index + 1 < len(code_block_info) else None
+        next_next_info = code_block_info[line_index + 2] if line_index + 2 < len(code_block_info) else None
+
+        if not next_line_info or not next_next_info:
+            return
+
+        next_line, _ = next_line_info
+        next_next_line, _ = next_next_info
+
+        # Check pattern: non-empty line, empty line, code block start
+        if not self._should_check_paragraph_end(line):
+            return
+
+        if next_line.strip() == "" and next_next_line.strip().startswith("```"):
+            last_char = line.rstrip()[-1] if line.rstrip() else ""
+
+            # Skip exceptions
+            if any(
+                marker in line
+                for marker in [
+                    "[!DETAILS]",
+                    "[!WARNING]",
+                    "[!IMPORTANT]",
+                    "[!NOTE]",
+                    "<!-- !details -->",
+                    "<!-- !note -->",
+                    "<!-- !important -->",
+                    "<!-- !warning -->",
+                ]
+            ):
                 return
 
-            if data:
-                lang = data.get("lang")
-                if "H004" in rules and not lang:
-                    line_num = self._find_yaml_block_end_line(all_lines)
-                    yield self._format_error("H004", self.RULES["H004"], filename, line_num=line_num)
-                elif "H005" in rules and lang and lang not in ["en", "ru"]:
-                    line_num = self._find_yaml_field_line_in_original(all_lines, "lang")
-                    col = self._find_yaml_field_column(all_lines, line_num, "lang")
-                    yield self._format_error("H005", self.RULES["H005"], filename, line_num=line_num, col=col)
+            if line.strip().startswith("<"):
+                return
 
-        except yaml.YAMLError as e:
-            yield self._format_error("H000", f"YAML parsing error: {e}", filename, line_num=1)
+            if last_char != ":":
+                error_msg = f'{self.RULES["H013"]}: last char is "{last_char}"'
+                yield self._format_error("H013", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
+
+    def _check_colon_before_image(
+        self, filename: Path, line: str, line_num: int, content_lines: list[str], line_index: int
+    ) -> Generator[str, None, None]:
+        """Check for missing colon before image (H014)."""
+        if line_index + 2 >= len(content_lines):
+            return
+
+        if not self._should_check_paragraph_end(line):
+            return
+
+        next_line = content_lines[line_index + 1]
+        next_next_line = content_lines[line_index + 2]
+
+        # Check pattern: non-empty line, empty line, image
+        if next_line.strip() == "" and next_next_line.strip().startswith("!["):
+            last_char = line.rstrip()[-1] if line.rstrip() else ""
+
+            # Skip exceptions
+            if any(
+                marker in line
+                for marker in ["<!-- !details -->", "<!-- !note -->", "<!-- !important -->", "<!-- !warning -->"]
+            ):
+                return
+
+            if line.strip().startswith("<"):
+                return
+
+            if last_char != ":":
+                error_msg = f'{self.RULES["H014"]}: last char is "{last_char}"'
+                yield self._format_error("H014", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
 
     # =========================================================================
     # Content Rules (H006, H008-H022) - for non-code content
@@ -301,7 +409,7 @@ class MarkdownChecker:
     ) -> Generator[str, None, None]:
         """Check content-related rules working directly with original file lines."""
         # Get content lines (after YAML)
-        content_lines = all_lines[yaml_end_line - 1:] if yaml_end_line > 1 else all_lines
+        content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
 
         # Use identify_code_blocks to determine which lines are in code blocks
         code_block_info = list(h.md.identify_code_blocks(content_lines))
@@ -322,6 +430,67 @@ class MarkdownChecker:
                     filename, line, actual_line_num, content_lines, i, code_block_info, rules
                 )
 
+    def _check_dash_usage(
+        self, filename: Path, line: str, clean_line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        """Check for incorrect dash/hyphen usage (H016)."""
+        # Check for " - " (hyphen with spaces should be em dash)
+        if " - " in clean_line:
+            # Skip if line starts with list marker
+            if not clean_line.strip().startswith("-"):
+                pos = clean_line.find(" - ")
+                error_msg = f'{self.RULES["H016"]}: " - " should be " — " (em dash)'
+                yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
+
+        # Check for en dash not between digits
+        if "–" in clean_line:
+            for match in re.finditer(r"–", clean_line):  # noqa: RUF001
+                pos = match.start()
+                before = clean_line[pos - 1] if pos > 0 else ""
+                after = clean_line[pos + 1] if pos + 1 < len(clean_line) else ""
+                if not (before.isdigit() and after.isdigit()):
+                    error_msg = f'{self.RULES["H016"]}: en dash "–" should only be between digits'  # noqa: RUF001
+                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
+
+        # Check for em dash not between spaces
+        if "—" in clean_line:
+            for match in re.finditer(r"—", clean_line):
+                pos = match.start()
+                before = clean_line[pos - 1] if pos > 0 else " "
+                after = clean_line[pos + 1] if pos + 1 < len(clean_line) else " "
+                # Em dash should have spaces around it (or be at line start for dialogue)
+                if pos == 0:
+                    if after != " ":
+                        error_msg = f'{self.RULES["H016"]}: em dash "—" at start should be followed by space'
+                        yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
+                elif not (before == " " and after == " "):
+                    error_msg = f'{self.RULES["H016"]}: em dash "—" should have spaces around it'
+                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
+
+    def _check_double_spaces(
+        self, filename: Path, line: str, clean_line: str, line_num: int, content_lines: list[str], line_index: int
+    ) -> Generator[str, None, None]:
+        """Check for double spaces (H009)."""
+        if "  " not in clean_line:
+            return
+
+        # Skip if line starts with list indentation
+        if line.startswith("  ") or line.startswith("  *") or line.startswith("  -"):
+            return
+
+        # Skip if previous line is a list item
+        if line_index > 0:
+            prev_line = content_lines[line_index - 1]
+            if prev_line.strip().startswith("*") or prev_line.strip().startswith("-"):
+                return
+
+        # Skip table lines
+        if line.strip().startswith("|"):
+            return
+
+        col = clean_line.index("  ") + 1
+        yield self._format_error("H009", self.RULES["H009"], filename, line_num=line_num, col=col)
+
     def _check_file_level_rules(
         self, filename: Path, all_lines: list[str], rules: set, content: str = ""
     ) -> Generator[str, None, None]:
@@ -337,28 +506,76 @@ class MarkdownChecker:
                 if not all_lines[i].strip() and not all_lines[i + 1].strip():
                     # Skip if at very beginning or very end
                     if i > 0 and i + 1 < len(all_lines) - 1:
-                        yield self._format_error(
-                            "H012", self.RULES["H012"], filename, line_num=i + 1
-                        )
+                        yield self._format_error("H012", self.RULES["H012"], filename, line_num=i + 1)
 
-    def _check_all_lines_rules(
-        self, filename: Path, line: str, line_num: int, rules: set
+    # =========================================================================
+    # Filename Rules (H001, H002)
+    # =========================================================================
+
+    def _check_filename_rules(self, filename: Path, rules: set) -> Generator[str, None, None]:
+        """Check filename-related rules."""
+        if "H001" in rules and " " in filename.name:
+            yield self._format_error("H001", self.RULES["H001"], filename)
+
+        if "H002" in rules and " " in str(filename):
+            yield self._format_error("H002", self.RULES["H002"], filename)
+
+    def _check_html_tags(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for HTML tags in content (H019)."""
+        for tag in self.FORBIDDEN_HTML_TAGS:
+            if tag.lower() in line.lower():
+                pos = line.lower().find(tag.lower())
+                error_msg = f'{self.RULES["H019"]}: found "{tag}"'
+                yield self._format_error("H019", error_msg, filename, line_num=line_num, col=pos + 1)
+
+    def _check_image_caption(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check that image captions start with uppercase (H020)."""
+        if not line.strip().startswith("!["):
+            return
+
+        match = re.match(r"!\[([^\]]*)\]", line.strip())
+        if match:
+            caption = match.group(1)
+            if caption and caption[0].isalpha() and caption[0].islower():
+                error_msg = f'{self.RULES["H020"]}: caption starts with "{caption[0]}"'
+                yield self._format_error("H020", error_msg, filename, line_num=line_num, col=3)
+
+    def _check_incorrect_words(
+        self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check rules that apply to all lines including code blocks."""
-        # H008: Trailing whitespace
-        if "H008" in rules and line != line.rstrip():
-            col = len(line.rstrip()) + 1
-            yield self._format_error("H008", self.RULES["H008"], filename, line_num=line_num, col=col)
+        """Check for incorrect word forms (H006)."""
+        for incorrect_word, correct_word in self.INCORRECT_WORDS.items():
+            escaped_word = re.escape(incorrect_word)
+            if re.match(r"^[\w]+$", incorrect_word):
+                pattern = rf"\b{escaped_word}\b"
+            else:
+                pattern = rf"(?<![a-zA-Zа-яА-ЯёЁ0-9_]){escaped_word}(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001
 
-        # H010: Tab character
-        if "H010" in rules and "\t" in line:
-            col = line.index("\t") + 1
-            yield self._format_error("H010", self.RULES["H010"], filename, line_num=line_num, col=col)
+            if re.search(pattern, clean_line):
+                match = re.search(pattern, line)
+                col = match.start() + 1 if match else 1
+                error_message = f'{self.RULES["H006"]}: "{incorrect_word}" should be "{correct_word}"'
+                yield self._format_error("H006", error_message, filename, line_num=line_num, col=col)
 
-        # H022: Non-breaking space
-        if "H022" in rules and "\u00a0" in line:
-            col = line.index("\u00a0") + 1
-            yield self._format_error("H022", self.RULES["H022"], filename, line_num=line_num, col=col)
+    def _check_lowercase_after_punctuation(
+        self, filename: Path, line: str, clean_line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        """Check for lowercase letter after sentence-ending punctuation (H021)."""
+        # Pattern: sentence end punctuation, space, lowercase letter
+        pattern = r"[.!?]\s+([a-zа-яё])"  # noqa: RUF001
+
+        for match in re.finditer(pattern, clean_line):
+            letter = match.group(1)
+            pos = match.start()
+
+            # Check for exceptions like "e.g. ", "т. е.", "т. д."
+            context_before = clean_line[max(0, pos - 4) : pos + 1]
+            exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001
+            if any(exc in context_before for exc in exceptions):
+                continue
+
+            error_msg = f'{self.RULES["H021"]}: found lowercase "{letter}" after punctuation'
+            yield self._format_error("H021", error_msg, filename, line_num=line_num, col=match.start(1) + 1)
 
     def _check_non_code_line_rules(
         self,
@@ -425,115 +642,21 @@ class MarkdownChecker:
         if "H021" in rules:
             yield from self._check_lowercase_after_punctuation(filename, line, clean_line, line_num)
 
-    def _check_incorrect_words(
-        self, filename: Path, line: str, clean_line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check for incorrect word forms (H006)."""
-        for incorrect_word, correct_word in self.INCORRECT_WORDS.items():
-            escaped_word = re.escape(incorrect_word)
-            if re.match(r"^[\w]+$", incorrect_word):
-                pattern = rf"\b{escaped_word}\b"
-            else:
-                pattern = rf"(?<![a-zA-Zа-яА-ЯёЁ0-9_]){escaped_word}(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001
+    def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for incorrect quote characters (H018)."""
+        incorrect_quotes = [
+            ('"', 'straight double quote "'),
+            ("\u201c", "curly quote \u201c"),
+            ("\u201d", "curly quote \u201d"),
+            ("« ", "space after «"),
+            (" »", "space before »"),
+        ]
 
-            if re.search(pattern, clean_line):
-                match = re.search(pattern, line)
-                col = match.start() + 1 if match else 1
-                error_message = f'{self.RULES["H006"]}: "{incorrect_word}" should be "{correct_word}"'
-                yield self._format_error("H006", error_message, filename, line_num=line_num, col=col)
-
-    def _check_double_spaces(
-        self, filename: Path, line: str, clean_line: str, line_num: int,
-        content_lines: list[str], line_index: int
-    ) -> Generator[str, None, None]:
-        """Check for double spaces (H009)."""
-        if "  " not in clean_line:
-            return
-
-        # Skip if line starts with list indentation
-        if line.startswith("  ") or line.startswith("  *") or line.startswith("  -"):
-            return
-
-        # Skip if previous line is a list item
-        if line_index > 0:
-            prev_line = content_lines[line_index - 1]
-            if prev_line.strip().startswith("*") or prev_line.strip().startswith("-"):
-                return
-
-        # Skip table lines
-        if line.strip().startswith("|"):
-            return
-
-        col = clean_line.index("  ") + 1
-        yield self._format_error("H009", self.RULES["H009"], filename, line_num=line_num, col=col)
-
-    def _check_colon_before_code(
-        self, filename: Path, line: str, line_num: int,
-        content_lines: list[str], line_index: int, code_block_info: list
-    ) -> Generator[str, None, None]:
-        """Check for missing colon before code block (H013)."""
-        if line_index + 2 >= len(code_block_info):
-            return
-
-        # Check if next non-empty line is a code block start
-        next_line_info = code_block_info[line_index + 1] if line_index + 1 < len(code_block_info) else None
-        next_next_info = code_block_info[line_index + 2] if line_index + 2 < len(code_block_info) else None
-
-        if not next_line_info or not next_next_info:
-            return
-
-        next_line, _ = next_line_info
-        next_next_line, _ = next_next_info
-
-        # Check pattern: non-empty line, empty line, code block start
-        if not self._should_check_paragraph_end(line):
-            return
-
-        if next_line.strip() == "" and next_next_line.strip().startswith("```"):
-            last_char = line.rstrip()[-1] if line.rstrip() else ""
-
-            # Skip exceptions
-            if any(marker in line for marker in ["[!DETAILS]", "[!WARNING]", "[!IMPORTANT]", "[!NOTE]",
-                                                   "<!-- !details -->", "<!-- !note -->",
-                                                   "<!-- !important -->", "<!-- !warning -->"]):
-                return
-
-            if line.strip().startswith("<"):
-                return
-
-            if last_char != ":":
-                error_msg = f'{self.RULES["H013"]}: last char is "{last_char}"'
-                yield self._format_error("H013", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
-
-    def _check_colon_before_image(
-        self, filename: Path, line: str, line_num: int,
-        content_lines: list[str], line_index: int
-    ) -> Generator[str, None, None]:
-        """Check for missing colon before image (H014)."""
-        if line_index + 2 >= len(content_lines):
-            return
-
-        if not self._should_check_paragraph_end(line):
-            return
-
-        next_line = content_lines[line_index + 1]
-        next_next_line = content_lines[line_index + 2]
-
-        # Check pattern: non-empty line, empty line, image
-        if next_line.strip() == "" and next_next_line.strip().startswith("!["):
-            last_char = line.rstrip()[-1] if line.rstrip() else ""
-
-            # Skip exceptions
-            if any(marker in line for marker in ["<!-- !details -->", "<!-- !note -->",
-                                                   "<!-- !important -->", "<!-- !warning -->"]):
-                return
-
-            if line.strip().startswith("<"):
-                return
-
-            if last_char != ":":
-                error_msg = f'{self.RULES["H014"]}: last char is "{last_char}"'
-                yield self._format_error("H014", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
+        for char, description in incorrect_quotes:
+            if char in clean_line:
+                pos = clean_line.find(char)
+                error_msg = f"{self.RULES['H018']}: found {description}"
+                yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
 
     def _check_space_before_punctuation(
         self, filename: Path, line: str, clean_line: str, line_num: int
@@ -562,179 +685,33 @@ class MarkdownChecker:
                     error_msg = f'{self.RULES["H015"]}: found " !"'
                     yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos + 1)
 
-    def _check_dash_usage(
-        self, filename: Path, line: str, clean_line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check for incorrect dash/hyphen usage (H016)."""
-        # Check for " - " (hyphen with spaces should be em dash)
-        if " - " in clean_line:
-            # Skip if line starts with list marker
-            if not clean_line.strip().startswith("-"):
-                pos = clean_line.find(" - ")
-                error_msg = f'{self.RULES["H016"]}: " - " should be " — " (em dash)'
-                yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
-
-        # Check for en dash not between digits
-        if "–" in clean_line:
-            for match in re.finditer(r"–", clean_line):  # noqa: RUF001
-                pos = match.start()
-                before = clean_line[pos - 1] if pos > 0 else ""
-                after = clean_line[pos + 1] if pos + 1 < len(clean_line) else ""
-                if not (before.isdigit() and after.isdigit()):
-                    error_msg = f'{self.RULES["H016"]}: en dash "–" should only be between digits'  # noqa: RUF001
-                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
-
-        # Check for em dash not between spaces
-        if "—" in clean_line:
-            for match in re.finditer(r"—", clean_line):
-                pos = match.start()
-                before = clean_line[pos - 1] if pos > 0 else " "
-                after = clean_line[pos + 1] if pos + 1 < len(clean_line) else " "
-                # Em dash should have spaces around it (or be at line start for dialogue)
-                if pos == 0:
-                    if after != " ":
-                        error_msg = f'{self.RULES["H016"]}: em dash "—" at start should be followed by space'
-                        yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
-                elif not (before == " " and after == " "):
-                    error_msg = f'{self.RULES["H016"]}: em dash "—" should have spaces around it'
-                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
-
-    def _check_quotes(
-        self, filename: Path, line: str, clean_line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check for incorrect quote characters (H018)."""
-        incorrect_quotes = [
-            ('"', 'straight double quote "'),
-            ("\u201c", "curly quote \u201c"),
-            ("\u201d", "curly quote \u201d"),
-            ("« ", "space after «"),
-            (" »", "space before »"),
-        ]
-
-        for char, description in incorrect_quotes:
-            if char in clean_line:
-                pos = clean_line.find(char)
-                error_msg = f'{self.RULES["H018"]}: found {description}'
-                yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
-
-    def _check_html_tags(
-        self, filename: Path, line: str, clean_line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check for HTML tags in content (H019)."""
-        for tag in self.FORBIDDEN_HTML_TAGS:
-            if tag.lower() in line.lower():
-                pos = line.lower().find(tag.lower())
-                error_msg = f'{self.RULES["H019"]}: found "{tag}"'
-                yield self._format_error("H019", error_msg, filename, line_num=line_num, col=pos + 1)
-
-    def _check_image_caption(
-        self, filename: Path, line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check that image captions start with uppercase (H020)."""
-        if not line.strip().startswith("!["):
-            return
-
-        match = re.match(r"!\[([^\]]*)\]", line.strip())
-        if match:
-            caption = match.group(1)
-            if caption and caption[0].isalpha() and caption[0].islower():
-                error_msg = f'{self.RULES["H020"]}: caption starts with "{caption[0]}"'
-                yield self._format_error("H020", error_msg, filename, line_num=line_num, col=3)
-
-    def _check_lowercase_after_punctuation(
-        self, filename: Path, line: str, clean_line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check for lowercase letter after sentence-ending punctuation (H021)."""
-        # Pattern: sentence end punctuation, space, lowercase letter
-        pattern = r"[.!?]\s+([a-zа-яё])"  # noqa: RUF001
-
-        for match in re.finditer(pattern, clean_line):
-            letter = match.group(1)
-            pos = match.start()
-
-            # Check for exceptions like "e.g. ", "т. е.", "т. д."
-            context_before = clean_line[max(0, pos - 4):pos + 1]
-            exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001
-            if any(exc in context_before for exc in exceptions):
-                continue
-
-            error_msg = f'{self.RULES["H021"]}: found lowercase "{letter}" after punctuation'
-            yield self._format_error("H021", error_msg, filename, line_num=line_num, col=match.start(1) + 1)
-
     # =========================================================================
-    # Code Block Rules (H007, H023)
+    # YAML Rules (H003-H005)
     # =========================================================================
 
-    def _check_code_rules(
-        self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set
+    def _check_yaml_rules(
+        self, filename: Path, yaml_content: str, all_lines: list[str], rules: set
     ) -> Generator[str, None, None]:
-        """Check code block related rules."""
-        content_lines = all_lines[yaml_end_line - 1:] if yaml_end_line > 1 else all_lines
-        code_block_info = list(h.md.identify_code_blocks(content_lines))
+        """Check YAML-related rules."""
+        try:
+            data = yaml.safe_load(yaml_content.replace("---\n", "").replace("\n---", "")) if yaml_content else None
 
-        in_code_block = False
-        for i, (line, is_code_block) in enumerate(code_block_info):
-            actual_line_num = (yaml_end_line - 1) + i + 1
+            if not data and "H003" in rules:
+                yield self._format_error("H003", self.RULES["H003"], filename, line_num=1)
+                return
 
-            # H007: Incorrect code block language identifier
-            if "H007" in rules and line.strip().startswith("```"):
-                match = re.match(r"^(`{3,})(\w+)?", line)
-                if match:
-                    language = match.group(2)
-                    if language and language in self.INCORRECT_LANGUAGES:
-                        col = match.start(2) + 1
-                        correct = self.INCORRECT_LANGUAGES[language]
-                        error_msg = f'{self.RULES["H007"]}: "{language}" should be "{correct}"'
-                        yield self._format_error("H007", error_msg, filename, line_num=actual_line_num, col=col)
+            if data:
+                lang = data.get("lang")
+                if "H004" in rules and not lang:
+                    line_num = self._find_yaml_block_end_line(all_lines)
+                    yield self._format_error("H004", self.RULES["H004"], filename, line_num=line_num)
+                elif "H005" in rules and lang and lang not in ["en", "ru"]:
+                    line_num = self._find_yaml_field_line_in_original(all_lines, "lang")
+                    col = self._find_yaml_field_column(all_lines, line_num, "lang")
+                    yield self._format_error("H005", self.RULES["H005"], filename, line_num=line_num, col=col)
 
-            # Track code block state
-            if line.strip().startswith("```"):
-                in_code_block = not in_code_block
-                continue
-
-            # H023: Incorrect dash characters in code blocks
-            if "H023" in rules and in_code_block:
-                for char, name in self.INCORRECT_CODE_DASHES.items():
-                    if char in line:
-                        col = line.index(char) + 1
-                        error_msg = f'{self.RULES["H023"]}: found "{char}" ({name}) in code block'
-                        yield self._format_error("H023", error_msg, filename, line_num=actual_line_num, col=col)
-
-    # =========================================================================
-    # Filename Rules (H001, H002)
-    # =========================================================================
-
-    def _check_filename_rules(self, filename: Path, rules: set) -> Generator[str, None, None]:
-        """Check filename-related rules."""
-        if "H001" in rules and " " in filename.name:
-            yield self._format_error("H001", self.RULES["H001"], filename)
-
-        if "H002" in rules and " " in str(filename):
-            yield self._format_error("H002", self.RULES["H002"], filename)
-
-    # =========================================================================
-    # Helper Methods
-    # =========================================================================
-
-    def _should_check_paragraph_end(self, line: str) -> bool:
-        """Check if line is a regular paragraph that should end with colon before code/image."""
-        if not line.strip():
-            return False
-        if line.strip() == "```":
-            return False
-        if line.strip().startswith("!["):
-            return False
-        if line.strip().startswith("#"):
-            return False
-        return True
-
-    def _remove_inline_code(self, line: str) -> str:
-        """Remove inline code segments from line."""
-        clean_line = ""
-        for segment, in_code in h.md.identify_code_blocks_line(line):
-            if not in_code:
-                clean_line += segment
-        return clean_line
+        except yaml.YAMLError as e:
+            yield self._format_error("H000", f"YAML parsing error: {e}", filename, line_num=1)
 
     def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]:
         """Determine which rules should be active."""
@@ -808,3 +785,27 @@ class MarkdownChecker:
             return str(filename.resolve().relative_to(self.project_root))
         except ValueError:
             return str(filename.resolve())
+
+    def _remove_inline_code(self, line: str) -> str:
+        """Remove inline code segments from line."""
+        clean_line = ""
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                clean_line += segment
+        return clean_line
+
+    # =========================================================================
+    # Helper Methods
+    # =========================================================================
+
+    def _should_check_paragraph_end(self, line: str) -> bool:
+        """Check if line is a regular paragraph that should end with colon before code/image."""
+        if not line.strip():
+            return False
+        if line.strip() == "```":
+            return False
+        if line.strip().startswith("!["):
+            return False
+        if line.strip().startswith("#"):
+            return False
+        return True
