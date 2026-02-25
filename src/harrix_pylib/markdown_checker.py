@@ -427,6 +427,19 @@ class MarkdownChecker:
                     yaml_end_line,
                 )
 
+    def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
+        """Return True if position pos in line is inside a table cell that contains only hyphen (and spaces)."""
+        parts = line.split("|")
+        if len(parts) < 2:
+            return False
+        start = 0
+        for part in parts:
+            end = start + len(part)
+            if start <= pos < end:
+                return part.strip() == "-"
+            start = end + 1  # +1 for the | after this cell
+        return False
+
     def _check_dash_usage(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
@@ -436,6 +449,10 @@ class MarkdownChecker:
         for segment, in_code in h.md.identify_code_blocks_line(line):
             if not in_code and " - " in segment and not segment.strip().startswith("-"):
                 pos = offset + segment.find(" - ")
+                # Skip if " - " is inside a table cell that contains only hyphen (and spaces), e.g. | - |
+                if "|" in line and self._is_table_cell_only_dash(line, pos):
+                    offset += len(segment)
+                    continue
                 error_msg = f'{self.RULES["H016"]}: " - " should be " — " (em dash)'
                 yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
                 break  # Report only first occurrence per line

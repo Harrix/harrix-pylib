@@ -458,6 +458,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(inline_code_hyphen_file, select={"H016"})
         assert not any("H016" in e for e in errors), "H016 must not apply to inline code"
 
+        # H016 must NOT trigger for " - " inside table cell that is only hyphen (e.g. | - |)
+        table_dash_cell_file = temp_path / "table_dash_cell.md"
+        table_dash_cell_file.write_text(
+            "---\nlang: en\n---\n\n| A | B |\n| --- | --- |\n| foo | - |\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(table_dash_cell_file, select={"H016"})
+        assert not any("H016" in e for e in errors), "H016 must not fire for hyphen-only table cell"
+
         # =====================================================================
         # H017: Three dots instead of ellipsis character
         # =====================================================================
