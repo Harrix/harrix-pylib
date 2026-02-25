@@ -303,6 +303,32 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
+        # H023: No empty line between paragraphs
+        # =====================================================================
+        no_empty_between_file = temp_path / "no_empty_between.md"
+        no_empty_between_file.write_text(
+            "---\nlang: en\n---\n\nFirst paragraph.\nSecond paragraph.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(no_empty_between_file, select={"H023"})
+        assert any("H023" in e for e in errors)
+
+        # With empty line between paragraphs — no error
+        with_empty_between_file = temp_path / "with_empty_between.md"
+        with_empty_between_file.write_text(
+            "---\nlang: en\n---\n\nFirst paragraph.\n\nSecond paragraph.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(with_empty_between_file, select={"H023"})
+        assert not errors
+
+        # List items without empty line — no H023 (list context)
+        list_file = temp_path / "list_no_empty.md"
+        list_file.write_text("---\nlang: en\n---\n\n* Item one\n* Item two\n", encoding="utf-8")
+        errors = checker.check(list_file, select={"H023"})
+        assert not errors
+
+        # =====================================================================
         # H013: Missing colon before code block
         # =====================================================================
         no_colon_code_file = temp_path / "no_colon_code.md"
