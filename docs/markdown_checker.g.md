@@ -1005,7 +1005,7 @@ class MarkdownChecker:
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
 
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '×' (H025).
+        """Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign 'x' (H025).
 
         Only checks text outside inline code. Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C).
         """
@@ -2313,7 +2313,7 @@ def _check_space_before_punctuation(
 def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '×' (H025).
+Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign 'x' (H025).
 
 Only checks text outside inline code. Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C).
 
