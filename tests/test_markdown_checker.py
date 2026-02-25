@@ -721,6 +721,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(x86_file, select={"H025"})
         assert not errors
 
+        # "2x Type-C", "1x USB" (digit + x + space) should not trigger H025
+        digit_x_file = temp_path / "digit_x.md"
+        digit_x_file.write_text(
+            "---\nlang: en\n---\n\n2x Type-C, 1x USB, 1x Micro SD.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(digit_x_file, select={"H025"})
+        assert not errors
+
         # x inside inline code should not trigger H025
         x_code_file = temp_path / "x_code.md"
         x_code_file.write_text("---\nlang: en\n---\n\nUse `x` variable.\n", encoding="utf-8")
