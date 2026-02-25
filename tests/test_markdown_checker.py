@@ -630,3 +630,48 @@ def test_markdown_checker() -> None:
         normal_space_file.write_text("---\nlang: en\n---\n\nText with normal space.\n", encoding="utf-8")
         errors = checker.check(normal_space_file, select={"H022"})
         assert not errors
+        # =====================================================================
+        # H024: Capitalized Russian polite pronoun (ru only)
+        # =====================================================================
+        ru_vy_file = temp_path / "ru_vy.md"
+        ru_vy_file.write_text(
+            "---\nlang: ru\n---\n\nОбращаемся к Вам с предложением.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_vy_file, select={"H024"})
+        assert any("H024" in e for e in errors)
+
+        # "Вы" at sentence start is allowed (only flag mid-sentence)
+        ru_vy_sentence_start_file = temp_path / "ru_vy_sentence_start.md"
+        ru_vy_sentence_start_file.write_text(
+            "---\nlang: ru\n---\n\nВы можете это увидеть.\n\nТут Вам не рады.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_vy_sentence_start_file, select={"H024"})
+        h024_errors = [e for e in errors if "H024" in e]
+        assert len(h024_errors) == 1, "Exactly one H024 (Вам in middle), not Вы at start"
+        assert "вам" in h024_errors[0].lower()
+
+        # Lowercase "вы" should not trigger H024
+        ru_vy_lower_file = temp_path / "ru_vy_lower.md"
+        ru_vy_lower_file.write_text(
+            "---\nlang: ru\n---\n\nОбращаемся к вам с предложением.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_vy_lower_file, select={"H024"})
+        assert not errors
+
+        # lang: en with "Вы" should not trigger H024 (rule only for ru)
+        en_vy_file = temp_path / "en_vy.md"
+        en_vy_file.write_text("---\nlang: en\n---\n\nSome text with Вы.\n", encoding="utf-8")
+        errors = checker.check(en_vy_file, select={"H024"})
+        assert not errors
+
+        # "Вы" inside inline code should not trigger H024
+        ru_vy_code_file = temp_path / "ru_vy_code.md"
+        ru_vy_code_file.write_text(
+            "---\nlang: ru\n---\n\nUse variable `Вы` in code.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_vy_code_file, select={"H024"})
+        assert not errors

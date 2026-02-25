@@ -38,6 +38,7 @@ class MarkdownChecker:
     - **H021** - Lowercase letter after sentence-ending punctuation.
     - **H022** - Non-breaking space character found.
     - **H023** - No empty line between paragraphs.
+    - **H024** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
 
     """
 
@@ -69,7 +70,29 @@ class MarkdownChecker:
         "H021": "Lowercase letter after sentence-ending punctuation",
         "H022": "Non-breaking space character found",
         "H023": "No empty line between paragraphs",
+        "H024": "Capitalized Russian polite pronoun (use lowercase when addressing reader)",
     }
+
+    # Russian polite "you" pronouns that must be lowercase when addressing the reader (lang: ru)
+    RUSSIAN_POLITE_PRONOUNS_CAPITALIZED: ClassVar[tuple[str, ...]] = (
+        "Вы",
+        "Вас",
+        "Вам",
+        "Вами",
+        "Ваш",
+        "Вашего",
+        "Ваше",
+        "Вашу",
+        "Вашей",
+        "Ваша",
+        "Вашему",
+        "Вашим",
+        "Вашем",
+        "Вашею",
+        "Ваши",
+        "Ваших",
+        "Вашими",
+    )
 
     # Dictionary of incorrect word forms that should be flagged
     INCORRECT_WORDS: ClassVar[dict[str, str]] = {
@@ -270,8 +293,13 @@ class MarkdownChecker:
             yaml_end_line = self._find_yaml_end_line(all_lines)
             yaml_part, _ = h.md.split_yaml_content(content)
 
+            try:
+                yaml_data = yaml.safe_load(yaml_part.replace("---\n", "").replace("\n---", "")) if yaml_part else None
+                lang = (yaml_data or {}).get("lang") or ""
+            except Exception:
+                lang = ""
             yield from self._check_yaml_rules(filename, yaml_part, all_lines, rules)
-            yield from self._check_content_rules(filename, all_lines, yaml_end_line, rules, content)
+            yield from self._check_content_rules(filename, all_lines, yaml_end_line, rules, content, lang=lang)
             yield from self._check_code_rules(filename, all_lines, yaml_end_line, rules)
 
         except Exception as e:
@@ -400,7 +428,7 @@ class MarkdownChecker:
     # =========================================================================
 
     def _check_content_rules(
-        self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set, content: str = ""
+        self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set, content: str = "", *, lang: str = ""
     ) -> Generator[str, None, None]:
         """Check content-related rules working directly with original file lines."""
         # Get content lines (after YAML)
@@ -436,6 +464,7 @@ class MarkdownChecker:
                     code_block_info,
                     rules,
                     yaml_end_line,
+                    lang=lang,
                 )
 
     def _check_dash_usage(
@@ -649,6 +678,8 @@ class MarkdownChecker:
         code_block_info: list,
         rules: set,
         yaml_end_line: int,
+        *,
+        lang: str = "",
     ) -> Generator[str, None, None]:
         """Check rules that apply only to non-code lines (markdown content, not YAML/code)."""
         # Remove inline code from line before checking text rules
@@ -705,6 +736,10 @@ class MarkdownChecker:
         if "H021" in rules:
             yield from self._check_lowercase_after_punctuation(filename, line, clean_line, line_num)
 
+        # H024: Capitalized Russian polite pronoun (ru only)
+        if "H024" in rules and lang == "ru":
+            yield from self._check_russian_polite_pronouns(filename, line, clean_line, line_num)
+
     def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
         """Check for incorrect quote characters (H018)."""
         incorrect_quotes = [
@@ -720,6 +755,45 @@ class MarkdownChecker:
                 pos = line.find(char) if char in line else clean_line.find(char)
                 error_msg = f"{self.RULES['H018']}: found {description}"
                 yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
+
+    def _check_russian_polite_pronouns(
+        self, filename: Path, line: str, clean_line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        """Check for capitalized Russian polite pronouns (H024). Use lowercase when addressing the reader.
+
+        Exception: pronoun at sentence start (after line start or after .!?) is allowed.
+        Yields at most one error per line.
+        """
+        # Word boundary: not letter/digit before and after (Cyrillic + Latin)
+        boundary_before = r"(?<![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001 # ignore: HP001
+        boundary_after = r"(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001 # ignore: HP001
+        code_ranges: list[tuple[int, int]] = []
+        pos = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def inside_inline_code(offset: int) -> bool:
+            return any(s <= offset < e for s, e in code_ranges)
+
+        def at_sentence_start(match_start: int) -> bool:
+            text_before = line[:match_start]
+            if not text_before.strip():
+                return True
+            return bool(re.search(r"[.!?]\s*$", text_before))
+
+        for word in self.RUSSIAN_POLITE_PRONOUNS_CAPITALIZED:
+            pattern = boundary_before + re.escape(word) + boundary_after
+            for match in re.finditer(pattern, line):
+                if inside_inline_code(match.start()):
+                    continue
+                if at_sentence_start(match.start()):
+                    continue
+                error_msg = f'{self.RULES["H024"]}: use lowercase "{word.lower()}" when addressing reader'
+                yield self._format_error("H024", error_msg, filename, line_num=line_num, col=match.start() + 1)
+                return
+        return
 
     def _check_space_before_punctuation(
         self, filename: Path, line: str, _clean_line: str, line_num: int
