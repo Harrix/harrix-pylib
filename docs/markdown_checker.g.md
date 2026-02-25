@@ -44,6 +44,7 @@ lang: en
   - [⚙️ Method `_find_yaml_field_line_in_original`](#%EF%B8%8F-method-_find_yaml_field_line_in_original)
   - [⚙️ Method `_format_error`](#%EF%B8%8F-method-_format_error)
   - [⚙️ Method `_get_relative_path`](#%EF%B8%8F-method-_get_relative_path)
+  - [⚙️ Method `_inside_details_block`](#%EF%B8%8F-method-_inside_details_block)
   - [⚙️ Method `_is_paragraph_pair_requiring_empty_line`](#%EF%B8%8F-method-_is_paragraph_pair_requiring_empty_line)
   - [⚙️ Method `_is_table_cell_only_dash`](#%EF%B8%8F-method-_is_table_cell_only_dash)
   - [⚙️ Method `_remove_inline_code`](#%EF%B8%8F-method-_remove_inline_code)
@@ -586,6 +587,9 @@ class MarkdownChecker:
             _, is_code_next = code_block_info[i + 1] if i + 1 < len(code_block_info) else (line_i_next, False)
             if is_code_i or is_code_next:
                 continue
+            # Skip pairs inside <details>...</details> block (no empty line required there)
+            if self._inside_details_block(content_lines, i):
+                continue
             if not self._is_paragraph_pair_requiring_empty_line(line_i, line_i_next):
                 continue
             actual_line_num = (yaml_end_line - 1) + i + 1
@@ -915,10 +919,27 @@ class MarkdownChecker:
         except ValueError:
             return str(filename.resolve())
 
+    def _inside_details_block(self, content_lines: list[str], line_index: int) -> bool:
+        """Return True if line at line_index is inside a <details>...</details> block."""
+        nest = 0
+        for j in range(line_index + 1):
+            line_lower = content_lines[j].strip().lower()
+            if "<details" in line_lower:
+                nest += 1
+            if "</details>" in line_lower:
+                nest -= 1
+        return nest > 0
+
     def _is_paragraph_pair_requiring_empty_line(self, line_i: str, line_i_next: str) -> bool:
         """Return True if these two consecutive non-empty lines should have an empty line between them."""
         stripped_i = line_i.strip()
         if not stripped_i:
+            return False
+        # Do not require empty line between/around <details> and <summary> tags
+        stripped_next = line_i_next.strip().lower()
+        if stripped_i.lower().startswith(("<details", "</details>", "<summary", "</summary>")):
+            return False
+        if stripped_next.startswith(("<details", "</details>", "<summary", "</summary>")):
             return False
         first_char = stripped_i[0]
         # Current line starts with math block
@@ -1502,6 +1523,9 @@ def _check_empty_line_between_paragraphs(
             _, is_code_next = code_block_info[i + 1] if i + 1 < len(code_block_info) else (line_i_next, False)
             if is_code_i or is_code_next:
                 continue
+            # Skip pairs inside <details>...</details> block (no empty line required there)
+            if self._inside_details_block(content_lines, i):
+                continue
             if not self._is_paragraph_pair_requiring_empty_line(line_i, line_i_next):
                 continue
             actual_line_num = (yaml_end_line - 1) + i + 1
@@ -2077,6 +2101,31 @@ def _get_relative_path(self, filename: Path) -> str:
 
 </details>
 
+### ⚙️ Method `_inside_details_block`
+
+```python
+def _inside_details_block(self, content_lines: list[str], line_index: int) -> bool
+```
+
+Return True if line at line_index is inside a <details>...</details> block.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _inside_details_block(self, content_lines: list[str], line_index: int) -> bool:
+        nest = 0
+        for j in range(line_index + 1):
+            line_lower = content_lines[j].strip().lower()
+            if "<details" in line_lower:
+                nest += 1
+            if "</details>" in line_lower:
+                nest -= 1
+        return nest > 0
+```
+
+</details>
+
 ### ⚙️ Method `_is_paragraph_pair_requiring_empty_line`
 
 ```python
@@ -2092,6 +2141,12 @@ Return True if these two consecutive non-empty lines should have an empty line b
 def _is_paragraph_pair_requiring_empty_line(self, line_i: str, line_i_next: str) -> bool:
         stripped_i = line_i.strip()
         if not stripped_i:
+            return False
+        # Do not require empty line between/around <details> and <summary> tags
+        stripped_next = line_i_next.strip().lower()
+        if stripped_i.lower().startswith(("<details", "</details>", "<summary", "</summary>")):
+            return False
+        if stripped_next.startswith(("<details", "</details>", "<summary", "</summary>")):
             return False
         first_char = stripped_i[0]
         # Current line starts with math block

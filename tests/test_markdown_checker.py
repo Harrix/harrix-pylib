@@ -328,6 +328,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(list_file, select={"H023"})
         assert not errors
 
+        # Content inside <details> block — no H023 (details/summary are exceptions)
+        details_block_file = temp_path / "details_block.md"
+        details_block_file.write_text(
+            "---\nlang: en\n---\n\n<details>\n<summary>📖 Содержание</summary>\n\n## Содержание\n\n</details>\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(details_block_file, select={"H023"})
+        assert not errors, "H023 must not flag content inside <details> block"
+
         # =====================================================================
         # H013: Missing colon before code block
         # =====================================================================
