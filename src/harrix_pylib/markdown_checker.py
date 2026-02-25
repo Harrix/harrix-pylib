@@ -556,7 +556,7 @@ class MarkdownChecker:
             if re.match(r"^[\w]+$", incorrect_word):
                 pattern = rf"\b{escaped_word}\b"
             else:
-                pattern = rf"(?<![a-zA-Zа-яА-ЯёЁ0-9_]){escaped_word}(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001
+                pattern = rf"(?<![a-zA-Zа-яА-ЯёЁ0-9_]){escaped_word}(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001 # ignore: HP001
 
             if re.search(pattern, clean_line):
                 match = re.search(pattern, line)
@@ -569,15 +569,15 @@ class MarkdownChecker:
     ) -> Generator[str, None, None]:
         """Check for lowercase letter after sentence-ending punctuation (H021)."""
         # Pattern: sentence end punctuation, space, lowercase letter
-        pattern = r"[.!?]\s+([a-zа-яё])"  # noqa: RUF001
+        pattern = r"[.!?]\s+([a-zа-яё])"  # noqa: RUF001  # ignore: HP001
 
         for match in re.finditer(pattern, clean_line):
             letter = match.group(1)
             pos = match.start()
 
-            # Check for exceptions like "e.g. ", "т. е.", "т. д."  # noqa: RUF003
+            # Check for exceptions like "e.g. ", "т. е.", "т. д."  # noqa: RUF003  # ignore: HP001
             context_before = clean_line[max(0, pos - 4) : pos + 1]
-            exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001
+            exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001  # ignore: HP001
             if any(exc in context_before for exc in exceptions):
                 continue
 
