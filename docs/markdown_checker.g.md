@@ -342,7 +342,7 @@ class MarkdownChecker:
         code_block_info = list(h.md.identify_code_blocks(content_lines))
 
         in_code_block = False
-        for i, (line, is_code_block) in enumerate(code_block_info):
+        for i, (line, _is_code_block) in enumerate(code_block_info):
             actual_line_num = (yaml_end_line - 1) + i + 1
 
             # H007: Incorrect code block language identifier
@@ -1076,7 +1076,7 @@ def _check_code_rules(
         code_block_info = list(h.md.identify_code_blocks(content_lines))
 
         in_code_block = False
-        for i, (line, is_code_block) in enumerate(code_block_info):
+        for i, (line, _is_code_block) in enumerate(code_block_info):
             actual_line_num = (yaml_end_line - 1) + i + 1
 
             # H007: Incorrect code block language identifier
