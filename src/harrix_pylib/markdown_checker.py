@@ -680,10 +680,11 @@ class MarkdownChecker:
         if " !" in clean_line:
             exceptions = [" !details", " !note", " !important", " !warning"]
             pos = clean_line.find(" !")
-            if not any(clean_line[pos:].startswith(exc) for exc in exceptions):
-                if not clean_line.strip().startswith("!"):
-                    error_msg = f'{self.RULES["H015"]}: found " !"'
-                    yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos + 1)
+            if not any(clean_line[pos:].startswith(exc) for exc in exceptions) and not clean_line.strip().startswith(
+                "!"
+            ):
+                error_msg = f'{self.RULES["H015"]}: found " !"'
+                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos + 1)
 
     # =========================================================================
     # YAML Rules (H003-H005)
@@ -806,6 +807,4 @@ class MarkdownChecker:
             return False
         if line.strip().startswith("!["):
             return False
-        if line.strip().startswith("#"):
-            return False
-        return True
+        return not line.strip().startswith("#")
