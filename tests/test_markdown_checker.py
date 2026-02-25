@@ -260,7 +260,7 @@ def test_markdown_checker() -> None:
         # Inline code must not create false H009 (clean_line would have "  " at junction)
         inline_code_no_double_file = temp_path / "inline_code_no_double.md"
         inline_code_no_double_file.write_text(
-            "---\nlang: en\n---\n\nРазметку экрана выбираем `Free` и сами формируем как нам нужно:\n",
+            "---\nlang: en\n---\n\nWe select the layout of the screen `Free` and form it ourselves as we need.:\n",
             encoding="utf-8",
         )
         errors = checker.check(inline_code_no_double_file, select={"H009"})
@@ -389,19 +389,13 @@ def test_markdown_checker() -> None:
 
         # Colon immediately after inline code must not trigger H015 (no real space in source)
         inline_code_colon_file = temp_path / "inline_code_colon.md"
-        inline_code_colon_file.write_text(
-            "---\nlang: en\n---\n\nСами категории добавляются в разделе `Categories`:\n",
-            encoding="utf-8",
-        )
+        inline_code_colon_file.write_text("---\nlang: en\n---\n\nIn `Categories`:\n", encoding="utf-8")
         errors = checker.check(inline_code_colon_file, select={"H015"})
         assert not [e for e in errors if "H015" in e], "H015 must not fire for `code`: (colon after backtick)"
 
         # Space before punctuation inside inline code must not trigger H015
         inline_code_dot_file = temp_path / "inline_code_dot.md"
-        inline_code_dot_file.write_text(
-            "---\nlang: en\n---\n\n- `cd ..`: переход выше на папку\n",
-            encoding="utf-8",
-        )
+        inline_code_dot_file.write_text("---\nlang: en\n---\n\n- `cd ..`: go\n", encoding="utf-8")
         errors = checker.check(inline_code_dot_file, select={"H015"})
         assert not [e for e in errors if "H015" in e], "H015 must not fire for space+dot inside `code`"
 

@@ -43,6 +43,7 @@ lang: en
   - [⚙️ Method `_find_yaml_field_line_in_original`](#%EF%B8%8F-method-_find_yaml_field_line_in_original)
   - [⚙️ Method `_format_error`](#%EF%B8%8F-method-_format_error)
   - [⚙️ Method `_get_relative_path`](#%EF%B8%8F-method-_get_relative_path)
+  - [⚙️ Method `_is_table_cell_only_dash`](#%EF%B8%8F-method-_is_table_cell_only_dash)
   - [⚙️ Method `_remove_inline_code`](#%EF%B8%8F-method-_remove_inline_code)
   - [⚙️ Method `_should_check_paragraph_end`](#%EF%B8%8F-method-_should_check_paragraph_end)
 
@@ -86,6 +87,9 @@ Rules:
 
 ````python
 class MarkdownChecker:
+
+    # Minimum length for a line to be treated as italic-only caption (e.g. _text_)
+    _MIN_ITALIC_CAPTION_LEN: ClassVar[int] = 2
 
     # Rule constants for easier maintenance
     RULES: ClassVar[dict[str, str]] = {
@@ -424,6 +428,15 @@ class MarkdownChecker:
             if line.strip().startswith("<"):
                 return
 
+            # Skip image caption line (italic only, e.g. _Figure 1: ..._): it belongs to previous image
+            stripped = line.strip()
+            if len(stripped) >= self._MIN_ITALIC_CAPTION_LEN and stripped.startswith("_") and stripped.endswith("_"):
+                return
+
+            # Skip list item: no colon required before image when last line is a list item
+            if stripped.startswith("- "):
+                return
+
             if last_char != ":":
                 error_msg = f'{self.RULES["H014"]}: last char is "{last_char}"'
                 yield self._format_error("H014", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
@@ -474,6 +487,10 @@ class MarkdownChecker:
         for segment, in_code in h.md.identify_code_blocks_line(line):
             if not in_code and " - " in segment and not segment.strip().startswith("-"):
                 pos = offset + segment.find(" - ")
+                # Skip if " - " is inside a table cell that contains only hyphen (and spaces), e.g. | - |
+                if "|" in line and self._is_table_cell_only_dash(line, pos):
+                    offset += len(segment)
+                    continue
                 error_msg = f'{self.RULES["H016"]}: " - " should be " — " (em dash)'
                 yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
                 break  # Report only first occurrence per line
@@ -509,10 +526,14 @@ class MarkdownChecker:
                     yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col_pos + 1)
 
     def _check_double_spaces(
-        self, filename: Path, line: str, clean_line: str, line_num: int, content_lines: list[str], line_index: int
+        self, filename: Path, line: str, _clean_line: str, line_num: int, content_lines: list[str], line_index: int
     ) -> Generator[str, None, None]:
-        """Check for double spaces (H009)."""
-        if "  " not in clean_line:
+        """Check for double spaces (H009).
+
+        Uses original line so that removal of inline code does not create
+        false double space when segments are concatenated.
+        """
+        if "  " not in line:
             return
 
         # Skip if line starts with list indentation
@@ -529,7 +550,7 @@ class MarkdownChecker:
         if line.strip().startswith("|"):
             return
 
-        col = clean_line.index("  ") + 1
+        col = line.index("  ") + 1
         yield self._format_error("H009", self.RULES["H009"], filename, line_num=line_num, col=col)
 
     def _check_file_level_rules(
@@ -569,7 +590,7 @@ class MarkdownChecker:
                 # Allow </details> and </summary> (details/summary are valid in markdown)
                 if tag == "</":
                     rest = line_lower[pos:]
-                    if rest.startswith("</details>") or rest.startswith("</summary>"):
+                    if rest.startswith(("</details>", "</summary>")):
                         continue
                 error_msg = f'{self.RULES["H019"]}: found "{tag}"'
                 yield self._format_error("H019", error_msg, filename, line_num=line_num, col=pos + 1)
@@ -710,9 +731,24 @@ class MarkdownChecker:
                 yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
 
     def _check_space_before_punctuation(
-        self, filename: Path, line: str, clean_line: str, line_num: int
+        self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for space before punctuation marks (H015)."""
+        """Check for space before punctuation marks (H015).
+
+        Uses original line so that removal of inline code (e.g. `word`:)
+        does not create false " :" when segments are concatenated.
+        Matches inside inline code (e.g. `cd ..`) are skipped.
+        """
+        pos = 0
+        code_ranges: list[tuple[int, int]] = []
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
         patterns = [
             (r" \.", " ."),
             (r" ,", " ,"),
@@ -722,23 +758,23 @@ class MarkdownChecker:
         ]
 
         for pattern, display in patterns:
-            match = re.search(pattern, clean_line)
+            match = re.search(pattern, line)
             if match:
-                line_match = re.search(pattern, line)
-                col = line_match.start() + 1 if line_match else match.start() + 1
+                if _inside_inline_code(match.start()):
+                    continue
+                col = match.start() + 1
                 error_msg = f'{self.RULES["H015"]}: found "{display}"'
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=col)
 
-        # Special handling for " !" - skip special markers
-        if " !" in clean_line:
+        # Special handling for " !" - skip special markers (check original line)
+        if " !" in line:
             exceptions = [" !details", " !note", " !important", " !warning"]
-            pos = clean_line.find(" !")
-            if not any(clean_line[pos:].startswith(exc) for exc in exceptions) and not clean_line.strip().startswith(
-                "!"
-            ):
-                line_pos = line.find(" !") if " !" in line else pos
+            pos_found = line.find(" !")
+            if _inside_inline_code(pos_found):
+                return
+            if not any(line[pos_found:].startswith(exc) for exc in exceptions) and not line.strip().startswith("!"):
                 error_msg = f'{self.RULES["H015"]}: found " !"'
-                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=line_pos + 1)
+                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
 
     # =========================================================================
     # YAML Rules (H003-H005)
@@ -840,6 +876,20 @@ class MarkdownChecker:
             return str(filename.resolve().relative_to(self.project_root))
         except ValueError:
             return str(filename.resolve())
+
+    def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
+        """Return True if position pos in line is inside a table cell that contains only hyphen (and spaces)."""
+        parts = line.split("|")
+        count_parts = 2
+        if len(parts) < count_parts:
+            return False
+        start = 0
+        for part in parts:
+            end = start + len(part)
+            if start <= pos < end:
+                return part.strip() == "-"
+            start = end + 1  # +1 for the | after this cell
+        return False
 
     def _remove_inline_code(self, line: str) -> str:
         """Remove inline code segments from line."""
@@ -1068,7 +1118,6 @@ def _check_code_rules(
         content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
         code_block_info = list(h.md.identify_code_blocks(content_lines))
 
-        in_code_block = False
         for i, (line, _is_code_block) in enumerate(code_block_info):
             actual_line_num = (yaml_end_line - 1) + i + 1
 
@@ -1082,7 +1131,6 @@ def _check_code_rules(
                         correct = self.INCORRECT_LANGUAGES[language]
                         error_msg = f'{self.RULES["H007"]}: "{language}" should be "{correct}"'
                         yield self._format_error("H007", error_msg, filename, line_num=actual_line_num, col=col)
-
 ````
 
 </details>
@@ -1192,6 +1240,15 @@ def _check_colon_before_image(
             if line.strip().startswith("<"):
                 return
 
+            # Skip image caption line (italic only, e.g. _Figure 1: ..._): it belongs to previous image
+            stripped = line.strip()
+            if len(stripped) >= self._MIN_ITALIC_CAPTION_LEN and stripped.startswith("_") and stripped.endswith("_"):
+                return
+
+            # Skip list item: no colon required before image when last line is a list item
+            if stripped.startswith("- "):
+                return
+
             if last_char != ":":
                 error_msg = f'{self.RULES["H014"]}: last char is "{last_char}"'
                 yield self._format_error("H014", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
@@ -1266,6 +1323,10 @@ def _check_dash_usage(
         for segment, in_code in h.md.identify_code_blocks_line(line):
             if not in_code and " - " in segment and not segment.strip().startswith("-"):
                 pos = offset + segment.find(" - ")
+                # Skip if " - " is inside a table cell that contains only hyphen (and spaces), e.g. | - |
+                if "|" in line and self._is_table_cell_only_dash(line, pos):
+                    offset += len(segment)
+                    continue
                 error_msg = f'{self.RULES["H016"]}: " - " should be " — " (em dash)'
                 yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
                 break  # Report only first occurrence per line
@@ -1306,19 +1367,22 @@ def _check_dash_usage(
 ### ⚙️ Method `_check_double_spaces`
 
 ```python
-def _check_double_spaces(self, filename: Path, line: str, clean_line: str, line_num: int, content_lines: list[str], line_index: int) -> Generator[str, None, None]
+def _check_double_spaces(self, filename: Path, line: str, _clean_line: str, line_num: int, content_lines: list[str], line_index: int) -> Generator[str, None, None]
 ```
 
 Check for double spaces (H009).
+
+Uses original line so that removal of inline code does not create
+false double space when segments are concatenated.
 
 <details>
 <summary>Code:</summary>
 
 ```python
 def _check_double_spaces(
-        self, filename: Path, line: str, clean_line: str, line_num: int, content_lines: list[str], line_index: int
+        self, filename: Path, line: str, _clean_line: str, line_num: int, content_lines: list[str], line_index: int
     ) -> Generator[str, None, None]:
-        if "  " not in clean_line:
+        if "  " not in line:
             return
 
         # Skip if line starts with list indentation
@@ -1335,7 +1399,7 @@ def _check_double_spaces(
         if line.strip().startswith("|"):
             return
 
-        col = clean_line.index("  ") + 1
+        col = line.index("  ") + 1
         yield self._format_error("H009", self.RULES["H009"], filename, line_num=line_num, col=col)
 ```
 
@@ -1413,7 +1477,7 @@ def _check_html_tags(
                 # Allow </details> and </summary> (details/summary are valid in markdown)
                 if tag == "</":
                     rest = line_lower[pos:]
-                    if rest.startswith("</details>") or rest.startswith("</summary>"):
+                    if rest.startswith(("</details>", "</summary>")):
                         continue
                 error_msg = f'{self.RULES["H019"]}: found "{tag}"'
                 yield self._format_error("H019", error_msg, filename, line_num=line_num, col=pos + 1)
@@ -1629,18 +1693,32 @@ def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: in
 ### ⚙️ Method `_check_space_before_punctuation`
 
 ```python
-def _check_space_before_punctuation(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]
+def _check_space_before_punctuation(self, filename: Path, line: str, _clean_line: str, line_num: int) -> Generator[str, None, None]
 ```
 
 Check for space before punctuation marks (H015).
+
+Uses original line so that removal of inline code (e.g. `word`:)
+does not create false " :" when segments are concatenated.
+Matches inside inline code (e.g. `cd ..`) are skipped.
 
 <details>
 <summary>Code:</summary>
 
 ```python
 def _check_space_before_punctuation(
-        self, filename: Path, line: str, clean_line: str, line_num: int
+        self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
+        pos = 0
+        code_ranges: list[tuple[int, int]] = []
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
         patterns = [
             (r" \.", " ."),
             (r" ,", " ,"),
@@ -1650,23 +1728,23 @@ def _check_space_before_punctuation(
         ]
 
         for pattern, display in patterns:
-            match = re.search(pattern, clean_line)
+            match = re.search(pattern, line)
             if match:
-                line_match = re.search(pattern, line)
-                col = line_match.start() + 1 if line_match else match.start() + 1
+                if _inside_inline_code(match.start()):
+                    continue
+                col = match.start() + 1
                 error_msg = f'{self.RULES["H015"]}: found "{display}"'
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=col)
 
-        # Special handling for " !" - skip special markers
-        if " !" in clean_line:
+        # Special handling for " !" - skip special markers (check original line)
+        if " !" in line:
             exceptions = [" !details", " !note", " !important", " !warning"]
-            pos = clean_line.find(" !")
-            if not any(clean_line[pos:].startswith(exc) for exc in exceptions) and not clean_line.strip().startswith(
-                "!"
-            ):
-                line_pos = line.find(" !") if " !" in line else pos
+            pos_found = line.find(" !")
+            if _inside_inline_code(pos_found):
+                return
+            if not any(line[pos_found:].startswith(exc) for exc in exceptions) and not line.strip().startswith("!"):
                 error_msg = f'{self.RULES["H015"]}: found " !"'
-                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=line_pos + 1)
+                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
 ```
 
 </details>
@@ -1890,6 +1968,34 @@ def _get_relative_path(self, filename: Path) -> str:
             return str(filename.resolve().relative_to(self.project_root))
         except ValueError:
             return str(filename.resolve())
+```
+
+</details>
+
+### ⚙️ Method `_is_table_cell_only_dash`
+
+```python
+def _is_table_cell_only_dash(self, line: str, pos: int) -> bool
+```
+
+Return True if position pos in line is inside a table cell that contains only hyphen (and spaces).
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
+        parts = line.split("|")
+        count_parts = 2
+        if len(parts) < count_parts:
+            return False
+        start = 0
+        for part in parts:
+            end = start + len(part)
+            if start <= pos < end:
+                return part.strip() == "-"
+            start = end + 1  # +1 for the | after this cell
+        return False
 ```
 
 </details>

@@ -40,6 +40,9 @@ class MarkdownChecker:
 
     """
 
+    # Minimum length for a line to be treated as italic-only caption (e.g. _text_)
+    _MIN_ITALIC_CAPTION_LEN: ClassVar[int] = 2
+
     # Rule constants for easier maintenance
     RULES: ClassVar[dict[str, str]] = {
         "H001": "Presence of a space in the Markdown file name",
@@ -377,9 +380,9 @@ class MarkdownChecker:
             if line.strip().startswith("<"):
                 return
 
-            # Skip image caption line (italic only, e.g. _Рисунок 21 — ..._): it belongs to previous image
+            # Skip image caption line (italic only, e.g. _Figure 1: ..._): it belongs to previous image
             stripped = line.strip()
-            if len(stripped) >= 2 and stripped.startswith("_") and stripped.endswith("_"):
+            if len(stripped) >= self._MIN_ITALIC_CAPTION_LEN and stripped.startswith("_") and stripped.endswith("_"):
                 return
 
             # Skip list item: no colon required before image when last line is a list item
@@ -426,19 +429,6 @@ class MarkdownChecker:
                     rules,
                     yaml_end_line,
                 )
-
-    def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
-        """Return True if position pos in line is inside a table cell that contains only hyphen (and spaces)."""
-        parts = line.split("|")
-        if len(parts) < 2:
-            return False
-        start = 0
-        for part in parts:
-            end = start + len(part)
-            if start <= pos < end:
-                return part.strip() == "-"
-            start = end + 1  # +1 for the | after this cell
-        return False
 
     def _check_dash_usage(
         self, filename: Path, line: str, clean_line: str, line_num: int
@@ -488,7 +478,7 @@ class MarkdownChecker:
                     yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col_pos + 1)
 
     def _check_double_spaces(
-        self, filename: Path, line: str, clean_line: str, line_num: int, content_lines: list[str], line_index: int
+        self, filename: Path, line: str, _clean_line: str, line_num: int, content_lines: list[str], line_index: int
     ) -> Generator[str, None, None]:
         """Check for double spaces (H009).
 
@@ -552,7 +542,7 @@ class MarkdownChecker:
                 # Allow </details> and </summary> (details/summary are valid in markdown)
                 if tag == "</":
                     rest = line_lower[pos:]
-                    if rest.startswith("</details>") or rest.startswith("</summary>"):
+                    if rest.startswith(("</details>", "</summary>")):
                         continue
                 error_msg = f'{self.RULES["H019"]}: found "{tag}"'
                 yield self._format_error("H019", error_msg, filename, line_num=line_num, col=pos + 1)
@@ -693,7 +683,7 @@ class MarkdownChecker:
                 yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
 
     def _check_space_before_punctuation(
-        self, filename: Path, line: str, clean_line: str, line_num: int
+        self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
         """Check for space before punctuation marks (H015).
 
@@ -734,9 +724,7 @@ class MarkdownChecker:
             pos_found = line.find(" !")
             if _inside_inline_code(pos_found):
                 return
-            if not any(line[pos_found:].startswith(exc) for exc in exceptions) and not line.strip().startswith(
-                "!"
-            ):
+            if not any(line[pos_found:].startswith(exc) for exc in exceptions) and not line.strip().startswith("!"):
                 error_msg = f'{self.RULES["H015"]}: found " !"'
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
 
@@ -840,6 +828,20 @@ class MarkdownChecker:
             return str(filename.resolve().relative_to(self.project_root))
         except ValueError:
             return str(filename.resolve())
+
+    def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
+        """Return True if position pos in line is inside a table cell that contains only hyphen (and spaces)."""
+        parts = line.split("|")
+        count_parts = 2
+        if len(parts) < count_parts:
+            return False
+        start = 0
+        for part in parts:
+            end = start + len(part)
+            if start <= pos < end:
+                return part.strip() == "-"
+            start = end + 1  # +1 for the | after this cell
+        return False
 
     def _remove_inline_code(self, line: str) -> str:
         """Remove inline code segments from line."""
