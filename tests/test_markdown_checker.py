@@ -257,6 +257,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(list_indent_file, select={"H009"})
         assert not errors
 
+        # Inline code must not create false H009 (clean_line would have "  " at junction)
+        inline_code_no_double_file = temp_path / "inline_code_no_double.md"
+        inline_code_no_double_file.write_text(
+            "---\nlang: en\n---\n\nРазметку экрана выбираем `Free` и сами формируем как нам нужно:\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(inline_code_no_double_file, select={"H009"})
+        assert not [e for e in errors if "H009" in e], "H009 must not fire for line with inline code only"
+
         # =====================================================================
         # H010: Tab character
         # =====================================================================

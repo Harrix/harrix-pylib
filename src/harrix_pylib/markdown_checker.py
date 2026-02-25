@@ -494,8 +494,12 @@ class MarkdownChecker:
     def _check_double_spaces(
         self, filename: Path, line: str, clean_line: str, line_num: int, content_lines: list[str], line_index: int
     ) -> Generator[str, None, None]:
-        """Check for double spaces (H009)."""
-        if "  " not in clean_line:
+        """Check for double spaces (H009).
+
+        Uses original line so that removal of inline code does not create
+        false double space when segments are concatenated.
+        """
+        if "  " not in line:
             return
 
         # Skip if line starts with list indentation
@@ -512,7 +516,7 @@ class MarkdownChecker:
         if line.strip().startswith("|"):
             return
 
-        col = clean_line.index("  ") + 1
+        col = line.index("  ") + 1
         yield self._format_error("H009", self.RULES["H009"], filename, line_num=line_num, col=col)
 
     def _check_file_level_rules(
