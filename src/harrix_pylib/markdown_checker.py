@@ -576,11 +576,10 @@ class MarkdownChecker:
         for tag in self.FORBIDDEN_HTML_TAGS:
             if tag.lower() in line_lower:
                 pos = line_lower.find(tag.lower())
-                # Allow </details> and </summary> (details/summary are valid in markdown)
-                if tag == "</":
-                    rest = line_lower[pos:]
-                    if rest.startswith(("</details>", "</summary>")):
-                        continue
+                rest = line_lower[pos:]
+                # Allow <details> and <summary> (open and close) — valid in markdown
+                if rest.startswith(("<details", "<details>", "</details>", "<summary", "<summary>", "</summary>")):
+                    continue
                 error_msg = f'{self.RULES["H019"]}: found "{tag}"'
                 yield self._format_error("H019", error_msg, filename, line_num=line_num, col=pos + 1)
 
