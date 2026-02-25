@@ -101,6 +101,16 @@ def test_markdown_checker() -> None:
         errors = checker.check(ru_file)
         assert any("H006" in error for error in errors)
 
+        # Test Russian abbreviations without spaces (т.е., т.д., т.ч., т.п.)
+        ru_abbrev_file = temp_path / "ru_abbrev.md"
+        ru_abbrev_file.write_text(
+            "---\nlang: ru\n---\n\nТо есть т.е. и т.д. правильно писать т. е. и т. д.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_abbrev_file, select={"H006"})
+        assert any("H006" in e and "т.е." in e for e in errors)
+        assert any("H006" in e and "т.д." in e for e in errors)
+
         # Test that code blocks are ignored
         code_block_file = temp_path / "code_block_test.md"
         code_block_file.write_text(
@@ -496,6 +506,18 @@ def test_markdown_checker() -> None:
         errors = checker.check(table_dash_cell_file, select={"H016"})
         assert not any("H016" in e for e in errors), "H016 must not fire for hyphen-only table cell"
 
+        # Double hyphen " -- " should trigger H016
+        double_hyphen_file = temp_path / "double_hyphen.md"
+        double_hyphen_file.write_text("---\nlang: en\n---\n\nDash -- here.\n", encoding="utf-8")
+        errors = checker.check(double_hyphen_file, select={"H016"})
+        assert any("H016" in e and " -- " in e for e in errors)
+
+        # Unicode minus " − " should trigger H016
+        minus_sign_file = temp_path / "minus_sign.md"
+        minus_sign_file.write_text("---\nlang: en\n---\n\nValue \u2212 5.\n", encoding="utf-8")
+        errors = checker.check(minus_sign_file, select={"H016"})
+        assert any("H016" in e for e in errors)
+
         # =====================================================================
         # H017: Three dots instead of ellipsis character
         # =====================================================================
@@ -504,11 +526,17 @@ def test_markdown_checker() -> None:
         errors = checker.check(three_dots_file, select={"H017"})
         assert any("H017" in e for e in errors)
 
-        # Correct ellipsis character should not trigger H017
+        # Correct ellipsis character (in middle of line) should not trigger H017
         ellipsis_file = temp_path / "ellipsis.md"
-        ellipsis_file.write_text("---\nlang: en\n---\n\nWait for it…\n", encoding="utf-8")
+        ellipsis_file.write_text("---\nlang: en\n---\n\nWait for it… and more.\n", encoding="utf-8")
         errors = checker.check(ellipsis_file, select={"H017"})
         assert not errors
+
+        # Ellipsis at end of line should trigger H017
+        ellipsis_eol_file = temp_path / "ellipsis_eol.md"
+        ellipsis_eol_file.write_text("---\nlang: en\n---\n\nWait for it…\n", encoding="utf-8")
+        errors = checker.check(ellipsis_eol_file, select={"H017"})
+        assert any("H017" in e and "end of line" in e for e in errors)
 
         # Three dots inside code block should not trigger H017
         dots_in_code_file = temp_path / "dots_in_code.md"
@@ -768,4 +796,18 @@ def test_markdown_checker() -> None:
             encoding="utf-8",
         )
         errors = checker.check(numero_space_ok_file, select={"H029"})
+        assert not errors
+
+        # =====================================================================
+        # H030: Question mark followed by period
+        # =====================================================================
+        qmark_period_file = temp_path / "qmark_period.md"
+        qmark_period_file.write_text("---\nlang: en\n---\n\nReally?.\n", encoding="utf-8")
+        errors = checker.check(qmark_period_file, select={"H030"})
+        assert any("H030" in e for e in errors)
+
+        # Normal "?" or "." should not trigger H030
+        normal_punct_file = temp_path / "normal_punct.md"
+        normal_punct_file.write_text("---\nlang: en\n---\n\nReally? Yes.\n", encoding="utf-8")
+        errors = checker.check(normal_punct_file, select={"H030"})
         assert not errors

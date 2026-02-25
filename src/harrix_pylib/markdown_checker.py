@@ -44,6 +44,7 @@ class MarkdownChecker:
     - **H027** - Multiplication sign "×" must be between spaces.
     - **H028** - Horizontal bar "―" (dialogue dash) should not be used.
     - **H029** - Space required after "№".
+    - **H030** - Question mark followed by period (?.).
 
     """
 
@@ -81,6 +82,7 @@ class MarkdownChecker:
         "H027": "Multiplication sign × must be between spaces",
         "H028": "Horizontal bar ― (dialogue dash) should not be used",
         "H029": "Space required after №",
+        "H030": "Question mark followed by period (?.)",
     }
 
     # Russian polite "you" pronouns that must be lowercase when addressing the reader (lang: ru)
@@ -194,6 +196,12 @@ class MarkdownChecker:
         "Github": "GitHub",
         "github": "GitHub",
         "git": "Git",
+        # Russian abbreviations (with spaces: т. е., т. д., т. ч., т. п.)
+        "т.е.": "т. е.",  # noqa: RUF001  # ignore: HP001
+        "Т.е.": "Т. е.",  # noqa: RUF001  # ignore: HP001
+        "т.д.": "т. д.",  # noqa: RUF001  # ignore: HP001
+        "т.ч.": "т. ч.",  # noqa: RUF001  # ignore: HP001
+        "т.п.": "т. п.",  # noqa: RUF001  # ignore: HP001
     }
 
     # Incorrect code block language identifiers
@@ -495,6 +503,24 @@ class MarkdownChecker:
                 break  # Report only first occurrence per line
             offset += len(segment)
 
+        # Check for Unicode minus " − " (U+2212) and double hyphen " -- " — should be em dash " — "
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                offset += len(segment)
+                continue
+            if " \u2212 " in segment:  # Unicode minus
+                col = offset + segment.find(" \u2212 ") + 1
+                error_msg = f'{self.RULES["H016"]}: " − " (minus) should be " — " (em dash)'
+                yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
+                break
+            if " -- " in segment:
+                col = offset + segment.find(" -- ") + 1
+                error_msg = f'{self.RULES["H016"]}: " -- " should be " — " (em dash)'
+                yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
+                break
+            offset += len(segment)
+
         # Check for en dash not between digits
         if "–" in clean_line:  # noqa: RUF001
             line_matches = list(re.finditer(r"–", line))  # noqa: RUF001
@@ -749,6 +775,13 @@ class MarkdownChecker:
             error_msg = f'{self.RULES["H017"]}: "..." should be "…"'
             yield self._format_error("H017", error_msg, filename, line_num=line_num, col=col)
 
+        # H017: Ellipsis at end of line
+        if "H017" in rules and clean_line.rstrip().endswith("\u2026"):
+            trimmed = line.rstrip()
+            col = trimmed.rfind("\u2026") + 1
+            error_msg = f'{self.RULES["H017"]}: ellipsis "…" at end of line'
+            yield self._format_error("H017", error_msg, filename, line_num=line_num, col=col)
+
         # H018: Curly/straight quotes
         if "H018" in rules:
             yield from self._check_quotes(filename, line, clean_line, line_num)
@@ -789,6 +822,10 @@ class MarkdownChecker:
         if "H029" in rules:
             yield from self._check_numero_space(filename, line, line_num)
 
+        # H030: Question mark followed by period
+        if "H030" in rules:
+            yield from self._check_question_mark_period(filename, line, line_num)
+
     def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that '№' is followed by a space (H029)."""
         idx = 0
@@ -800,6 +837,20 @@ class MarkdownChecker:
                 error_msg = self.RULES["H029"]
                 yield self._format_error("H029", error_msg, filename, line_num=line_num, col=pos + 1)
             idx = pos + 1
+
+    def _check_question_mark_period(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for question mark followed by period '?.' (H030)."""
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                offset += len(segment)
+                continue
+            if "?." in segment:
+                col = offset + segment.find("?.") + 1
+                error_msg = self.RULES["H030"]
+                yield self._format_error("H030", error_msg, filename, line_num=line_num, col=col)
+                return
+            offset += len(segment)
 
     def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
         """Check for incorrect quote characters (H018)."""
