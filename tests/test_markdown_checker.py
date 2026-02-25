@@ -704,6 +704,24 @@ def test_markdown_checker() -> None:
         errors = checker.check(ru_vy_code_file, select={"H024"})
         assert not errors
 
+        # "Ваша" after « (direct speech) is sentence start — no H024
+        ru_vy_guillemet_file = temp_path / "ru_vy_guillemet.md"
+        ru_vy_guillemet_file.write_text(
+            "---\nlang: ru\n---\n\nВедущий говорит: «Ваша задача определить, сколько я показываю гаражей».\n",  # noqa: RUF001
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_vy_guillemet_file, select={"H024"})
+        assert not errors
+
+        # "Ваша" after dash at line start (dialogue) is sentence start — no H024
+        ru_vy_dash_dialogue_file = temp_path / "ru_vy_dash_dialogue.md"
+        ru_vy_dash_dialogue_file.write_text(
+            "---\nlang: ru\n---\n\n— Ваша работа хороша.\n",  # noqa: RUF001
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_vy_dash_dialogue_file, select={"H024"})
+        assert not errors
+
         # =====================================================================
         # H025: Latin x or Cyrillic x instead of ×  # noqa: RUF003
         # =====================================================================

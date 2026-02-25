@@ -867,7 +867,10 @@ class MarkdownChecker:
     ) -> Generator[str, None, None]:
         """Check for capitalized Russian polite pronouns (H024). Use lowercase when addressing the reader.
 
-        Exception: pronoun at sentence start (after line start or after .!?) is allowed.
+        Exception: pronoun at sentence start is allowed:
+        - after line start or after .!?;
+        - after opening guillemet « (direct speech, e.g. «Ваша задача);
+        - after dash at line start (dialogue, e.g. — Ваша работа хороша).
         Yields at most one error per line.
         """
         # Word boundary: not letter/digit before and after (Cyrillic + Latin)
@@ -885,9 +888,18 @@ class MarkdownChecker:
 
         def at_sentence_start(match_start: int) -> bool:
             text_before = line[:match_start]
-            if not text_before.strip():
+            stripped = text_before.strip()
+            if not stripped:
                 return True
-            return bool(re.search(r"[.!?]\s*$", text_before))
+            if re.search(r"[.!?]\s*$", text_before):
+                return True
+            # After opening guillemet « (direct speech): next word is sentence start
+            if stripped.endswith("\u00AB"):  # «
+                return True
+            # Dash at line start (dialogue): — Ваша работа or - Ваша работа
+            if re.match(r"^\s*[—\-]\s*$", text_before):
+                return True
+            return False
 
         for word in self.RUSSIAN_POLITE_PRONOUNS_CAPITALIZED:
             pattern = boundary_before + re.escape(word) + boundary_after
