@@ -41,7 +41,6 @@ class MarkdownChecker:
     - **H024** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
     - **H025** - Latin "x" or Cyrillic "х" used instead of multiplication sign "×".
     - **H026** - Image markdown "![" found not at start of line.
-    - **H027** - Multiplication sign "×" must be between spaces.
     - **H028** - Horizontal bar "―" (dialogue dash) should not be used.
     - **H029** - Space required after "№".
     - **H030** - Question mark followed by period (?.).
@@ -79,7 +78,6 @@ class MarkdownChecker:
         "H024": "Capitalized Russian polite pronoun (use lowercase when addressing reader)",
         "H025": "Latin x or Cyrillic х used instead of multiplication sign ×",
         "H026": "Image markdown ![ found not at start of line",
-        "H027": "Multiplication sign × must be between spaces",
         "H028": "Horizontal bar ― (dialogue dash) should not be used",
         "H029": "Space required after №",
         "H030": "Question mark followed by period (?.)",
@@ -810,10 +808,6 @@ class MarkdownChecker:
         if "H026" in rules:
             yield from self._check_image_not_at_line_start(filename, line, line_num)
 
-        # H027: × must be between spaces
-        if "H027" in rules:
-            yield from self._check_times_sign_spaces(filename, line, clean_line, line_num)
-
         # H028: Horizontal bar ―
         if "H028" in rules:
             yield from self._check_horizontal_bar(filename, line, clean_line, line_num)
@@ -952,33 +946,6 @@ class MarkdownChecker:
             if not any(line[pos_found:].startswith(exc) for exc in exceptions) and not line.strip().startswith("!"):
                 error_msg = f'{self.RULES["H015"]}: found " !"'
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
-
-    def _check_times_sign_spaces(
-        self, filename: Path, line: str, clean_line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check that multiplication sign '×' is between spaces (H027)."""
-        if "\u00d7" not in clean_line:  # ×
-            return
-        offset = 0
-        for segment, in_code in h.md.identify_code_blocks_line(line):
-            if in_code:
-                offset += len(segment)
-                continue
-            for i, char in enumerate(segment):
-                if char != "\u00d7":
-                    continue
-                pos = i
-                before = segment[pos - 1] if pos > 0 else ""
-                after = segment[pos + 1] if pos + 1 < len(segment) else ""
-                col = offset + pos + 1
-                if pos == 0 or pos == len(segment) - 1:
-                    error_msg = f'{self.RULES["H027"]}: "×" at line start/end'
-                elif before != " " or after != " ":
-                    error_msg = f'{self.RULES["H027"]}: "×" should be between spaces'
-                else:
-                    continue
-                yield self._format_error("H027", error_msg, filename, line_num=line_num, col=col)
-            offset += len(segment)
 
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check for Latin 'x' or Cyrillic 'х' used instead of multiplication sign '×' (H025).

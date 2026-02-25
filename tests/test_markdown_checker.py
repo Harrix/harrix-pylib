@@ -751,23 +751,6 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H027: × must be between spaces
-        # =====================================================================
-        times_no_space_file = temp_path / "times_no_space.md"
-        times_no_space_file.write_text(
-            "---\nlang: ru\n---\n\n5×10 or 5 ×10.\n",
-            encoding="utf-8",
-        )
-        errors = checker.check(times_no_space_file, select={"H027"})
-        assert any("H027" in e for e in errors)
-
-        # × between spaces should not trigger H027
-        times_space_ok_file = temp_path / "times_space_ok.md"
-        times_space_ok_file.write_text("---\nlang: ru\n---\n\n5 × 10.\n", encoding="utf-8")
-        errors = checker.check(times_space_ok_file, select={"H027"})
-        assert not errors
-
-        # =====================================================================
         # H028: Horizontal bar ―
         # =====================================================================
         horizontal_bar_file = temp_path / "horizontal_bar.md"
