@@ -708,10 +708,10 @@ class MarkdownChecker:
             letter = match.group(1)
             pos = match.start()
 
-            # Check for exceptions like "e.g. ", "т. е.", "т. д."  # noqa: RUF003  # ignore: HP001
-            context_before = clean_line[max(0, pos - 4) : pos + 1]
+            # Check for exceptions like "e.g. ", "т. е.", "т. д." (include space+letter so "т. д" is visible)
+            context = clean_line[max(0, pos - 4) : match.end()]
             exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001  # ignore: HP001
-            if any(exc in context_before for exc in exceptions):
+            if any(exc in context for exc in exceptions):
                 continue
 
             line_match = re.search(re.escape(match.group(0)), line)

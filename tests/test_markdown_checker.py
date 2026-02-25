@@ -645,6 +645,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(abbrev_file, select={"H021"})
         assert not errors
 
+        # Russian abbreviations "т. д.", "т. е." should not trigger H021
+        ru_abbrev_file = temp_path / "ru_abbrev_td_te.md"
+        ru_abbrev_file.write_text(
+            "---\nlang: ru\n---\n\nНачинкой (капустной, крапивной и т. д.) заливают. Используют т. е. так.\n",  # noqa: RUF001
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_abbrev_file, select={"H021"})
+        assert not errors
+
         # =====================================================================
         # H022: Non-breaking space
         # =====================================================================
