@@ -192,9 +192,9 @@ class MarkdownChecker:
     INCORRECT_CODE_DASHES: ClassVar[dict[str, str]] = {
         "―": "horizontal bar",
         "—": "em dash",
-        "‒": "figure dash",
-        "−": "minus sign",
-        "‐": "hyphen",
+        "‒": "figure dash",  # noqa: RUF001
+        "−": "minus sign",  # noqa: RUF001
+        "‐": "hyphen",  # noqa: RUF001
     }
 
     def __init__(self, project_root: Path | str | None = None) -> None:
@@ -323,7 +323,13 @@ class MarkdownChecker:
                         yield self._format_error("H023", error_msg, filename, line_num=actual_line_num, col=col)
 
     def _check_colon_before_code(
-        self, filename: Path, line: str, line_num: int, content_lines: list[str], line_index: int, code_block_info: list
+        self,
+        filename: Path,
+        line: str,
+        line_num: int,
+        _content_lines: list[str],
+        line_index: int,
+        code_block_info: list,
     ) -> Generator[str, None, None]:
         """Check for missing colon before code block (H013)."""
         if line_index + 2 >= len(code_block_info):
@@ -435,12 +441,10 @@ class MarkdownChecker:
     ) -> Generator[str, None, None]:
         """Check for incorrect dash/hyphen usage (H016)."""
         # Check for " - " (hyphen with spaces should be em dash)
-        if " - " in clean_line:
-            # Skip if line starts with list marker
-            if not clean_line.strip().startswith("-"):
-                pos = line.find(" - ") if " - " in line else clean_line.find(" - ")
-                error_msg = f'{self.RULES["H016"]}: " - " should be " — " (em dash)'
-                yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
+        if " - " in clean_line and not clean_line.strip().startswith("-"):
+            pos = line.find(" - ") if " - " in line else clean_line.find(" - ")
+            error_msg = f'{self.RULES["H016"]}: " - " should be " — " (em dash)'
+            yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
 
         # Check for en dash not between digits
         if "–" in clean_line:  # noqa: RUF001
