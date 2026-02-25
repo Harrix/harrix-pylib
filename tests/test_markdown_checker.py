@@ -16,7 +16,7 @@ def test_markdown_checker() -> None:
         temp_path = Path(temp_dir)
 
         # =====================================================================
-        # H001: Space in filename
+        # H001: Space in filename  # noqa: ERA001
         # =====================================================================
         file_with_space = temp_path / "file name.md"
         file_with_space.write_text("---\nlang: en\n---\n# Test", encoding="utf-8")
@@ -24,7 +24,7 @@ def test_markdown_checker() -> None:
         assert any("H001" in error for error in errors)
 
         # =====================================================================
-        # H002: Space in path
+        # H002: Space in path  # noqa: ERA001
         # =====================================================================
         space_dir = temp_path / "folder with space"
         space_dir.mkdir()
