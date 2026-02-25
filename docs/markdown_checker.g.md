@@ -765,10 +765,10 @@ class MarkdownChecker:
             letter = match.group(1)
             pos = match.start()
 
-            # Check for exceptions like "e.g. ", "т. е.", "т. д."  # noqa: RUF003  # ignore: HP001
-            context_before = clean_line[max(0, pos - 4) : pos + 1]
+            # Check for exceptions like "e.g. ", "т. е.", "т. д." (include space+letter so "т. д" is visible)
+            context = clean_line[max(0, pos - 4) : match.end()]
             exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001  # ignore: HP001
-            if any(exc in context_before for exc in exceptions):
+            if any(exc in context for exc in exceptions):
                 continue
 
             line_match = re.search(re.escape(match.group(0)), line)
@@ -924,7 +924,10 @@ class MarkdownChecker:
     ) -> Generator[str, None, None]:
         """Check for capitalized Russian polite pronouns (H024). Use lowercase when addressing the reader.
 
-        Exception: pronoun at sentence start (after line start or after .!?) is allowed.
+        Exception: pronoun at sentence start is allowed:
+        - after line start or after .!?;
+        - after opening guillemet « (direct speech, e.g. «Ваша задача);
+        - after dash at line start (dialogue, e.g. — Ваша работа хороша).
         Yields at most one error per line.
         """
         # Word boundary: not letter/digit before and after (Cyrillic + Latin)
@@ -942,9 +945,18 @@ class MarkdownChecker:
 
         def at_sentence_start(match_start: int) -> bool:
             text_before = line[:match_start]
-            if not text_before.strip():
+            stripped = text_before.strip()
+            if not stripped:
                 return True
-            return bool(re.search(r"[.!?]\s*$", text_before))
+            if re.search(r"[.!?]\s*$", text_before):
+                return True
+            # After opening guillemet « (direct speech): next word is sentence start
+            if stripped.endswith("\u00ab"):  # «
+                return True
+            # Dash at line start (dialogue): — Ваша работа or - Ваша работа
+            if re.match(r"^\s*[—\-]\s*$", text_before):
+                return True
+            return False
 
         for word in self.RUSSIAN_POLITE_PRONOUNS_CAPITALIZED:
             pattern = boundary_before + re.escape(word) + boundary_after
@@ -1983,10 +1995,10 @@ def _check_lowercase_after_punctuation(
             letter = match.group(1)
             pos = match.start()
 
-            # Check for exceptions like "e.g. ", "т. е.", "т. д."  # noqa: RUF003  # ignore: HP001
-            context_before = clean_line[max(0, pos - 4) : pos + 1]
+            # Check for exceptions like "e.g. ", "т. е.", "т. д." (include space+letter so "т. д" is visible)
+            context = clean_line[max(0, pos - 4) : match.end()]
             exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001  # ignore: HP001
-            if any(exc in context_before for exc in exceptions):
+            if any(exc in context for exc in exceptions):
                 continue
 
             line_match = re.search(re.escape(match.group(0)), line)
@@ -2204,8 +2216,12 @@ def _check_russian_polite_pronouns(self, filename: Path, line: str, _clean_line:
 
 Check for capitalized Russian polite pronouns (H024). Use lowercase when addressing the reader.
 
-Exception: pronoun at sentence start (after line start or after .!?) is allowed.
-Yields at most one error per line.
+Exception: pronoun at sentence start is allowed:
+
+- after line start or after .!?;
+- after opening guillemet « (direct speech, e.g. «Ваша задача);
+- after dash at line start (dialogue, e.g. — Ваша работа хороша).
+  Yields at most one error per line.
 
 <details>
 <summary>Code:</summary>
@@ -2229,9 +2245,18 @@ def _check_russian_polite_pronouns(
 
         def at_sentence_start(match_start: int) -> bool:
             text_before = line[:match_start]
-            if not text_before.strip():
+            stripped = text_before.strip()
+            if not stripped:
                 return True
-            return bool(re.search(r"[.!?]\s*$", text_before))
+            if re.search(r"[.!?]\s*$", text_before):
+                return True
+            # After opening guillemet « (direct speech): next word is sentence start
+            if stripped.endswith("\u00ab"):  # «
+                return True
+            # Dash at line start (dialogue): — Ваша работа or - Ваша работа
+            if re.match(r"^\s*[—\-]\s*$", text_before):
+                return True
+            return False
 
         for word in self.RUSSIAN_POLITE_PRONOUNS_CAPITALIZED:
             pattern = boundary_before + re.escape(word) + boundary_after

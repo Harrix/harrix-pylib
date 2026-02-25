@@ -894,7 +894,7 @@ class MarkdownChecker:
             if re.search(r"[.!?]\s*$", text_before):
                 return True
             # After opening guillemet « (direct speech): next word is sentence start
-            if stripped.endswith("\u00AB"):  # «
+            if stripped.endswith("\u00ab"):  # «
                 return True
             # Dash at line start (dialogue): — Ваша работа or - Ваша работа
             if re.match(r"^\s*[—\-]\s*$", text_before):
