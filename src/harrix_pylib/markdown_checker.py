@@ -605,10 +605,10 @@ class MarkdownChecker:
         """Check for incorrect quote characters (H018)."""
         incorrect_quotes = [
             ('"', 'straight double quote "'),
-            ('\u201c', 'curly quote \u201c'),
-            ('\u201d', 'curly quote \u201d'),
-            ("« ", 'space after «'),
-            (" »", 'space before »'),
+            ("\u201c", "curly quote \u201c"),
+            ("\u201d", "curly quote \u201d"),
+            ("« ", "space after «"),
+            (" »", "space before »"),
         ]
 
         for char, description in incorrect_quotes:
@@ -646,7 +646,7 @@ class MarkdownChecker:
     ) -> Generator[str, None, None]:
         """Check for lowercase letter after sentence-ending punctuation (H021)."""
         # Pattern: sentence end punctuation, space, lowercase letter
-        pattern = r'[.!?]\s+([a-zа-яё])'  # noqa: RUF001
+        pattern = r"[.!?]\s+([a-zа-яё])"  # noqa: RUF001
 
         for match in re.finditer(pattern, clean_line):
             letter = match.group(1)
