@@ -269,7 +269,8 @@ class PythonChecker:
             if col > 0:
                 location += f":{col}"
 
-        return f"{location}: {error_code} {message}"
+        hint = f" [to ignore: # ignore: {error_code}]" if error_code in self.RULES else ""
+        return f"{location}: {error_code} {message}{hint}"
 
     def _get_file_ignored_rules(self, lines: list[str]) -> set[str]:
         """Get set of rules that should be ignored for the entire file.
