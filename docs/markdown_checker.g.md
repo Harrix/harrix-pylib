@@ -28,14 +28,19 @@ lang: en
   - [⚙️ Method `_check_empty_line_between_paragraphs`](#%EF%B8%8F-method-_check_empty_line_between_paragraphs)
   - [⚙️ Method `_check_file_level_rules`](#%EF%B8%8F-method-_check_file_level_rules)
   - [⚙️ Method `_check_filename_rules`](#%EF%B8%8F-method-_check_filename_rules)
+  - [⚙️ Method `_check_horizontal_bar`](#%EF%B8%8F-method-_check_horizontal_bar)
   - [⚙️ Method `_check_html_tags`](#%EF%B8%8F-method-_check_html_tags)
   - [⚙️ Method `_check_image_caption`](#%EF%B8%8F-method-_check_image_caption)
+  - [⚙️ Method `_check_image_not_at_line_start`](#%EF%B8%8F-method-_check_image_not_at_line_start)
   - [⚙️ Method `_check_incorrect_words`](#%EF%B8%8F-method-_check_incorrect_words)
   - [⚙️ Method `_check_lowercase_after_punctuation`](#%EF%B8%8F-method-_check_lowercase_after_punctuation)
   - [⚙️ Method `_check_non_code_line_rules`](#%EF%B8%8F-method-_check_non_code_line_rules)
+  - [⚙️ Method `_check_numero_space`](#%EF%B8%8F-method-_check_numero_space)
   - [⚙️ Method `_check_quotes`](#%EF%B8%8F-method-_check_quotes)
   - [⚙️ Method `_check_russian_polite_pronouns`](#%EF%B8%8F-method-_check_russian_polite_pronouns)
   - [⚙️ Method `_check_space_before_punctuation`](#%EF%B8%8F-method-_check_space_before_punctuation)
+  - [⚙️ Method `_check_times_sign_spaces`](#%EF%B8%8F-method-_check_times_sign_spaces)
+  - [⚙️ Method `_check_x_instead_of_times`](#%EF%B8%8F-method-_check_x_instead_of_times)
   - [⚙️ Method `_check_yaml_rules`](#%EF%B8%8F-method-_check_yaml_rules)
   - [⚙️ Method `_determine_active_rules`](#%EF%B8%8F-method-_determine_active_rules)
   - [⚙️ Method `_determine_project_root`](#%EF%B8%8F-method-_determine_project_root)
@@ -87,6 +92,11 @@ Rules:
 - **H022** - Non-breaking space character found.
 - **H023** - No empty line between paragraphs.
 - **H024** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
+- **H025** - Latin "x" or Cyrillic "х" used instead of multiplication sign "×".
+- **H026** - Image markdown "![" found not at start of line.
+- **H027** - Multiplication sign "×" must be between spaces.
+- **H028** - Horizontal bar "―" (dialogue dash) should not be used.
+- **H029** - Space required after "№".
 
 <details>
 <summary>Code:</summary>
@@ -123,6 +133,11 @@ class MarkdownChecker:
         "H022": "Non-breaking space character found",
         "H023": "No empty line between paragraphs",
         "H024": "Capitalized Russian polite pronoun (use lowercase when addressing reader)",
+        "H025": "Latin x or Cyrillic х used instead of multiplication sign ×",
+        "H026": "Image markdown ![ found not at start of line",
+        "H027": "Multiplication sign × must be between spaces",
+        "H028": "Horizontal bar ― (dialogue dash) should not be used",
+        "H029": "Space required after №",
     }
 
     # Russian polite "you" pronouns that must be lowercase when addressing the reader (lang: ru)
@@ -652,6 +667,16 @@ class MarkdownChecker:
         if "H002" in rules and " " in str(filename):
             yield self._format_error("H002", self.RULES["H002"], filename)
 
+    def _check_horizontal_bar(
+        self, filename: Path, line: str, clean_line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        """Check for horizontal bar '―' (U+2015, dialogue dash) which should not be used (H028)."""
+        if "\u2015" not in clean_line:
+            return
+        col = line.find("\u2015") + 1
+        error_msg = self.RULES["H028"]
+        yield self._format_error("H028", error_msg, filename, line_num=line_num, col=col)
+
     def _check_html_tags(
         self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
@@ -678,6 +703,15 @@ class MarkdownChecker:
             if caption and caption[0].isalpha() and caption[0].islower():
                 error_msg = f'{self.RULES["H020"]}: caption starts with "{caption[0]}"'
                 yield self._format_error("H020", error_msg, filename, line_num=line_num, col=3)
+
+    def _check_image_not_at_line_start(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check that image markdown '![' is at start of (trimmed) line (H026)."""
+        trimmed = line.strip()
+        if "![" not in trimmed or trimmed.find("![") == 0:
+            return
+        col = line.find("![") + 1
+        error_msg = self.RULES["H026"]
+        yield self._format_error("H026", error_msg, filename, line_num=line_num, col=col)
 
     def _check_incorrect_words(
         self, filename: Path, line: str, clean_line: str, line_num: int
@@ -792,6 +826,38 @@ class MarkdownChecker:
         if "H024" in rules and lang == "ru":
             yield from self._check_russian_polite_pronouns(filename, line, clean_line, line_num)
 
+        # H025: Latin x or Cyrillic х instead of ×
+        if "H025" in rules:
+            yield from self._check_x_instead_of_times(filename, line, line_num)
+
+        # H026: Image ![ not at start of line
+        if "H026" in rules:
+            yield from self._check_image_not_at_line_start(filename, line, line_num)
+
+        # H027: × must be between spaces
+        if "H027" in rules:
+            yield from self._check_times_sign_spaces(filename, line, clean_line, line_num)
+
+        # H028: Horizontal bar ―
+        if "H028" in rules:
+            yield from self._check_horizontal_bar(filename, line, clean_line, line_num)
+
+        # H029: Space after №
+        if "H029" in rules:
+            yield from self._check_numero_space(filename, line, line_num)
+
+    def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check that '№' is followed by a space (H029)."""
+        idx = 0
+        while True:
+            pos = line.find("\u2116", idx)  # №
+            if pos < 0:
+                break
+            if pos + 1 < len(line) and line[pos + 1] != " ":
+                error_msg = self.RULES["H029"]
+                yield self._format_error("H029", error_msg, filename, line_num=line_num, col=pos + 1)
+            idx = pos + 1
+
     def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
         """Check for incorrect quote characters (H018)."""
         incorrect_quotes = [
@@ -892,6 +958,66 @@ class MarkdownChecker:
             if not any(line[pos_found:].startswith(exc) for exc in exceptions) and not line.strip().startswith("!"):
                 error_msg = f'{self.RULES["H015"]}: found " !"'
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
+
+    def _check_times_sign_spaces(
+        self, filename: Path, line: str, clean_line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        """Check that multiplication sign '×' is between spaces (H027)."""
+        if "\u00d7" not in clean_line:  # ×
+            return
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                offset += len(segment)
+                continue
+            for i, char in enumerate(segment):
+                if char != "\u00d7":
+                    continue
+                pos = i
+                before = segment[pos - 1] if pos > 0 else ""
+                after = segment[pos + 1] if pos + 1 < len(segment) else ""
+                col = offset + pos + 1
+                if pos == 0 or pos == len(segment) - 1:
+                    error_msg = f'{self.RULES["H027"]}: "×" at line start/end'
+                elif before != " " or after != " ":
+                    error_msg = f'{self.RULES["H027"]}: "×" should be between spaces'
+                else:
+                    continue
+                yield self._format_error("H027", error_msg, filename, line_num=line_num, col=col)
+            offset += len(segment)
+
+    def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for Latin 'x' or Cyrillic 'х' used instead of multiplication sign '×' (H025).
+
+        Only checks text outside inline code. Exception: 'x86' and 'x64' are allowed.
+        """
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                offset += len(segment)
+                continue
+            # Latin "x" between space/digit: should be ×, except x86/x64
+            for pos, char in enumerate(segment):
+                if char != "x" and char != "\u0445":  # Latin x, Cyrillic х
+                    continue
+                if pos <= 0 or pos >= len(segment) - 1:
+                    continue
+                before = segment[pos - 1]
+                after = segment[pos + 1]
+                if before not in " \t" and not before.isdigit():
+                    continue
+                if after not in " \t" and not after.isdigit():
+                    continue
+                if char == "x":  # Latin
+                    part = segment[pos : pos + 3]
+                    if before == " " and part in ("x86", "x64"):
+                        continue
+                    error_msg = f'{self.RULES["H025"]}: "x" should be "×"'
+                else:  # Cyrillic х
+                    error_msg = f'{self.RULES["H025"]}: "х" should be "×"'  # noqa: RUF001
+                col = offset + pos + 1
+                yield self._format_error("H025", error_msg, filename, line_num=line_num, col=col)
+            offset += len(segment)
 
     # =========================================================================
     # YAML Rules (H003-H005)
@@ -1666,6 +1792,30 @@ def _check_filename_rules(self, filename: Path, rules: set) -> Generator[str, No
 
 </details>
 
+### ⚙️ Method `_check_horizontal_bar`
+
+```python
+def _check_horizontal_bar(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]
+```
+
+Check for horizontal bar '―' (U+2015, dialogue dash) which should not be used (H028).
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _check_horizontal_bar(
+        self, filename: Path, line: str, clean_line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        if "\u2015" not in clean_line:
+            return
+        col = line.find("\u2015") + 1
+        error_msg = self.RULES["H028"]
+        yield self._format_error("H028", error_msg, filename, line_num=line_num, col=col)
+```
+
+</details>
+
 ### ⚙️ Method `_check_html_tags`
 
 ```python
@@ -1717,6 +1867,29 @@ def _check_image_caption(self, filename: Path, line: str, line_num: int) -> Gene
             if caption and caption[0].isalpha() and caption[0].islower():
                 error_msg = f'{self.RULES["H020"]}: caption starts with "{caption[0]}"'
                 yield self._format_error("H020", error_msg, filename, line_num=line_num, col=3)
+```
+
+</details>
+
+### ⚙️ Method `_check_image_not_at_line_start`
+
+```python
+def _check_image_not_at_line_start(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
+```
+
+Check that image markdown '![' is at start of (trimmed) line (H026).
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _check_image_not_at_line_start(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        trimmed = line.strip()
+        if "![" not in trimmed or trimmed.find("![") == 0:
+            return
+        col = line.find("![") + 1
+        error_msg = self.RULES["H026"]
+        yield self._format_error("H026", error_msg, filename, line_num=line_num, col=col)
 ```
 
 </details>
@@ -1872,6 +2045,52 @@ def _check_non_code_line_rules(
         # H024: Capitalized Russian polite pronoun (ru only)
         if "H024" in rules and lang == "ru":
             yield from self._check_russian_polite_pronouns(filename, line, clean_line, line_num)
+
+        # H025: Latin x or Cyrillic х instead of ×
+        if "H025" in rules:
+            yield from self._check_x_instead_of_times(filename, line, line_num)
+
+        # H026: Image ![ not at start of line
+        if "H026" in rules:
+            yield from self._check_image_not_at_line_start(filename, line, line_num)
+
+        # H027: × must be between spaces
+        if "H027" in rules:
+            yield from self._check_times_sign_spaces(filename, line, clean_line, line_num)
+
+        # H028: Horizontal bar ―
+        if "H028" in rules:
+            yield from self._check_horizontal_bar(filename, line, clean_line, line_num)
+
+        # H029: Space after №
+        if "H029" in rules:
+            yield from self._check_numero_space(filename, line, line_num)
+```
+
+</details>
+
+### ⚙️ Method `_check_numero_space`
+
+```python
+def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
+```
+
+Check that '№' is followed by a space (H029).
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        idx = 0
+        while True:
+            pos = line.find("\u2116", idx)  # №
+            if pos < 0:
+                break
+            if pos + 1 < len(line) and line[pos + 1] != " ":
+                error_msg = self.RULES["H029"]
+                yield self._format_error("H029", error_msg, filename, line_num=line_num, col=pos + 1)
+            idx = pos + 1
 ```
 
 </details>
@@ -2013,6 +2232,93 @@ def _check_space_before_punctuation(
             if not any(line[pos_found:].startswith(exc) for exc in exceptions) and not line.strip().startswith("!"):
                 error_msg = f'{self.RULES["H015"]}: found " !"'
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
+```
+
+</details>
+
+### ⚙️ Method `_check_times_sign_spaces`
+
+```python
+def _check_times_sign_spaces(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]
+```
+
+Check that multiplication sign '×' is between spaces (H027).
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _check_times_sign_spaces(
+        self, filename: Path, line: str, clean_line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        if "\u00d7" not in clean_line:  # ×
+            return
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                offset += len(segment)
+                continue
+            for i, char in enumerate(segment):
+                if char != "\u00d7":
+                    continue
+                pos = i
+                before = segment[pos - 1] if pos > 0 else ""
+                after = segment[pos + 1] if pos + 1 < len(segment) else ""
+                col = offset + pos + 1
+                if pos == 0 or pos == len(segment) - 1:
+                    error_msg = f'{self.RULES["H027"]}: "×" at line start/end'
+                elif before != " " or after != " ":
+                    error_msg = f'{self.RULES["H027"]}: "×" should be between spaces'
+                else:
+                    continue
+                yield self._format_error("H027", error_msg, filename, line_num=line_num, col=col)
+            offset += len(segment)
+```
+
+</details>
+
+### ⚙️ Method `_check_x_instead_of_times`
+
+```python
+def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
+```
+
+Check for Latin 'x' or Cyrillic 'х' used instead of multiplication sign '×' (H025).
+
+Only checks text outside inline code. Exception: 'x86' and 'x64' are allowed.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                offset += len(segment)
+                continue
+            # Latin "x" between space/digit: should be ×, except x86/x64
+            for pos, char in enumerate(segment):
+                if char != "x" and char != "\u0445":  # Latin x, Cyrillic х
+                    continue
+                if pos <= 0 or pos >= len(segment) - 1:
+                    continue
+                before = segment[pos - 1]
+                after = segment[pos + 1]
+                if before not in " \t" and not before.isdigit():
+                    continue
+                if after not in " \t" and not after.isdigit():
+                    continue
+                if char == "x":  # Latin
+                    part = segment[pos : pos + 3]
+                    if before == " " and part in ("x86", "x64"):
+                        continue
+                    error_msg = f'{self.RULES["H025"]}: "x" should be "×"'
+                else:  # Cyrillic х
+                    error_msg = f'{self.RULES["H025"]}: "х" should be "×"'  # noqa: RUF001
+                col = offset + pos + 1
+                yield self._format_error("H025", error_msg, filename, line_num=line_num, col=col)
+            offset += len(segment)
 ```
 
 </details>

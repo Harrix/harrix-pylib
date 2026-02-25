@@ -675,3 +675,97 @@ def test_markdown_checker() -> None:
         )
         errors = checker.check(ru_vy_code_file, select={"H024"})
         assert not errors
+
+        # =====================================================================
+        # H025: Latin x or Cyrillic х instead of ×
+        # =====================================================================
+        x_instead_file = temp_path / "x_instead.md"
+        x_instead_file.write_text(
+            "---\nlang: ru\n---\n\nSize 5 x 10 cm.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(x_instead_file, select={"H025"})
+        assert any("H025" in e for e in errors)
+
+        # x86 and x64 should not trigger H025
+        x86_file = temp_path / "x86.md"
+        x86_file.write_text("---\nlang: en\n---\n\nSupport x86 and x64.\n", encoding="utf-8")
+        errors = checker.check(x86_file, select={"H025"})
+        assert not errors
+
+        # × (correct) should not trigger H025
+        times_ok_file = temp_path / "times_ok.md"
+        times_ok_file.write_text("---\nlang: ru\n---\n\nSize 5 × 10.\n", encoding="utf-8")
+        errors = checker.check(times_ok_file, select={"H025"})
+        assert not errors
+
+        # x inside inline code should not trigger H025
+        x_code_file = temp_path / "x_code.md"
+        x_code_file.write_text("---\nlang: en\n---\n\nUse `x` variable.\n", encoding="utf-8")
+        errors = checker.check(x_code_file, select={"H025"})
+        assert not errors
+
+        # =====================================================================
+        # H026: Image ![ not at start of line
+        # =====================================================================
+        image_not_start_file = temp_path / "image_not_start.md"
+        image_not_start_file.write_text(
+            "---\nlang: en\n---\n\nText ![alt](img.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(image_not_start_file, select={"H026"})
+        assert any("H026" in e for e in errors)
+
+        # Image at start of line should not trigger H026
+        image_start_file = temp_path / "image_start.md"
+        image_start_file.write_text("---\nlang: en\n---\n\n![Alt](img.png)\n", encoding="utf-8")
+        errors = checker.check(image_start_file, select={"H026"})
+        assert not errors
+
+        # =====================================================================
+        # H027: × must be between spaces
+        # =====================================================================
+        times_no_space_file = temp_path / "times_no_space.md"
+        times_no_space_file.write_text(
+            "---\nlang: ru\n---\n\n5×10 or 5 ×10.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(times_no_space_file, select={"H027"})
+        assert any("H027" in e for e in errors)
+
+        # × between spaces should not trigger H027
+        times_space_ok_file = temp_path / "times_space_ok.md"
+        times_space_ok_file.write_text("---\nlang: ru\n---\n\n5 × 10.\n", encoding="utf-8")
+        errors = checker.check(times_space_ok_file, select={"H027"})
+        assert not errors
+
+        # =====================================================================
+        # H028: Horizontal bar ―
+        # =====================================================================
+        horizontal_bar_file = temp_path / "horizontal_bar.md"
+        horizontal_bar_file.write_text(
+            "---\nlang: ru\n---\n\n— Привет!\n― Как дела?\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(horizontal_bar_file, select={"H028"})
+        assert any("H028" in e for e in errors)
+
+        # =====================================================================
+        # H029: Space after №
+        # =====================================================================
+        numero_no_space_file = temp_path / "numero_no_space.md"
+        numero_no_space_file.write_text(
+            "---\nlang: ru\n---\n\n№1 и №2.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(numero_no_space_file, select={"H029"})
+        assert any("H029" in e for e in errors)
+
+        # № with space should not trigger H029
+        numero_space_ok_file = temp_path / "numero_space_ok.md"
+        numero_space_ok_file.write_text(
+            "---\nlang: ru\n---\n\n№ 1 и № 2.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(numero_space_ok_file, select={"H029"})
+        assert not errors
