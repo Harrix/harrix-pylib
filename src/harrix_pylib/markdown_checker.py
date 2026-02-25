@@ -479,7 +479,7 @@ class MarkdownChecker:
             return
 
         # Skip if line starts with list indentation
-        if line.startswith("  ") or line.startswith("  *") or line.startswith("  -"):
+        if line.startswith(("  ", "  *", "  -")):
             return
 
         # Skip if previous line is a list item
@@ -500,17 +500,14 @@ class MarkdownChecker:
     ) -> Generator[str, None, None]:
         """Check rules that apply to the entire file."""
         # H011: No empty line at end of file
-        if "H011" in rules and all_lines:
-            if not content.endswith("\n"):
-                yield self._format_error("H011", self.RULES["H011"], filename, line_num=len(all_lines))
+        if "H011" in rules and all_lines and not content.endswith("\n"):
+            yield self._format_error("H011", self.RULES["H011"], filename, line_num=len(all_lines))
 
         # H012: Two consecutive empty lines
         if "H012" in rules:
             for i in range(len(all_lines) - 1):
-                if not all_lines[i].strip() and not all_lines[i + 1].strip():
-                    # Skip if at very beginning or very end
-                    if i > 0 and i + 1 < len(all_lines) - 1:
-                        yield self._format_error("H012", self.RULES["H012"], filename, line_num=i + 1)
+                if not all_lines[i].strip() and not all_lines[i + 1].strip() and i > 0 and i + 1 < len(all_lines) - 1:
+                    yield self._format_error("H012", self.RULES["H012"], filename, line_num=i + 1)
 
     # =========================================================================
     # Filename Rules (H001, H002)
@@ -524,7 +521,9 @@ class MarkdownChecker:
         if "H002" in rules and " " in str(filename):
             yield self._format_error("H002", self.RULES["H002"], filename)
 
-    def _check_html_tags(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
+    def _check_html_tags(
+        self, filename: Path, line: str, _clean_line: str, line_num: int
+    ) -> Generator[str, None, None]:
         """Check for HTML tags in content (H019)."""
         for tag in self.FORBIDDEN_HTML_TAGS:
             if tag.lower() in line.lower():
@@ -572,7 +571,7 @@ class MarkdownChecker:
             letter = match.group(1)
             pos = match.start()
 
-            # Check for exceptions like "e.g. ", "т. е.", "т. д."
+            # Check for exceptions like "e.g. ", "т. е.", "т. д."  # noqa: RUF003
             context_before = clean_line[max(0, pos - 4) : pos + 1]
             exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001
             if any(exc in context_before for exc in exceptions):
