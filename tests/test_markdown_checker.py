@@ -104,7 +104,7 @@ def test_markdown_checker() -> None:
         # Test Russian abbreviations without spaces (т.е., т.д., т.ч., т.п.)
         ru_abbrev_file = temp_path / "ru_abbrev.md"
         ru_abbrev_file.write_text(
-            "---\nlang: ru\n---\n\nТо есть т.е. и т.д. правильно писать т. е. и т. д.\n",
+            "---\nlang: ru\n---\n\nТо есть т.е. и т.д. правильно писать т. е. и т. д.\n",  # noqa: RUF001
             encoding="utf-8",
         )
         errors = checker.check(ru_abbrev_file, select={"H006"})
@@ -663,7 +663,7 @@ def test_markdown_checker() -> None:
         # =====================================================================
         ru_vy_file = temp_path / "ru_vy.md"
         ru_vy_file.write_text(
-            "---\nlang: ru\n---\n\nОбращаемся к Вам с предложением.\n",
+            "---\nlang: ru\n---\n\nОбращаемся к Вам с предложением.\n",  # noqa: RUF001
             encoding="utf-8",
         )
         errors = checker.check(ru_vy_file, select={"H024"})
@@ -672,7 +672,7 @@ def test_markdown_checker() -> None:
         # "Вы" at sentence start is allowed (only flag mid-sentence)
         ru_vy_sentence_start_file = temp_path / "ru_vy_sentence_start.md"
         ru_vy_sentence_start_file.write_text(
-            "---\nlang: ru\n---\n\nВы можете это увидеть.\n\nТут Вам не рады.\n",
+            "---\nlang: ru\n---\n\nВы можете это увидеть.\n\nТут Вам не рады.\n",  # noqa: RUF001
             encoding="utf-8",
         )
         errors = checker.check(ru_vy_sentence_start_file, select={"H024"})
@@ -683,7 +683,7 @@ def test_markdown_checker() -> None:
         # Lowercase "вы" should not trigger H024
         ru_vy_lower_file = temp_path / "ru_vy_lower.md"
         ru_vy_lower_file.write_text(
-            "---\nlang: ru\n---\n\nОбращаемся к вам с предложением.\n",
+            "---\nlang: ru\n---\n\nОбращаемся к вам с предложением.\n",  # noqa: RUF001
             encoding="utf-8",
         )
         errors = checker.check(ru_vy_lower_file, select={"H024"})

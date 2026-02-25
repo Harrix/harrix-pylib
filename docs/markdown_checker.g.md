@@ -254,9 +254,9 @@ class MarkdownChecker:
         # Russian abbreviations (with spaces: т. е., т. д., т. ч., т. п.)  # ignore: HP001
         "т.е.": "т. е.",  # noqa: RUF001  # ignore: HP001
         "Т.е.": "Т. е.",  # noqa: RUF001  # ignore: HP001
-        "т.д.": "т. д.",  # noqa: RUF001  # ignore: HP001
-        "т.ч.": "т. ч.",  # noqa: RUF001  # ignore: HP001
-        "т.п.": "т. п.",  # noqa: RUF001  # ignore: HP001
+        "т.д.": "т. д.",  # ignore: HP001
+        "т.ч.": "т. ч.",  # ignore: HP001
+        "т.п.": "т. п.",  # ignore: HP001
     }
 
     # Incorrect code block language identifiers
