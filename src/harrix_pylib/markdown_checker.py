@@ -39,7 +39,7 @@ class MarkdownChecker:
     - **H022** - Non-breaking space character found.
     - **H023** - No empty line between paragraphs.
     - **H024** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
-    - **H025** - Latin "x" or Cyrillic "х" used instead of multiplication sign "×".
+    - **H025** - Latin "x" or Cyrillic "х" used instead of multiplication sign "×".  # ignore: HP001
     - **H026** - Image markdown "![" found not at start of line.
     - **H028** - Horizontal bar "―" (dialogue dash) should not be used.
     - **H029** - Space required after "№".
@@ -76,7 +76,7 @@ class MarkdownChecker:
         "H022": "Non-breaking space character found",
         "H023": "No empty line between paragraphs",
         "H024": "Capitalized Russian polite pronoun (use lowercase when addressing reader)",
-        "H025": "Latin x or Cyrillic х used instead of multiplication sign ×",
+        "H025": "Latin x or Cyrillic х used instead of multiplication sign ×",  # ignore: HP001
         "H026": "Image markdown ![ found not at start of line",
         "H028": "Horizontal bar ― (dialogue dash) should not be used",
         "H029": "Space required after №",
@@ -85,23 +85,23 @@ class MarkdownChecker:
 
     # Russian polite "you" pronouns that must be lowercase when addressing the reader (lang: ru)
     RUSSIAN_POLITE_PRONOUNS_CAPITALIZED: ClassVar[tuple[str, ...]] = (
-        "Вы",
-        "Вас",
-        "Вам",
-        "Вами",
-        "Ваш",
-        "Вашего",
-        "Ваше",
-        "Вашу",
-        "Вашей",
-        "Ваша",
-        "Вашему",
-        "Вашим",
-        "Вашем",
-        "Вашею",
-        "Ваши",
-        "Ваших",
-        "Вашими",
+        "Вы",  # ignore: HP001
+        "Вас",  # ignore: HP001
+        "Вам",  # ignore: HP001
+        "Вами",  # ignore: HP001
+        "Ваш",  # ignore: HP001
+        "Вашего",  # ignore: HP001
+        "Ваше",  # ignore: HP001
+        "Вашу",  # ignore: HP001
+        "Вашей",  # ignore: HP001
+        "Ваша",  # ignore: HP001
+        "Вашему",  # ignore: HP001
+        "Вашим",  # ignore: HP001
+        "Вашем",  # ignore: HP001
+        "Вашею",  # ignore: HP001
+        "Ваши",  # ignore: HP001
+        "Ваших",  # ignore: HP001
+        "Вашими",  # ignore: HP001
     )
 
     # Dictionary of incorrect word forms that should be flagged
@@ -194,7 +194,7 @@ class MarkdownChecker:
         "Github": "GitHub",
         "github": "GitHub",
         "git": "Git",
-        # Russian abbreviations (with spaces: т. е., т. д., т. ч., т. п.)
+        # Russian abbreviations (with spaces: т. е., т. д., т. ч., т. п.)  # ignore: HP001
         "т.е.": "т. е.",  # noqa: RUF001  # ignore: HP001
         "Т.е.": "Т. е.",  # noqa: RUF001  # ignore: HP001
         "т.д.": "т. д.",  # noqa: RUF001  # ignore: HP001
@@ -800,7 +800,7 @@ class MarkdownChecker:
         if "H024" in rules and lang == "ru":
             yield from self._check_russian_polite_pronouns(filename, line, clean_line, line_num)
 
-        # H025: Latin x or Cyrillic х instead of ×
+        # H025: Latin x or Cyrillic х instead of ×  # ignore: HP001
         if "H025" in rules:
             yield from self._check_x_instead_of_times(filename, line, line_num)
 
@@ -948,7 +948,7 @@ class MarkdownChecker:
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
 
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for Latin 'x' or Cyrillic 'х' used instead of multiplication sign '×' (H025).
+        """Check for Latin 'x' or Cyrillic 'х' used instead of multiplication sign '×' (H025).  # ignore: HP001
 
         Only checks text outside inline code. Exception: 'x86' and 'x64' are allowed.
         """
@@ -959,7 +959,7 @@ class MarkdownChecker:
                 continue
             # Latin "x" between space/digit: should be ×, except x86/x64
             for pos, char in enumerate(segment):
-                if char != "x" and char != "\u0445":  # Latin x, Cyrillic х
+                if char != "x" and char != "\u0445":  # Latin x, Cyrillic х  # ignore: HP001
                     continue
                 if pos <= 0 or pos >= len(segment) - 1:
                     continue
@@ -974,8 +974,8 @@ class MarkdownChecker:
                     if before == " " and part in ("x86", "x64"):
                         continue
                     error_msg = f'{self.RULES["H025"]}: "x" should be "×"'
-                else:  # Cyrillic х
-                    error_msg = f'{self.RULES["H025"]}: "х" should be "×"'  # noqa: RUF001
+                else:  # Cyrillic х  # ignore: HP001
+                    error_msg = f'{self.RULES["H025"]}: "х" should be "×"'  # noqa: RUF001  # ignore: HP001
                 col = offset + pos + 1
                 yield self._format_error("H025", error_msg, filename, line_num=line_num, col=col)
             offset += len(segment)
