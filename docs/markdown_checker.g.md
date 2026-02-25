@@ -1005,9 +1005,9 @@ class MarkdownChecker:
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
 
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign 'x' (H025).
+        """Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '×' (H025).
 
-        Only checks text outside inline code. Exception: 'x86' and 'x64' are allowed.
+        Only checks text outside inline code. Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C).
         """
         offset = 0
         for segment, in_code in h.md.identify_code_blocks_line(line):
@@ -1030,6 +1030,8 @@ class MarkdownChecker:
                     part = segment[pos : pos + 3]
                     if before == " " and part in ("x86", "x64"):
                         continue
+                    if before.isdigit() and after in " \t":
+                        continue  # e.g. "2x Type-C", "1x USB" — Latin x is correct
                     error_msg = f'{self.RULES["H025"]}: "x" should be "×"'  # noqa: RUF001
                 else:  # Cyrillic x  # ignore: HP001
                     error_msg = f'{self.RULES["H025"]}: "х" should be "×"'  # noqa: RUF001  # ignore: HP001
@@ -2311,9 +2313,9 @@ def _check_space_before_punctuation(
 def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign 'x' (H025).
+Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '×' (H025).
 
-Only checks text outside inline code. Exception: 'x86' and 'x64' are allowed.
+Only checks text outside inline code. Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C).
 
 <details>
 <summary>Code:</summary>
@@ -2341,6 +2343,8 @@ def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) ->
                     part = segment[pos : pos + 3]
                     if before == " " and part in ("x86", "x64"):
                         continue
+                    if before.isdigit() and after in " \t":
+                        continue  # e.g. "2x Type-C", "1x USB" — Latin x is correct
                     error_msg = f'{self.RULES["H025"]}: "x" should be "×"'  # noqa: RUF001
                 else:  # Cyrillic x  # ignore: HP001
                     error_msg = f'{self.RULES["H025"]}: "х" should be "×"'  # noqa: RUF001  # ignore: HP001
