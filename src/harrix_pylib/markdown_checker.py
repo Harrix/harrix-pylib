@@ -678,7 +678,18 @@ class MarkdownChecker:
 
         Uses original line so that removal of inline code (e.g. `word`:)
         does not create false " :" when segments are concatenated.
+        Matches inside inline code (e.g. `cd ..`) are skipped.
         """
+        pos = 0
+        code_ranges: list[tuple[int, int]] = []
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
         patterns = [
             (r" \.", " ."),
             (r" ,", " ,"),
@@ -690,6 +701,8 @@ class MarkdownChecker:
         for pattern, display in patterns:
             match = re.search(pattern, line)
             if match:
+                if _inside_inline_code(match.start()):
+                    continue
                 col = match.start() + 1
                 error_msg = f'{self.RULES["H015"]}: found "{display}"'
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=col)
@@ -697,12 +710,14 @@ class MarkdownChecker:
         # Special handling for " !" - skip special markers (check original line)
         if " !" in line:
             exceptions = [" !details", " !note", " !important", " !warning"]
-            pos = line.find(" !")
-            if not any(line[pos:].startswith(exc) for exc in exceptions) and not line.strip().startswith(
+            pos_found = line.find(" !")
+            if _inside_inline_code(pos_found):
+                return
+            if not any(line[pos_found:].startswith(exc) for exc in exceptions) and not line.strip().startswith(
                 "!"
             ):
                 error_msg = f'{self.RULES["H015"]}: found " !"'
-                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos + 1)
+                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
 
     # =========================================================================
     # YAML Rules (H003-H005)
