@@ -632,11 +632,15 @@ class MarkdownChecker:
                     if code_block_info is not None and yaml_end_line >= 1:
                         # Line numbers are 1-based; all_lines index i = line number i+1
                         content_start = yaml_end_line - 1
-                        if i >= content_start and i + 1 >= content_start:
-                            ci, ci1 = i - content_start, i + 1 - content_start
-                            if ci < len(code_block_info) and ci1 < len(code_block_info):
-                                if code_block_info[ci][1] or code_block_info[ci1][1]:
-                                    continue
+                        ci, ci1 = i - content_start, i + 1 - content_start
+                        if (
+                            i >= content_start
+                            and i + 1 >= content_start
+                            and ci < len(code_block_info)
+                            and ci1 < len(code_block_info)
+                            and (code_block_info[ci][1] or code_block_info[ci1][1])
+                        ):
+                            continue
                     yield self._format_error("H012", self.RULES["H012"], filename, line_num=i + 1)
 
     # =========================================================================
