@@ -353,6 +353,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(caption_before_img_file, select={"H014"})
         assert not [e for e in errors if "H014" in e], "H014 must not fire for italic caption line before image"
 
+        # List item before image must not require colon (H014)
+        list_before_img_file = temp_path / "list_before_img.md"
+        list_before_img_file.write_text(
+            "---\nlang: en\n---\n\n- Item one\n- Item two with `code` at end\n\n![Caption](img.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(list_before_img_file, select={"H014"})
+        assert not [e for e in errors if "H014" in e], "H014 must not fire when line before image is list item (- )"
+
         # =====================================================================
         # H015: Space before punctuation
         # =====================================================================

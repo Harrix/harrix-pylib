@@ -382,6 +382,10 @@ class MarkdownChecker:
             if len(stripped) >= 2 and stripped.startswith("_") and stripped.endswith("_"):
                 return
 
+            # Skip list item: no colon required before image when last line is a list item
+            if stripped.startswith("- "):
+                return
+
             if last_char != ":":
                 error_msg = f'{self.RULES["H014"]}: last char is "{last_char}"'
                 yield self._format_error("H014", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
