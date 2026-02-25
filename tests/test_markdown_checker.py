@@ -574,26 +574,3 @@ def test_markdown_checker() -> None:
         normal_space_file.write_text("---\nlang: en\n---\n\nText with normal space.\n", encoding="utf-8")
         errors = checker.check(normal_space_file, select={"H022"})
         assert not errors
-
-        # =====================================================================
-        # H023: Incorrect dash characters in code blocks
-        # =====================================================================
-        emdash_in_code_file = temp_path / "emdash_in_code.md"
-        emdash_in_code_file.write_text(
-            "---\nlang: en\n---\n\n```python\ntext = 'hello \u2014 world'\n```\n", encoding="utf-8"
-        )
-        errors = checker.check(emdash_in_code_file, select={"H023"})
-        assert any("H023" in e for e in errors)
-
-        # Check all incorrect dash types in code
-        for dash_char in ["\u2015", "\u2014", "\u2012", "\u2212", "\u2010"]:
-            dash_file = temp_path / f"dash_{ord(dash_char)}.md"
-            dash_file.write_text(f"---\nlang: en\n---\n\n```shell\ncommand{dash_char}flag\n```\n", encoding="utf-8")
-            errors = checker.check(dash_file, select={"H023"})
-            assert any("H023" in e for e in errors), f"Expected H023 for dash U+{ord(dash_char):04X}"
-
-        # Normal dash in code should not trigger H023
-        normal_dash_code_file = temp_path / "normal_dash_code.md"
-        normal_dash_code_file.write_text("---\nlang: en\n---\n\n```shell\ncommand --flag\n```\n", encoding="utf-8")
-        errors = checker.check(normal_dash_code_file, select={"H023"})
-        assert not errors

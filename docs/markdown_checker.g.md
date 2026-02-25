@@ -80,7 +80,6 @@ Rules:
 - **H020** - Image caption starts with lowercase letter.
 - **H021** - Lowercase letter after sentence-ending punctuation.
 - **H022** - Non-breaking space character found.
-- **H023** - Incorrect dash characters in code blocks.
 
 <details>
 <summary>Code:</summary>
@@ -112,7 +111,6 @@ class MarkdownChecker:
         "H020": "Image caption starts with lowercase letter",
         "H021": "Lowercase letter after sentence-ending punctuation",
         "H022": "Non-breaking space character found",
-        "H023": "Incorrect dash characters in code blocks",
     }
 
     # Dictionary of incorrect word forms that should be flagged
@@ -235,15 +233,6 @@ class MarkdownChecker:
         "</",
     ]
 
-    # Incorrect dash characters in code blocks
-    INCORRECT_CODE_DASHES: ClassVar[dict[str, str]] = {
-        "―": "horizontal bar",
-        "—": "em dash",
-        "‒": "figure dash",  # noqa: RUF001
-        "−": "minus sign",  # noqa: RUF001
-        "‐": "hyphen",  # noqa: RUF001
-    }
-
     def __init__(self, project_root: Path | str | None = None) -> None:
         """Initialize the MarkdownChecker with all available rules."""
         self.all_rules = set(self.RULES.keys())
@@ -331,7 +320,7 @@ class MarkdownChecker:
             yield self._format_error("H000", f"Exception error: {e}", filename)
 
     # =========================================================================
-    # Code Block Rules (H007, H023)
+    # Code Block Rules (H007)
     # =========================================================================
 
     def _check_code_rules(
@@ -341,7 +330,6 @@ class MarkdownChecker:
         content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
         code_block_info = list(h.md.identify_code_blocks(content_lines))
 
-        in_code_block = False
         for i, (line, _is_code_block) in enumerate(code_block_info):
             actual_line_num = (yaml_end_line - 1) + i + 1
 
@@ -355,19 +343,6 @@ class MarkdownChecker:
                         correct = self.INCORRECT_LANGUAGES[language]
                         error_msg = f'{self.RULES["H007"]}: "{language}" should be "{correct}"'
                         yield self._format_error("H007", error_msg, filename, line_num=actual_line_num, col=col)
-
-            # Track code block state
-            if line.strip().startswith("```"):
-                in_code_block = not in_code_block
-                continue
-
-            # H023: Incorrect dash characters in code blocks
-            if "H023" in rules and in_code_block:
-                for char, name in self.INCORRECT_CODE_DASHES.items():
-                    if char in line:
-                        col = line.index(char) + 1
-                        error_msg = f'{self.RULES["H023"]}: found "{char}" ({name}) in code block'
-                        yield self._format_error("H023", error_msg, filename, line_num=actual_line_num, col=col)
 
     def _check_colon_before_code(
         self,
@@ -1108,18 +1083,6 @@ def _check_code_rules(
                         error_msg = f'{self.RULES["H007"]}: "{language}" should be "{correct}"'
                         yield self._format_error("H007", error_msg, filename, line_num=actual_line_num, col=col)
 
-            # Track code block state
-            if line.strip().startswith("```"):
-                in_code_block = not in_code_block
-                continue
-
-            # H023: Incorrect dash characters in code blocks
-            if "H023" in rules and in_code_block:
-                for char, name in self.INCORRECT_CODE_DASHES.items():
-                    if char in line:
-                        col = line.index(char) + 1
-                        error_msg = f'{self.RULES["H023"]}: found "{char}" ({name}) in code block'
-                        yield self._format_error("H023", error_msg, filename, line_num=actual_line_num, col=col)
 ````
 
 </details>
