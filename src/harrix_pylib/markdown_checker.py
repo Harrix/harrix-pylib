@@ -438,34 +438,38 @@ class MarkdownChecker:
         if " - " in clean_line:
             # Skip if line starts with list marker
             if not clean_line.strip().startswith("-"):
-                pos = clean_line.find(" - ")
+                pos = line.find(" - ") if " - " in line else clean_line.find(" - ")
                 error_msg = f'{self.RULES["H016"]}: " - " should be " — " (em dash)'
                 yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
 
         # Check for en dash not between digits
-        if "–" in clean_line:
-            for match in re.finditer(r"–", clean_line):  # noqa: RUF001
+        if "–" in clean_line:  # noqa: RUF001
+            line_matches = list(re.finditer(r"–", line))  # noqa: RUF001
+            for i, match in enumerate(re.finditer(r"–", clean_line)):  # noqa: RUF001
                 pos = match.start()
                 before = clean_line[pos - 1] if pos > 0 else ""
                 after = clean_line[pos + 1] if pos + 1 < len(clean_line) else ""
                 if not (before.isdigit() and after.isdigit()):
+                    col_pos = line_matches[i].start() if i < len(line_matches) else pos
                     error_msg = f'{self.RULES["H016"]}: en dash "–" should only be between digits'  # noqa: RUF001
-                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
+                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col_pos + 1)
 
         # Check for em dash not between spaces
         if "—" in clean_line:
-            for match in re.finditer(r"—", clean_line):
+            line_matches = list(re.finditer(r"—", line))
+            for i, match in enumerate(re.finditer(r"—", clean_line)):
                 pos = match.start()
                 before = clean_line[pos - 1] if pos > 0 else " "
                 after = clean_line[pos + 1] if pos + 1 < len(clean_line) else " "
+                col_pos = line_matches[i].start() if i < len(line_matches) else pos
                 # Em dash should have spaces around it (or be at line start for dialogue)
                 if pos == 0:
                     if after != " ":
                         error_msg = f'{self.RULES["H016"]}: em dash "—" at start should be followed by space'
-                        yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
+                        yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col_pos + 1)
                 elif not (before == " " and after == " "):
                     error_msg = f'{self.RULES["H016"]}: em dash "—" should have spaces around it'
-                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
+                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col_pos + 1)
 
     def _check_double_spaces(
         self, filename: Path, line: str, clean_line: str, line_num: int, content_lines: list[str], line_index: int
@@ -574,8 +578,12 @@ class MarkdownChecker:
             if any(exc in context_before for exc in exceptions):
                 continue
 
+            line_match = re.search(re.escape(match.group(0)), line)
+            offset = match.start(1) - match.start(0)
+            col = line_match.start(0) + offset + 1 if line_match else match.start(1) + 1
+
             error_msg = f'{self.RULES["H021"]}: found lowercase "{letter}" after punctuation'
-            yield self._format_error("H021", error_msg, filename, line_num=line_num, col=match.start(1) + 1)
+            yield self._format_error("H021", error_msg, filename, line_num=line_num, col=col)
 
     def _check_non_code_line_rules(
         self,
@@ -622,7 +630,7 @@ class MarkdownChecker:
 
         # H017: Three dots instead of ellipsis
         if "H017" in rules and "..." in clean_line:
-            col = clean_line.index("...") + 1
+            col = line.index("...") + 1 if "..." in line else clean_line.index("...") + 1
             error_msg = f'{self.RULES["H017"]}: "..." should be "…"'
             yield self._format_error("H017", error_msg, filename, line_num=line_num, col=col)
 
@@ -654,7 +662,7 @@ class MarkdownChecker:
 
         for char, description in incorrect_quotes:
             if char in clean_line:
-                pos = clean_line.find(char)
+                pos = line.find(char) if char in line else clean_line.find(char)
                 error_msg = f"{self.RULES['H018']}: found {description}"
                 yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
 
@@ -673,8 +681,10 @@ class MarkdownChecker:
         for pattern, display in patterns:
             match = re.search(pattern, clean_line)
             if match:
+                line_match = re.search(pattern, line)
+                col = line_match.start() + 1 if line_match else match.start() + 1
                 error_msg = f'{self.RULES["H015"]}: found "{display}"'
-                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=match.start() + 1)
+                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=col)
 
         # Special handling for " !" - skip special markers
         if " !" in clean_line:
@@ -683,8 +693,9 @@ class MarkdownChecker:
             if not any(clean_line[pos:].startswith(exc) for exc in exceptions) and not clean_line.strip().startswith(
                 "!"
             ):
+                line_pos = line.find(" !") if " !" in line else pos
                 error_msg = f'{self.RULES["H015"]}: found " !"'
-                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos + 1)
+                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=line_pos + 1)
 
     # =========================================================================
     # YAML Rules (H003-H005)
