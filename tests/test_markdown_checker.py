@@ -335,6 +335,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(colon_img_file, select={"H014"})
         assert not errors
 
+        # Italic caption line before next image must not trigger H014 (caption belongs to previous image)
+        caption_before_img_file = temp_path / "caption_before_img.md"
+        caption_before_img_file.write_text(
+            "---\nlang: en\n---\n\nText:\n\n![First](a.png)\n\n_Рисунок 1 — First_\n\n![Second](b.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(caption_before_img_file, select={"H014"})
+        assert not [e for e in errors if "H014" in e], "H014 must not fire for italic caption line before image"
+
         # =====================================================================
         # H015: Space before punctuation
         # =====================================================================

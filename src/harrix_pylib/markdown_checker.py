@@ -402,6 +402,11 @@ class MarkdownChecker:
             if line.strip().startswith("<"):
                 return
 
+            # Skip image caption line (italic only, e.g. _Рисунок 21 — ..._): it belongs to previous image
+            stripped = line.strip()
+            if len(stripped) >= 2 and stripped.startswith("_") and stripped.endswith("_"):
+                return
+
             if last_char != ":":
                 error_msg = f'{self.RULES["H014"]}: last char is "{last_char}"'
                 yield self._format_error("H014", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
