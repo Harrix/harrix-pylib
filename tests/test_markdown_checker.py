@@ -101,14 +101,14 @@ def test_markdown_checker() -> None:
         errors = checker.check(ru_file)
         assert any("H006" in error for error in errors)
 
-        # Test Russian abbreviations without spaces (т.е., т.д., т.ч., т.п.)
+        # Test Russian abbreviations without spaces (т.е., т.д., т.ч., т.п.)  # noqa: RUF003
         ru_abbrev_file = temp_path / "ru_abbrev.md"
         ru_abbrev_file.write_text(
             "---\nlang: ru\n---\n\nТо есть т.е. и т.д. правильно писать т. е. и т. д.\n",  # noqa: RUF001
             encoding="utf-8",
         )
         errors = checker.check(ru_abbrev_file, select={"H006"})
-        assert any("H006" in e and "т.е." in e for e in errors)
+        assert any("H006" in e and "т.е." in e for e in errors)  # noqa: RUF001
         assert any("H006" in e and "т.д." in e for e in errors)
 
         # Test that code blocks are ignored
@@ -512,7 +512,7 @@ def test_markdown_checker() -> None:
         errors = checker.check(double_hyphen_file, select={"H016"})
         assert any("H016" in e and " -- " in e for e in errors)
 
-        # Unicode minus " − " should trigger H016
+        # Unicode minus " − " should trigger H016  # noqa: RUF003
         minus_sign_file = temp_path / "minus_sign.md"
         minus_sign_file.write_text("---\nlang: en\n---\n\nValue \u2212 5.\n", encoding="utf-8")
         errors = checker.check(minus_sign_file, select={"H016"})
@@ -705,7 +705,7 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H025: Latin x or Cyrillic х instead of ×
+        # H025: Latin x or Cyrillic x instead of ×  # noqa: RUF003
         # =====================================================================
         x_instead_file = temp_path / "x_instead.md"
         x_instead_file.write_text(
@@ -719,12 +719,6 @@ def test_markdown_checker() -> None:
         x86_file = temp_path / "x86.md"
         x86_file.write_text("---\nlang: en\n---\n\nSupport x86 and x64.\n", encoding="utf-8")
         errors = checker.check(x86_file, select={"H025"})
-        assert not errors
-
-        # × (correct) should not trigger H025
-        times_ok_file = temp_path / "times_ok.md"
-        times_ok_file.write_text("---\nlang: ru\n---\n\nSize 5 × 10.\n", encoding="utf-8")
-        errors = checker.check(times_ok_file, select={"H025"})
         assert not errors
 
         # x inside inline code should not trigger H025

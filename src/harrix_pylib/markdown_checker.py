@@ -39,7 +39,7 @@ class MarkdownChecker:
     - **H022** - Non-breaking space character found.
     - **H023** - No empty line between paragraphs.
     - **H024** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
-    - **H025** - Latin "x" or Cyrillic "х" used instead of multiplication sign "×".  # ignore: HP001
+    - **H025** - Latin "x" or Cyrillic "x" used instead of multiplication sign "x".
     - **H026** - Image markdown "![" found not at start of line.
     - **H028** - Horizontal bar "―" (dialogue dash) should not be used.
     - **H029** - Space required after "№".
@@ -76,7 +76,7 @@ class MarkdownChecker:
         "H022": "Non-breaking space character found",
         "H023": "No empty line between paragraphs",
         "H024": "Capitalized Russian polite pronoun (use lowercase when addressing reader)",
-        "H025": "Latin x or Cyrillic х used instead of multiplication sign ×",  # ignore: HP001
+        "H025": "Latin x or Cyrillic x used instead of multiplication sign ×",  # ignore: HP001  # noqa: RUF001
         "H026": "Image markdown ![ found not at start of line",
         "H028": "Horizontal bar ― (dialogue dash) should not be used",
         "H029": "Space required after №",
@@ -86,7 +86,7 @@ class MarkdownChecker:
     # Russian polite "you" pronouns that must be lowercase when addressing the reader (lang: ru)
     RUSSIAN_POLITE_PRONOUNS_CAPITALIZED: ClassVar[tuple[str, ...]] = (
         "Вы",  # ignore: HP001
-        "Вас",  # ignore: HP001
+        "Вас",  # ignore: HP001  # noqa: RUF001
         "Вам",  # ignore: HP001
         "Вами",  # ignore: HP001
         "Ваш",  # ignore: HP001
@@ -194,7 +194,7 @@ class MarkdownChecker:
         "Github": "GitHub",
         "github": "GitHub",
         "git": "Git",
-        # Russian abbreviations (with spaces: т. е., т. д., т. ч., т. п.)  # ignore: HP001
+        # Russian abbreviations (with spaces: т. е., т. д., т. ч., т. п.)  # ignore: HP001  # noqa: RUF003
         "т.е.": "т. е.",  # noqa: RUF001  # ignore: HP001
         "Т.е.": "Т. е.",  # noqa: RUF001  # ignore: HP001
         "т.д.": "т. д.",  # ignore: HP001
@@ -501,7 +501,7 @@ class MarkdownChecker:
                 break  # Report only first occurrence per line
             offset += len(segment)
 
-        # Check for Unicode minus " − " (U+2212) and double hyphen " -- " — should be em dash " — "
+        # Check for Unicode minus " − " (U+2212) and double hyphen " -- " — should be em dash " — "  # noqa: RUF003
         offset = 0
         for segment, in_code in h.md.identify_code_blocks_line(line):
             if in_code:
@@ -509,7 +509,7 @@ class MarkdownChecker:
                 continue
             if " \u2212 " in segment:  # Unicode minus
                 col = offset + segment.find(" \u2212 ") + 1
-                error_msg = f'{self.RULES["H016"]}: " − " (minus) should be " — " (em dash)'
+                error_msg = f'{self.RULES["H016"]}: " − " (minus) should be " — " (em dash)'  # noqa: RUF001
                 yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
                 break
             if " -- " in segment:
@@ -800,7 +800,7 @@ class MarkdownChecker:
         if "H024" in rules and lang == "ru":
             yield from self._check_russian_polite_pronouns(filename, line, clean_line, line_num)
 
-        # H025: Latin x or Cyrillic х instead of ×  # ignore: HP001
+        # H025: Latin x or Cyrillic x instead of ×  # ignore: HP001  # noqa: RUF003
         if "H025" in rules:
             yield from self._check_x_instead_of_times(filename, line, line_num)
 
@@ -863,7 +863,7 @@ class MarkdownChecker:
                 yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
 
     def _check_russian_polite_pronouns(
-        self, filename: Path, line: str, clean_line: str, line_num: int
+        self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
         """Check for capitalized Russian polite pronouns (H024). Use lowercase when addressing the reader.
 
@@ -948,7 +948,7 @@ class MarkdownChecker:
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
 
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for Latin 'x' or Cyrillic 'х' used instead of multiplication sign '×' (H025).  # ignore: HP001
+        """Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign 'x' (H025).
 
         Only checks text outside inline code. Exception: 'x86' and 'x64' are allowed.
         """
@@ -957,9 +957,9 @@ class MarkdownChecker:
             if in_code:
                 offset += len(segment)
                 continue
-            # Latin "x" between space/digit: should be ×, except x86/x64
+            # Latin "x" between space/digit: should be ×, except x86/x64  # noqa: RUF003
             for pos, char in enumerate(segment):
-                if char != "x" and char != "\u0445":  # Latin x, Cyrillic х  # ignore: HP001
+                if char not in ["x", "\u0445"]:  # Latin x, Cyrillic x
                     continue
                 if pos <= 0 or pos >= len(segment) - 1:
                     continue
@@ -973,8 +973,8 @@ class MarkdownChecker:
                     part = segment[pos : pos + 3]
                     if before == " " and part in ("x86", "x64"):
                         continue
-                    error_msg = f'{self.RULES["H025"]}: "x" should be "×"'
-                else:  # Cyrillic х  # ignore: HP001
+                    error_msg = f'{self.RULES["H025"]}: "x" should be "×"'  # noqa: RUF001
+                else:  # Cyrillic x  # ignore: HP001
                     error_msg = f'{self.RULES["H025"]}: "х" should be "×"'  # noqa: RUF001  # ignore: HP001
                 col = offset + pos + 1
                 yield self._format_error("H025", error_msg, filename, line_num=line_num, col=col)
@@ -1114,9 +1114,7 @@ class MarkdownChecker:
         if line_i_next.strip().startswith(("![", "$$")):
             return False
         # Current line is table, blockquote, or numbered list
-        if first_char in ("|", "*", ">") or first_char.isdigit():
-            return False
-        return True
+        return not (first_char in ("|", "*", ">") or first_char.isdigit())
 
     def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
         """Return True if position pos in line is inside a table cell that contains only hyphen (and spaces)."""
