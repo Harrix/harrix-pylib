@@ -576,12 +576,12 @@ class MarkdownChecker:
 
         # Check for en dash not between digits
         if "–" in clean_line:
-            for match in re.finditer(r"–", clean_line):
+            for match in re.finditer(r"–", clean_line):  # noqa: RUF001
                 pos = match.start()
                 before = clean_line[pos - 1] if pos > 0 else ""
                 after = clean_line[pos + 1] if pos + 1 < len(clean_line) else ""
                 if not (before.isdigit() and after.isdigit()):
-                    error_msg = f'{self.RULES["H016"]}: en dash "–" should only be between digits'
+                    error_msg = f'{self.RULES["H016"]}: en dash "–" should only be between digits'  # noqa: RUF001
                     yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
 
         # Check for em dash not between spaces
@@ -654,7 +654,7 @@ class MarkdownChecker:
 
             # Check for exceptions like "e.g. ", "т. е.", "т. д."
             context_before = clean_line[max(0, pos - 4):pos + 1]
-            exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]
+            exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001
             if any(exc in context_before for exc in exceptions):
                 continue
 

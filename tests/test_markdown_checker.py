@@ -376,13 +376,13 @@ def test_markdown_checker() -> None:
 
         # En dash between digits should not trigger H016
         endash_digits_file = temp_path / "endash_digits.md"
-        endash_digits_file.write_text("---\nlang: en\n---\n\nRange is 1–10 pages.\n", encoding="utf-8")
+        endash_digits_file.write_text("---\nlang: en\n---\n\nRange is 1–10 pages.\n", encoding="utf-8")  # noqa: RUF001
         errors = checker.check(endash_digits_file, select={"H016"})
         assert not errors
 
         # En dash NOT between digits should trigger H016
         endash_wrong_file = temp_path / "endash_wrong.md"
-        endash_wrong_file.write_text("---\nlang: en\n---\n\nWord–word is wrong.\n", encoding="utf-8")
+        endash_wrong_file.write_text("---\nlang: en\n---\n\nWord–word is wrong.\n", encoding="utf-8")  # noqa: RUF001
         errors = checker.check(endash_wrong_file, select={"H016"})
         assert any("H016" in e for e in errors)
 
