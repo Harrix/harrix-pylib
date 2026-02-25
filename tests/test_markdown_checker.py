@@ -645,7 +645,7 @@ def test_markdown_checker() -> None:
         errors = checker.check(abbrev_file, select={"H021"})
         assert not errors
 
-        # Russian abbreviations "т. д.", "т. е." should not trigger H021
+        # Russian abbreviations "т. д.", "т. е." should not trigger H021  # noqa: RUF003
         ru_abbrev_file = temp_path / "ru_abbrev_td_te.md"
         ru_abbrev_file.write_text(
             "---\nlang: ru\n---\n\nНачинкой (капустной, крапивной и т. д.) заливают. Используют т. е. так.\n",  # noqa: RUF001
@@ -725,7 +725,7 @@ def test_markdown_checker() -> None:
         # "Ваша" after dash at line start (dialogue) is sentence start — no H024
         ru_vy_dash_dialogue_file = temp_path / "ru_vy_dash_dialogue.md"
         ru_vy_dash_dialogue_file.write_text(
-            "---\nlang: ru\n---\n\n— Ваша работа хороша.\n",  # noqa: RUF001
+            "---\nlang: ru\n---\n\n— Ваша работа хороша.\n",
             encoding="utf-8",
         )
         errors = checker.check(ru_vy_dash_dialogue_file, select={"H024"})

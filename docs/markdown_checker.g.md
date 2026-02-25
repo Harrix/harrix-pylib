@@ -765,7 +765,8 @@ class MarkdownChecker:
             letter = match.group(1)
             pos = match.start()
 
-            # Check for exceptions like "e.g. ", "т. е.", "т. д." (include space+letter so "т. д" is visible)
+            # Check for exceptions like "e.g. ", "т. е.", "т. д."  # ignore: HP001  # noqa: RUF003
+            # (include space+letter so "т. д" is visible)  # ignore: HP001
             context = clean_line[max(0, pos - 4) : match.end()]
             exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001  # ignore: HP001
             if any(exc in context for exc in exceptions):
@@ -926,8 +927,8 @@ class MarkdownChecker:
 
         Exception: pronoun at sentence start is allowed:
         - after line start or after .!?;
-        - after opening guillemet « (direct speech, e.g. «Ваша задача);
-        - after dash at line start (dialogue, e.g. — Ваша работа хороша).
+        - after opening guillemet « (direct speech, e.g. «Ваша задача);  # ignore: HP001
+        - after dash at line start (dialogue, e.g. — Ваша работа хороша).  # ignore: HP001
         Yields at most one error per line.
         """
         # Word boundary: not letter/digit before and after (Cyrillic + Latin)
@@ -953,10 +954,8 @@ class MarkdownChecker:
             # After opening guillemet « (direct speech): next word is sentence start
             if stripped.endswith("\u00ab"):  # «
                 return True
-            # Dash at line start (dialogue): — Ваша работа or - Ваша работа
-            if re.match(r"^\s*[—\-]\s*$", text_before):
-                return True
-            return False
+            # Dash at line start (dialogue): — Ваша работа or - Ваша работа  # ignore: HP001
+            return bool(re.match(r"^\s*[—\-]\s*$", text_before))
 
         for word in self.RUSSIAN_POLITE_PRONOUNS_CAPITALIZED:
             pattern = boundary_before + re.escape(word) + boundary_after
@@ -1995,7 +1994,8 @@ def _check_lowercase_after_punctuation(
             letter = match.group(1)
             pos = match.start()
 
-            # Check for exceptions like "e.g. ", "т. е.", "т. д." (include space+letter so "т. д" is visible)
+            # Check for exceptions like "e.g. ", "т. е.", "т. д."  # ignore: HP001  # noqa: RUF003
+            # (include space+letter so "т. д" is visible)  # ignore: HP001
             context = clean_line[max(0, pos - 4) : match.end()]
             exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001  # ignore: HP001
             if any(exc in context for exc in exceptions):
@@ -2219,8 +2219,8 @@ Check for capitalized Russian polite pronouns (H024). Use lowercase when address
 Exception: pronoun at sentence start is allowed:
 
 - after line start or after .!?;
-- after opening guillemet « (direct speech, e.g. «Ваша задача);
-- after dash at line start (dialogue, e.g. — Ваша работа хороша).
+- after opening guillemet « (direct speech, e.g. «Ваша задача); # ignore: HP001
+- after dash at line start (dialogue, e.g. — Ваша работа хороша). # ignore: HP001
   Yields at most one error per line.
 
 <details>
@@ -2253,10 +2253,8 @@ def _check_russian_polite_pronouns(
             # After opening guillemet « (direct speech): next word is sentence start
             if stripped.endswith("\u00ab"):  # «
                 return True
-            # Dash at line start (dialogue): — Ваша работа or - Ваша работа
-            if re.match(r"^\s*[—\-]\s*$", text_before):
-                return True
-            return False
+            # Dash at line start (dialogue): — Ваша работа or - Ваша работа  # ignore: HP001
+            return bool(re.match(r"^\s*[—\-]\s*$", text_before))
 
         for word in self.RUSSIAN_POLITE_PRONOUNS_CAPITALIZED:
             pattern = boundary_before + re.escape(word) + boundary_after
