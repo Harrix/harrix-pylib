@@ -360,6 +360,15 @@ def test_markdown_checker() -> None:
             errors = checker.check(p_file, select={"H015"})
             assert any("H015" in e for e in errors), f"Expected H015 for '{punct}'"
 
+        # Colon immediately after inline code must not trigger H015 (no real space in source)
+        inline_code_colon_file = temp_path / "inline_code_colon.md"
+        inline_code_colon_file.write_text(
+            "---\nlang: en\n---\n\nСами категории добавляются в разделе `Categories`:\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(inline_code_colon_file, select={"H015"})
+        assert not [e for e in errors if "H015" in e], "H015 must not fire for `code`: (colon after backtick)"
+
         # =====================================================================
         # H016: Incorrect dash/hyphen usage
         # =====================================================================

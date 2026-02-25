@@ -690,7 +690,11 @@ class MarkdownChecker:
     def _check_space_before_punctuation(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for space before punctuation marks (H015)."""
+        """Check for space before punctuation marks (H015).
+
+        Uses original line so that removal of inline code (e.g. `word`:)
+        does not create false " :" when segments are concatenated.
+        """
         patterns = [
             (r" \.", " ."),
             (r" ,", " ,"),
@@ -700,23 +704,21 @@ class MarkdownChecker:
         ]
 
         for pattern, display in patterns:
-            match = re.search(pattern, clean_line)
+            match = re.search(pattern, line)
             if match:
-                line_match = re.search(pattern, line)
-                col = line_match.start() + 1 if line_match else match.start() + 1
+                col = match.start() + 1
                 error_msg = f'{self.RULES["H015"]}: found "{display}"'
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=col)
 
-        # Special handling for " !" - skip special markers
-        if " !" in clean_line:
+        # Special handling for " !" - skip special markers (check original line)
+        if " !" in line:
             exceptions = [" !details", " !note", " !important", " !warning"]
-            pos = clean_line.find(" !")
-            if not any(clean_line[pos:].startswith(exc) for exc in exceptions) and not clean_line.strip().startswith(
+            pos = line.find(" !")
+            if not any(line[pos:].startswith(exc) for exc in exceptions) and not line.strip().startswith(
                 "!"
             ):
-                line_pos = line.find(" !") if " !" in line else pos
                 error_msg = f'{self.RULES["H015"]}: found " !"'
-                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=line_pos + 1)
+                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos + 1)
 
     # =========================================================================
     # YAML Rules (H003-H005)
