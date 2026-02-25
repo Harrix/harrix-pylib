@@ -433,18 +433,29 @@ class MarkdownChecker:
             # Rules that apply only to NON-code lines
             if not is_code_block:
                 yield from self._check_non_code_line_rules(
-                    filename, line, actual_line_num, content_lines, i, code_block_info, rules
+                    filename,
+                    line,
+                    actual_line_num,
+                    content_lines,
+                    i,
+                    code_block_info,
+                    rules,
+                    yaml_end_line,
                 )
 
     def _check_dash_usage(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for incorrect dash/hyphen usage (H016)."""
-        # Check for " - " (hyphen with spaces should be em dash)
-        if " - " in clean_line and not clean_line.strip().startswith("-"):
-            pos = line.find(" - ") if " - " in line else clean_line.find(" - ")
-            error_msg = f'{self.RULES["H016"]}: " - " should be " — " (em dash)'
-            yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
+        """Check for incorrect dash/hyphen usage (H016). Applies only to markdown text, not YAML/code."""
+        # Check for " - " (hyphen with spaces should be em dash) only in markdown segments (not in inline code)
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code and " - " in segment and not segment.strip().startswith("-"):
+                pos = offset + segment.find(" - ")
+                error_msg = f'{self.RULES["H016"]}: " - " should be " — " (em dash)'
+                yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
+                break  # Report only first occurrence per line
+            offset += len(segment)
 
         # Check for en dash not between digits
         if "–" in clean_line:  # noqa: RUF001
@@ -528,10 +539,16 @@ class MarkdownChecker:
     def _check_html_tags(
         self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for HTML tags in content (H019)."""
+        """Check for HTML tags in content (H019). Exception: <details> and <summary> are allowed."""
+        line_lower = line.lower()
         for tag in self.FORBIDDEN_HTML_TAGS:
-            if tag.lower() in line.lower():
-                pos = line.lower().find(tag.lower())
+            if tag.lower() in line_lower:
+                pos = line_lower.find(tag.lower())
+                # Allow </details> and </summary> (details/summary are valid in markdown)
+                if tag == "</":
+                    rest = line_lower[pos:]
+                    if rest.startswith("</details>") or rest.startswith("</summary>"):
+                        continue
                 error_msg = f'{self.RULES["H019"]}: found "{tag}"'
                 yield self._format_error("H019", error_msg, filename, line_num=line_num, col=pos + 1)
 
@@ -597,8 +614,9 @@ class MarkdownChecker:
         line_index: int,
         code_block_info: list,
         rules: set,
+        yaml_end_line: int,
     ) -> Generator[str, None, None]:
-        """Check rules that apply only to non-code lines."""
+        """Check rules that apply only to non-code lines (markdown content, not YAML/code)."""
         # Remove inline code from line before checking text rules
         clean_line = self._remove_inline_code(line)
         # Remove URLs from markdown links
@@ -627,8 +645,8 @@ class MarkdownChecker:
         if "H015" in rules:
             yield from self._check_space_before_punctuation(filename, line, clean_line, line_num)
 
-        # H016: Incorrect dash/hyphen usage
-        if "H016" in rules:
+        # H016: Incorrect dash/hyphen usage (only for markdown lines, not YAML/code)
+        if "H016" in rules and line_num >= yaml_end_line:
             yield from self._check_dash_usage(filename, line, clean_line, line_num)
 
         # H017: Three dots instead of ellipsis

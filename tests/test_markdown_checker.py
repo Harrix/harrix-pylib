@@ -386,6 +386,33 @@ def test_markdown_checker() -> None:
         errors = checker.check(endash_wrong_file, select={"H016"})
         assert any("H016" in e for e in errors)
 
+        # H016 must NOT trigger in YAML front matter
+        yaml_hyphen_file = temp_path / "yaml_hyphen.md"
+        yaml_hyphen_file.write_text(
+            "---\ntags: notebook - ноутбук\nauthor: Anton\n---\n\nBody text here.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(yaml_hyphen_file, select={"H016"})
+        assert not any("H016" in e for e in errors), "H016 must not apply to YAML lines"
+
+        # H016 must NOT trigger inside code blocks
+        code_hyphen_file = temp_path / "code_hyphen.md"
+        code_hyphen_file.write_text(
+            "---\nlang: en\n---\n\nParagraph.\n\n```\noption - value\n```\n\nMore text.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(code_hyphen_file, select={"H016"})
+        assert not any("H016" in e for e in errors), "H016 must not apply to code block lines"
+
+        # H016 must NOT trigger inside inline code
+        inline_code_hyphen_file = temp_path / "inline_code_hyphen.md"
+        inline_code_hyphen_file.write_text(
+            "---\nlang: en\n---\n\nUse `cmd - flag` in shell.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(inline_code_hyphen_file, select={"H016"})
+        assert not any("H016" in e for e in errors), "H016 must not apply to inline code"
+
         # =====================================================================
         # H017: Three dots instead of ellipsis character
         # =====================================================================
@@ -457,6 +484,15 @@ def test_markdown_checker() -> None:
             html_file.write_text(f"---\nlang: en\n---\n\nContent {tag} here.\n", encoding="utf-8")
             errors = checker.check(html_file, select={"H019"})
             assert any("H019" in e for e in errors), f"Expected H019 for tag '{tag}'"
+
+        # H019 exception: <details> and <summary> are allowed
+        details_summary_file = temp_path / "details_summary.md"
+        details_summary_file.write_text(
+            "---\nlang: en\n---\n\n<details>\n<summary>Click to expand</summary>\n\nContent here.\n</details>\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(details_summary_file, select={"H019"})
+        assert not any("H019" in e for e in errors), "H019 must not flag <details> and <summary>"
 
         # =====================================================================
         # H020: Image caption starts with lowercase
