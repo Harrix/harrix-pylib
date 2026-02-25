@@ -25,6 +25,7 @@ lang: en
   - [⚙️ Method `_check_content_rules`](#%EF%B8%8F-method-_check_content_rules)
   - [⚙️ Method `_check_dash_usage`](#%EF%B8%8F-method-_check_dash_usage)
   - [⚙️ Method `_check_double_spaces`](#%EF%B8%8F-method-_check_double_spaces)
+  - [⚙️ Method `_check_empty_line_between_paragraphs`](#%EF%B8%8F-method-_check_empty_line_between_paragraphs)
   - [⚙️ Method `_check_file_level_rules`](#%EF%B8%8F-method-_check_file_level_rules)
   - [⚙️ Method `_check_filename_rules`](#%EF%B8%8F-method-_check_filename_rules)
   - [⚙️ Method `_check_html_tags`](#%EF%B8%8F-method-_check_html_tags)
@@ -43,6 +44,7 @@ lang: en
   - [⚙️ Method `_find_yaml_field_line_in_original`](#%EF%B8%8F-method-_find_yaml_field_line_in_original)
   - [⚙️ Method `_format_error`](#%EF%B8%8F-method-_format_error)
   - [⚙️ Method `_get_relative_path`](#%EF%B8%8F-method-_get_relative_path)
+  - [⚙️ Method `_is_paragraph_pair_requiring_empty_line`](#%EF%B8%8F-method-_is_paragraph_pair_requiring_empty_line)
   - [⚙️ Method `_is_table_cell_only_dash`](#%EF%B8%8F-method-_is_table_cell_only_dash)
   - [⚙️ Method `_remove_inline_code`](#%EF%B8%8F-method-_remove_inline_code)
   - [⚙️ Method `_should_check_paragraph_end`](#%EF%B8%8F-method-_should_check_paragraph_end)
@@ -81,6 +83,7 @@ Rules:
 - **H020** - Image caption starts with lowercase letter.
 - **H021** - Lowercase letter after sentence-ending punctuation.
 - **H022** - Non-breaking space character found.
+- **H023** - No empty line between paragraphs.
 
 <details>
 <summary>Code:</summary>
@@ -115,6 +118,7 @@ class MarkdownChecker:
         "H020": "Image caption starts with lowercase letter",
         "H021": "Lowercase letter after sentence-ending punctuation",
         "H022": "Non-breaking space character found",
+        "H023": "No empty line between paragraphs",
     }
 
     # Dictionary of incorrect word forms that should be flagged
@@ -458,6 +462,12 @@ class MarkdownChecker:
         # Check file-level rules
         yield from self._check_file_level_rules(filename, all_lines, rules, content)
 
+        # H023: No empty line between paragraphs (content-level, respects code blocks)
+        if "H023" in rules:
+            yield from self._check_empty_line_between_paragraphs(
+                filename, content_lines, code_block_info, yaml_end_line
+            )
+
         # Check line-by-line rules
         for i, (line, is_code_block) in enumerate(code_block_info):
             actual_line_num = (yaml_end_line - 1) + i + 1
@@ -552,6 +562,35 @@ class MarkdownChecker:
 
         col = line.index("  ") + 1
         yield self._format_error("H009", self.RULES["H009"], filename, line_num=line_num, col=col)
+
+    def _check_empty_line_between_paragraphs(
+        self,
+        filename: Path,
+        content_lines: list[str],
+        code_block_info: list,
+        yaml_end_line: int,
+    ) -> Generator[str, None, None]:
+        """Check that two consecutive paragraph lines have an empty line between them (H023).
+
+        Replicates logic from C++ checkAbsenceOfEmptyStringBetweenParagraphs:
+        two non-empty lines that are both "paragraph" lines (not list, blockquote,
+        table, math block, image, etc.) must be separated by an empty line.
+        """
+        for i in range(len(content_lines) - 1):
+            line_i = content_lines[i]
+            line_i_next = content_lines[i + 1]
+            if not line_i.strip() or not line_i_next.strip():
+                continue
+            # Skip if either line is inside a code block
+            _, is_code_i = code_block_info[i] if i < len(code_block_info) else (line_i, False)
+            _, is_code_next = code_block_info[i + 1] if i + 1 < len(code_block_info) else (line_i_next, False)
+            if is_code_i or is_code_next:
+                continue
+            if not self._is_paragraph_pair_requiring_empty_line(line_i, line_i_next):
+                continue
+            actual_line_num = (yaml_end_line - 1) + i + 1
+            error_msg = f"{self.RULES['H023']}: add empty line between paragraphs"
+            yield self._format_error("H023", error_msg, filename, line_num=actual_line_num)
 
     def _check_file_level_rules(
         self, filename: Path, all_lines: list[str], rules: set, content: str = ""
@@ -876,6 +915,26 @@ class MarkdownChecker:
             return str(filename.resolve().relative_to(self.project_root))
         except ValueError:
             return str(filename.resolve())
+
+    def _is_paragraph_pair_requiring_empty_line(self, line_i: str, line_i_next: str) -> bool:
+        """Return True if these two consecutive non-empty lines should have an empty line between them."""
+        stripped_i = line_i.strip()
+        if not stripped_i:
+            return False
+        first_char = stripped_i[0]
+        # Current line starts with math block
+        if line_i.strip().startswith("$$"):
+            return False
+        # Current line is list item (unordered)
+        if line_i.strip().startswith(("* ", "- ", "  * ", "  - ")):
+            return False
+        # Next line starts with image or math
+        if line_i_next.strip().startswith(("![", "$$")):
+            return False
+        # Current line is table, blockquote, or numbered list
+        if first_char in ("|", "*", ">") or first_char.isdigit():
+            return False
+        return True
 
     def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
         """Return True if position pos in line is inside a table cell that contains only hyphen (and spaces)."""
@@ -1280,6 +1339,12 @@ def _check_content_rules(
         # Check file-level rules
         yield from self._check_file_level_rules(filename, all_lines, rules, content)
 
+        # H023: No empty line between paragraphs (content-level, respects code blocks)
+        if "H023" in rules:
+            yield from self._check_empty_line_between_paragraphs(
+                filename, content_lines, code_block_info, yaml_end_line
+            )
+
         # Check line-by-line rules
         for i, (line, is_code_block) in enumerate(code_block_info):
             actual_line_num = (yaml_end_line - 1) + i + 1
@@ -1401,6 +1466,48 @@ def _check_double_spaces(
 
         col = line.index("  ") + 1
         yield self._format_error("H009", self.RULES["H009"], filename, line_num=line_num, col=col)
+```
+
+</details>
+
+### ⚙️ Method `_check_empty_line_between_paragraphs`
+
+```python
+def _check_empty_line_between_paragraphs(self, filename: Path, content_lines: list[str], code_block_info: list, yaml_end_line: int) -> Generator[str, None, None]
+```
+
+Check that two consecutive paragraph lines have an empty line between them (H023).
+
+Replicates logic from C++ checkAbsenceOfEmptyStringBetweenParagraphs:
+two non-empty lines that are both "paragraph" lines (not list, blockquote,
+table, math block, image, etc.) must be separated by an empty line.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _check_empty_line_between_paragraphs(
+        self,
+        filename: Path,
+        content_lines: list[str],
+        code_block_info: list,
+        yaml_end_line: int,
+    ) -> Generator[str, None, None]:
+        for i in range(len(content_lines) - 1):
+            line_i = content_lines[i]
+            line_i_next = content_lines[i + 1]
+            if not line_i.strip() or not line_i_next.strip():
+                continue
+            # Skip if either line is inside a code block
+            _, is_code_i = code_block_info[i] if i < len(code_block_info) else (line_i, False)
+            _, is_code_next = code_block_info[i + 1] if i + 1 < len(code_block_info) else (line_i_next, False)
+            if is_code_i or is_code_next:
+                continue
+            if not self._is_paragraph_pair_requiring_empty_line(line_i, line_i_next):
+                continue
+            actual_line_num = (yaml_end_line - 1) + i + 1
+            error_msg = f"{self.RULES['H023']}: add empty line between paragraphs"
+            yield self._format_error("H023", error_msg, filename, line_num=actual_line_num)
 ```
 
 </details>
@@ -1968,6 +2075,40 @@ def _get_relative_path(self, filename: Path) -> str:
             return str(filename.resolve().relative_to(self.project_root))
         except ValueError:
             return str(filename.resolve())
+```
+
+</details>
+
+### ⚙️ Method `_is_paragraph_pair_requiring_empty_line`
+
+```python
+def _is_paragraph_pair_requiring_empty_line(self, line_i: str, line_i_next: str) -> bool
+```
+
+Return True if these two consecutive non-empty lines should have an empty line between them.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_paragraph_pair_requiring_empty_line(self, line_i: str, line_i_next: str) -> bool:
+        stripped_i = line_i.strip()
+        if not stripped_i:
+            return False
+        first_char = stripped_i[0]
+        # Current line starts with math block
+        if line_i.strip().startswith("$$"):
+            return False
+        # Current line is list item (unordered)
+        if line_i.strip().startswith(("* ", "- ", "  * ", "  - ")):
+            return False
+        # Next line starts with image or math
+        if line_i_next.strip().startswith(("![", "$$")):
+            return False
+        # Current line is table, blockquote, or numbered list
+        if first_char in ("|", "*", ">") or first_char.isdigit():
+            return False
+        return True
 ```
 
 </details>
