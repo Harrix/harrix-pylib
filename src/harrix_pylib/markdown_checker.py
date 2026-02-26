@@ -281,7 +281,7 @@ class MarkdownChecker:
                 yield from self.find_markdown_files(item, additional_ignore_patterns)
 
     def _check_all_lines_rules(
-        self, filename: Path, line: str, line_num: int, rules: set
+        self, filename: Path, line: str, line_num: int, rules: set, *, is_code_block: bool = False
     ) -> Generator[str, None, None]:
         """Check rules that apply to all lines including code blocks."""
         # H008: Trailing whitespace
@@ -289,8 +289,8 @@ class MarkdownChecker:
             col = len(line.rstrip()) + 1
             yield self._format_error("H008", self.RULES["H008"], filename, line_num=line_num, col=col)
 
-        # H010: Tab character
-        if "H010" in rules and "\t" in line:
+        # H010: Tab character (skip inside code blocks — tabs are valid there, e.g. CSV/TSV examples)
+        if "H010" in rules and "\t" in line and not is_code_block:
             col = line.index("\t") + 1
             yield self._format_error("H010", self.RULES["H010"], filename, line_num=line_num, col=col)
 
@@ -469,7 +469,9 @@ class MarkdownChecker:
             actual_line_num = (yaml_end_line - 1) + i + 1
 
             # Rules that apply to ALL lines (including code blocks)
-            yield from self._check_all_lines_rules(filename, line, actual_line_num, rules)
+            yield from self._check_all_lines_rules(
+                filename, line, actual_line_num, rules, is_code_block=is_code_block
+            )
 
             # Rules that apply only to NON-code lines
             if not is_code_block:

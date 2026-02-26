@@ -284,6 +284,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(tab_file, select={"H010"})
         assert any("H010" in e for e in errors)
 
+        # Tab inside code block (e.g. TSV/CSV example) should not trigger H010
+        tab_in_code_file = temp_path / "tab_in_code.md"
+        tab_in_code_file.write_text(
+            "---\nlang: ru\n---\n\n```text\nМороженое\tFood\t494 ₽\n```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(tab_in_code_file, select={"H010"})
+        assert not errors
+
         # =====================================================================
         # H011: No empty line at end of file
         # =====================================================================
