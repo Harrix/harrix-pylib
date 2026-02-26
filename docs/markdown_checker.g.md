@@ -1140,7 +1140,7 @@ class MarkdownChecker:
             location += f":{line_num}"
             if col > 0:
                 location += f":{col}"
-        return f"{location}: {error_code} {message}"
+        return f"{location}:{error_code} {message}"
 
     def _get_relative_path(self, filename: Path) -> str:
         """Get relative path from project root."""
@@ -2547,7 +2547,7 @@ def _format_error(self, error_code: str, message: str, filename: Path, *, line_n
             location += f":{line_num}"
             if col > 0:
                 location += f":{col}"
-        return f"{location}: {error_code} {message}"
+        return f"{location}:{error_code} {message}"
 ```
 
 </details>
