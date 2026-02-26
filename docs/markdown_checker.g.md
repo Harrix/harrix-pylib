@@ -774,7 +774,7 @@ class MarkdownChecker:
             letter = match.group(1)
             pos = match.start()
             context = clean_line[max(0, pos - 4) : match.end()]
-            if any(exc in context for exc in exceptions):
+            if any(exc in context.lower() for exc in exceptions):
                 continue
 
             line_match = re.search(re.escape(match.group(0)), line)
@@ -1979,7 +1979,7 @@ def _check_lowercase_after_punctuation(
             letter = match.group(1)
             pos = match.start()
             context = clean_line[max(0, pos - 4) : match.end()]
-            if any(exc in context for exc in exceptions):
+            if any(exc in context.lower() for exc in exceptions):
                 continue
 
             line_match = re.search(re.escape(match.group(0)), line)
