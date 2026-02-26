@@ -338,7 +338,7 @@ class MarkdownChecker:
                 yield from self.find_markdown_files(item, additional_ignore_patterns)
 
     def _check_all_lines_rules(
-        self, filename: Path, line: str, line_num: int, rules: set
+        self, filename: Path, line: str, line_num: int, rules: set, *, is_code_block: bool = False
     ) -> Generator[str, None, None]:
         """Check rules that apply to all lines including code blocks."""
         # H008: Trailing whitespace
@@ -346,8 +346,8 @@ class MarkdownChecker:
             col = len(line.rstrip()) + 1
             yield self._format_error("H008", self.RULES["H008"], filename, line_num=line_num, col=col)
 
-        # H010: Tab character
-        if "H010" in rules and "\t" in line:
+        # H010: Tab character (skip inside code blocks — tabs are valid there, e.g. CSV/TSV examples)
+        if "H010" in rules and "\t" in line and not is_code_block:
             col = line.index("\t") + 1
             yield self._format_error("H010", self.RULES["H010"], filename, line_num=line_num, col=col)
 
@@ -526,7 +526,7 @@ class MarkdownChecker:
             actual_line_num = (yaml_end_line - 1) + i + 1
 
             # Rules that apply to ALL lines (including code blocks)
-            yield from self._check_all_lines_rules(filename, line, actual_line_num, rules)
+            yield from self._check_all_lines_rules(filename, line, actual_line_num, rules, is_code_block=is_code_block)
 
             # Rules that apply only to NON-code lines
             if not is_code_block:
@@ -926,7 +926,10 @@ class MarkdownChecker:
             offset += len(segment)
 
     def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for incorrect quote characters (H018)."""
+        """Check for incorrect quote characters (H018).
+
+        Exception: straight double quote after a digit is allowed (inch notation, e.g. 14", 15.6").
+        """
         incorrect_quotes = [
             ('"', 'straight double quote "'),
             ("\u201c", "curly quote \u201c"),
@@ -936,10 +939,36 @@ class MarkdownChecker:
         ]
 
         for char, description in incorrect_quotes:
-            if char in clean_line:
-                pos = line.find(char) if char in line else clean_line.find(char)
-                error_msg = f"{self.RULES['H018']}: found {description}"
-                yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
+            if char not in clean_line:
+                continue
+            if char == '"':
+                # Report only if there is a " that is not inch notation (digit before ")
+                pos = 0
+                while True:
+                    pos = clean_line.find('"', pos)
+                    if pos < 0:
+                        break
+                    if pos > 0 and clean_line[pos - 1].isdigit():
+                        pos += 1
+                        continue
+                    # Column in original line: first non-inch " in line
+                    idx = 0
+                    col = pos + 1
+                    while True:
+                        q = line.find('"', idx)
+                        if q < 0:
+                            break
+                        if q == 0 or not line[q - 1].isdigit():
+                            col = q + 1
+                            break
+                        idx = q + 1
+                    error_msg = f"{self.RULES['H018']}: found {description}"
+                    yield self._format_error("H018", error_msg, filename, line_num=line_num, col=col)
+                    return
+                continue
+            pos = line.find(char) if char in line else clean_line.find(char)
+            error_msg = f"{self.RULES['H018']}: found {description}"
+            yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
 
     def _check_russian_polite_pronouns(
         self, filename: Path, line: str, _clean_line: str, line_num: int
@@ -1379,15 +1408,15 @@ Check rules that apply to all lines including code blocks.
 
 ```python
 def _check_all_lines_rules(
-        self, filename: Path, line: str, line_num: int, rules: set
+        self, filename: Path, line: str, line_num: int, rules: set, *, is_code_block: bool = False
     ) -> Generator[str, None, None]:
         # H008: Trailing whitespace
         if "H008" in rules and line != line.rstrip():
             col = len(line.rstrip()) + 1
             yield self._format_error("H008", self.RULES["H008"], filename, line_num=line_num, col=col)
 
-        # H010: Tab character
-        if "H010" in rules and "\t" in line:
+        # H010: Tab character (skip inside code blocks — tabs are valid there, e.g. CSV/TSV examples)
+        if "H010" in rules and "\t" in line and not is_code_block:
             col = line.index("\t") + 1
             yield self._format_error("H010", self.RULES["H010"], filename, line_num=line_num, col=col)
 
@@ -1628,7 +1657,7 @@ def _check_content_rules(
             actual_line_num = (yaml_end_line - 1) + i + 1
 
             # Rules that apply to ALL lines (including code blocks)
-            yield from self._check_all_lines_rules(filename, line, actual_line_num, rules)
+            yield from self._check_all_lines_rules(filename, line, actual_line_num, rules, is_code_block=is_code_block)
 
             # Rules that apply only to NON-code lines
             if not is_code_block:
@@ -2228,6 +2257,8 @@ def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: in
 
 Check for incorrect quote characters (H018).
 
+Exception: straight double quote after a digit is allowed (inch notation, e.g. 14", 15.6").
+
 <details>
 <summary>Code:</summary>
 
@@ -2242,10 +2273,36 @@ def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: in
         ]
 
         for char, description in incorrect_quotes:
-            if char in clean_line:
-                pos = line.find(char) if char in line else clean_line.find(char)
-                error_msg = f"{self.RULES['H018']}: found {description}"
-                yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
+            if char not in clean_line:
+                continue
+            if char == '"':
+                # Report only if there is a " that is not inch notation (digit before ")
+                pos = 0
+                while True:
+                    pos = clean_line.find('"', pos)
+                    if pos < 0:
+                        break
+                    if pos > 0 and clean_line[pos - 1].isdigit():
+                        pos += 1
+                        continue
+                    # Column in original line: first non-inch " in line
+                    idx = 0
+                    col = pos + 1
+                    while True:
+                        q = line.find('"', idx)
+                        if q < 0:
+                            break
+                        if q == 0 or not line[q - 1].isdigit():
+                            col = q + 1
+                            break
+                        idx = q + 1
+                    error_msg = f"{self.RULES['H018']}: found {description}"
+                    yield self._format_error("H018", error_msg, filename, line_num=line_num, col=col)
+                    return
+                continue
+            pos = line.find(char) if char in line else clean_line.find(char)
+            error_msg = f"{self.RULES['H018']}: found {description}"
+            yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
 ```
 
 </details>

@@ -287,7 +287,7 @@ def test_markdown_checker() -> None:
         # Tab inside code block (e.g. TSV/CSV example) should not trigger H010
         tab_in_code_file = temp_path / "tab_in_code.md"
         tab_in_code_file.write_text(
-            "---\nlang: ru\n---\n\n```text\nМороженое\tFood\t494 ₽\n```\n",
+            "---\nlang: ru\n---\n\n```text\nМороженое\tFood\t494 ₽\n```\n",  # noqa: RUF001
             encoding="utf-8",
         )
         errors = checker.check(tab_in_code_file, select={"H010"})
@@ -596,7 +596,7 @@ def test_markdown_checker() -> None:
         # Inch notation (e.g. 14", 15.6") should not trigger H018
         inch_quote_file = temp_path / "inch_quote.md"
         inch_quote_file.write_text(
-            "---\nlang: ru\n---\n\n| ДИСПЛЕЙ | 14\" FHD (1920×1080), IPS |\n",
+            '---\nlang: ru\n---\n\n| ДИСПЛЕЙ | 14" FHD (1920×1080), IPS |\n',  # noqa: RUF001
             encoding="utf-8",
         )
         errors = checker.check(inch_quote_file, select={"H018"})

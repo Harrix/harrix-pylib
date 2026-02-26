@@ -469,9 +469,7 @@ class MarkdownChecker:
             actual_line_num = (yaml_end_line - 1) + i + 1
 
             # Rules that apply to ALL lines (including code blocks)
-            yield from self._check_all_lines_rules(
-                filename, line, actual_line_num, rules, is_code_block=is_code_block
-            )
+            yield from self._check_all_lines_rules(filename, line, actual_line_num, rules, is_code_block=is_code_block)
 
             # Rules that apply only to NON-code lines
             if not is_code_block:
