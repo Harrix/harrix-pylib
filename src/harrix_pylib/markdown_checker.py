@@ -1082,7 +1082,7 @@ class MarkdownChecker:
             location += f":{line_num}"
             if col > 0:
                 location += f":{col}"
-        return f"{location}:{error_code} {message}"
+        return f"{location}: {error_code} {message}"
 
     def _get_relative_path(self, filename: Path) -> str:
         """Get relative path from project root."""
