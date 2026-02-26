@@ -869,7 +869,10 @@ class MarkdownChecker:
             offset += len(segment)
 
     def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for incorrect quote characters (H018)."""
+        """Check for incorrect quote characters (H018).
+
+        Exception: straight double quote after a digit is allowed (inch notation, e.g. 14", 15.6").
+        """
         incorrect_quotes = [
             ('"', 'straight double quote "'),
             ("\u201c", "curly quote \u201c"),
@@ -879,10 +882,36 @@ class MarkdownChecker:
         ]
 
         for char, description in incorrect_quotes:
-            if char in clean_line:
-                pos = line.find(char) if char in line else clean_line.find(char)
-                error_msg = f"{self.RULES['H018']}: found {description}"
-                yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
+            if char not in clean_line:
+                continue
+            if char == '"':
+                # Report only if there is a " that is not inch notation (digit before ")
+                pos = 0
+                while True:
+                    pos = clean_line.find('"', pos)
+                    if pos < 0:
+                        break
+                    if pos > 0 and clean_line[pos - 1].isdigit():
+                        pos += 1
+                        continue
+                    # Column in original line: first non-inch " in line
+                    idx = 0
+                    col = pos + 1
+                    while True:
+                        q = line.find('"', idx)
+                        if q < 0:
+                            break
+                        if q == 0 or not line[q - 1].isdigit():
+                            col = q + 1
+                            break
+                        idx = q + 1
+                    error_msg = f"{self.RULES['H018']}: found {description}"
+                    yield self._format_error("H018", error_msg, filename, line_num=line_num, col=col)
+                    return
+                continue
+            pos = line.find(char) if char in line else clean_line.find(char)
+            error_msg = f"{self.RULES['H018']}: found {description}"
+            yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
 
     def _check_russian_polite_pronouns(
         self, filename: Path, line: str, _clean_line: str, line_num: int

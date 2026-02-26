@@ -584,6 +584,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(angle_quote_file, select={"H018"})
         assert not errors
 
+        # Inch notation (e.g. 14", 15.6") should not trigger H018
+        inch_quote_file = temp_path / "inch_quote.md"
+        inch_quote_file.write_text(
+            "---\nlang: ru\n---\n\n| ДИСПЛЕЙ | 14\" FHD (1920×1080), IPS |\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(inch_quote_file, select={"H018"})
+        assert not errors
+
         # =====================================================================
         # H019: HTML tags in markdown content
         # =====================================================================
