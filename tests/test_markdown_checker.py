@@ -790,6 +790,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(x_code_file, select={"H025"})
         assert not errors
 
+        # x inside link URL (e.g. resolution 3840x2160) should not trigger H025
+        x_link_file = temp_path / "x_link.md"
+        x_link_file.write_text(
+            "---\nlang: ru\n---\n\n[Отзывы](https://market.yandex.ru/product--noutbuk-15-6-3840x2160/123).\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(x_link_file, select={"H025"})
+        assert not errors
+
         # =====================================================================
         # H026: Image ![ not at start of line
         # =====================================================================

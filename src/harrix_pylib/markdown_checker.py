@@ -963,12 +963,16 @@ class MarkdownChecker:
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '&ast;' (H025).
 
-        Only checks text outside inline code. Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C).
+        Only checks text outside inline code and outside link URLs.
+        Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C).
         """
+        link_url_ranges = self._get_link_url_ranges(line)
         offset = 0
         for segment, in_code in h.md.identify_code_blocks_line(line):
             if not in_code:
                 for pos, char in enumerate(segment):
+                    if offset + pos in link_url_ranges:
+                        continue
                     if char not in ("x", "\u0445"):  # Latin x, Cyrillic x  # ignore: HP001
                         continue
                     if pos <= 0 or pos >= len(segment) - 1:
@@ -1083,6 +1087,14 @@ class MarkdownChecker:
             if col > 0:
                 location += f":{col}"
         return f"{location}: {error_code} {message}"
+
+    def _get_link_url_ranges(self, line: str) -> set[int]:
+        """Return set of 0-based character positions that are inside Markdown link URLs (](url))."""
+        positions: set[int] = set()
+        for m in re.finditer(r"\]\([^)]*\)", line):
+            for i in range(m.start() + 2, m.end() - 1):
+                positions.add(i)
+        return positions
 
     def _get_relative_path(self, filename: Path) -> str:
         """Get relative path from project root."""
