@@ -964,7 +964,8 @@ class MarkdownChecker:
         """Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '&ast;' (H025).
 
         Only checks text outside inline code and outside link URLs.
-        Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C).
+        Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C);
+        'x' + digit(s) when not after digit (e.g. PCIe x4, x16).
         """
         link_url_ranges = self._get_link_url_ranges(line)
         offset = 0
@@ -988,6 +989,8 @@ class MarkdownChecker:
                             continue
                         if before.isdigit() and after in " \t":
                             continue  # e.g. "2x Type-C", "1x USB" — Latin x is correct
+                        if after.isdigit() and not before.isdigit():
+                            continue  # e.g. "PCIe 4.0 x4", "x16" — lane designation, not multiplication
                         error_msg = f'{self.RULES["H025"]}: "x" should be "×"'  # noqa: RUF001
                     else:  # Cyrillic x  # ignore: HP001
                         error_msg = f'{self.RULES["H025"]}: "х" should be "×"'  # noqa: RUF001  # ignore: HP001

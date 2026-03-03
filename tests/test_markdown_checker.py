@@ -799,6 +799,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(x_link_file, select={"H025"})
         assert not errors
 
+        # x followed by digit (e.g. PCIe x4, x16) should not trigger H025
+        x4_file = temp_path / "x4.md"
+        x4_file.write_text(
+            "---\nlang: ru\n---\n\nNVMe, PCIe 4.0 x4.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(x4_file, select={"H025"})
+        assert not errors
+
         # =====================================================================
         # H026: Image ![ not at start of line
         # =====================================================================
