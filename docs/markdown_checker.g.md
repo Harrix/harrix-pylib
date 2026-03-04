@@ -887,8 +887,11 @@ class MarkdownChecker:
     def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
         """Check for incorrect quote characters (H018).
 
+        Only applies when line contains Russian letters; otherwise straight quotes "" are allowed.
         Exception: straight double quote after a digit is allowed (inch notation, e.g. 14", 15.6").
         """
+        if not re.search(r"[а-яА-ЯёЁ]", line):  # noqa: RUF001  # ignore: HP001
+            return
         incorrect_quotes = [
             ('"', 'straight double quote "'),
             ("\u201c", "curly quote \u201c"),
@@ -2156,6 +2159,7 @@ def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: in
 
 Check for incorrect quote characters (H018).
 
+Only applies when line contains Russian letters; otherwise straight quotes "" are allowed.
 Exception: straight double quote after a digit is allowed (inch notation, e.g. 14", 15.6").
 
 <details>
@@ -2163,6 +2167,8 @@ Exception: straight double quote after a digit is allowed (inch notation, e.g. 1
 
 ```python
 def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
+        if not re.search(r"[а-яА-ЯёЁ]", line):  # noqa: RUF001  # ignore: HP001
+            return
         incorrect_quotes = [
             ('"', 'straight double quote "'),
             ("\u201c", "curly quote \u201c"),

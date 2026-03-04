@@ -566,24 +566,36 @@ def test_markdown_checker() -> None:
         # H018: Curly/straight quotes instead of angle quotes
         # =====================================================================
         straight_quote_file = temp_path / "straight_quote.md"
-        straight_quote_file.write_text('---\nlang: en\n---\n\nHe said "hello".\n', encoding="utf-8")
+        straight_quote_file.write_text(
+            '---\nlang: ru\n---\n\nОн сказал "привет".\n',  # noqa: RUF001  # ignore: HP001
+            encoding="utf-8",
+        )
         errors = checker.check(straight_quote_file, select={"H018"})
         assert any("H018" in e for e in errors)
 
         curly_quote_file = temp_path / "curly_quote.md"
-        curly_quote_file.write_text("---\nlang: en\n---\n\nHe said \u201chello\u201d.\n", encoding="utf-8")
+        curly_quote_file.write_text(
+            "---\nlang: ru\n---\n\nОн сказал \u201cпривет\u201d.\n",  # ignore: HP001  # noqa: RUF001
+            encoding="utf-8",
+        )
         errors = checker.check(curly_quote_file, select={"H018"})
         assert any("H018" in e for e in errors)
 
         # Space after « should trigger H018
         space_after_lquote_file = temp_path / "space_lquote.md"
-        space_after_lquote_file.write_text("---\nlang: en\n---\n\nSaid « hello».\n", encoding="utf-8")
+        space_after_lquote_file.write_text(
+            "---\nlang: ru\n---\n\nСказал « привет».\n",  # ignore: HP001  # noqa: RUF001
+            encoding="utf-8",
+        )
         errors = checker.check(space_after_lquote_file, select={"H018"})
         assert any("H018" in e for e in errors)
 
         # Space before » should trigger H018
         space_before_rquote_file = temp_path / "space_rquote.md"
-        space_before_rquote_file.write_text("---\nlang: en\n---\n\nSaid «hello ».\n", encoding="utf-8")
+        space_before_rquote_file.write_text(
+            "---\nlang: ru\n---\n\nСказал «привет ».\n",  # ignore: HP001  # noqa: RUF001
+            encoding="utf-8",
+        )
         errors = checker.check(space_before_rquote_file, select={"H018"})
         assert any("H018" in e for e in errors)
 
@@ -591,6 +603,15 @@ def test_markdown_checker() -> None:
         angle_quote_file = temp_path / "angle_quote.md"
         angle_quote_file.write_text("---\nlang: en\n---\n\nHe said «hello».\n", encoding="utf-8")
         errors = checker.check(angle_quote_file, select={"H018"})
+        assert not errors
+
+        # Straight quotes in line without Russian letters should not trigger H018
+        straight_quote_en_file = temp_path / "straight_quote_en.md"
+        straight_quote_en_file.write_text(
+            '---\nlang: en\n---\n\nUse the one without "old" in the filename.\n',
+            encoding="utf-8",
+        )
+        errors = checker.check(straight_quote_en_file, select={"H018"})
         assert not errors
 
         # Inch notation (e.g. 14", 15.6") should not trigger H018
