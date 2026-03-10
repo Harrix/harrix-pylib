@@ -26,6 +26,7 @@ lang: en
   - [📄 File `markdown_checker.py`](#-file-markdown_checkerpy)
   - [📄 File `python_checker.py`](#-file-python_checkerpy)
 - [📄 License](#-license)
+- [👤 Author](#-author)
 
 </details>
 
@@ -205,3 +206,7 @@ Doc: [python_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs
 ## 📄 License
 
 This project is licensed under the [MIT License](https://github.com/Harrix/harrix-pylib/blob/main/LICENSE.md).
+
+## 👤 Author
+
+Author: [Anton Sergienko](https://github.com/Harrix).
