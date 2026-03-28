@@ -6,7 +6,7 @@ import re
 import shutil
 import subprocess
 import zipfile
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from pathlib import Path
 
 import pypdf
@@ -320,12 +320,12 @@ def clear_directory(path: Path | str) -> None:
         path.mkdir(parents=True, exist_ok=True)
 
 
-def collect_text_files_to_markdown(file_paths: list[str | Path], base_folder: str | Path | None = None) -> str:
+def collect_text_files_to_markdown(file_paths: Sequence[str | Path], base_folder: str | Path | None = None) -> str:
     """Create a markdown document containing the contents of text files.
 
     Args:
 
-    - `file_paths` (`list[str | Path]`): A list of file paths (absolute or relative) to text files.
+    - `file_paths` (`Sequence[str | Path]`): File paths (absolute or relative) to text files.
     - `base_folder` (`str | Path | None`, *optional*): A base directory to strip from file paths
       in the output. Defaults to `None`.
 

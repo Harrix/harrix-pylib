@@ -398,14 +398,14 @@ def clear_directory(path: Path | str) -> None:
 ## 🔧 Function `collect_text_files_to_markdown`
 
 ```python
-def collect_text_files_to_markdown(file_paths: list[str | Path], base_folder: str | Path | None = None) -> str
+def collect_text_files_to_markdown(file_paths: Sequence[str | Path], base_folder: str | Path | None = None) -> str
 ```
 
 Create a markdown document containing the contents of text files.
 
 Args:
 
-- `file_paths` (`list[str | Path]`): A list of file paths (absolute or relative) to text files.
+- `file_paths` (`Sequence[str | Path]`): File paths (absolute or relative) to text files.
 - `base_folder` (`str | Path | None`, _optional_): A base directory to strip from file paths
   in the output. Defaults to `None`.
 
@@ -434,7 +434,7 @@ print(result)
 <summary>Code:</summary>
 
 ```python
-def collect_text_files_to_markdown(file_paths: list[str | Path], base_folder: str | Path | None = None) -> str:
+def collect_text_files_to_markdown(file_paths: Sequence[str | Path], base_folder: str | Path | None = None) -> str:
     base_folder = Path(base_folder).resolve() if base_folder else None
     markdown_parts = []
 
