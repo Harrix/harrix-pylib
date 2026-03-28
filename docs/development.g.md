@@ -51,6 +51,7 @@ CLI commands after installation:
 
 - `.venv\Scripts\Activate.ps1` — activate virtual environment
 - `isort .` — sort imports.
+- `pytest` — run pytest.
 - `pytest -m slow` — run pytest with slow tests.
 - `ruff check --fix` — lint and fix the project's Python files.
 - `ruff check` — lint the project's Python files.
