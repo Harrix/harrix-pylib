@@ -135,7 +135,11 @@ def add_diary_new_cases_in_year(path_cases: Path | str, beginning_of_md: str) ->
     else:
         year_match = re.search(r"^# " + re.escape(year) + r"(?:\s|$)", content, re.MULTILINE)
         if year_match:
-            insert_pos = year_match.end()
+            toc_match = re.search(r"<details>[\s\S]*?</details>", content)
+            if toc_match and toc_match.start() >= year_match.start():
+                insert_pos = toc_match.end()
+            else:
+                insert_pos = year_match.end()
             content = content[:insert_pos] + "\n\n" + new_month_section + content[insert_pos:].lstrip()
         else:
             content = content.rstrip() + "\n\n# " + year + "\n\n" + new_month_section

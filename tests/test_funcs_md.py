@@ -345,6 +345,41 @@ def test_add_diary_new_cases_in_year() -> None:
         total_items = updated_content3.count("- \n")
         assert total_items >= count_cases  # At least 16 new items
 
+    # Test 4: New month section is inserted after <details> TOC
+    with TemporaryDirectory() as temp_dir4:
+        temp_path4 = Path(temp_dir4)
+        now_t4 = datetime.now(UTC).astimezone()
+        year_t4 = now_t4.strftime("%Y")
+        current_ym_t4 = now_t4.strftime("%Y-%m")
+
+        # Month section that is guaranteed not to be the current month
+        other_month_t4 = f"{year_t4}-02" if now_t4.month == 1 else f"{year_t4}-01"
+
+        toc_block = """<details>
+<summary>TOC</summary>
+
+## Contents
+
+- [a](#a)
+</details>"""
+
+        year_file_t4 = temp_path4 / f"{year_t4}.md"
+        existing_t4 = f"{front_matter}\n# {year_t4}\n\n{toc_block}\n\n## {other_month_t4}\n\n- \n"
+        year_file_t4.write_text(existing_t4, encoding="utf-8")
+
+        cases_msg_t4, path_t4 = h.md.add_diary_new_cases_in_year(temp_path4, front_matter)
+        assert path_t4 == year_file_t4
+        assert "updated" in cases_msg_t4
+
+        out_t4 = year_file_t4.read_text(encoding="utf-8")
+        pos_toc_end = out_t4.find("</details>")
+        pos_new_month = out_t4.find(f"## {current_ym_t4}")
+        pos_old_month = out_t4.find(f"## {other_month_t4}")
+        assert pos_toc_end != -1
+        assert pos_new_month != -1
+        assert pos_old_month != -1
+        assert pos_toc_end < pos_new_month < pos_old_month
+
 
 def test_add_diary_new_note() -> None:
     with TemporaryDirectory() as temp_dir:
