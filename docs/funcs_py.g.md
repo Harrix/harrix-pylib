@@ -785,6 +785,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
     final_statements: list[cst.BaseStatement] = []
     class_defs: list[cst.ClassDef] = []
     func_defs: list[cst.FunctionDef] = []
+    main_def: cst.FunctionDef | None = None
 
     state: str = "initial"
 
@@ -794,7 +795,10 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
             class_defs.append(stmt)
         elif isinstance(stmt, cst.FunctionDef):
             state = "collecting"
-            func_defs.append(stmt)
+            if stmt.name.value == "main":
+                main_def = stmt
+            else:
+                func_defs.append(stmt)
         elif state == "initial":
             initial_statements.append(stmt)
         else:
@@ -861,6 +865,9 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
 
     # Sort functions with custom priority: regular functions first, then private
     func_defs_sorted: list[cst.FunctionDef] = sorted(func_defs, key=lambda func: _get_sort_key(func.name.value))
+
+    if main_def is not None:
+        func_defs_sorted.append(main_def)
 
     # Assemble the new module body
     new_module_body: list[cst.BaseStatement] = (

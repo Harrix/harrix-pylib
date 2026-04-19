@@ -3,6 +3,11 @@ def multiply(a, b):
     return a * b
 
 
+def main():
+    """Entry point."""
+    pass
+
+
 def subtract(a, b):
     """Returns the difference between two numbers."""
     return a - b

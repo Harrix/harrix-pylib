@@ -27,3 +27,8 @@ def multiply(a, b):
 def subtract(a, b):
     """Returns the difference between two numbers."""
     return a - b
+
+
+def main():
+    """Entry point."""
+    pass
