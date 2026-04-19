@@ -62,6 +62,7 @@ CLI commands after installation:
 - `uv self update` — update uv itself.
 - `uv sync --upgrade` — update all project libraries (sometimes you need to call twice).
 - `vermin src` — determines the minimum version of Python. However, if the version is below 3.10, we stick with 3.10 because Python 3.10 annotations are used.
+- `harrix-swiss-knife-cli python isort-ruff-sort-docs "D:/GitHub/harrix-pylib"` — isort, ruff format, sort, make docs in PY files.
 
 ## ➕ Adding a new function
 
