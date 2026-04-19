@@ -1,6 +1,7 @@
 """Functions for working with Python code."""
 
 import ast
+import bisect
 import shutil
 import subprocess
 import tempfile
@@ -703,6 +704,56 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
             return (3, name)  # Private methods/functions with single underscore
         return (2, name)  # Regular methods/functions
 
+    def _decorator_dependency_source_name(decorator_expr: cst.BaseExpression) -> str | None:
+        """If decorator looks like @Name.attr(...) then return Name; else None.
+
+        This keeps runtime name resolution stable for decorator registration patterns
+        (e.g. Click): `@group.command(...)` requires `group` to exist at import time.
+        """
+        expr: cst.BaseExpression = decorator_expr
+        if isinstance(expr, cst.Call):
+            expr = expr.func
+        if not isinstance(expr, cst.Attribute):
+            return None
+        if not isinstance(expr.value, cst.Name):
+            return None
+        return expr.value.value
+
+    def _toposort_stable(names: list[str], edges: dict[str, set[str]]) -> list[str]:
+        """Stable topological sort using `names` as tie-breaker.
+
+        If a cycle exists, the remaining nodes are appended in the original order.
+        """
+        index: dict[str, int] = {name: i for i, name in enumerate(names)}
+
+        indegree: dict[str, int] = dict.fromkeys(names, 0)
+        for src, dsts in edges.items():
+            if src not in indegree:
+                continue
+            for dst in dsts:
+                if dst in indegree:
+                    indegree[dst] += 1
+
+        ready: list[tuple[int, str]] = [(index[name], name) for name in names if indegree[name] == 0]
+        ready.sort()
+
+        out: list[str] = []
+        while ready:
+            _, node = ready.pop(0)
+            out.append(node)
+            for dst in edges.get(node, set()):
+                if dst not in indegree:
+                    continue
+                indegree[dst] -= 1
+                if indegree[dst] == 0:
+                    bisect.insort(ready, (index[dst], dst))
+
+        if len(out) != len(names):
+            out_set = set(out)
+            out.extend([name for name in names if name not in out_set])
+
+        return out
+
     with Path(filename).open(encoding="utf-8") as f:
         code: str = f.read()
 
@@ -793,6 +844,35 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
 
     # Sort functions with custom priority: regular functions first, then private
     func_defs_sorted: list[cst.FunctionDef] = sorted(func_defs, key=lambda func: _get_sort_key(func.name.value))
+
+    # Preserve decorator dependencies between top-level functions.
+    # Example: @markdown_group.command(...) requires markdown_group() to be defined before the decorated function.
+    click_decorator_methods: set[str] = {"command", "group", "callback"}
+    func_names: set[str] = {f.name.value for f in func_defs_sorted}
+    deps_edges: dict[str, set[str]] = {name: set() for name in func_names}
+    for func_def in func_defs_sorted:
+        current_name = func_def.name.value
+        for deco in func_def.decorators:
+            base_name = _decorator_dependency_source_name(deco.decorator)
+            if base_name is None:
+                continue
+
+            deco_expr: cst.BaseExpression = deco.decorator
+            if isinstance(deco_expr, cst.Call):
+                deco_expr = deco_expr.func
+            if not isinstance(deco_expr, cst.Attribute) or not isinstance(deco_expr.attr, cst.Name):
+                continue
+            if deco_expr.attr.value not in click_decorator_methods:
+                continue
+
+            if base_name in func_names and base_name != current_name:
+                deps_edges.setdefault(base_name, set()).add(current_name)
+
+    if any(dsts for dsts in deps_edges.values()):
+        base_order = [f.name.value for f in func_defs_sorted]
+        sorted_names = _toposort_stable(base_order, deps_edges)
+        name_to_def: dict[str, cst.FunctionDef] = {f.name.value: f for f in func_defs_sorted}
+        func_defs_sorted = [name_to_def[name] for name in sorted_names if name in name_to_def]
 
     if main_def is not None:
         func_defs_sorted.append(main_def)
