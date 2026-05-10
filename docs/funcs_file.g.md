@@ -144,6 +144,8 @@ Note:
 - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
   are ignored during processing.
 - Hidden files and folders (those with names starting with a dot) are ignored during processing.
+- Optional `skip_rel_prefixes` skips files whose path relative to the resolved root starts with one
+  of the given tuples (for example `(("install", "dependencies"),)`).
 - The function handles different return types from the `func` parameter:
   - If `None`: Shows a simple success message
   - If `str`: Appends the string to the success message
@@ -173,13 +175,31 @@ print(result)
 <summary>Code:</summary>
 
 ```python
-def apply_func(path: Path | str, ext: str, func: Callable) -> str:
+def apply_func(
+    path: Path | str,
+    ext: str,
+    func: Callable,
+    *,
+    skip_rel_prefixes: tuple[tuple[str, ...], ...] | None = None,
+) -> str:
     list_lines = []
-    folder_path = Path(path)
+    folder_path = Path(path).resolve()
+
+    def _rel_matches_skip(rel: Path) -> bool:
+        if not skip_rel_prefixes:
+            return False
+        parts = rel.parts
+        return any(len(parts) >= len(pref) and parts[: len(pref)] == pref for pref in skip_rel_prefixes)
 
     for file_path in folder_path.rglob(f"*{ext}"):
         # Check if file should be processed
         if file_path.is_file():
+            try:
+                rel_to_root = file_path.relative_to(folder_path)
+            except ValueError:
+                continue
+            if _rel_matches_skip(rel_to_root):
+                continue
             # Check if any part of the path should be ignored
             should_skip = False
             for part in file_path.parts:
@@ -2169,8 +2189,10 @@ def should_ignore_path(
         "config",
         "dist",
         "node_modules",
+        "site-packages",
         "tests",
         "Thumbs.db",
+        "uv-cache",
         "venv",
     }
 
