@@ -21,7 +21,7 @@ CLI commands after installation.
 
 - `uv self update` — update uv itself.
 - `uv sync --upgrade` — update all project libraries.
-- `isort .` — sort imports.
+- `ruff check --select I --fix` — sort imports.
 - `ruff format` — format the project's Python files.
 - `ruff check` — lint the project's Python files.
 - `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
@@ -49,7 +49,7 @@ CLI commands after installation.
             assert f"# {project_name}\n\n" in content
             assert "uv self update" in content
             assert "uv sync --upgrade" in content
-            assert "isort ." in content
+            assert "ruff check --select I --fix" in content
             assert "ruff format" in content
             assert "ruff check" in content
             assert "uv python install 3.13" in content
