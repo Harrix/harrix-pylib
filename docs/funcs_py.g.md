@@ -44,7 +44,7 @@ CLI commands after installation.
 
 - `uv self update` — update uv itself.
 - `uv sync --upgrade` — update all project libraries.
-- `isort .` — sort imports.
+- `ruff check --select I --fix` — sort imports.
 - `ruff format` — format the project's Python files.
 - `ruff check` — lint the project's Python files.
 - `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
@@ -93,7 +93,6 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
         uv init --package {project_name}
         cd {project_name}
         uv sync
-        uv add --dev isort
         uv add --dev ruff
         uv add --dev pytest
         New-Item -ItemType File -Path src/{project_name_under}/main.py -Force
