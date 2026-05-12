@@ -453,14 +453,11 @@ Returns:
 
 - `str`: The output from running the PowerShell script.
 
-Raises:
-
-- `subprocess.CalledProcessError`: If the PowerShell script execution fails.
-
 Note:
 
 - This function creates temporary files to store the script and its output, which are deleted after execution.
-- The function waits for the script to finish and ensures the output file exists before reading from it.
+- Multiline scripts are written to a `.ps1` file as-is (not joined with `;`), so block syntax is preserved.
+- The launcher uses `Start-Process -Verb RunAs -Wait` so execution finishes before the output file is read.
 
 Examples:
 
@@ -483,66 +480,84 @@ print(result_output)
 
 ```python
 def run_powershell_script_as_admin(commands: str) -> str:
-    res_output = []
-    command = ";".join(map(str.strip, commands.strip().splitlines()))
+    script_body = commands.strip()
+    if not script_body:
+        return ""
 
-    # Create a temporary file with the PowerShell script
-    with tempfile.NamedTemporaryFile(suffix=".ps1", delete=False) as tmp_script_file:
-        tmp_script_file.write(command.encode("utf-8"))
+    def _ps_single_quoted_literal(path: str) -> str:
+        return "'" + str(path).replace("'", "''") + "'"
+
+    tmp_wrapper_path: Path | None = None
+
+    with tempfile.NamedTemporaryFile(suffix=".ps1", delete=False, mode="wb") as tmp_script_file:
+        tmp_script_file.write("\ufeff".encode("utf-8"))
+        tmp_script_file.write(script_body.encode("utf-8"))
         tmp_script_path = Path(tmp_script_file.name)
 
-    # Create a temporary file for the output
-    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tmp_output_file:
-        tmp_output_path = Path(tmp_output_file.name)
+    fd, out_name = tempfile.mkstemp(suffix=".txt", prefix="harrix_pylib_ps_admin_")
+    os.close(fd)
+    Path(out_name).unlink(missing_ok=True)
+    tmp_output_path = Path(out_name)
 
     try:
-        # Wrapper script that runs the main script and writes the output to a file
-        wrapper_script = f"& '{tmp_script_path}' | Out-File -FilePath '{tmp_output_path}' -Encoding UTF8"
+        script_sq = _ps_single_quoted_literal(str(tmp_script_path))
+        output_sq = _ps_single_quoted_literal(str(tmp_output_path))
+        wrapper_script = f"& {script_sq} *>&1 | Out-File -LiteralPath {output_sq} -Encoding utf8"
 
-        # Save the wrapper script to a temporary file
-        with tempfile.NamedTemporaryFile(suffix=".ps1", delete=False) as tmp_wrapper_file:
+        with tempfile.NamedTemporaryFile(suffix=".ps1", delete=False, mode="wb") as tmp_wrapper_file:
+            tmp_wrapper_file.write("\ufeff".encode("utf-8"))
             tmp_wrapper_file.write(wrapper_script.encode("utf-8"))
             tmp_wrapper_path = Path(tmp_wrapper_file.name)
 
-        # Command to run PowerShell with administrator privileges
+        wrapper_sq = _ps_single_quoted_literal(str(tmp_wrapper_path))
+        ps_cmd = (
+            f"Start-Process -FilePath powershell.exe "
+            f"-ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',{wrapper_sq} "
+            f"-Verb RunAs -Wait"
+        )
+
+        powershell_path = shutil.which("powershell")
+        if powershell_path is None:
+            return "PowerShell executable not found."
+
         cmd = [
-            "powershell",
+            powershell_path,
             "-NoProfile",
             "-ExecutionPolicy",
             "Bypass",
             "-Command",
-            (
-                f"Start-Process powershell.exe -ArgumentList "
-                f"'-NoProfile -ExecutionPolicy Bypass -File \"{tmp_wrapper_path}\"' "
-                f"-Verb RunAs"
-            ),
+            ps_cmd,
         ]
+        completed = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
 
-        # Start the process
-        process = subprocess.Popen(cmd)
+        launcher_tail = "\n".join(filter(None, [(completed.stdout or "").strip(), (completed.stderr or "").strip()]))
 
-        # Wait for the process to finish
-        process.wait()
+        if tmp_output_path.exists():
+            captured = tmp_output_path.read_text(encoding="utf-8")
+            if captured.strip():
+                return captured
+            if launcher_tail:
+                return f"{launcher_tail}\n(exit code {completed.returncode}; captured script output was empty)"
+            return f"Exit code {completed.returncode} (captured script output was empty)."
 
-        # Ensure the output file has been created
-        while not tmp_output_path.exists():
-            time.sleep(0.1)
-
-        # Wait until the file is fully written (can adjust wait time as needed)
-        time.sleep(1)  # Delay to complete writing to the file
-
-        # Read the output data from the file
-        with tmp_output_path.open("r", encoding="utf-8") as f:
-            output = f.read()
-            res_output.append(output)
+        if launcher_tail:
+            return (
+                f"Output file was not created (UAC cancelled, elevation failed, or script did not run).\n"
+                f"Exit code {completed.returncode}.\n{launcher_tail}"
+            )
+        return f"Output file was not created and the launcher produced no text (exit code {completed.returncode})."
 
     finally:
-        # Delete temporary files after execution
         tmp_script_path.unlink(missing_ok=True)
         tmp_output_path.unlink(missing_ok=True)
-        tmp_wrapper_path.unlink(missing_ok=True)
-
-    return "\n".join(filter(None, res_output))
+        if tmp_wrapper_path is not None:
+            tmp_wrapper_path.unlink(missing_ok=True)
 ```
 
 </details>
