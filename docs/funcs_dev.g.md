@@ -358,8 +358,8 @@ def run_command(
             check=False,
         )
 
-        # Combine stdout and stderr, filter out empty lines
-        output_parts = [process.stdout.strip(), process.stderr.strip()]
+        # Combine stdout and stderr, filter out empty lines (streams may be None on some platforms).
+        output_parts = [(process.stdout or "").strip(), (process.stderr or "").strip()]
         return "\n".join(filter(None, output_parts))
 
     except subprocess.TimeoutExpired:
