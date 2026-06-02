@@ -67,6 +67,23 @@ def test_apply_func_skip_rel_prefixes() -> None:
         assert skip_file.read_text(encoding="utf8") == "s"
 
 
+def test_apply_func_ignores_install_dependencies() -> None:
+    def mark(filename: Path | str) -> None:
+        Path(filename).write_text("x", encoding="utf8")
+
+    with TemporaryDirectory() as temp_folder:
+        root = Path(temp_folder)
+        keep = root / "notes" / "a.md"
+        skip_file = root / "install" / "dependencies" / "b.md"
+        keep.parent.mkdir(parents=True)
+        skip_file.parent.mkdir(parents=True)
+        keep.write_text("k", encoding="utf8")
+        skip_file.write_text("s", encoding="utf8")
+        h.file.apply_func(str(root), ".md", mark)
+        assert keep.read_text(encoding="utf8") == "x"
+        assert skip_file.read_text(encoding="utf8") == "s"
+
+
 def test_apply_func() -> None:
     def test_func(filename: Path | str) -> None:
         content = Path(filename).read_text(encoding="utf8")

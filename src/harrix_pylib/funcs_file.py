@@ -160,14 +160,7 @@ def apply_func(
                 continue
             if _rel_matches_skip(rel_to_root):
                 continue
-            # Check if any part of the path should be ignored
-            should_skip = False
-            for part in file_path.parts:
-                if should_ignore_path(part):
-                    should_skip = True
-                    break
-
-            if should_skip:
+            if should_ignore_path(rel_to_root):
                 continue
 
             try:
@@ -286,14 +279,11 @@ def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -
     for file_path in folder_path.rglob(f"*{ext}"):
         # Check if file should be processed
         if file_path.is_file():
-            # Check if any part of the path should be ignored
-            should_skip = False
-            for part in file_path.parts:
-                if should_ignore_path(part):
-                    should_skip = True
-                    break
-
-            if should_skip:
+            try:
+                rel_to_root = file_path.relative_to(folder_path)
+            except ValueError:
+                continue
+            if should_ignore_path(rel_to_root):
                 continue
 
             result = func(file_path)
@@ -577,7 +567,7 @@ def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = Fals
 
         for item in contents:
             # Skip ignored items if flag is set
-            if is_ignore_hidden_folders and should_ignore_path(item.name):
+            if is_ignore_hidden_folders and should_ignore_path(item.relative_to(root_path)):
                 continue
 
             if item.is_file():
@@ -1929,6 +1919,9 @@ def should_ignore_path(
 
     - `path` (`Path | str`): The path to check for ignoring.
     - `additional_patterns` (`list[str] | None`): Additional patterns to ignore. Defaults to `None`.
+      Patterns may be a single path segment (for example ``node_modules``) or several segments joined with
+      ``/`` (for example ``install/dependencies``); multi-segment patterns match any consecutive subsequence
+      of ``path.parts`` (including paths nested below that folder).
     - `is_ignore_hidden` (`bool`): Whether to ignore hidden files/folders (starting with dot). Defaults to `True`.
 
     Returns:
@@ -1972,6 +1965,7 @@ def should_ignore_path(
         "build",
         "config",
         "dist",
+        "install/dependencies",
         "node_modules",
         "site-packages",
         "tests",
@@ -1984,12 +1978,27 @@ def should_ignore_path(
     if additional_patterns:
         base_patterns.update(additional_patterns)
 
-    # Check for hidden files/folders
-    if is_ignore_hidden and path.name.startswith("."):
+    single_patterns: set[str] = set()
+    multi_patterns: list[tuple[str, ...]] = []
+    for pattern in base_patterns:
+        if "/" in pattern:
+            multi_patterns.append(tuple(pattern.split("/")))
+        else:
+            single_patterns.add(pattern)
+
+    parts = path.parts
+
+    # Check for hidden files/folders (any segment, not only the last one)
+    if is_ignore_hidden and any(part.startswith(".") for part in parts):
+        return True
+    if path.name in single_patterns or any(part in single_patterns for part in parts):
         return True
 
-    # Check against patterns
-    return path.name in base_patterns
+    return any(
+        len(parts) >= len(prefix) and parts[index : index + len(prefix)] == prefix
+        for prefix in multi_patterns
+        for index in range(len(parts) - len(prefix) + 1)
+    )
 
 
 def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False) -> str:
@@ -2038,8 +2047,11 @@ def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False
     ```
 
     """
+    root_path = Path(path)
 
-    def __tree(path: Path | str, *, is_ignore_hidden_folders: bool = False, prefix: str = "") -> Iterator[str]:
+    def __tree(
+        path: Path | str, *, is_ignore_hidden_folders: bool = False, prefix: str = "", root_path: Path
+    ) -> Iterator[str]:
         path = Path(path)
         try:
             contents = list(path.iterdir())
@@ -2051,8 +2063,14 @@ def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False
             yield prefix + pointer + item.name
 
             # Only traverse into directories if they shouldn't be ignored or if we're not ignoring
-            if item.is_dir() and not (is_ignore_hidden_folders and should_ignore_path(item.name)):
+            rel_item = item.relative_to(root_path)
+            if item.is_dir() and not (is_ignore_hidden_folders and should_ignore_path(rel_item)):
                 extension = "│  " if pointer == "├─ " else "   "
-                yield from __tree(item, is_ignore_hidden_folders=is_ignore_hidden_folders, prefix=prefix + extension)
+                yield from __tree(
+                    item,
+                    is_ignore_hidden_folders=is_ignore_hidden_folders,
+                    prefix=prefix + extension,
+                    root_path=root_path,
+                )
 
-    return "\n".join(list(__tree(Path(path), is_ignore_hidden_folders=is_ignore_hidden_folders)))
+    return "\n".join(list(__tree(root_path, is_ignore_hidden_folders=is_ignore_hidden_folders, root_path=root_path)))

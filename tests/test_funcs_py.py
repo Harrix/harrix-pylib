@@ -282,6 +282,19 @@ def test_should_ignore_path() -> None:
         assert h.file.should_ignore_path(ds_store)
         assert h.file.should_ignore_path(thumbs_db)
 
+        install_deps = temp_path / "install" / "dependencies"
+        install_deps.mkdir(parents=True)
+        install_only = temp_path / "install"
+        deps_only = temp_path / "other" / "dependencies"
+        deps_only.mkdir(parents=True)
+
+        assert h.file.should_ignore_path(install_deps)
+        assert h.file.should_ignore_path(install_deps / "cache")
+        assert not h.file.should_ignore_path(install_only)
+        assert not h.file.should_ignore_path(deps_only)
+        assert not h.file.should_ignore_path(Path("dependencies"))
+        assert h.file.should_ignore_path(Path(".hidden") / "file.md")
+
 
 def test_sort_py_code() -> None:
     current_folder = h.dev.get_project_root()

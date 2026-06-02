@@ -810,7 +810,7 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_m
 
     def should_process_path(path: Path) -> bool:
         """Check if a path should be processed (not ignored)."""
-        return all(not h.file.should_ignore_path(part) for part in path.parts)
+        return not h.file.should_ignore_path(path)
 
     result_lines = []
     folder_path = Path(folder_path)
@@ -2367,14 +2367,11 @@ def get_set_variables_from_yaml(folder_path: Path | str) -> list[str]:
         if not md_file.is_file():
             continue
 
-        # Check if any part of the path should be ignored
-        should_skip = False
-        for part in md_file.parts:
-            if h.file.should_ignore_path(part):
-                should_skip = True
-                break
-
-        if should_skip:
+        try:
+            rel_to_root = md_file.relative_to(folder_path)
+        except ValueError:
+            continue
+        if h.file.should_ignore_path(rel_to_root):
             continue
 
         try:
