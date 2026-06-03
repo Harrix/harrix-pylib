@@ -2,7 +2,7 @@
 
 import functools
 import re
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -49,7 +49,7 @@ def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_
     year = current_date.strftime("%Y")
 
     path_dream = Path(path_dream)
-    year_file = path_dream / f"{year}.md"
+    year_file = note_md_path(path_dream, year)
 
     # Prepare the new entry
     new_entry = f"## {current_date.strftime('%Y-%m-%d')}\n\n"
@@ -59,6 +59,7 @@ def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_
     # Check if the yearly file exists
     if not year_file.exists():
         # Create new yearly file with front matter, year heading, TOC, and new entry
+        year_file.parent.mkdir(parents=True, exist_ok=True)
         toc_section = "<details>\n<summary>📖 Contents ⬇️</summary>\n\n## Contents\n\n</details>\n\n"
         content = f"{beginning_of_md}\n# {year}\n\n{toc_section}{new_entry}"
         year_file.write_text(content, encoding="utf-8")
@@ -113,14 +114,14 @@ def add_diary_new_cases_in_year(path_cases: Path | str, beginning_of_md: str) ->
     year_month = current_date.strftime("%Y-%m")
 
     path_cases = Path(path_cases)
-    year_file = path_cases / f"{year}.md"
+    year_file = note_md_path(path_cases, year)
 
     cases_count = 16
     new_items = "".join("- \n" for _ in range(cases_count))
     new_month_section = f"## {year_month}\n\n{new_items}\n"
 
     if not year_file.exists():
-        path_cases.mkdir(parents=True, exist_ok=True)
+        year_file.parent.mkdir(parents=True, exist_ok=True)
         content = f"{beginning_of_md}\n# {year}\n\n{new_month_section}"
         year_file.write_text(content, encoding="utf-8")
         return f"✅ File {year_file} created.", year_file
@@ -377,13 +378,11 @@ def add_note(base_path: Path | str, name: str, text: str, *, is_with_images: boo
 
     """
     base_path = Path(base_path)
-
+    note_dir = base_path / name
+    note_dir.mkdir(parents=True, exist_ok=True)
     if is_with_images:
-        (base_path / name).mkdir(exist_ok=True)
-        (base_path / name / "img").mkdir(exist_ok=True)
-        filename = base_path / name / f"{name}.md"
-    else:
-        filename = base_path / f"{name}.md"
+        (note_dir / "img").mkdir(exist_ok=True)
+    filename = note_dir / f"{name}.md"
 
     with filename.open(mode="w", encoding="utf-8") as file:
         file.write(text)
@@ -533,6 +532,51 @@ def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> st
     return "File is not changed."
 
 
+def collect_subfolder_md(subfolder: Path, should_include_file: Callable[[Path], bool]) -> list[Path]:
+    """Collect Markdown files from a subfolder for combine operations.
+
+    Prefers the named-folder layout ``Name/Name/Name.md``, then flat ``Name/Name.md``,
+    then falls back to a recursive search for all ``*.md`` files that pass the filter.
+
+    Args:
+
+    - `subfolder` (`Path`): Subfolder to collect Markdown files from.
+    - `should_include_file` (`Callable[[Path], bool]`): Predicate that decides whether
+      a file should be included.
+
+    Returns:
+
+    - `list[Path]`: Sorted list of Markdown file paths (may be a single preferred note).
+
+    Note:
+
+    - Used by `combine_markdown_files()` in recursive mode when no ``*.g.md`` file
+      is present in the subfolder.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    def include_md(path: Path) -> bool:
+        return path.suffix == ".md" and not path.name.endswith(".g.md")
+
+    files = h.md.collect_subfolder_md(Path("C:/Notes/Chapter1"), include_md)
+    ```
+
+    """
+    subfolder = Path(subfolder)
+    named = subfolder / subfolder.name / f"{subfolder.name}.md"
+    if named.is_file() and should_include_file(named):
+        return [named]
+    flat = subfolder / f"{subfolder.name}.md"
+    if flat.is_file() and should_include_file(flat):
+        return [flat]
+    return sorted(
+        file_path for file_path in subfolder.rglob("*.md") if file_path.is_file() and should_include_file(file_path)
+    )
+
+
 def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = False) -> str:
     """Combine multiple Markdown files in a folder into a single file with intelligent YAML header merging.
 
@@ -625,13 +669,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
                 # Use the first .g.md file found
                 md_files.append(g_md_files[0])
             else:
-                subfolder_files = [
-                    file_path
-                    for file_path in subfolder.rglob("*.md")
-                    if file_path.is_file() and should_include_file(file_path)
-                ]
-                subfolder_files.sort()
-                md_files.extend(subfolder_files)
+                md_files.extend(collect_subfolder_md(subfolder, should_include_file))
     else:
         # Non-recursive - only get files in the current folder
         md_files = sorted(
@@ -2006,12 +2044,8 @@ def generate_summaries(folder: Path | str) -> str:
     # YAML frontmatter to use for both files
     yaml_frontmatter = ""
 
-    # Scan the directory for Markdown files
-    for file_path in path.glob("*.md"):
-        # Skip the table.include.g.md and short summary files we're going to create
-        if file_path.name == "table.include.g.md" or file_path.name.startswith(f"_{dir_name}"):
-            continue
-
+    # Scan the directory for Markdown files (flat and Note/Note subfolders)
+    for file_path in iter_note_md_in_folder(path, dir_name=dir_name):
         # Check if the filename contains a 4-digit year
         year_match = year_pattern.search(file_path.stem)
 
@@ -2614,6 +2648,170 @@ def increase_heading_level_content(markdown_text: str) -> str:
     return "\n".join(new_lines)
 
 
+def is_note_in_named_folder(md_path: Path) -> bool:
+    """Check whether a Markdown path uses the named-folder layout.
+
+    A note is in named-folder layout when it is stored as ``Folder/Folder.md``,
+    where the folder name matches the file stem (case-insensitive comparison).
+    This function checks path structure only and does not verify that the file exists.
+
+    Args:
+
+    - `md_path` (`Path`): Path to the Markdown file to check.
+
+    Returns:
+
+    - `bool`: `True` if the path follows the named-folder layout, `False` otherwise.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+    from pathlib import Path
+
+    h.md.is_note_in_named_folder(Path("Notes/MyNote/MyNote.md"))
+    ```
+
+    """
+    note_dir = md_path.parent
+    stem = md_path.stem
+    if note_dir.name.lower() != stem.lower():
+        return False
+    expected_md = note_dir / f"{note_dir.name}.md"
+    return expected_md.resolve() == md_path.resolve()
+
+
+def iter_note_md_in_folder(folder: Path | str, *, dir_name: str | None = None) -> Iterator[Path]:
+    """Iterate scannable note Markdown files in a folder.
+
+    Yields flat ``*.md`` files in ``folder`` and ``Sub/Sub.md`` notes in immediate
+    subfolders (named-folder layout relative to the parent). Results are deduplicated
+    by stem (case-insensitive). Generated files (``*.g.md``, ``table.include.g.md``)
+    and short-summary files (``_{dir_name}*``) are excluded. Ignored subfolders
+    (for example ``.git``) are skipped via `h.file.should_ignore_path()`.
+
+    Args:
+
+    - `folder` (`Path | str`): Directory to scan for note files.
+    - `dir_name` (`str | None`): Folder name used to filter ``_{dir_name}*`` files.
+      Defaults to ``folder.name``.
+
+    Returns:
+
+    - `Iterator[Path]`: Unique scannable note paths in sorted discovery order.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    for note_path in h.md.iter_note_md_in_folder("C:/Books"):
+        print(note_path)
+    ```
+
+    """
+    folder = Path(folder)
+    resolved_dir_name = folder.name if dir_name is None else dir_name
+    seen_stems: set[str] = set()
+
+    def is_scannable_note_md(file_path: Path) -> bool:
+        """Check if a Markdown file should be included when scanning notes."""
+        name = file_path.name
+        if name.endswith(".include.g.md"):
+            return False
+        if name.endswith(".g.md"):
+            return False
+        if name == "table.include.g.md":
+            return False
+        return not name.startswith(f"_{resolved_dir_name}")
+
+    def yield_unique(path: Path) -> Iterator[Path]:
+        if not is_scannable_note_md(path):
+            return
+        stem_key = path.stem.lower()
+        if stem_key in seen_stems:
+            return
+        seen_stems.add(stem_key)
+        yield path
+
+    for file_path in sorted(folder.glob("*.md")):
+        yield from yield_unique(file_path)
+
+    for subfolder in sorted(d for d in folder.iterdir() if d.is_dir()):
+        if h.file.should_ignore_path(subfolder):
+            continue
+        note_path = note_md_path(subfolder, subfolder.name)
+        if note_path.is_file():
+            yield from yield_unique(note_path)
+
+
+def named_note_md_path(parent: Path | str, stem: str) -> Path:
+    """Build the canonical named-folder path for a note.
+
+    Returns ``parent/stem/stem.md``, the preferred layout for new notes and file moves.
+
+    Args:
+
+    - `parent` (`Path | str`): Directory that will contain the note folder.
+    - `stem` (`str`): Note name without the ``.md`` extension.
+
+    Returns:
+
+    - `Path`: Path in named-folder layout (the file may not exist yet).
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    new_note = h.md.named_note_md_path("C:/Notes", "MyNote")
+    # C:/Notes/MyNote/MyNote.md
+    ```
+
+    """
+    parent = Path(parent)
+    return parent / stem / f"{stem}.md"
+
+
+def note_md_path(parent: Path | str, stem: str) -> Path:
+    """Resolve the path to an existing note, preferring the named-folder layout.
+
+    The library supports two layouts: named-folder ``parent/stem/stem.md`` (canonical)
+    and legacy flat ``parent/stem.md``. When both files exist, the named-folder path
+    is returned. When neither exists, the named-folder path is returned for creation.
+
+    Args:
+
+    - `parent` (`Path | str`): Directory that contains the note or note folder.
+    - `stem` (`str`): Note name without the ``.md`` extension.
+
+    Returns:
+
+    - `Path`: Resolved path to the note file.
+
+    Note:
+
+    - Priority: named-folder layout, then flat layout, then named-folder path as default.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    note_path = h.md.note_md_path("C:/Notes", "MyNote")
+    ```
+
+    """
+    parent = Path(parent)
+    named = named_note_md_path(parent, stem)
+    flat = parent / f"{stem}.md"
+    if named.is_file():
+        return named
+    if flat.is_file():
+        return flat
+    return named
+
+
 def remove_markdown_formatting_for_headings(text: str) -> str:
     """Remove markdown formatting from text.
 
@@ -2951,6 +3149,41 @@ def replace_section_content(
         updated_lines.append("")  # Ensure the Markdown ends with a newline
 
     return "\n".join(updated_lines)
+
+
+def resolve_md_path(path: Path | str) -> Path:
+    """Resolve a Markdown path to an existing file, including named-folder layout.
+
+    If ``path`` points to an existing file, it is returned unchanged. If ``path`` ends
+    with ``.md`` but does not exist, the function tries the named-folder layout
+    ``parent/stem/stem.md``. Otherwise the original path is returned.
+
+    Args:
+
+    - `path` (`Path | str`): Flat or named-folder Markdown path to resolve.
+
+    Returns:
+
+    - `Path`: Existing file path, or the original path if no file was found.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    resolved = h.md.resolve_md_path("C:/Notes/MyNote.md")
+    # Returns C:/Notes/MyNote/MyNote.md when only the named-folder file exists
+    ```
+
+    """
+    path = Path(path)
+    if path.is_file():
+        return path
+    if path.suffix.lower() == ".md":
+        named = path.parent / path.stem / f"{path.stem}.md"
+        if named.is_file():
+            return named
+    return path
 
 
 def sort_sections(filename: Path | str, *, is_sort_section_from_yaml: bool = False) -> str:

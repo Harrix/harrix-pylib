@@ -23,7 +23,7 @@ def test_add_diary_entry_in_year() -> None:
         # Assertions for Test 1
         now_local = datetime.now(UTC).astimezone()
         current_year = now_local.strftime("%Y")
-        expected_file_path = temp_path / f"{current_year}.md"
+        expected_file_path = temp_path / current_year / f"{current_year}.md"
         assert file_path == expected_file_path
         assert expected_file_path.exists()
         assert "created" in message
@@ -73,7 +73,7 @@ def test_add_diary_new_dairy_in_year() -> None:
         dairy_message, dairy_file_path = h.md.add_diary_new_dairy_in_year(temp_path2, front_matter)
 
         # Assertions for Test 4
-        expected_dairy_path = temp_path2 / f"{current_year}.md"
+        expected_dairy_path = temp_path2 / current_year / f"{current_year}.md"
         assert dairy_file_path == expected_dairy_path
         assert expected_dairy_path.exists()
         assert "created" in dairy_message
@@ -140,7 +140,7 @@ lang: ru
         assert "File" in result_msg
 
         # Verify that the new diary entry is added to the existing diary structure
-        new_diary_file = diary_month_path / f"{day}.md"
+        new_diary_file = diary_month_path / day / f"{day}.md"
         assert new_diary_file.is_file()
 
         # Verify content of the new diary file
@@ -210,7 +210,7 @@ lang: ru
         assert "File" in result_msg
 
         # Verify that the new dream diary file is added to the existing diary structure
-        new_dream_diary_file = diary_month_path / f"{day}.md"
+        new_dream_diary_file = diary_month_path / day / f"{day}.md"
         assert new_dream_diary_file.is_file()
 
         # Verify content of the new dream diary file
@@ -230,7 +230,7 @@ def test_add_diary_new_dream_in_year() -> None:
         front_matter = "---\ntitle: Test Diary\n---\n"
 
         current_year = datetime.now(UTC).astimezone().strftime("%Y")
-        expected_file_path = temp_path / f"{current_year}.md"
+        expected_file_path = temp_path / current_year / f"{current_year}.md"
 
         # Test 1: Test add_diary_new_dream_in_year
         _, dream_file_path = h.md.add_diary_new_dream_in_year(temp_path, front_matter)
@@ -252,7 +252,7 @@ def test_add_diary_new_dream_in_year() -> None:
             dairy_message, dairy_file_path = h.md.add_diary_new_dairy_in_year(temp_path2, front_matter)
 
             # Assertions for Test 4
-            expected_dairy_path = temp_path2 / f"{current_year}.md"
+            expected_dairy_path = temp_path2 / current_year / f"{current_year}.md"
             assert dairy_file_path == expected_dairy_path
             assert expected_dairy_path.exists()
             assert "created" in dairy_message
@@ -271,7 +271,7 @@ def test_add_diary_new_cases_in_year() -> None:
         now_local = datetime.now(UTC).astimezone()
         current_year = now_local.strftime("%Y")
         current_year_month = now_local.strftime("%Y-%m")
-        expected_file_path = temp_path / f"{current_year}.md"
+        expected_file_path = temp_path / current_year / f"{current_year}.md"
 
         # Test 1: Create a new file when it doesn't exist
         cases_message, cases_file_path = h.md.add_diary_new_cases_in_year(temp_path, front_matter)
@@ -407,7 +407,7 @@ def test_add_diary_new_note() -> None:
         assert diary_month_path.is_dir()
 
         # Check if the note file exists in the correct location
-        note_file = diary_month_path / f"{day}.md"
+        note_file = diary_month_path / day / f"{day}.md"
         assert note_file.is_file()
 
         # Verify content of the note file
@@ -470,8 +470,8 @@ def test_add_note() -> None:
         # Check if the message indicates file creation
         assert "File" in result_msg
 
-        # Check if the note file exists at the base path
-        note_file_no_images = base_path / f"{name}.md"
+        # Check if the note file exists at the named-folder path
+        note_file_no_images = base_path / name / f"{name}.md"
         assert note_file_no_images.is_file()
 
         # Verify content of the note file
@@ -479,7 +479,7 @@ def test_add_note() -> None:
             assert file.read().strip() == text
 
         # Check that there's no image folder created
-        assert not (base_path / f"{name}/img").exists()
+        assert not (base_path / name / "img").exists()
 
 
 def test_append_path_to_local_links_images_line() -> None:
@@ -1104,6 +1104,250 @@ A long book about a whale.
         table_years = [int(year) for year in table_years]
         # Check they're in descending order
         assert table_years == sorted(table_years, reverse=True)
+
+
+def test_is_note_in_named_folder() -> None:
+    # Test 1: named-folder layout
+    assert h.md.is_note_in_named_folder(Path("Notes/MyNote/MyNote.md"))
+
+    # Test 2: case-insensitive folder name and stem
+    assert h.md.is_note_in_named_folder(Path("Notes/Note/note.md"))
+
+    # Test 3: flat layout in parent directory
+    assert not h.md.is_note_in_named_folder(Path("Notes/MyNote.md"))
+
+    # Test 4: stem does not match folder name
+    assert not h.md.is_note_in_named_folder(Path("Notes/MyNote/Other.md"))
+
+
+def test_named_note_md_path_and_note_md_path() -> None:
+    with TemporaryDirectory() as temp_dir:
+        parent = Path(temp_dir)
+
+        # Test 1: named_note_md_path builds canonical path
+        assert h.md.named_note_md_path(parent, "Note") == parent / "Note" / "Note.md"
+
+        # Test 2: only named layout exists
+        named = parent / "NamedOnly" / "NamedOnly.md"
+        named.parent.mkdir()
+        named.write_text("# Named", encoding="utf-8")
+        assert h.md.note_md_path(parent, "NamedOnly") == named
+
+        # Test 3: only flat layout exists (legacy)
+        flat = parent / "FlatOnly.md"
+        flat.write_text("# Flat", encoding="utf-8")
+        assert h.md.note_md_path(parent, "FlatOnly") == flat
+
+        # Test 4: both exist — named layout has priority
+        both_named = parent / "Both" / "Both.md"
+        both_named.parent.mkdir()
+        both_named.write_text("# Named both", encoding="utf-8")
+        both_flat = parent / "Both.md"
+        both_flat.write_text("# Flat both", encoding="utf-8")
+        assert h.md.note_md_path(parent, "Both") == both_named
+
+        # Test 5: neither exists — default to named layout for creation
+        assert h.md.note_md_path(parent, "NewNote") == parent / "NewNote" / "NewNote.md"
+
+
+def test_resolve_md_path() -> None:
+    with TemporaryDirectory() as temp_dir:
+        base = Path(temp_dir)
+
+        # Test 1: existing flat file is returned unchanged
+        flat = base / "Flat.md"
+        flat.write_text("# Flat", encoding="utf-8")
+        assert h.md.resolve_md_path(flat) == flat
+
+        # Test 2: non-existent flat path resolves to named layout when it exists
+        named = base / "MyNote" / "MyNote.md"
+        named.parent.mkdir()
+        named.write_text("# Named", encoding="utf-8")
+        assert h.md.resolve_md_path(base / "MyNote.md") == named
+
+        # Test 3: non-existent path is returned unchanged
+        missing = base / "Missing.md"
+        assert h.md.resolve_md_path(missing) == missing
+
+
+def test_iter_note_md_in_folder() -> None:
+    with TemporaryDirectory() as temp_dir:
+        folder = Path(temp_dir)
+
+        # Test 1: flat notes in folder root
+        (folder / "Alpha.md").write_text("# Alpha", encoding="utf-8")
+        (folder / "Beta.md").write_text("# Beta", encoding="utf-8")
+
+        # Test 2: named notes in immediate subfolders
+        sub_2023 = folder / "2023"
+        sub_2023.mkdir()
+        (sub_2023 / "2023.md").write_text("# 2023", encoding="utf-8")
+
+        # Test 3: excluded generated and summary files
+        (folder / "output.g.md").write_text("# Generated", encoding="utf-8")
+        (folder / "table.include.g.md").write_text("# Table", encoding="utf-8")
+        (folder / f"_{folder.name}.short.g.md").write_text("# Short", encoding="utf-8")
+
+        # Test 4: deduplication — flat note wins over subfolder with same stem
+        (folder / "Dup.md").write_text("# Flat dup", encoding="utf-8")
+        dup_sub = folder / "Dup"
+        dup_sub.mkdir()
+        (dup_sub / "Dup.md").write_text("# Sub dup", encoding="utf-8")
+
+        # Test 5: ignored subfolder (.git)
+        git_dir = folder / ".git"
+        git_dir.mkdir()
+        (git_dir / "git.md").write_text("# Git", encoding="utf-8")
+
+        notes = list(h.md.iter_note_md_in_folder(folder))
+        note_names = {path.name for path in notes}
+
+        assert note_names == {"Alpha.md", "Beta.md", "2023.md", "Dup.md"}
+        assert "output.g.md" not in note_names
+        assert "table.include.g.md" not in note_names
+        assert f"_{folder.name}.short.g.md" not in note_names
+        assert "git.md" not in note_names
+
+        # Test 6: custom dir_name filters short-summary prefix
+        custom_folder = folder / "custom"
+        custom_folder.mkdir()
+        (custom_folder / "Note.md").write_text("# Note", encoding="utf-8")
+        (custom_folder / "_Books.short.g.md").write_text("# Short", encoding="utf-8")
+
+        custom_notes = list(h.md.iter_note_md_in_folder(custom_folder, dir_name="Books"))
+        assert [path.name for path in custom_notes] == ["Note.md"]
+
+
+def test_collect_subfolder_md() -> None:
+    def include_md(path: Path) -> bool:
+        return path.suffix == ".md" and not path.name.endswith(".g.md")
+
+    with TemporaryDirectory() as temp_dir:
+        base = Path(temp_dir)
+
+        # Test 1: named layout Name/Name/Name.md
+        named_sub = base / "NoteA"
+        named_sub.mkdir()
+        named_note = named_sub / "NoteA" / "NoteA.md"
+        named_note.parent.mkdir()
+        named_note.write_text("# Named A", encoding="utf-8")
+        (named_sub / "extra.md").write_text("# Extra", encoding="utf-8")
+        assert h.md.collect_subfolder_md(named_sub, include_md) == [named_note]
+
+        # Test 2: flat layout Name/Name.md
+        flat_sub = base / "NoteB"
+        flat_sub.mkdir()
+        flat_note = flat_sub / "NoteB.md"
+        flat_note.write_text("# Flat B", encoding="utf-8")
+        assert h.md.collect_subfolder_md(flat_sub, include_md) == [flat_note]
+
+        # Test 3: fallback rglob when no named/flat note exists
+        legacy_sub = base / "Legacy"
+        legacy_sub.mkdir()
+        deep_note = legacy_sub / "nested" / "deep.md"
+        deep_note.parent.mkdir()
+        deep_note.write_text("# Deep", encoding="utf-8")
+        shallow_note = legacy_sub / "shallow.md"
+        shallow_note.write_text("# Shallow", encoding="utf-8")
+        assert h.md.collect_subfolder_md(legacy_sub, include_md) == [deep_note, shallow_note]
+
+        # Test 4: should_include_file filter excludes files
+        filter_sub = base / "Filtered"
+        filter_sub.mkdir()
+        included = filter_sub / "keep.md"
+        included.write_text("# Keep", encoding="utf-8")
+        excluded = filter_sub / "skip.g.md"
+        excluded.write_text("# Skip", encoding="utf-8")
+
+        def include_non_g(path: Path) -> bool:
+            return path.suffix == ".md" and not path.name.endswith(".g.md")
+
+        assert h.md.collect_subfolder_md(filter_sub, include_non_g) == [included]
+
+
+def test_generate_summaries_named_folders() -> None:
+    current_year = datetime.now(UTC).year
+
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        yaml_content = """---
+author: Test Author
+date: 2024-06-15
+---
+
+# Books 2023
+
+## The Hobbit: 9
+
+Great book.
+"""
+        note_dir_2023 = temp_path / "2023"
+        note_dir_2023.mkdir()
+        (note_dir_2023 / "2023.md").write_text(yaml_content, encoding="utf-8")
+
+        content_2022 = """# Books 2022
+
+## Dune: 8
+
+Science fiction.
+"""
+        note_dir_2022 = temp_path / "2022"
+        note_dir_2022.mkdir()
+        (note_dir_2022 / "2022.md").write_text(content_2022, encoding="utf-8")
+
+        result = h.md.generate_summaries(temp_path)
+
+        assert "table.include.g.md is created" in result
+        assert f"_{temp_path.name}.short.g.md is created" in result
+
+        table_content = (temp_path / "table.include.g.md").read_text(encoding="utf-8")
+        short_content = (temp_path / f"_{temp_path.name}.short.g.md").read_text(encoding="utf-8")
+
+        assert "| 2023 | 1 |" in table_content
+        assert "| 2022 | 1 |" in table_content
+        assert "  - The Hobbit: 9" in short_content
+        assert "  - Dune: 8" in short_content
+
+        current_year_pattern = re.compile(rf"\| {current_year} \| \d+ \|")
+        assert current_year_pattern.search(table_content) is not None
+
+
+def test_combine_markdown_files_recursively_named_folders() -> None:
+    with TemporaryDirectory() as temp_dir:
+        root_path = Path(temp_dir)
+        folder1 = root_path / "folder1"
+        folder1.mkdir()
+        note_a = folder1 / "NoteA"
+        note_a.mkdir()
+        (note_a / "NoteA.md").write_text("# Note A")
+        note_b = folder1 / "NoteB"
+        note_b.mkdir()
+        (note_b / "NoteB.md").write_text("# Note B")
+
+        h.md.combine_markdown_files_recursively(root_path)
+
+        assert (folder1 / "_folder1.g.md").exists()
+
+
+def test_add_diary_entry_in_year_named_folder() -> None:
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        front_matter = "---\ntitle: Test Diary\n---\n"
+        current_year = datetime.now(UTC).astimezone().strftime("%Y")
+
+        year_dir = temp_path / current_year
+        year_dir.mkdir()
+        year_file = year_dir / f"{current_year}.md"
+        year_file.write_text(f"{front_matter}\n# {current_year}\n\n", encoding="utf-8")
+
+        entry_content = "Named folder entry.\n\n"
+        message, file_path = h.md.add_diary_entry_in_year(temp_path, front_matter, entry_content)
+
+        assert file_path == year_file
+        assert "updated" in message
+        content = year_file.read_text(encoding="utf-8")
+        assert entry_content in content
 
 
 def test_generate_toc_with_links() -> None:

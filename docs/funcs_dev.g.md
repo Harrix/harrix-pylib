@@ -490,7 +490,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
     tmp_wrapper_path: Path | None = None
 
     with tempfile.NamedTemporaryFile(suffix=".ps1", delete=False, mode="wb") as tmp_script_file:
-        tmp_script_file.write("\ufeff".encode("utf-8"))
+        tmp_script_file.write("\ufeff".encode())
         tmp_script_file.write(script_body.encode("utf-8"))
         tmp_script_path = Path(tmp_script_file.name)
 
@@ -505,7 +505,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
         wrapper_script = f"& {script_sq} *>&1 | Out-File -LiteralPath {output_sq} -Encoding utf8"
 
         with tempfile.NamedTemporaryFile(suffix=".ps1", delete=False, mode="wb") as tmp_wrapper_file:
-            tmp_wrapper_file.write("\ufeff".encode("utf-8"))
+            tmp_wrapper_file.write("\ufeff".encode())
             tmp_wrapper_file.write(wrapper_script.encode("utf-8"))
             tmp_wrapper_path = Path(tmp_wrapper_file.name)
 
