@@ -696,6 +696,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(html_in_code_file, select={"H019"})
         assert not errors
 
+        # HTML-like content inside inline code should not trigger H019
+        html_in_inline_code_file = temp_path / "html_in_inline_code.md"
+        html_in_inline_code_file.write_text(
+            "---\nlang: en\n---\n\nIn the file `resources.qrc` add line for example `<file>assets/logo.svg</file>`:\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(html_in_inline_code_file, select={"H019"})
+        assert not errors
+
         # Check various forbidden HTML tags
         for tag in ["<table", "<h1", "<h2", "<h3", "<p>"]:
             html_file = temp_path / f"html_{tag.strip('<>').replace(' ', '_')}.md"

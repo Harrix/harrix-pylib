@@ -666,17 +666,25 @@ class MarkdownChecker:
     def _check_html_tags(
         self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for HTML tags in content (H019). Exception: <details> and <summary> are allowed."""
-        line_lower = line.lower()
-        for tag in self.FORBIDDEN_HTML_TAGS:
-            if tag.lower() not in line_lower:
-                continue
-            pos = line_lower.find(tag.lower())
-            rest = line_lower[pos:]
-            if rest.startswith(("<details", "<details>", "</details>", "<summary", "<summary>", "</summary>")):
-                continue
-            error_msg = f'{self.RULES["H019"]}: found "{tag}"'
-            yield self._format_error("H019", error_msg, filename, line_num=line_num, col=pos + 1)
+        """Check for HTML tags in content (H019). Exception: <details> and <summary> are allowed.
+
+        Skips inline code segments (e.g. `` `<file>...</file>` `` in backticks).
+        """
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                segment_lower = segment.lower()
+                for tag in self.FORBIDDEN_HTML_TAGS:
+                    tag_lower = tag.lower()
+                    if tag_lower not in segment_lower:
+                        continue
+                    pos = segment_lower.find(tag_lower)
+                    rest = segment_lower[pos:]
+                    if rest.startswith(("<details", "<details>", "</details>", "<summary", "<summary>", "</summary>")):
+                        continue
+                    error_msg = f'{self.RULES["H019"]}: found "{tag}"'
+                    yield self._format_error("H019", error_msg, filename, line_num=line_num, col=offset + pos + 1)
+            offset += len(segment)
 
     def _check_image_caption(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that image captions start with uppercase (H020)."""
