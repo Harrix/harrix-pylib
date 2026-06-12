@@ -72,7 +72,7 @@ Rules:
 
 - **H001** - Presence of a space in the Markdown file name.
 - **H002** - Presence of a space in the path to the Markdown file.
-- **H003** - YAML is missing.
+- **H003** - YAML is missing (except `README.md` and `LICENSE.md`).
 - **H004** - The lang field is missing in YAML.
 - **H005** - In YAML, lang is not set to `en` or `ru`.
 - **H006** - Incorrect word form used (e.g., "markdown" instead of "Markdown").
@@ -120,6 +120,9 @@ class MarkdownChecker:
         "<!-- !important -->",
         "<!-- !warning -->",
     )
+
+    # Filenames exempt from H003 (YAML is missing)
+    _H003_EXEMPT_FILENAMES: ClassVar[frozenset[str]] = frozenset({"README.MD", "LICENSE.MD"})
 
     # Rule constants for easier maintenance
     RULES: ClassVar[dict[str, str]] = {
@@ -1070,7 +1073,7 @@ class MarkdownChecker:
         try:
             data = yaml.safe_load(yaml_content.replace("---\n", "").replace("\n---", "")) if yaml_content else None
 
-            if not data and "H003" in rules:
+            if not data and "H003" in rules and filename.name.upper() not in self._H003_EXEMPT_FILENAMES:
                 yield self._format_error("H003", self.RULES["H003"], filename, line_num=1)
                 return
 
@@ -2397,7 +2400,7 @@ def _check_yaml_rules(
         try:
             data = yaml.safe_load(yaml_content.replace("---\n", "").replace("\n---", "")) if yaml_content else None
 
-            if not data and "H003" in rules:
+            if not data and "H003" in rules and filename.name.upper() not in self._H003_EXEMPT_FILENAMES:
                 yield self._format_error("H003", self.RULES["H003"], filename, line_num=1)
                 return
 

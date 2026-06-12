@@ -41,6 +41,17 @@ def test_markdown_checker() -> None:
         errors = checker.check(no_yaml_file)
         assert any("H003" in error for error in errors)
 
+        # H003 is ignored for README.md and LICENSE.md
+        readme_file = temp_path / "README.md"
+        readme_file.write_text("# Project README", encoding="utf-8")
+        errors = checker.check(readme_file, select={"H003"})
+        assert not any("H003" in error for error in errors)
+
+        license_file = temp_path / "LICENSE.md"
+        license_file.write_text("# The MIT License", encoding="utf-8")
+        errors = checker.check(license_file, select={"H003"})
+        assert not any("H003" in error for error in errors)
+
         # =====================================================================
         # H004: Missing lang field in YAML
         # =====================================================================
