@@ -506,6 +506,21 @@ def test_markdown_checker() -> None:
         errors = checker.check(inline_code_dot_file, select={"H015"})
         assert not [e for e in errors if "H015" in e], "H015 must not fire for space+dot inside `code`"
 
+        # Space before dot in file extension should not trigger H015
+        file_ext_file = temp_path / "file_ext_dot.md"
+        file_ext_file.write_text(
+            "---\nlang: en\n---\n\n  - 💎 ★ Beautify MD and regenerate .g.md in … ꟲᴸᴵ\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(file_ext_file, select={"H015"})
+        assert not [e for e in errors if "H015" in e], "H015 must not fire for regenerate .g.md"
+
+        # Space before dot at end of sentence should still trigger H015
+        wrong_dot_file = temp_path / "wrong_dot.md"
+        wrong_dot_file.write_text("---\nlang: en\n---\n\nThis is wrong .\n", encoding="utf-8")
+        errors = checker.check(wrong_dot_file, select={"H015"})
+        assert any("H015" in e and " ." in e for e in errors)
+
         # =====================================================================
         # H016: Incorrect dash/hyphen usage
         # =====================================================================

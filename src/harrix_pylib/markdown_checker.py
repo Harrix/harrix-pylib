@@ -946,7 +946,7 @@ class MarkdownChecker:
             return any(start <= offset < end for start, end in code_ranges)
 
         patterns = [
-            (r" \.", " ."),
+            (r" \.(?![a-zA-Z0-9])", " ."),
             (r" ,", " ,"),
             (r" ;", " ;"),
             (r" :", " :"),

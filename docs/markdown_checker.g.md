@@ -1006,7 +1006,7 @@ class MarkdownChecker:
             return any(start <= offset < end for start, end in code_ranges)
 
         patterns = [
-            (r" \.", " ."),
+            (r" \.(?![a-zA-Z0-9])", " ."),
             (r" ,", " ,"),
             (r" ;", " ;"),
             (r" :", " :"),
@@ -2323,7 +2323,7 @@ def _check_space_before_punctuation(
             return any(start <= offset < end for start, end in code_ranges)
 
         patterns = [
-            (r" \.", " ."),
+            (r" \.(?![a-zA-Z0-9])", " ."),
             (r" ,", " ,"),
             (r" ;", " ;"),
             (r" :", " :"),
