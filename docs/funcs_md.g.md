@@ -3278,7 +3278,7 @@ def note_md_path(parent: Path | str, stem: str) -> Path:
 def remove_markdown_formatting_for_headings(text: str) -> str
 ```
 
-Remove markdown formatting from text.
+Remove Markdown formatting from text.
 
 Args:
 
