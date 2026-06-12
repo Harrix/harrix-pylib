@@ -331,7 +331,7 @@ def clear_directory(path: Path | str) -> None:
 
 
 def collect_text_files_to_markdown(file_paths: Sequence[str | Path], base_folder: str | Path | None = None) -> str:
-    """Create a markdown document containing the contents of text files.
+    """Create a Markdown document containing the contents of text files.
 
     Args:
 
