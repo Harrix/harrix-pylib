@@ -469,6 +469,22 @@ def test_markdown_checker() -> None:
         errors = checker.check(list_before_img_file, select={"H014"})
         assert not [e for e in errors if "H014" in e], "H014 must not fire when line before image is list item (- )"
 
+        # Badge/decorative images should not require colon before them (H014)
+        badge_img_file = temp_path / "badge_img.md"
+        badge_img_file.write_text(
+            "---\nlang: en\n---\n\n"
+            "This is a personal project.\n\n"
+            "![GitHub](https://img.shields.io/badge/GitHub-repo-blue?logo=github)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(badge_img_file, select={"H014"})
+        assert not [e for e in errors if "H014" in e], "H014 must not fire before shields.io badge"
+
+        multi_badge_file = temp_path / "multi_badge_img.md"
+        multi_badge_file.write_text("---\nlang: en\n---\n\nText.\n\n![A](u1.png) ![B](u2.png)\n", encoding="utf-8")
+        errors = checker.check(multi_badge_file, select={"H014"})
+        assert not [e for e in errors if "H014" in e], "H014 must not fire before multi-badge row"
+
         # =====================================================================
         # H015: Space before punctuation
         # =====================================================================

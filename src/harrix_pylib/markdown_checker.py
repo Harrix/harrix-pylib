@@ -62,6 +62,14 @@ class MarkdownChecker:
         "<!-- !warning -->",
     )
 
+    # Image URL/alt patterns that do not require a colon in the preceding paragraph (H014)
+    _IMAGE_H014_SKIP_SUBSTRINGS: ClassVar[tuple[str, ...]] = (
+        "![Featured image](",
+        "img.shields.io",
+        "badgen.net",
+        "<!-- no-caption -->",
+    )
+
     # Filenames exempt from H003 (YAML is missing)
     _H003_EXEMPT_FILENAMES: ClassVar[frozenset[str]] = frozenset({"README.MD", "LICENSE.MD"})
 
@@ -429,6 +437,13 @@ class MarkdownChecker:
 
         # Check pattern: non-empty line, empty line, image
         if not (next_line.strip() == "" and next_next_line.strip().startswith("![")):
+            return
+
+        if any(sub in next_next_line for sub in self._IMAGE_H014_SKIP_SUBSTRINGS):
+            return
+        if "<!-- no-caption -->" in line:
+            return
+        if next_next_line.count("![") > 1:
             return
 
         last_char = line.rstrip()[-1] if line.rstrip() else ""
