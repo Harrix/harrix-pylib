@@ -1530,6 +1530,27 @@ def test_identify_code_blocks() -> None:
     assert count_lines_content == correct_count_lines_content
 
 
+def test_identify_code_blocks_indented_fence() -> None:
+    lines = [
+        "1. Step:",
+        "",
+        "   ```shell",
+        "   git clone https://github.com/example/repo.git",
+        "   ```",
+        "Outside text",
+    ]
+    result = list(h.md.identify_code_blocks(lines))
+    expected = [
+        ("1. Step:", False),
+        ("", False),
+        ("   ```shell", True),
+        ("   git clone https://github.com/example/repo.git", True),
+        ("   ```", True),
+        ("Outside text", False),
+    ]
+    assert result == expected
+
+
 def test_identify_code_blocks_line() -> None:
     test_cases = [
         ("No code here", [("No code here", False)]),

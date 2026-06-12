@@ -364,7 +364,7 @@ class MarkdownChecker:
 
             # H007: Incorrect code block language identifier
             if "H007" in rules and line.strip().startswith("```"):
-                match = re.match(r"^(`{3,})(\w+)?", line)
+                match = re.match(r"^\s*(`{3,})(\w+)?", line)
                 if match:
                     language = match.group(2)
                     if language and language in self.INCORRECT_LANGUAGES:

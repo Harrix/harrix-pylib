@@ -120,6 +120,19 @@ def test_markdown_checker() -> None:
         errors = checker.check(code_block_file)
         assert not any("markdown" in error and "```" in str(code_block_file.read_text()) for error in errors)
 
+        # Test that indented code blocks inside list items are ignored (H006)
+        indented_code_block_file = temp_path / "indented_code_block_test.md"
+        indented_code_block_file.write_text(
+            "---\nlang: en\n---\n"
+            "2. Restart PowerShell and clone projects:\n\n"
+            "   ```shell\n"
+            "   git clone https://github.com/Harrix/harrix-pylib.git\n"
+            "   ```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(indented_code_block_file, select={"H006"})
+        assert not any("H006" in error for error in errors)
+
         # Test that inline code is ignored
         inline_code_file = temp_path / "inline_code_test.md"
         inline_code_file.write_text(

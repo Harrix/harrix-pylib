@@ -2503,7 +2503,8 @@ def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
 
     Note:
 
-    - This function identifies code blocks by looking for lines that start with three or more backticks (`` ` ``).
+    - This function identifies code blocks by looking for lines with three or more backticks (`` ` ``),
+      optionally preceded by leading whitespace (e.g. fenced blocks inside list items).
     - Code blocks can be nested, and this function will toggle the `code_block_delimiter` on matching delimiters.
 
     Example:
@@ -2527,7 +2528,7 @@ def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
     """
     code_block_delimiter = None
     for line in lines:
-        match = re.match(r"^(`{3,})(.*)", line)
+        match = re.match(r"^\s*(`{3,})(.*)", line)
         if match:
             delimiter = match.group(1)
             if code_block_delimiter is None:
