@@ -783,11 +783,6 @@ class MarkdownChecker:
                 col = line.index("...") + 1 if "..." in line else clean_line.index("...") + 1
                 error_msg = f'{self.RULES["H017"]}: "..." should be "…"'
                 yield self._format_error("H017", error_msg, filename, line_num=line_num, col=col)
-            elif clean_line.rstrip().endswith("\u2026"):
-                trimmed = line.rstrip()
-                col = trimmed.rfind("\u2026") + 1
-                error_msg = f'{self.RULES["H017"]}: ellipsis "…" at end of line'
-                yield self._format_error("H017", error_msg, filename, line_num=line_num, col=col)
 
         if "H018" in rules:
             yield from self._check_quotes(filename, line, clean_line, line_num)

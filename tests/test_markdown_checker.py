@@ -588,17 +588,17 @@ def test_markdown_checker() -> None:
         errors = checker.check(three_dots_file, select={"H017"})
         assert any("H017" in e for e in errors)
 
-        # Correct ellipsis character (in middle of line) should not trigger H017
+        # Correct ellipsis character should not trigger H017
         ellipsis_file = temp_path / "ellipsis.md"
         ellipsis_file.write_text("---\nlang: en\n---\n\nWait for it… and more.\n", encoding="utf-8")
         errors = checker.check(ellipsis_file, select={"H017"})
         assert not errors
 
-        # Ellipsis at end of line should trigger H017
+        # Ellipsis at end of line is allowed
         ellipsis_eol_file = temp_path / "ellipsis_eol.md"
-        ellipsis_eol_file.write_text("---\nlang: en\n---\n\nWait for it…\n", encoding="utf-8")
+        ellipsis_eol_file.write_text("---\nlang: en\n---\n\n  - 🐍 New uv library in …\n", encoding="utf-8")
         errors = checker.check(ellipsis_eol_file, select={"H017"})
-        assert any("H017" in e and "end of line" in e for e in errors)
+        assert not errors
 
         # Three dots inside code block should not trigger H017
         dots_in_code_file = temp_path / "dots_in_code.md"
