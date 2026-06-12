@@ -801,11 +801,10 @@ class MarkdownChecker:
         if "H016" in rules and line_num >= yaml_end_line:
             yield from self._check_dash_usage(filename, line, clean_line, line_num)
 
-        if "H017" in rules:
-            if "..." in clean_line:
-                col = line.index("...") + 1 if "..." in line else clean_line.index("...") + 1
-                error_msg = f'{self.RULES["H017"]}: "..." should be "…"'
-                yield self._format_error("H017", error_msg, filename, line_num=line_num, col=col)
+        if "H017" in rules and "..." in clean_line:
+            col = line.index("...") + 1 if "..." in line else clean_line.index("...") + 1
+            error_msg = f'{self.RULES["H017"]}: "..." should be "…"'
+            yield self._format_error("H017", error_msg, filename, line_num=line_num, col=col)
 
         if "H018" in rules:
             yield from self._check_quotes(filename, line, clean_line, line_num)
