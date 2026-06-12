@@ -166,6 +166,26 @@ def test_markdown_checker() -> None:
         assert len(html_errors) == 1
         assert any(":5:" in e for e in html_errors)
 
+        # Test that identifier-like link labels are ignored (e.g. package names)
+        package_link_file = temp_path / "package_link_test.md"
+        package_link_file.write_text(
+            "---\nlang: en\n---\n"
+            "Markdown processor: [markdown-it-py](https://pypi.org/project/markdown-it-py) "
+            "<https://pypistats.org/packages/markdown-it-py>.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(package_link_file, select={"H006"})
+        assert not any("H006" in error for error in errors)
+
+        # Test that prose link text is still checked
+        prose_link_file = temp_path / "prose_link_test.md"
+        prose_link_file.write_text(
+            "---\nlang: en\n---\n[see markdown guide](https://example.com)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(prose_link_file, select={"H006"})
+        assert any("H006" in error and "markdown" in error for error in errors)
+
         # Test valid file with no errors
         valid_file = temp_path / "valid.md"
         valid_file.write_text(

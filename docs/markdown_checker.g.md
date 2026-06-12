@@ -53,6 +53,7 @@ lang: en
   - [⚙️ Method `_get_link_url_ranges`](#%EF%B8%8F-method-_get_link_url_ranges)
   - [⚙️ Method `_get_relative_path`](#%EF%B8%8F-method-_get_relative_path)
   - [⚙️ Method `_inside_details_block`](#%EF%B8%8F-method-_inside_details_block)
+  - [⚙️ Method `_is_identifier_like_link_label`](#%EF%B8%8F-method-_is_identifier_like_link_label)
   - [⚙️ Method `_is_paragraph_pair_requiring_empty_line`](#%EF%B8%8F-method-_is_paragraph_pair_requiring_empty_line)
   - [⚙️ Method `_is_table_cell_only_dash`](#%EF%B8%8F-method-_is_table_cell_only_dash)
   - [⚙️ Method `_remove_inline_code`](#%EF%B8%8F-method-_remove_inline_code)
@@ -802,9 +803,19 @@ class MarkdownChecker:
         lang: str = "",
     ) -> Generator[str, None, None]:
         """Check rules that apply only to non-code lines (markdown content, not YAML/code)."""
-        # Remove inline code and URLs before text checks
+        # Remove inline code, URLs, and identifier-like link labels before text checks
         clean_line = self._remove_inline_code(line)
         clean_line = re.sub(r"\]\([^)]*\)", "]()", clean_line)
+        clean_line = re.sub(
+            r"\[([^\]]*)\]\(\)",
+            lambda m: "[]()" if self._is_identifier_like_link_label(m.group(1)) else m.group(0),
+            clean_line,
+        )
+        clean_line = re.sub(
+            r"!\[([^\]]*)\]\(\)",
+            lambda m: "![]()" if self._is_identifier_like_link_label(m.group(1)) else m.group(0),
+            clean_line,
+        )
         clean_line = re.sub(r"<[^>]*>", "<>", clean_line)
 
         if "H006" in rules:
@@ -1181,6 +1192,14 @@ class MarkdownChecker:
             if "</details>" in line_lower:
                 nest -= 1
         return nest > 0
+
+    @staticmethod
+    def _is_identifier_like_link_label(label: str) -> bool:
+        """Return True if link label looks like a package/URL identifier, not prose."""
+        stripped = label.strip()
+        if not stripped or " " in stripped:
+            return False
+        return any(c in stripped for c in "-._")
 
     def _is_paragraph_pair_requiring_empty_line(self, line_i: str, line_i_next: str) -> bool:
         """Return True if these two consecutive non-empty lines should have an empty line between them."""
@@ -2039,9 +2058,19 @@ def _check_non_code_line_rules(
         *,
         lang: str = "",
     ) -> Generator[str, None, None]:
-        # Remove inline code and URLs before text checks
+        # Remove inline code, URLs, and identifier-like link labels before text checks
         clean_line = self._remove_inline_code(line)
         clean_line = re.sub(r"\]\([^)]*\)", "]()", clean_line)
+        clean_line = re.sub(
+            r"\[([^\]]*)\]\(\)",
+            lambda m: "[]()" if self._is_identifier_like_link_label(m.group(1)) else m.group(0),
+            clean_line,
+        )
+        clean_line = re.sub(
+            r"!\[([^\]]*)\]\(\)",
+            lambda m: "![]()" if self._is_identifier_like_link_label(m.group(1)) else m.group(0),
+            clean_line,
+        )
         clean_line = re.sub(r"<[^>]*>", "<>", clean_line)
 
         if "H006" in rules:
@@ -2648,6 +2677,27 @@ def _inside_details_block(self, content_lines: list[str], line_index: int) -> bo
             if "</details>" in line_lower:
                 nest -= 1
         return nest > 0
+```
+
+</details>
+
+### ⚙️ Method `_is_identifier_like_link_label`
+
+```python
+def _is_identifier_like_link_label(label: str) -> bool
+```
+
+Return True if link label looks like a package/URL identifier, not prose.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_identifier_like_link_label(label: str) -> bool:
+        stripped = label.strip()
+        if not stripped or " " in stripped:
+            return False
+        return any(c in stripped for c in "-._")
 ```
 
 </details>

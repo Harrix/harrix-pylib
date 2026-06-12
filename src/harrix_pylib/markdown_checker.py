@@ -743,9 +743,19 @@ class MarkdownChecker:
         lang: str = "",
     ) -> Generator[str, None, None]:
         """Check rules that apply only to non-code lines (markdown content, not YAML/code)."""
-        # Remove inline code and URLs before text checks
+        # Remove inline code, URLs, and identifier-like link labels before text checks
         clean_line = self._remove_inline_code(line)
         clean_line = re.sub(r"\]\([^)]*\)", "]()", clean_line)
+        clean_line = re.sub(
+            r"\[([^\]]*)\]\(\)",
+            lambda m: "[]()" if self._is_identifier_like_link_label(m.group(1)) else m.group(0),
+            clean_line,
+        )
+        clean_line = re.sub(
+            r"!\[([^\]]*)\]\(\)",
+            lambda m: "![]()" if self._is_identifier_like_link_label(m.group(1)) else m.group(0),
+            clean_line,
+        )
         clean_line = re.sub(r"<[^>]*>", "<>", clean_line)
 
         if "H006" in rules:
@@ -1122,6 +1132,14 @@ class MarkdownChecker:
             if "</details>" in line_lower:
                 nest -= 1
         return nest > 0
+
+    @staticmethod
+    def _is_identifier_like_link_label(label: str) -> bool:
+        """Return True if link label looks like a package/URL identifier, not prose."""
+        stripped = label.strip()
+        if not stripped or " " in stripped:
+            return False
+        return any(c in stripped for c in "-._")
 
     def _is_paragraph_pair_requiring_empty_line(self, line_i: str, line_i_next: str) -> bool:
         """Return True if these two consecutive non-empty lines should have an empty line between them."""
