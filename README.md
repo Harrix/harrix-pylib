@@ -55,13 +55,13 @@ uv add harrix-pylib
 
 Examples of using the library:
 
-```py
+```python
 import harrixpylib as h
 
 h.file.clear_directory("C:/temp_dir")
 ```
 
-```py
+```python
 import harrixpylib as h
 
 md_clean = h.file.remove_yaml_content("""

@@ -3282,11 +3282,11 @@ Remove markdown formatting from text.
 
 Args:
 
-- `text` (`str`): The input text containing markdown formatting to be removed.
+- `text` (`str`): The input text containing Markdown formatting to be removed.
 
 Returns:
 
-- `str`: The text with markdown formatting removed (bold, italic, strikethrough, links, and autolinks).
+- `str`: The text with Markdown formatting removed (bold, italic, strikethrough, links, and autolinks).
 
 Example:
 
