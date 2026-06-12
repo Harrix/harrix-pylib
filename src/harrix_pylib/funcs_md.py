@@ -770,7 +770,6 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
     contents_value = combined_yaml.get("contents")
     if contents_value is False or contents_value == [False]:
         combined_yaml.pop("contents", None)
-    adding_path = "/".join(md_file.parent.parts[len(folder_path.parts) :])
 
     # Prepare the final content
     folder_name = folder_path.name
@@ -1201,7 +1200,7 @@ def format_quotes_as_markdown_content(markdown_text: str) -> str:
     # >
     # > -- _J.D. Salinger, The Catcher in the Rye_
 
-    markdown_text = h.md.convert_to_markdown(markdown_text)
+    markdown_text = h.md.format_quotes_as_markdown_content(markdown_text)
     print(markdown_text)
     ```
 
@@ -1298,7 +1297,7 @@ def format_yaml_content(markdown_text: str) -> str:
     import harrix_pylib as h
     from pathlib import Path
 
-    text = Path('example.md').read_text(encoding="utf8")
+    text = Path('example.md').read_text(encoding="utf-8")
     print(h.md.format_yaml_content(text))
     ```
 
@@ -1416,7 +1415,7 @@ def generate_author_book(filename: Path | str) -> str | None:
         return None
     if file.suffix.lower() != ".md":
         return None
-    markdown_text = file.read_text(encoding="utf8")
+    markdown_text = file.read_text(encoding="utf-8")
 
     yaml_md, content_md = split_yaml_content(markdown_text)
 
@@ -1444,7 +1443,7 @@ def generate_author_book(filename: Path | str) -> str | None:
         quotes_fix.append(f"{quote_fix}\n>\n> -- _{author}, {title}_")
     note += "\n\n---\n\n".join(quotes_fix) + "\n"
     if markdown_text != note:
-        file.write_text(note, encoding="utf8")
+        file.write_text(note, encoding="utf-8")
         lines_list.append(f"Fix {filename}")
     else:
         lines_list.append(f"No changes in {filename}")
@@ -1676,7 +1675,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
     ```python
     import harrix_pylib as h
 
-    text = Path('example.md').read_text(encoding="utf8")
+    text = Path('example.md').read_text(encoding="utf-8")
     print(h.md.generate_image_captions(text))
     ```
 
@@ -1891,6 +1890,9 @@ def generate_short_note_toc_with_links(filename: Path | str) -> str:
         # For normal files, just add .short.g.md
         short_filename = filename.with_suffix(".short.g.md")
 
+    if short_filename.exists() and short_filename.read_text(encoding="utf-8") == short_toc_content:
+        return "File is not changed."
+
     # Write the short TOC to the new file
     with Path.open(short_filename, "w", encoding="utf-8") as file:
         file.write(short_toc_content)
@@ -1921,9 +1923,9 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
     import harrix_pylib as h
     from pathlib import Path
 
-    text = Path("C:/Notes/note.md").read_text(encoding="utf8")
+    text = Path("C:/Notes/note.md").read_text(encoding="utf-8")
     short_toc = h.md.generate_short_note_toc_with_links_content(text)
-    Path("C:/Notes/note.short.g.md").write_text(short_toc, encoding="utf8")
+    Path("C:/Notes/note.short.g.md").write_text(short_toc, encoding="utf-8")
     ```
 
     """
@@ -2010,7 +2012,7 @@ def generate_summaries(folder: Path | str) -> str:
     import harrix_pylib as h
     from pathlib import Path
 
-    result = h.create_markdown_summaries(Path("C:/Notes/books"))
+    result = h.md.generate_summaries(Path("C:/Notes/books"))
     print(result)
     ```
 
@@ -2250,7 +2252,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     import harrix_pylib as h
     from pathlib import Path
 
-    text = Path("C:/Notes/note.md").read_text(encoding="utf8")
+    text = Path("C:/Notes/note.md").read_text(encoding="utf-8")
     print(h.md.generate_toc_with_links_content(text))
     ```
 
@@ -2476,16 +2478,14 @@ def get_yaml_content(markdown_text: str) -> str:
     from pathlib import Path
     import harrix-pylib as h
 
-    md = Path("article.md").read_text(encoding="utf8")
+    md = Path("article.md").read_text(encoding="utf-8")
     yaml_content = h.md.get_yaml_content(md)
     print(yaml_content)
     ```
 
     """
-    find = re.search(r"^---(.|\n)*?---\n", markdown_text.lstrip(), re.DOTALL)
-    if find:
-        return find.group().rstrip()
-    return ""
+    yaml_part, _ = split_yaml_content(markdown_text.lstrip())
+    return yaml_part.rstrip() if yaml_part else ""
 
 
 def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
@@ -2514,7 +2514,7 @@ def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
 
     import harrix_pylib as h
 
-    md = Path("C:/Notes/note.md").read_text(encoding="utf8")
+    md = Path("C:/Notes/note.md").read_text(encoding="utf-8")
     _, content = h.md.split_yaml_content(md)
     count_lines_content = 0
     count_lines_code = 0
@@ -2839,7 +2839,7 @@ def remove_markdown_formatting_for_headings(text: str) -> str:
         (r"\*\*([^*]+)\*\*", r"\1"),  # Remove bold
         (r"\*([^*]+)\*", r"\1"),  # Remove italic
         (r"~~([^~]+)~~", r"\1"),  # Remove strikethrough
-        (r"$$([^$$]+)\]$$[^)]+$$", r"\1"),  # Remove links, keep text
+        (r"\[([^\]]+)\]\([^)]+\)", r"\1"),  # Remove links, keep text
         (r"<https?://[^>]+>", ""),  # Remove autolinks like <https://...>
         (r"<http?://[^>]+>", ""),  # Remove autolinks like <http://...>
     ]
@@ -2874,7 +2874,7 @@ def remove_toc_content(markdown_text: str) -> str:
     import harrix_pylib as h
     from pathlib import Path
 
-    text = Path("C:/Notes/note.md").read_text(encoding="utf8")
+    text = Path("C:/Notes/note.md").read_text(encoding="utf-8")
     print(h.md.remove_toc_content(text))
     ```
 
@@ -2947,7 +2947,7 @@ def remove_yaml_and_code_content(markdown_text: str) -> str:
     from pathlib import Path
     import harrix-pylib as h
 
-    md = Path("article.md").read_text(encoding="utf8")
+    md = Path("article.md").read_text(encoding="utf-8")
     md_clean = h.md.remove_yaml_and_code_content(md)
     print(md_clean)
     ```
@@ -3007,7 +3007,7 @@ def remove_yaml_content(markdown_text: str) -> str:
     from pathlib import Path
     import harrix-pylib as h
 
-    md = Path("article.md").read_text(encoding="utf8")
+    md = Path("article.md").read_text(encoding="utf-8")
     md_clean = h.md.remove_yaml_content(md)
     print(md_clean)
     ```
@@ -3096,7 +3096,7 @@ def replace_section_content(
     from pathlib import Path
 
     new_content = "New list of commands:\n\n- new command1\n- new command2"
-    text = Path('C:/Notes/note.md').read_text(encoding="utf8")
+    text = Path('C:/Notes/note.md').read_text(encoding="utf-8")
     print(h.md.replace_section_content(text, new_content, "## 📋 List of commands"))
     ```
 
@@ -3388,7 +3388,7 @@ def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool
         heading = first_line.replace("## ", "").strip()
 
         # Remove top-section marker if present
-        heading = heading.replace("", "").strip()
+        heading = heading.replace(" <!-- top-section -->", "").replace("<!-- top-section -->", "").strip()
 
         # Try each pattern in sequence without nesting try-except in the loop
         patterns = [
@@ -3622,7 +3622,7 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     ```python
     import harrix_pylib as h
 
-    md = Path('C:/Notes/note.md').read_text(encoding="utf8")
+    md = Path('C:/Notes/note.md').read_text(encoding="utf-8")
     yaml, content = h.md.split_yaml_content(md)
     ```
 

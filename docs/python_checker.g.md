@@ -15,9 +15,12 @@ lang: en
   - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
   - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
   - [⚙️ Method `check`](#%EF%B8%8F-method-check)
+  - [⚙️ Method `check_directory`](#%EF%B8%8F-method-check_directory)
+  - [⚙️ Method `find_python_files`](#%EF%B8%8F-method-find_python_files)
   - [⚙️ Method `_check_all_rules`](#%EF%B8%8F-method-_check_all_rules)
   - [⚙️ Method `_check_content_rules`](#%EF%B8%8F-method-_check_content_rules)
   - [⚙️ Method `_check_old_style_docstrings`](#%EF%B8%8F-method-_check_old_style_docstrings)
+  - [⚙️ Method `_determine_active_rules`](#%EF%B8%8F-method-_determine_active_rules)
   - [⚙️ Method `_determine_project_root`](#%EF%B8%8F-method-_determine_project_root)
   - [⚙️ Method `_find_russian_letters_position`](#%EF%B8%8F-method-_find_russian_letters_position)
   - [⚙️ Method `_format_error`](#%EF%B8%8F-method-_format_error)
@@ -81,28 +84,34 @@ class PythonChecker:
         self.all_rules = set(self.RULES.keys())
         self.project_root = self._determine_project_root(project_root)
 
-    def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]:
+    def __call__(
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
         """Check Python file for compliance with specified rules.
 
         Args:
 
         - `filename` (`Path | str`): Path to the Python file to check.
-        - `exclude_rules` (`set | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+        - `select` (`set[str] | None`): Set of rule codes to include in checking. Defaults to `None` (all rules).
+        - `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
 
         Returns:
 
         - `list[str]`: List of error messages found during checking.
 
         """
-        return self.check(filename, exclude_rules)
+        return self.check(filename, select=select, exclude_rules=exclude_rules)
 
-    def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]:
+    def check(
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
         """Check Python file for compliance with specified rules.
 
         Args:
 
         - `filename` (`Path | str`): Path to the Python file to check.
-        - `exclude_rules` (`set | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+        - `select` (`set[str] | None`): Set of rule codes to include in checking. Defaults to `None` (all rules).
+        - `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
 
         Returns:
 
@@ -110,9 +119,65 @@ class PythonChecker:
 
         """
         filename = Path(filename)
-        return list(self._check_all_rules(filename, self.all_rules - (exclude_rules or set())))
+        active_rules = self._determine_active_rules(select, exclude_rules)
+        return list(self._check_all_rules(filename, active_rules))
 
-    def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, None]:
+    def check_directory(
+        self,
+        directory: Path | str,
+        *,
+        select: set[str] | None = None,
+        exclude_rules: set[str] | None = None,
+        additional_ignore_patterns: list[str] | None = None,
+    ) -> dict[str, list[str]]:
+        """Check all Python files in directory for compliance with specified rules.
+
+        Args:
+
+        - `directory` (`Path | str`): Directory path to scan for Python files.
+        - `select` (`set[str] | None`): Set of rule codes to include in checking. Defaults to `None` (all rules).
+        - `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+        - `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to ignore. Defaults to `None`.
+
+        Returns:
+
+        - `dict[str, list[str]]`: Mapping of file paths to lists of error messages.
+
+        """
+        results: dict[str, list[str]] = {}
+        for py_file in self.find_python_files(directory, additional_ignore_patterns):
+            errors = self.check(py_file, select=select, exclude_rules=exclude_rules)
+            if errors:
+                results[str(py_file)] = errors
+        return results
+
+    def find_python_files(
+        self, directory: Path | str, additional_ignore_patterns: list[str] | None = None
+    ) -> Generator[Path, None, None]:
+        """Find all Python files in directory, ignoring hidden folders.
+
+        Args:
+
+        - `directory` (`Path | str`): Directory path to scan.
+        - `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to ignore. Defaults to `None`.
+
+        Yields:
+
+        - `Path`: Path to each Python file found.
+
+        """
+        directory = Path(directory)
+        if not directory.is_dir():
+            return
+        if h.file.should_ignore_path(directory, additional_ignore_patterns):
+            return
+        for item in directory.iterdir():
+            if item.is_file() and item.suffix.lower() == ".py":
+                yield item
+            elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
+                yield from self.find_python_files(item, additional_ignore_patterns)
+
+    def _check_all_rules(self, filename: Path, rules: set[str]) -> Generator[str, None, None]:
         """Generate all errors found during checking.
 
         Args:
@@ -135,10 +200,10 @@ class PythonChecker:
 
             yield from self._check_content_rules(filename, lines, rules_to_check)
 
-        except Exception as e:
+        except (OSError, UnicodeDecodeError) as e:
             yield self._format_error("P000", f"Exception error: {e}", filename)
 
-    def _check_content_rules(self, filename: Path, lines: list[str], rules: set) -> Generator[str, None, None]:
+    def _check_content_rules(self, filename: Path, lines: list[str], rules: set[str]) -> Generator[str, None, None]:
         """Check content-related rules.
 
         Args:
@@ -236,6 +301,24 @@ class PythonChecker:
                                 filename,
                                 line_num=line_num,
                             )
+
+    def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]:
+        """Determine which rules should be active.
+
+        Args:
+
+        - `select` (`set[str] | None`): Set of rule codes to include in checking.
+        - `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking.
+
+        Returns:
+
+        - `set[str]`: Set of active rule codes.
+
+        """
+        active = select & self.all_rules if select is not None else self.all_rules.copy()
+        if exclude_rules is not None:
+            active -= exclude_rules
+        return active
 
     def _determine_project_root(self, project_root: Path | str | None) -> Path:
         """Determine the project root directory.
@@ -426,7 +509,7 @@ def __init__(self, project_root: Path | str | None = None) -> None:
 ### ⚙️ Method `__call__`
 
 ```python
-def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]
+def __call__(self, filename: Path | str) -> list[str]
 ```
 
 Check Python file for compliance with specified rules.
@@ -434,7 +517,8 @@ Check Python file for compliance with specified rules.
 Args:
 
 - `filename` (`Path | str`): Path to the Python file to check.
-- `exclude_rules` (`set | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+- `select` (`set[str] | None`): Set of rule codes to include in checking. Defaults to `None` (all rules).
+- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
 
 Returns:
 
@@ -444,8 +528,10 @@ Returns:
 <summary>Code:</summary>
 
 ```python
-def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]:
-        return self.check(filename, exclude_rules)
+def __call__(
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
+        return self.check(filename, select=select, exclude_rules=exclude_rules)
 ```
 
 </details>
@@ -453,7 +539,7 @@ def __call__(self, filename: Path | str, exclude_rules: set | None = None) -> li
 ### ⚙️ Method `check`
 
 ```python
-def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]
+def check(self, filename: Path | str) -> list[str]
 ```
 
 Check Python file for compliance with specified rules.
@@ -461,7 +547,8 @@ Check Python file for compliance with specified rules.
 Args:
 
 - `filename` (`Path | str`): Path to the Python file to check.
-- `exclude_rules` (`set | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+- `select` (`set[str] | None`): Set of rule codes to include in checking. Defaults to `None` (all rules).
+- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
 
 Returns:
 
@@ -471,9 +558,91 @@ Returns:
 <summary>Code:</summary>
 
 ```python
-def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[str]:
+def check(
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
         filename = Path(filename)
-        return list(self._check_all_rules(filename, self.all_rules - (exclude_rules or set())))
+        active_rules = self._determine_active_rules(select, exclude_rules)
+        return list(self._check_all_rules(filename, active_rules))
+```
+
+</details>
+
+### ⚙️ Method `check_directory`
+
+```python
+def check_directory(self, directory: Path | str) -> dict[str, list[str]]
+```
+
+Check all Python files in directory for compliance with specified rules.
+
+Args:
+
+- `directory` (`Path | str`): Directory path to scan for Python files.
+- `select` (`set[str] | None`): Set of rule codes to include in checking. Defaults to `None` (all rules).
+- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+- `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to ignore. Defaults to `None`.
+
+Returns:
+
+- `dict[str, list[str]]`: Mapping of file paths to lists of error messages.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def check_directory(
+        self,
+        directory: Path | str,
+        *,
+        select: set[str] | None = None,
+        exclude_rules: set[str] | None = None,
+        additional_ignore_patterns: list[str] | None = None,
+    ) -> dict[str, list[str]]:
+        results: dict[str, list[str]] = {}
+        for py_file in self.find_python_files(directory, additional_ignore_patterns):
+            errors = self.check(py_file, select=select, exclude_rules=exclude_rules)
+            if errors:
+                results[str(py_file)] = errors
+        return results
+```
+
+</details>
+
+### ⚙️ Method `find_python_files`
+
+```python
+def find_python_files(self, directory: Path | str, additional_ignore_patterns: list[str] | None = None) -> Generator[Path, None, None]
+```
+
+Find all Python files in directory, ignoring hidden folders.
+
+Args:
+
+- `directory` (`Path | str`): Directory path to scan.
+- `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to ignore. Defaults to `None`.
+
+Yields:
+
+- `Path`: Path to each Python file found.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def find_python_files(
+        self, directory: Path | str, additional_ignore_patterns: list[str] | None = None
+    ) -> Generator[Path, None, None]:
+        directory = Path(directory)
+        if not directory.is_dir():
+            return
+        if h.file.should_ignore_path(directory, additional_ignore_patterns):
+            return
+        for item in directory.iterdir():
+            if item.is_file() and item.suffix.lower() == ".py":
+                yield item
+            elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
+                yield from self.find_python_files(item, additional_ignore_patterns)
 ```
 
 </details>
@@ -481,7 +650,7 @@ def check(self, filename: Path | str, exclude_rules: set | None = None) -> list[
 ### ⚙️ Method `_check_all_rules`
 
 ```python
-def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, None]
+def _check_all_rules(self, filename: Path, rules: set[str]) -> Generator[str, None, None]
 ```
 
 Generate all errors found during checking.
@@ -499,7 +668,7 @@ Yields:
 <summary>Code:</summary>
 
 ```python
-def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, None]:
+def _check_all_rules(self, filename: Path, rules: set[str]) -> Generator[str, None, None]:
         try:
             content = filename.read_text(encoding="utf-8")
             lines = content.splitlines()
@@ -510,7 +679,7 @@ def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, N
 
             yield from self._check_content_rules(filename, lines, rules_to_check)
 
-        except Exception as e:
+        except (OSError, UnicodeDecodeError) as e:
             yield self._format_error("P000", f"Exception error: {e}", filename)
 ```
 
@@ -519,7 +688,7 @@ def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, N
 ### ⚙️ Method `_check_content_rules`
 
 ```python
-def _check_content_rules(self, filename: Path, lines: list[str], rules: set) -> Generator[str, None, None]
+def _check_content_rules(self, filename: Path, lines: list[str], rules: set[str]) -> Generator[str, None, None]
 ```
 
 Check content-related rules.
@@ -538,7 +707,7 @@ Yields:
 <summary>Code:</summary>
 
 ```python
-def _check_content_rules(self, filename: Path, lines: list[str], rules: set) -> Generator[str, None, None]:
+def _check_content_rules(self, filename: Path, lines: list[str], rules: set[str]) -> Generator[str, None, None]:
         for line_num, line in enumerate(lines, 1):
             # Check HP001: Russian letters
             if "HP001" in rules and not self._should_ignore_line(line, "HP001") and self._has_russian_letters(line):
@@ -635,6 +804,36 @@ def _check_old_style_docstrings(self, filename: Path, lines: list[str]) -> Gener
                                 filename,
                                 line_num=line_num,
                             )
+```
+
+</details>
+
+### ⚙️ Method `_determine_active_rules`
+
+```python
+def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]
+```
+
+Determine which rules should be active.
+
+Args:
+
+- `select` (`set[str] | None`): Set of rule codes to include in checking.
+- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking.
+
+Returns:
+
+- `set[str]`: Set of active rule codes.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]:
+        active = select & self.all_rules if select is not None else self.all_rules.copy()
+        if exclude_rules is not None:
+            active -= exclude_rules
+        return active
 ```
 
 </details>

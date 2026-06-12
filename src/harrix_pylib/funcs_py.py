@@ -17,8 +17,8 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
 
     Args:
 
-    - `name_project` (`str`): The name of the new project.
-    - `path` (`Path | str`): The folder path where the project will be created.
+    - `project_name` (`str`): The name of the new project.
+    - `folder` (`Path | str`): The folder path where the project will be created.
     - `editor` (`str`): The name of the text editor for opening the project. Example: `code`
     - `cli_commands` (`Path | str`): The section of CLI commands for `README.md`.
 
@@ -297,7 +297,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
         final_content = beginning_of_md + "\n" + docs
         final_content = h.md.generate_toc_with_links_content(final_content)
         final_content = h.md.generate_image_captions_content(final_content)
-        filename_docs.write_text(final_content, encoding="utf8")
+        filename_docs.write_text(final_content, encoding="utf-8")
 
         list_funcs_all += list_funcs + "\n\n"
 
@@ -319,12 +319,12 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
         if md_file.is_file() and not md_file.name.startswith("."):
             # Special handling for README.md - create index.g.md
             if md_file.name.upper() == "README.MD":
-                original_content = md_file.read_text(encoding="utf8")
+                original_content = md_file.read_text(encoding="utf-8")
                 final_content = beginning_of_md + "\n" + original_content
                 final_content = h.md.generate_toc_with_links_content(final_content)
                 final_content = h.md.generate_image_captions_content(final_content)
 
-                (docs_folder / "index.g.md").write_text(final_content, encoding="utf8")
+                (docs_folder / "index.g.md").write_text(final_content, encoding="utf-8")
                 result_lines.append(f"File {md_file.name} copied as index.g.md")
             else:
                 # Convert filename to lowercase for other MD files and add .g.md
@@ -332,7 +332,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
                 target_path = docs_folder / target_filename
 
                 # Read original content and add beginning_of_md
-                original_content = md_file.read_text(encoding="utf8")
+                original_content = md_file.read_text(encoding="utf-8")
                 final_content = beginning_of_md + "\n" + original_content
 
                 # Apply additional processing
@@ -340,7 +340,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
                 final_content = h.md.generate_image_captions_content(final_content)
 
                 # Write to docs folder
-                target_path.write_text(final_content, encoding="utf8")
+                target_path.write_text(final_content, encoding="utf-8")
                 result_lines.append(f"File {md_file.name} copied as {target_filename}")
 
     return "\n".join(result_lines)

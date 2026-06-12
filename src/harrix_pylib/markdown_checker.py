@@ -356,7 +356,7 @@ class MarkdownChecker:
             yield from self._check_content_rules(filename, all_lines, yaml_end_line, rules, content, lang=lang)
             yield from self._check_code_rules(filename, all_lines, yaml_end_line, rules)
 
-        except Exception as e:
+        except (OSError, UnicodeDecodeError) as e:
             yield self._format_error("H000", f"Exception error: {e}", filename)
 
     # =========================================================================
@@ -1078,21 +1078,17 @@ class MarkdownChecker:
 
     def _find_yaml_block_end_line(self, all_lines: list[str]) -> int:
         """Find the line number where YAML block ends."""
-        if not all_lines or all_lines[0].strip() != "---":
+        yaml_part, _ = h.md.split_yaml_content("\n".join(all_lines))
+        if not yaml_part:
             return 1
-        for i, line in enumerate(all_lines[1:], start=2):
-            if line.strip() == "---":
-                return i
-        return len(all_lines)
+        return len(yaml_part.splitlines())
 
     def _find_yaml_end_line(self, lines: list[str]) -> int:
         """Find the first content line number after the YAML block (1-based)."""
-        if not lines or lines[0].strip() != "---":
+        yaml_part, _ = h.md.split_yaml_content("\n".join(lines))
+        if not yaml_part:
             return 1
-        for i, line in enumerate(lines[1:], start=2):
-            if line.strip() == "---":
-                return i + 1
-        return len(lines) + 1
+        return len(yaml_part.splitlines()) + 1
 
     def _find_yaml_field_column(self, all_lines: list[str], line_num: int, field: str) -> int:
         """Find column position of field value in YAML."""

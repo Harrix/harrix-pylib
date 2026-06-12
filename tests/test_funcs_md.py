@@ -943,9 +943,11 @@ def test_generate_short_note_toc_with_links() -> None:
         temp_filename.write_text(md_before, encoding="utf-8")
 
         result = h.md.generate_short_note_toc_with_links(temp_filename)
-
         assert "✅ Short TOC file created:" in result
         assert str(temp_filename.with_suffix(".short.g.md")) in result
+
+        result_unchanged = h.md.generate_short_note_toc_with_links(temp_filename)
+        assert result_unchanged == "File is not changed."
 
         generated_file = temp_filename.with_suffix(".short.g.md")
         assert generated_file.exists()
@@ -2032,6 +2034,12 @@ def test_remove_markdown_formatting_for_headings() -> None:
     assert (
         h.md.remove_markdown_formatting_for_headings("~~Multiple~~ ~~strikethrough~~ ~~words~~")
         == "Multiple strikethrough words"
+    )
+
+    # Test markdown link removal (keep link text)
+    assert h.md.remove_markdown_formatting_for_headings("[Example](https://example.com)") == "Example"
+    assert (
+        h.md.remove_markdown_formatting_for_headings("Read [docs](https://example.com/docs) here") == "Read docs here"
     )
 
     # Test autolinks removal

@@ -123,6 +123,10 @@ Doc: [funcs_file.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/fun
 | 🔧 [`rename_pdf_file`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-rename_pdf_file)                                     | Rename PDF file based on metadata from file content.                                              |
 | 🔧 [`should_ignore_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-should_ignore_path)                               | Check if a path should be ignored based on common ignore patterns.                                |
 | 🔧 [`tree_view_folder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-tree_view_folder)                                   | Generate a tree-like representation of folder contents.                                           |
+| 🔧 [`_clean_filename`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-_clean_filename)                                     | Clean text for use in filename.                                                                   |
+| 🔧 [`_format_author_name`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-_format_author_name)                             | Format author name as 'LastName FirstName' if possible.                                           |
+| 🔧 [`_resolve_unique_rename_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-_resolve_unique_rename_path)             | Return a non-colliding destination path and final filename.                                       |
+| 🔧 [`_transliterate_filename`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-_transliterate_filename)                     | Attempt to transliterate filename from English to Russian.                                        |
 
 ### 📄 File `funcs_md.py`
 

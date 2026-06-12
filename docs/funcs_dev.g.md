@@ -54,7 +54,7 @@ from pathlib import Path
 import harrix_pylib as h
 
 root_path = h.dev.get_project_root()
-Path(root_path / "config.json").write_text('{"pi": 3.14}', encoding="utf8")
+Path(root_path / "config.json").write_text('{"pi": 3.14}', encoding="utf-8")
 
 config = h.dev.config_load("config.json")
 print(config["pi"])  # 3.14
@@ -518,7 +518,8 @@ def run_powershell_script_as_admin(commands: str) -> str:
 
         powershell_path = shutil.which("powershell")
         if powershell_path is None:
-            return "PowerShell executable not found."
+            msg = "PowerShell executable not found."
+            raise RuntimeError(msg)
 
         cmd = [
             powershell_path,
@@ -656,7 +657,7 @@ def write_in_output_txt(*, is_show_output: bool = True) -> Callable:
                     temp_path.mkdir(parents=True, exist_ok=True)
                 file = Path(temp_path / "output.txt")
                 output_text = "\n".join(self.output_lines) if self.output_lines else ""
-                file.write_text(output_text, encoding="utf8")
+                file.write_text(output_text, encoding="utf-8")
                 if is_show_output:
                     h.file.open_file_or_folder(file)
 

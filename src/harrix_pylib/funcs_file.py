@@ -1,6 +1,5 @@
 """Functions for working with files."""
 
-import contextlib
 import platform
 import re
 import shutil
@@ -75,15 +74,40 @@ def all_to_parent_folder(path: Path | str) -> str:
 
     """
     list_lines = []
-    for child_folder in Path(path).iterdir():
-        for file in Path(child_folder).glob("**/*"):
-            if file.is_file():
-                with contextlib.suppress(Exception):
-                    file.replace(child_folder / file.name)
-        for file in Path(child_folder).glob("**/*"):
-            if file.is_dir():
-                with contextlib.suppress(Exception):
-                    shutil.rmtree(file)
+    root_path = Path(path)
+    for child_folder in root_path.iterdir():
+        if not child_folder.is_dir():
+            continue
+
+        used_names: set[str] = {item.name for item in child_folder.iterdir() if item.is_file()}
+
+        for file in child_folder.glob("**/*"):
+            if not file.is_file() or file.parent == child_folder:
+                continue
+
+            base_name = file.name
+            destination_name = base_name
+            counter = 1
+            while destination_name in used_names:
+                stem = Path(base_name).stem
+                suffix = Path(base_name).suffix
+                destination_name = f"{stem} ({counter}){suffix}"
+                counter += 1
+
+            used_names.add(destination_name)
+            destination = child_folder / destination_name
+            try:
+                file.replace(destination)
+            except OSError as e:
+                list_lines.append(f"❌ Error moving {file} to {destination}: {e!s}")
+
+        for nested_folder in sorted(child_folder.glob("**/*"), key=lambda item: len(item.parts), reverse=True):
+            if nested_folder.is_dir() and nested_folder != child_folder:
+                try:
+                    shutil.rmtree(nested_folder)
+                except OSError as e:
+                    list_lines.append(f"❌ Error removing {nested_folder}: {e!s}")
+
         list_lines.append(f"Fix {child_folder}")
     return "\n".join(list_lines)
 
@@ -131,9 +155,9 @@ def apply_func(
 
 
     def test_func(filename):
-        content = Path(filename).read_text(encoding="utf8")
+        content = Path(filename).read_text(encoding="utf-8")
         content = content.upper()
-        Path(filename).write_text(content, encoding="utf8")
+        Path(filename).write_text(content, encoding="utf-8")
         return ["Changed to uppercase", "No errors found"]
 
 
@@ -274,7 +298,7 @@ def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -
 
     """
     list_checkers = []
-    folder_path = Path(path)
+    folder_path = Path(path).resolve()
 
     for file_path in folder_path.rglob(f"*{ext}"):
         # Check if file should be processed
@@ -286,9 +310,12 @@ def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -
             if should_ignore_path(rel_to_root):
                 continue
 
-            result = func(file_path)
-            if result is not None and result:
-                list_checkers.extend(result)
+            try:
+                result = func(str(file_path))
+                if result is not None and result:
+                    list_checkers.extend(result)
+            except OSError as e:
+                list_checkers.append(f"❌ File {file_path.name} is not checked: {e!s}")
 
     return list_checkers
 
@@ -318,7 +345,7 @@ def clear_directory(path: Path | str) -> None:
 
     folder = Path(__file__).resolve().parent / "data/temp"
     folder.mkdir(parents=True, exist_ok=True)
-    Path(folder / "temp.txt").write_text("Hello, world!", encoding="utf8")
+    Path(folder / "temp.txt").write_text("Hello, world!", encoding="utf-8")
     ...
     h.file.clear_directory(folder)
     ```
@@ -853,7 +880,7 @@ def rename_epub_file(filename: Path | str) -> str:
                 author_text = author_text.strip()
 
                 if author_text:
-                    return format_author_name(author_text)
+                    return _format_author_name(author_text)
 
         return None
 
@@ -901,61 +928,6 @@ def rename_epub_file(filename: Path | str) -> str:
 
         return None
 
-    def format_author_name(author_text: str) -> str:
-        """Format author name as 'LastName FirstName' if possible."""
-        if not author_text:
-            return ""
-
-        # Remove HTML tags and entities
-        author_text = re.sub(r"<[^>]+>", "", author_text)
-        author_text = re.sub(r"&[^;]+;", "", author_text)
-        author_text = author_text.strip()
-
-        # Split by spaces and try to identify first and last names
-        parts = author_text.split()
-
-        count_parts = 2
-        if len(parts) >= count_parts:
-            # Assume first part is first name, last part is last name
-            # If there are middle names, include them with the first name
-            first_name = " ".join(parts[:-1])
-            last_name = parts[-1]
-            return f"{last_name} {first_name}"
-        # If only one part, return as is
-        return author_text
-
-    def clean_filename(text: str) -> str:
-        """Clean text for use in filename."""
-        if not text:
-            return ""
-
-        # Remove HTML entities and tags
-        text = re.sub(r"&[^;]+;", "", text)
-        text = re.sub(r"<[^>]+>", "", text)
-
-        # Remove or replace invalid filename characters
-        invalid_chars = r'[<>:"/\\|?*]'
-        text = re.sub(invalid_chars, "", text)
-
-        # Replace multiple spaces with single space
-        text = re.sub(r"\s+", " ", text)
-
-        return text.strip()
-
-    def transliterate_filename(filename_stem: str) -> str:
-        """Attempt to transliterate filename from English to Russian."""
-        try:
-            # Try reverse transliteration (English to Russian)
-            transliterated = translit(filename_stem, "ru", reversed=True)
-
-            # Check if transliteration made sense (contains Cyrillic characters)
-            if re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", transliterated, re.IGNORECASE):
-                return transliterated
-        except Exception:
-            return filename_stem
-        else:
-            return filename_stem
-
     filename = Path(filename)
 
     if not filename.exists():
@@ -971,8 +943,8 @@ def rename_epub_file(filename: Path | str) -> str:
 
     if author and title:
         # Clean the extracted data
-        author = clean_filename(author)
-        title = clean_filename(title)
+        author = _clean_filename(author)
+        title = _clean_filename(title)
 
         # Construct new filename
         new_name = f"{author} - {title} - {year}.epub" if year else f"{author} - {title}.epub"
@@ -980,30 +952,21 @@ def rename_epub_file(filename: Path | str) -> str:
     else:
         # Try transliteration
         original_stem = filename.stem
-        transliterated = transliterate_filename(original_stem)
+        transliterated = _transliterate_filename(original_stem)
 
         if transliterated != original_stem:
             new_name = f"{transliterated}.epub"
 
     if new_name:
-        new_name = clean_filename(new_name.replace(".epub", "")) + ".epub"
-        new_path = filename.parent / new_name
-
-        # Avoid overwriting existing files
-        counter = 1
-        while new_path.exists() and new_path != filename:
-            name_without_ext = new_name.replace(".epub", "")
-            new_name = f"{name_without_ext} ({counter}).epub"
-            new_path = filename.parent / new_name
-            counter += 1
+        new_name = _clean_filename(new_name.replace(".epub", "")) + ".epub"
+        new_path, new_name = _resolve_unique_rename_path(filename, new_name)
 
         if new_path != filename:
             try:
                 filename.rename(new_path)
-            except Exception as e:
+            except OSError as e:
                 return f"❌ Error renaming file: {e!s}"
-            else:
-                return f"✅ File renamed: {filename.name} → {new_name}"
+            return f"✅ File renamed: {filename.name} → {new_name}"
 
     return f"📝 File {filename.name} left unchanged."
 
@@ -1046,11 +1009,11 @@ def rename_fb2_file(filename: Path | str) -> str:
     def extract_fb2_metadata(file_path: Path | str) -> tuple[str | None, str | None, str | None]:
         """Extract author, title, and year from FB2 file."""
         try:
-            with Path.open(Path(file_path), encoding="utf-8") as f:
+            with Path(file_path).open(encoding="utf-8") as f:
                 content = f.read()
         except UnicodeDecodeError:
             try:
-                with Path.open(Path(file_path), encoding="windows-1251") as f:
+                with Path(file_path).open(encoding="windows-1251") as f:
                     content = f.read()
             except UnicodeDecodeError:
                 return None, None, None
@@ -1101,7 +1064,7 @@ def rename_fb2_file(filename: Path | str) -> str:
                     if match:
                         author_text = match.group(1).strip()
                         # Try to parse "FirstName LastName" format and reverse it
-                        author = format_author_name(author_text)
+                        author = _format_author_name(author_text)
                         break
 
             # Extract title
@@ -1131,61 +1094,6 @@ def rename_fb2_file(filename: Path | str) -> str:
         else:
             return author, title, year
 
-    def format_author_name(author_text: str) -> str:
-        """Format author name as 'LastName FirstName' if possible."""
-        if not author_text:
-            return ""
-
-        # Remove HTML tags and entities
-        author_text = re.sub(r"<[^>]+>", "", author_text)
-        author_text = re.sub(r"&[^;]+;", "", author_text)
-        author_text = author_text.strip()
-
-        # Split by spaces and try to identify first and last names
-        parts = author_text.split()
-
-        count_parts = 2
-        if len(parts) >= count_parts:
-            # Assume first part is first name, last part is last name
-            # If there are middle names, include them with the first name
-            first_name = " ".join(parts[:-1])
-            last_name = parts[-1]
-            return f"{last_name} {first_name}"
-        # If only one part, return as is
-        return author_text
-
-    def clean_filename(text: str) -> str:
-        """Clean text for use in filename."""
-        if not text:
-            return ""
-
-        # Remove HTML entities and tags
-        text = re.sub(r"&[^;]+;", "", text)
-        text = re.sub(r"<[^>]+>", "", text)
-
-        # Remove or replace invalid filename characters
-        invalid_chars = r'[<>:"/\\|?*]'
-        text = re.sub(invalid_chars, "", text)
-
-        # Replace multiple spaces with single space
-        text = re.sub(r"\s+", " ", text)
-
-        return text.strip()
-
-    def transliterate_filename(filename_stem: str) -> str:
-        """Attempt to transliterate filename from English to Russian."""
-        try:
-            # Try reverse transliteration (English to Russian)
-            transliterated = translit(filename_stem, "ru", reversed=True)
-
-            # Check if transliteration made sense (contains Cyrillic characters)
-            if re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", transliterated, re.IGNORECASE):
-                return transliterated
-        except Exception:
-            return filename_stem
-        else:
-            return filename_stem
-
     filename = Path(filename)
 
     if not filename.exists():
@@ -1201,8 +1109,8 @@ def rename_fb2_file(filename: Path | str) -> str:
 
     if author and title:
         # Clean the extracted data
-        author = clean_filename(author)
-        title = clean_filename(title)
+        author = _clean_filename(author)
+        title = _clean_filename(title)
 
         # Construct new filename
         new_name = f"{author} - {title} - {year}.fb2" if year else f"{author} - {title}.fb2"
@@ -1210,30 +1118,21 @@ def rename_fb2_file(filename: Path | str) -> str:
     else:
         # Try transliteration
         original_stem = filename.stem
-        transliterated = transliterate_filename(original_stem)
+        transliterated = _transliterate_filename(original_stem)
 
         if transliterated != original_stem:
             new_name = f"{transliterated}.fb2"
 
     if new_name:
-        new_name = clean_filename(new_name.replace(".fb2", "")) + ".fb2"
-        new_path = filename.parent / new_name
-
-        # Avoid overwriting existing files
-        counter = 1
-        while new_path.exists() and new_path != filename:
-            name_without_ext = new_name.replace(".fb2", "")
-            new_name = f"{name_without_ext} ({counter}).fb2"
-            new_path = filename.parent / new_name
-            counter += 1
+        new_name = _clean_filename(new_name.replace(".fb2", "")) + ".fb2"
+        new_path, new_name = _resolve_unique_rename_path(filename, new_name)
 
         if new_path != filename:
             try:
                 filename.rename(new_path)
-            except Exception as e:
+            except OSError as e:
                 return f"❌ Error renaming file: {e!s}"
-            else:
-                return f"✅ File renamed: {filename.name} → {new_name}"
+            return f"✅ File renamed: {filename.name} → {new_name}"
 
     return f"📝 File {filename.name} left unchanged."
 
@@ -1530,7 +1429,7 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
     Args:
 
     - `filename` (`Path | str`): The path to the PDF file to be processed.
-    - `verbose` (`bool`): If True, print detailed debug information. Default is False.
+    - `is_verbose` (`bool`): If True, print detailed debug information. Default is False.
 
     Returns:
 
@@ -1551,7 +1450,7 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
     import harrix_pylib as h
 
     h.file.rename_pdf_file("C:/Books/unknown_book.pdf")
-    h.file.rename_pdf_file("C:/Books/unknown_book.pdf", verbose=True)  # With debug output
+    h.file.rename_pdf_file("C:/Books/unknown_book.pdf", is_verbose=True)  # With debug output
     ```
 
     """
@@ -1609,7 +1508,7 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
                 # Extract metadata fields
                 author = None
                 if metadata.author:
-                    author = format_author_name(str(metadata.author))
+                    author = _format_author_name(str(metadata.author))
 
                 title = None
                 if metadata.title:
@@ -1722,7 +1621,7 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
                 for pattern in author_patterns:
                     match = re.search(pattern, text[:1000], re.IGNORECASE)
                     if match:
-                        author = format_author_name(match.group(1))
+                        author = _format_author_name(match.group(1))
                         break
 
                 # Extract year
@@ -1736,33 +1635,6 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
             if is_verbose:
                 print(f"Debug: Error extracting text metadata from {file_path}: {e}")
             return None, None, None
-
-    def format_author_name(author_text: str) -> str:
-        """Format author name as 'LastName FirstName' if possible."""
-        if not author_text:
-            return ""
-
-        # Remove extra whitespace and clean up
-        author_text = re.sub(r"\s+", " ", author_text.strip())
-
-        # Remove common suffixes and prefixes
-        author_text = re.sub(
-            r"\b(?:Dr\.?|Prof\.?|Ph\.?D\.?|M\.?D\.?|Mr\.?|Mrs\.?|Ms\.?)\s*", "", author_text, flags=re.IGNORECASE
-        )
-
-        # Split by spaces and try to identify first and last names
-        parts = author_text.split()
-
-        count_parts = 2
-        if len(parts) >= count_parts:
-            # Assume first part is first name, last part is last name
-            # If there are middle names, include them with the first name
-            first_name = " ".join(parts[:-1])
-            last_name = parts[-1]
-            return f"{last_name} {first_name}"
-
-        # If only one part, return as is
-        return author_text
 
     def clean_filename(text: str) -> str:
         """Clean text for use in filename."""
@@ -1850,28 +1722,20 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
     def attempt_rename(filename: Path, new_name: str, original_name: str) -> str:
         """Attempt to rename the file and return status message."""
         new_name = clean_filename(new_name.replace(".pdf", "")) + ".pdf"
-        new_path = filename.parent / new_name
 
         # Final check for Cyrillic character loss
         final_stem = new_name.replace(".pdf", "")
         if would_lose_cyrillic(original_name, final_stem):
             return f"📝 File {filename.name} left unchanged (would lose Cyrillic characters)."
 
-        # Avoid overwriting existing files
-        counter = 1
-        while new_path.exists() and new_path != filename:
-            name_without_ext = new_name.replace(".pdf", "")
-            new_name = f"{name_without_ext} ({counter}).pdf"
-            new_path = filename.parent / new_name
-            counter += 1
+        new_path, new_name = _resolve_unique_rename_path(filename, new_name)
 
         if new_path != filename:
             try:
                 filename.rename(new_path)
-            except Exception as e:
+            except OSError as e:
                 return f"❌ Error renaming file: {e!s}"
-            else:
-                return f"✅ File renamed: {filename.name} → {new_name}"
+            return f"✅ File renamed: {filename.name} → {new_name}"
 
         return f"❗ File {filename.name} left unchanged."
 
@@ -2074,3 +1938,64 @@ def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False
                 )
 
     return "\n".join(list(__tree(root_path, is_ignore_hidden_folders=is_ignore_hidden_folders, root_path=root_path)))
+
+
+def _clean_filename(text: str) -> str:
+    """Clean text for use in filename."""
+    if not text:
+        return ""
+
+    text = re.sub(r"&[^;]+;", "", text)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = re.sub(r'[<>:"/\\|?*]', "", text)
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+
+def _format_author_name(author_text: str) -> str:
+    """Format author name as 'LastName FirstName' if possible."""
+    if not author_text:
+        return ""
+
+    author_text = re.sub(r"<[^>]+>", "", author_text)
+    author_text = re.sub(r"&[^;]+;", "", author_text)
+    author_text = re.sub(r"\s+", " ", author_text.strip())
+    author_text = re.sub(
+        r"\b(?:Dr\.?|Prof\.?|Ph\.?D\.?|M\.?D\.?|Mr\.?|Mrs\.?|Ms\.?)\s*",
+        "",
+        author_text,
+        flags=re.IGNORECASE,
+    )
+
+    parts = author_text.split()
+    count_parts = 2
+    if len(parts) >= count_parts:
+        first_name = " ".join(parts[:-1])
+        last_name = parts[-1]
+        return f"{last_name} {first_name}"
+    return author_text
+
+
+def _resolve_unique_rename_path(original_path: Path, new_name: str) -> tuple[Path, str]:
+    """Return a non-colliding destination path and final filename."""
+    new_path = original_path.parent / new_name
+    counter = 1
+    extension = original_path.suffix
+    while new_path.exists() and new_path != original_path:
+        stem = Path(new_name).stem
+        new_name = f"{stem} ({counter}){extension}"
+        new_path = original_path.parent / new_name
+        counter += 1
+    return new_path, new_name
+
+
+def _transliterate_filename(filename_stem: str) -> str:
+    """Attempt to transliterate filename from English to Russian."""
+    try:
+        transliterated = translit(filename_stem, "ru", reversed=True)
+        if re.search(r"[\u0430-\u044F\u0451\u0410-\u042F\u0401]", transliterated, re.IGNORECASE):
+            return transliterated
+    except Exception:
+        return filename_stem
+    else:
+        return filename_stem

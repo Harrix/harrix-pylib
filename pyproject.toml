@@ -14,9 +14,6 @@ dependencies = [
     "transliterate",
 ]
 
-[project.scripts]
-harrix-pylib = "harrix_pylib:main"
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
