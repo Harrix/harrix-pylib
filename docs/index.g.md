@@ -24,6 +24,7 @@ lang: en
   - [📄 File `funcs_img.py`](#-file-funcs_imgpy)
   - [📄 File `funcs_md.py`](#-file-funcs_mdpy)
   - [📄 File `funcs_py.py`](#-file-funcs_pypy)
+  - [📄 File `img_tools.py`](#-file-img_toolspy)
   - [📄 File `markdown_checker.py`](#-file-markdown_checkerpy)
   - [📄 File `python_checker.py`](#-file-python_checkerpy)
   - [📄 File `cleanup.py`](#-file-cleanuppy)
@@ -142,11 +143,12 @@ Doc: [funcs_file.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/fun
 
 Doc: [funcs_img.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md)
 
-| Function/Class                                                                                                                   | Description                                                           |
-| -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| 🔧 [`optimize_svg`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg)                 | Optimize an SVG file and write the result.                            |
-| 🔧 [`optimize_svg_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg_content) | Optimize SVG markup to a compact form similar to SVGO preset-default. |
-| 🔧 [`optimize_svg_folder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg_folder)   | Optimize all SVG files in a folder.                                   |
+| Function/Class                                                                                                                             | Description                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| 🔧 [`optimize_image_with_tools`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_image_with_tools) | Optimize GIF, MP4, or AVIF using ffmpeg, avifenc, and avifdec.        |
+| 🔧 [`optimize_svg`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg)                           | Optimize an SVG file and write the result.                            |
+| 🔧 [`optimize_svg_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg_content)           | Optimize SVG markup to a compact form similar to SVGO preset-default. |
+| 🔧 [`optimize_svg_folder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg_folder)             | Optimize all SVG files in a folder.                                   |
 
 ### 📄 File `funcs_md.py`
 
@@ -216,6 +218,28 @@ Doc: [funcs_py.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs
 | 🔧 [`generate_md_docs_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-generate_md_docs_content)           | Generate Markdown documentation for a single Python file.                                   |
 | 🔧 [`lint_and_fix_python_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-lint_and_fix_python_code)           | Lints and fixes the provided Python code using the `ruff` formatter.                        |
 | 🔧 [`sort_py_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-sort_py_code)                                   | Sorts the Python code in the given file by organizing classes, functions, and statements.   |
+
+### 📄 File `img_tools.py`
+
+Doc: [img_tools.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md)
+
+| Function/Class                                                                                                                                       | Description                                                           |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 🔧 [`convert_gif_mp4_to_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-convert_gif_mp4_to_avif)               | Convert GIF or MP4 to AVIF using ffmpeg.                              |
+| 🔧 [`get_frame_rate`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-get_frame_rate)                                 | Detect frame rate from media file using ffmpeg output.                |
+| 🔧 [`is_avif_animated`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-is_avif_animated)                             | Return True if AVIF contains more than one frame.                     |
+| 🔧 [`optimize_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-optimize_avif)                                   | Optimize AVIF using ffmpeg or avifdec/avifenc depending on animation. |
+| 🔧 [`optimize_image_with_tools`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-optimize_image_with_tools)           | Optimize a raster image using ffmpeg, avifenc, or avifdec.            |
+| 🔧 [`process_animated_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_animated_avif)                   | Optimize animated AVIF with avifdec and avifenc or ffmpeg.            |
+| 🔧 [`process_static_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_static_avif)                       | Optimize static AVIF with ffmpeg.                                     |
+| 🔧 [`_exe`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_exe)                                                     |                                                                       |
+| 🔧 [`_ffmpeg_output`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_ffmpeg_output)                                 |                                                                       |
+| 🔧 [`_is_avif_animated_with_avifdec`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_is_avif_animated_with_avifdec) |                                                                       |
+| 🔧 [`_reduce_frames`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_reduce_frames)                                 |                                                                       |
+| 🔧 [`_resize_frames`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_resize_frames)                                 |                                                                       |
+| 🔧 [`_run_checked`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_run_checked)                                     |                                                                       |
+| 🔧 [`_scale_vf`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_scale_vf)                                           |                                                                       |
+| 🔧 [`_sequence_pattern`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_sequence_pattern)                           |                                                                       |
 
 ### 📄 File `markdown_checker.py`
 

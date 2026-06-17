@@ -11,9 +11,65 @@ lang: en
 
 ## Contents
 
+- [🔧 Function `optimize_image_with_tools`](#-function-optimize_image_with_tools)
 - [🔧 Function `optimize_svg`](#-function-optimize_svg)
 - [🔧 Function `optimize_svg_content`](#-function-optimize_svg_content)
 - [🔧 Function `optimize_svg_folder`](#-function-optimize_svg_folder)
+
+</details>
+
+## 🔧 Function `optimize_image_with_tools`
+
+```python
+def optimize_image_with_tools(filename: Path | str, output_filename: Path | str) -> str
+```
+
+Optimize GIF, MP4, or AVIF using ffmpeg, avifenc, and avifdec.
+
+Args:
+
+- `filename` (`Path | str`): Source image path.
+- `output_filename` (`Path | str`): Destination path.
+- `project_root` (`Path | str`): Folder containing external tool executables.
+- `quality` (`bool`): Use higher quality settings. Defaults to `False`.
+- `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
+
+Returns:
+
+- `str`: Status message.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+message = h.img.optimize_image_with_tools(
+    "video.gif",
+    "video.avif",
+    project_root=".",
+)
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def optimize_image_with_tools(
+    filename: Path | str,
+    output_filename: Path | str,
+    *,
+    project_root: Path | str,
+    quality: bool = False,
+    max_size: int | None = None,
+) -> str:
+    return img_tools.optimize_image_with_tools(
+        filename,
+        output_filename,
+        project_root=project_root,
+        quality=quality,
+        max_size=max_size,
+    )
+```
 
 </details>
 

@@ -4,7 +4,54 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from harrix_pylib import img_tools
 from harrix_pylib.svg_optimize.optimizer import optimize_svg_content as _optimize_svg_content
+
+EXE_RASTER_EXTENSIONS = img_tools.EXE_RASTER_EXTENSIONS
+
+
+def optimize_image_with_tools(
+    filename: Path | str,
+    output_filename: Path | str,
+    *,
+    project_root: Path | str,
+    quality: bool = False,
+    max_size: int | None = None,
+) -> str:
+    """Optimize GIF, MP4, or AVIF using ffmpeg, avifenc, and avifdec.
+
+    Args:
+
+    - `filename` (`Path | str`): Source image path.
+    - `output_filename` (`Path | str`): Destination path.
+    - `project_root` (`Path | str`): Folder containing external tool executables.
+    - `quality` (`bool`): Use higher quality settings. Defaults to `False`.
+    - `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
+
+    Returns:
+
+    - `str`: Status message.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    message = h.img.optimize_image_with_tools(
+        "video.gif",
+        "video.avif",
+        project_root=".",
+    )
+    ```
+
+    """
+    return img_tools.optimize_image_with_tools(
+        filename,
+        output_filename,
+        project_root=project_root,
+        quality=quality,
+        max_size=max_size,
+    )
 
 
 def optimize_svg(filename: Path | str, output_filename: Path | str | None = None) -> str:
