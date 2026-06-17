@@ -1,0 +1,148 @@
+"""Convert basic SVG shapes to path elements."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from harrix_pylib.svg_optimize.paths import format_path_data
+from harrix_pylib.svg_optimize.xml_tags import tag_local_name
+
+if TYPE_CHECKING:
+    from lxml import etree
+
+SVG_NS = "http://www.w3.org/2000/svg"
+_MIN_POINTS = 2
+CONVERTIBLE = frozenset(
+    {
+        f"{{{SVG_NS}}}rect",
+        f"{{{SVG_NS}}}polygon",
+        f"{{{SVG_NS}}}polyline",
+        f"{{{SVG_NS}}}line",
+        f"{{{SVG_NS}}}circle",
+        f"{{{SVG_NS}}}ellipse",
+    }
+)
+
+
+def convert_shapes(root: etree._Element) -> bool:
+    """Convert basic shapes to paths. Returns True if any conversion happened."""
+    changed = False
+    for elem in list(root.iter()):
+        if elem.tag not in CONVERTIBLE:
+            continue
+        path_d = _shape_to_path(elem)
+        if path_d is None:
+            continue
+        elem.tag = f"{{{SVG_NS}}}path"
+        elem.set("d", path_d)
+        for attr in ("x", "y", "width", "height", "rx", "ry", "cx", "cy", "r", "points", "x1", "y1", "x2", "y2"):
+            if attr in elem.attrib:
+                del elem.attrib[attr]
+        changed = True
+    return changed
+
+
+def _circle_to_path(elem: etree._Element) -> str | None:
+    cx = _num(elem.get("cx", "0"))
+    cy = _num(elem.get("cy", "0"))
+    r = _num(elem.get("r", "0"))
+    if r == 0:
+        return None
+    return format_path_data(
+        [
+            ("M", [cx - r, cy]),
+            ("A", [r, r, 0, 1, 0, cx + r, cy]),
+            ("A", [r, r, 0, 1, 0, cx - r, cy]),
+            ("Z", []),
+        ]
+    )
+
+
+def _ellipse_to_path(elem: etree._Element) -> str | None:
+    cx = _num(elem.get("cx", "0"))
+    cy = _num(elem.get("cy", "0"))
+    rx = _num(elem.get("rx", "0"))
+    ry = _num(elem.get("ry", "0"))
+    if rx == 0 or ry == 0:
+        return None
+    return format_path_data(
+        [
+            ("M", [cx - rx, cy]),
+            ("A", [rx, ry, 0, 1, 0, cx + rx, cy]),
+            ("A", [rx, ry, 0, 1, 0, cx - rx, cy]),
+            ("Z", []),
+        ]
+    )
+
+
+def _line_to_path(elem: etree._Element) -> str | None:
+    x1 = _num(elem.get("x1", "0"))
+    y1 = _num(elem.get("y1", "0"))
+    x2 = _num(elem.get("x2", "0"))
+    y2 = _num(elem.get("y2", "0"))
+    return format_path_data([("M", [x1, y1]), ("L", [x2, y2])])
+
+
+def _num(value: str) -> float:
+    return float(value.replace("px", "").strip())
+
+
+def _parse_points(points_str: str) -> list[tuple[float, float]]:
+    numbers = [_num(part) for part in points_str.replace(",", " ").split() if part.strip()]
+    return [(numbers[i], numbers[i + 1]) for i in range(0, len(numbers) - 1, 2)]
+
+
+def _polygon_to_path(elem: etree._Element) -> str | None:
+    points = _parse_points(elem.get("points", ""))
+    if len(points) < _MIN_POINTS:
+        return None
+    commands: list[tuple[str, list[float]]] = [("M", list(points[0]))]
+    commands.extend(("L", list(point)) for point in points[1:])
+    commands.append(("Z", []))
+    return format_path_data(commands)
+
+
+def _polyline_to_path(elem: etree._Element) -> str | None:
+    points = _parse_points(elem.get("points", ""))
+    if len(points) < _MIN_POINTS:
+        return None
+    commands: list[tuple[str, list[float]]] = [("M", list(points[0]))]
+    commands.extend(("L", list(point)) for point in points[1:])
+    return format_path_data(commands)
+
+
+def _rect_to_path(elem: etree._Element) -> str | None:
+    if elem.get("rx") or elem.get("ry"):
+        return None
+    x = _num(elem.get("x", "0"))
+    y = _num(elem.get("y", "0"))
+    width = _num(elem.get("width") or "0")
+    height = _num(elem.get("height") or "0")
+    if width == 0 or height == 0:
+        return None
+    return format_path_data(
+        [
+            ("M", [x, y]),
+            ("H", [x + width]),
+            ("V", [y + height]),
+            ("H", [x]),
+            ("Z", []),
+        ]
+    )
+
+
+def _shape_to_path(elem: etree._Element) -> str | None:
+    tag = tag_local_name(elem.tag)
+    if tag == "rect":
+        return _rect_to_path(elem)
+    if tag == "polygon":
+        return _polygon_to_path(elem)
+    if tag == "polyline":
+        return _polyline_to_path(elem)
+    if tag == "line":
+        return _line_to_path(elem)
+    if tag == "circle":
+        return _circle_to_path(elem)
+    if tag == "ellipse":
+        return _ellipse_to_path(elem)
+    return None
