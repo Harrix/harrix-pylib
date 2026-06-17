@@ -57,6 +57,16 @@ def test_optimize_svg_github_icon() -> None:
     assert len(result) < len(before)
 
 
+def test_optimize_svg_fil1_preserves_fill_color() -> None:
+    current_folder = h.dev.get_project_root()
+    before = Path(current_folder / "tests/data/optimize_svg_fil1__before.svg").read_text(encoding="utf-8")
+    result = h.img.optimize_svg_content(before)
+    assert ".fil1{fill:#fffffe;fill-rule:nonzero}" in result
+    assert "#fffffefill-rule" not in result
+    assert 'type="text/css"' not in result
+    assert 'class="fil1"' in result
+
+
 def test_optimize_svg_folder(tmp_path: Path) -> None:
     current_folder = h.dev.get_project_root()
     before = Path(current_folder / "tests/data/optimize_svg__before.svg").read_text(encoding="utf-8")

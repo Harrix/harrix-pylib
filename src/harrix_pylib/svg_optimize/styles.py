@@ -103,10 +103,12 @@ class StyleSheet:
                 props = self.rules.get(class_name)
                 if not props:
                     continue
-                decls = "".join(f"{prop}:{value}" for prop, value in props.items())
+                decls = ";".join(f"{prop}:{value}" for prop, value in props.items())
                 css_parts.append(f".{class_name}{{{decls}}}")
             if css_parts:
                 style_elem.text = "".join(css_parts)
+                if "type" in style_elem.attrib:
+                    del style_elem.attrib["type"]
             else:
                 parent = style_elem.getparent()
                 if parent is not None:
