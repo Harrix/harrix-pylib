@@ -13,6 +13,7 @@ lang: en
 
 - [🔧 Function `render_tokens`](#-function-render_tokens)
 - [🔧 Function `_find_close`](#-function-_find_close)
+- [🔧 Function `_format_code_inline`](#-function-_format_code_inline)
 - [🔧 Function `_format_self_referential_link`](#-function-_format_self_referential_link)
 - [🔧 Function `_format_table_row`](#-function-_format_table_row)
 - [🔧 Function `_format_table_separator`](#-function-_format_table_separator)
@@ -20,6 +21,7 @@ lang: en
 - [🔧 Function `_join_blocks`](#-function-_join_blocks)
 - [🔧 Function `_list_is_loose`](#-function-_list_is_loose)
 - [🔧 Function `_list_item_is_loose`](#-function-_list_item_is_loose)
+- [🔧 Function `_max_backtick_run`](#-function-_max_backtick_run)
 - [🔧 Function `_readable_link_href`](#-function-_readable_link_href)
 - [🔧 Function `_render_block`](#-function-_render_block)
 - [🔧 Function `_render_blockquote`](#-function-_render_blockquote)
@@ -85,6 +87,31 @@ def _find_close(tokens: list[Token], index: int, close_type: str) -> int:
             if depth == 0:
                 return current
     return len(tokens) - 1
+```
+
+</details>
+
+## 🔧 Function `_format_code_inline`
+
+```python
+def _format_code_inline(content: str) -> str
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _format_code_inline(content: str, *, in_table: bool = False) -> str:
+    if in_table and "|" in content:
+        content = content.replace("|", "\\|")
+    if "`" not in content:
+        return f"`{content}`"
+    fence = "`" * (_max_backtick_run(content) + 1)
+    if content.startswith("`") or content.endswith("`"):
+        return f"{fence} {content} {fence}"
+    return f"{fence}{content}{fence}"
 ```
 
 </details>
@@ -291,6 +318,32 @@ def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_in
 
 </details>
 
+## 🔧 Function `_max_backtick_run`
+
+```python
+def _max_backtick_run(text: str) -> int
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _max_backtick_run(text: str) -> int:
+    max_run = 0
+    current = 0
+    for char in text:
+        if char == "`":
+            current += 1
+            max_run = max(max_run, current)
+        else:
+            current = 0
+    return max_run
+```
+
+</details>
+
 ## 🔧 Function `_readable_link_href`
 
 ```python
@@ -439,11 +492,11 @@ _No docstring provided._
 <summary>Code:</summary>
 
 ```python
-def _render_inline(children: list[Token]) -> str:
+def _render_inline(children: list[Token], *, in_table: bool = False) -> str:
     parts: list[str] = []
     index = 0
     while index < len(children):
-        chunk, index = _render_inline_token(children, index)
+        chunk, index = _render_inline_token(children, index, in_table=in_table)
         parts.append(chunk)
     return "".join(parts)
 ```
@@ -462,12 +515,12 @@ _No docstring provided._
 <summary>Code:</summary>
 
 ```python
-def _render_inline_token(children: list[Token], index: int) -> tuple[str, int]:
+def _render_inline_token(children: list[Token], index: int, *, in_table: bool = False) -> tuple[str, int]:
     child = children[index]
     if child.type == "text":
         return child.content, index + 1
     if child.type == "code_inline":
-        return f"`{child.content}`", index + 1
+        return _format_code_inline(child.content, in_table=in_table), index + 1
     if child.type == "softbreak":
         return "\n", index + 1
     if child.type == "hardbreak":
@@ -492,7 +545,7 @@ def _render_inline_token(children: list[Token], index: int) -> tuple[str, int]:
         inner_parts: list[str] = []
         inner_index = index + 1
         while inner_index < len(children) and children[inner_index].type != "link_close":
-            chunk, inner_index = _render_inline_token(children, inner_index)
+            chunk, inner_index = _render_inline_token(children, inner_index, in_table=in_table)
             inner_parts.append(chunk)
         inner = "".join(inner_parts)
         next_index = inner_index + 1 if inner_index < len(children) else inner_index
@@ -506,13 +559,13 @@ def _render_inline_token(children: list[Token], index: int) -> tuple[str, int]:
     if child.type == "link_close":
         return "", index + 1
     if child.type == "strong_open":
-        inner, next_index = _render_inline_until(children, index + 1, "strong_close")
+        inner, next_index = _render_inline_until(children, index + 1, "strong_close", in_table=in_table)
         return f"**{inner}**", next_index + 1
     if child.type == "em_open":
-        inner, next_index = _render_inline_until(children, index + 1, "em_close")
+        inner, next_index = _render_inline_until(children, index + 1, "em_close", in_table=in_table)
         return f"_{inner}_", next_index + 1
     if child.type == "s_open":
-        inner, next_index = _render_inline_until(children, index + 1, "s_close")
+        inner, next_index = _render_inline_until(children, index + 1, "s_close", in_table=in_table)
         return f"~~{inner}~~", next_index + 1
     if child.type in {"strong_close", "em_close", "s_close"}:
         return "", index + 1
@@ -533,10 +586,12 @@ _No docstring provided._
 <summary>Code:</summary>
 
 ```python
-def _render_inline_until(children: list[Token], index: int, close_type: str) -> tuple[str, int]:
+def _render_inline_until(
+    children: list[Token], index: int, close_type: str, *, in_table: bool = False
+) -> tuple[str, int]:
     parts: list[str] = []
     while index < len(children) and children[index].type != close_type:
-        chunk, index = _render_inline_token(children, index)
+        chunk, index = _render_inline_token(children, index, in_table=in_table)
         parts.append(chunk)
     return "".join(parts), index
 ```
@@ -709,7 +764,7 @@ def _render_table(tokens: list[Token], index: int) -> tuple[str, int]:
             while cell_index < row_close:
                 if tokens[cell_index].type in {"th_open", "td_open"}:
                     inline = tokens[cell_index + 1]
-                    cells.append(_render_inline(inline.children or []))
+                    cells.append(_render_inline(inline.children or [], in_table=True))
                     cell_index += 3
                 else:
                     cell_index += 1

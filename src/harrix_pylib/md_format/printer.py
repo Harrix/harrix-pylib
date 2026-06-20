@@ -35,6 +35,17 @@ def _find_close(tokens: list[Token], index: int, close_type: str) -> int:
     return len(tokens) - 1
 
 
+def _format_code_inline(content: str, *, in_table: bool = False) -> str:
+    if in_table and "|" in content:
+        content = content.replace("|", "\\|")
+    if "`" not in content:
+        return f"`{content}`"
+    fence = "`" * (_max_backtick_run(content) + 1)
+    if content.startswith("`") or content.endswith("`"):
+        return f"{fence} {content} {fence}"
+    return f"{fence}{content}{fence}"
+
+
 def _format_self_referential_link(href: str, inner: str) -> str | None:
     """Return angle-bracket autolink syntax for bare and self-referential URLs."""
     mailto_prefix = "mailto:"
@@ -140,6 +151,18 @@ def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_in
     return block_count != paragraph_count + nested_list_count
 
 
+def _max_backtick_run(text: str) -> int:
+    max_run = 0
+    current = 0
+    for char in text:
+        if char == "`":
+            current += 1
+            max_run = max(max_run, current)
+        else:
+            current = 0
+    return max_run
+
+
 def _readable_link_href(href: str) -> str:
     """Decode percent-encoded URL fragments for readable Markdown output."""
     if href.startswith("#"):
@@ -207,21 +230,21 @@ def _render_heading(tokens: list[Token], index: int) -> tuple[str, int]:
     return f"{'#' * level} {text}\n", index + 3
 
 
-def _render_inline(children: list[Token]) -> str:
+def _render_inline(children: list[Token], *, in_table: bool = False) -> str:
     parts: list[str] = []
     index = 0
     while index < len(children):
-        chunk, index = _render_inline_token(children, index)
+        chunk, index = _render_inline_token(children, index, in_table=in_table)
         parts.append(chunk)
     return "".join(parts)
 
 
-def _render_inline_token(children: list[Token], index: int) -> tuple[str, int]:
+def _render_inline_token(children: list[Token], index: int, *, in_table: bool = False) -> tuple[str, int]:
     child = children[index]
     if child.type == "text":
         return child.content, index + 1
     if child.type == "code_inline":
-        return f"`{child.content}`", index + 1
+        return _format_code_inline(child.content, in_table=in_table), index + 1
     if child.type == "softbreak":
         return "\n", index + 1
     if child.type == "hardbreak":
@@ -246,7 +269,7 @@ def _render_inline_token(children: list[Token], index: int) -> tuple[str, int]:
         inner_parts: list[str] = []
         inner_index = index + 1
         while inner_index < len(children) and children[inner_index].type != "link_close":
-            chunk, inner_index = _render_inline_token(children, inner_index)
+            chunk, inner_index = _render_inline_token(children, inner_index, in_table=in_table)
             inner_parts.append(chunk)
         inner = "".join(inner_parts)
         next_index = inner_index + 1 if inner_index < len(children) else inner_index
@@ -260,23 +283,25 @@ def _render_inline_token(children: list[Token], index: int) -> tuple[str, int]:
     if child.type == "link_close":
         return "", index + 1
     if child.type == "strong_open":
-        inner, next_index = _render_inline_until(children, index + 1, "strong_close")
+        inner, next_index = _render_inline_until(children, index + 1, "strong_close", in_table=in_table)
         return f"**{inner}**", next_index + 1
     if child.type == "em_open":
-        inner, next_index = _render_inline_until(children, index + 1, "em_close")
+        inner, next_index = _render_inline_until(children, index + 1, "em_close", in_table=in_table)
         return f"_{inner}_", next_index + 1
     if child.type == "s_open":
-        inner, next_index = _render_inline_until(children, index + 1, "s_close")
+        inner, next_index = _render_inline_until(children, index + 1, "s_close", in_table=in_table)
         return f"~~{inner}~~", next_index + 1
     if child.type in {"strong_close", "em_close", "s_close"}:
         return "", index + 1
     return child.content or "", index + 1
 
 
-def _render_inline_until(children: list[Token], index: int, close_type: str) -> tuple[str, int]:
+def _render_inline_until(
+    children: list[Token], index: int, close_type: str, *, in_table: bool = False
+) -> tuple[str, int]:
     parts: list[str] = []
     while index < len(children) and children[index].type != close_type:
-        chunk, index = _render_inline_token(children, index)
+        chunk, index = _render_inline_token(children, index, in_table=in_table)
         parts.append(chunk)
     return "".join(parts), index
 
@@ -379,7 +404,7 @@ def _render_table(tokens: list[Token], index: int) -> tuple[str, int]:
             while cell_index < row_close:
                 if tokens[cell_index].type in {"th_open", "td_open"}:
                     inline = tokens[cell_index + 1]
-                    cells.append(_render_inline(inline.children or []))
+                    cells.append(_render_inline(inline.children or [], in_table=True))
                     cell_index += 3
                 else:
                     cell_index += 1

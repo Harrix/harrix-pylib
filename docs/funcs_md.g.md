@@ -2979,7 +2979,7 @@ Returns:
 
 Note:
 
-- This function identifies code blocks by looking for lines with three or more backticks (```),
+- This function identifies code blocks by looking for lines with three or more backticks (`` ` ``),
 optionally preceded by leading whitespace (e.g. fenced blocks inside list items).
 - Code blocks can be nested, and this function will toggle the `code_block_delimiter` on matching delimiters.
 

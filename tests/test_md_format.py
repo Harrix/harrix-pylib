@@ -99,6 +99,26 @@ def test_format_markdown_content_preserves_cyrillic_link_fragments() -> None:
     assert "%D0" not in result
 
 
+def test_format_markdown_content_preserves_inline_code_with_backticks() -> None:
+    source = "`` `\\n`$1`:` ``\n"
+    result = format_markdown_content(source)
+    assert "`` `\\n`$1`:` ``" in result
+
+
+def test_format_markdown_content_preserves_escaped_pipe_in_table_inline_code() -> None:
+    source = "| Col1 | Col2 |\n| --- | --- |\n| `a\\|b` | Соответствует a или b |\n"
+    result = format_markdown_content(source)
+    assert "`a\\|b`" in result
+    assert "| `a|b` |" not in result
+
+
+def test_format_markdown_content_keeps_unescaped_pipe_in_inline_code_outside_table() -> None:
+    source = "Use `a|b` in text.\n"
+    result = format_markdown_content(source)
+    assert "`a|b`" in result
+    assert "`a\\|b`" not in result
+
+
 def test_format_markdown_content_formats_nested_lists() -> None:
     source = "- [List](#list)\n    - [File a](#a)\n    - [File b](#b)\n"
     result = format_markdown_content(source)

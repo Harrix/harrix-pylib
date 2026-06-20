@@ -1810,7 +1810,7 @@ def _check_html_tags(self, filename: Path, line: str, _clean_line: str, line_num
 
 Check for HTML tags in content (H019). Exception: <details> and <summary> are allowed.
 
-Skips inline code segments (e.g. ``<file>...</file>`` in backticks).
+Skips inline code segments (e.g. `` `<file>...</file>` `` in backticks).
 
 <details>
 <summary>Code:</summary>
