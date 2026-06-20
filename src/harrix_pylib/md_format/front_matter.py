@@ -40,6 +40,17 @@ def join_front_matter(front_matter: str, body: str) -> str:
     return f"{front_matter.rstrip()}\n"
 
 
+def prepend_markdown_header(header: str, markdown_text: str) -> str:
+    """Prepend YAML or Markdown prefix without duplicating existing front matter."""
+    _, body = split_front_matter(markdown_text)
+    header = header.rstrip("\n")
+    if not header:
+        return body or markdown_text
+    if not body:
+        return f"{header}\n"
+    return f"{header}\n\n{body}"
+
+
 def split_front_matter(markdown_text: str) -> tuple[str, str]:
     """Split YAML front matter from Markdown body.
 

@@ -10,6 +10,7 @@ from pathlib import Path
 import libcst as cst
 
 import harrix_pylib as h
+from harrix_pylib.md_format.front_matter import prepend_markdown_header
 
 
 def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str:
@@ -294,7 +295,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
         # Create parent directories if they don't exist
         filename_docs.parent.mkdir(parents=True, exist_ok=True)
 
-        final_content = beginning_of_md + "\n" + docs
+        final_content = prepend_markdown_header(beginning_of_md, docs)
         final_content = h.md.generate_toc_with_links_content(final_content)
         final_content = h.md.generate_image_captions_content(final_content)
         filename_docs.write_text(final_content, encoding="utf-8")
@@ -320,7 +321,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
             # Special handling for README.md - create index.g.md
             if md_file.name.upper() == "README.MD":
                 original_content = md_file.read_text(encoding="utf-8")
-                final_content = beginning_of_md + "\n" + original_content
+                final_content = prepend_markdown_header(beginning_of_md, original_content)
                 final_content = h.md.generate_toc_with_links_content(final_content)
                 final_content = h.md.generate_image_captions_content(final_content)
 
@@ -333,7 +334,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
 
                 # Read original content and add beginning_of_md
                 original_content = md_file.read_text(encoding="utf-8")
-                final_content = beginning_of_md + "\n" + original_content
+                final_content = prepend_markdown_header(beginning_of_md, original_content)
 
                 # Apply additional processing
                 final_content = h.md.generate_toc_with_links_content(final_content)

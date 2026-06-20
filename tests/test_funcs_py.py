@@ -140,6 +140,24 @@ class ExampleClass:
         )
 
 
+def test_generate_md_docs_strips_existing_front_matter_from_root_md() -> None:
+    with TemporaryDirectory() as temp_folder:
+        temp_path = Path(temp_folder)
+        (temp_path / "src").mkdir()
+        (temp_path / "README.md").write_text("# Test\n\n## List of functions\n", encoding="utf-8")
+        (temp_path / "DEVELOPMENT.md").write_text(
+            "---\nlang: en\n---\n\n# Development\n",
+            encoding="utf-8",
+        )
+        beginning = "---\nlang: en\nauthor: Test\n---"
+        h.py.generate_md_docs(temp_path, beginning, "test")
+        development_content = (temp_path / "docs" / "development.g.md").read_text(encoding="utf-8")
+        assert development_content.count("---") == 2
+        assert "author: Test" in development_content
+        assert "# Development" in development_content
+        assert "lang: en\n---\n\n---" not in development_content
+
+
 def test_generate_md_docs_content() -> None:
     # Setup
     content = '''

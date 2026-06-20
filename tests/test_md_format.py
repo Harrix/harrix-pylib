@@ -6,6 +6,7 @@ from pathlib import Path
 
 import harrix_pylib as h
 from harrix_pylib.md_format.formatter import format_markdown_content, read_markdown_text
+from harrix_pylib.md_format.front_matter import prepend_markdown_header
 from harrix_pylib.md_format.table_format import text_display_width
 
 
@@ -50,6 +51,14 @@ def test_format_markdown_content_preserves_front_matter() -> None:
     result = format_markdown_content(source)
     assert "---\r\nhello: world\r\n---" in result
     assert "# Title" in result
+
+
+def test_prepend_markdown_header_strips_existing_front_matter() -> None:
+    header = "---\nlang: en\n---"
+    source = "---\nlang: ru\n---\n\n# Title\n"
+    result = prepend_markdown_header(header, source)
+    assert result.startswith("---\nlang: en\n---\n\n# Title")
+    assert result.count("---") == 2
 
 
 def test_format_markdown_content_formats_lists() -> None:

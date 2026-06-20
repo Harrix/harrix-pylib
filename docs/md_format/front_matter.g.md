@@ -14,6 +14,7 @@ lang: en
 - [🔧 Function `collapse_extra_blank_lines`](#-function-collapse_extra_blank_lines)
 - [🔧 Function `compact_front_matter`](#-function-compact_front_matter)
 - [🔧 Function `join_front_matter`](#-function-join_front_matter)
+- [🔧 Function `prepend_markdown_header`](#-function-prepend_markdown_header)
 - [🔧 Function `split_front_matter`](#-function-split_front_matter)
 
 </details>
@@ -88,6 +89,30 @@ def join_front_matter(front_matter: str, body: str) -> str:
     if body:
         return f"{front_matter.rstrip()}\n\n{body}"
     return f"{front_matter.rstrip()}\n"
+```
+
+</details>
+
+## 🔧 Function `prepend_markdown_header`
+
+```python
+def prepend_markdown_header(header: str, markdown_text: str) -> str
+```
+
+Prepend YAML or Markdown prefix without duplicating existing front matter.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def prepend_markdown_header(header: str, markdown_text: str) -> str:
+    _, body = split_front_matter(markdown_text)
+    header = header.rstrip("\n")
+    if not header:
+        return body or markdown_text
+    if not body:
+        return f"{header}\n"
+    return f"{header}\n\n{body}"
 ```
 
 </details>

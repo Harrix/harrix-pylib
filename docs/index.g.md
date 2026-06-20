@@ -300,12 +300,13 @@ Doc: [formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/form
 
 Doc: [front_matter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md)
 
-| Function/Class                                                                                                                                  | Description                                                           |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| 🔧 [`collapse_extra_blank_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-collapse_extra_blank_lines) | Collapse consecutive blank lines to a single blank line.              |
-| 🔧 [`compact_front_matter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-compact_front_matter)             | Remove blank lines inside YAML front matter while keeping delimiters. |
-| 🔧 [`join_front_matter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-join_front_matter)                   | Join front matter and formatted body.                                 |
-| 🔧 [`split_front_matter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-split_front_matter)                 | Split YAML front matter from Markdown body.                           |
+| Function/Class                                                                                                                                  | Description                                                                |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| 🔧 [`collapse_extra_blank_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-collapse_extra_blank_lines) | Collapse consecutive blank lines to a single blank line.                   |
+| 🔧 [`compact_front_matter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-compact_front_matter)             | Remove blank lines inside YAML front matter while keeping delimiters.      |
+| 🔧 [`join_front_matter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-join_front_matter)                   | Join front matter and formatted body.                                      |
+| 🔧 [`prepend_markdown_header`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-prepend_markdown_header)       | Prepend YAML or Markdown prefix without duplicating existing front matter. |
+| 🔧 [`split_front_matter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-split_front_matter)                 | Split YAML front matter from Markdown body.                                |
 
 ### 📄 File `list_format.py`
 
