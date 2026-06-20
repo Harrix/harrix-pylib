@@ -91,11 +91,14 @@ def test_format_markdown_content_formats_italic_with_underscores() -> None:
 def test_format_markdown_content_preserves_cyrillic_link_fragments() -> None:
     source = (
         "- [Жареная картошка](#жареная-картошка)\n"
-        "- [Заклинание «Соль-вода!» против ос и пчёл](#заклинание-соль-вода-против-ос-и-пчёл)\n"
+        "- [Заклинание «Соль-вода!» против ос и пчёл](#заклинание-соль-вода-против-ос-и-пчёл)\n"  # noqa: RUF001
     )
     result = format_markdown_content(source)
     assert "[Жареная картошка](#жареная-картошка)" in result
-    assert "[Заклинание «Соль-вода!» против ос и пчёл](#заклинание-соль-вода-против-ос-и-пчёл)" in result
+    assert (
+        "[Заклинание «Соль-вода!» против ос и пчёл](#заклинание-соль-вода-против-ос-и-пчёл)"  # noqa: RUF001
+        in result
+    )
     assert "%D0" not in result
 
 
