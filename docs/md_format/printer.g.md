@@ -67,7 +67,7 @@ def render_tokens(tokens: list[Token]) -> str:
 def _find_close(tokens: list[Token], index: int, close_type: str) -> int
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -117,7 +117,7 @@ def _format_self_referential_link(href: str, inner: str) -> str | None:
 def _format_table_row(cells: list[str], column_widths: list[int]) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -143,7 +143,7 @@ def _format_table_row(cells: list[str], column_widths: list[int]) -> str:
 def _format_table_separator(column_widths: list[int]) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -161,7 +161,7 @@ def _format_table_separator(column_widths: list[int]) -> str:
 def _is_spurious_table_row(cells: list[str], width: int) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -184,7 +184,7 @@ def _is_spurious_table_row(cells: list[str], width: int) -> bool:
 def _join_blocks(parts: list[str]) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -205,7 +205,7 @@ def _join_blocks(parts: list[str]) -> str:
 def _list_is_loose(tokens: list[Token], index: int, close_index: int) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -232,7 +232,7 @@ def _list_is_loose(tokens: list[Token], index: int, close_index: int) -> bool:
 def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_index: int) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -289,7 +289,7 @@ def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_in
 def _render_block(tokens: list[Token], index: int) -> tuple[str, int]
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -334,7 +334,7 @@ def _render_block(tokens: list[Token], index: int) -> tuple[str, int]:
 def _render_blockquote(tokens: list[Token], index: int) -> tuple[str, int]
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -360,18 +360,18 @@ def _render_blockquote(tokens: list[Token], index: int) -> tuple[str, int]:
 def _render_fence(token: Token) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
 
-````python
+```python
 def _render_fence(token: Token) -> str:
     info = (token.info or "").strip()
     fence = "```"
     content = token.content.strip("\n")
     return f"{fence}{info}\n{content}\n{fence}\n"
-````
+```
 
 </details>
 
@@ -381,7 +381,7 @@ def _render_fence(token: Token) -> str:
 def _render_heading(tokens: list[Token], index: int) -> tuple[str, int]
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -402,7 +402,7 @@ def _render_heading(tokens: list[Token], index: int) -> tuple[str, int]:
 def _render_inline(children: list[Token]) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -425,7 +425,7 @@ def _render_inline(children: list[Token]) -> str:
 def _render_inline_token(children: list[Token], index: int) -> tuple[str, int]
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -496,7 +496,7 @@ def _render_inline_token(children: list[Token], index: int) -> tuple[str, int]:
 def _render_inline_until(children: list[Token], index: int, close_type: str) -> tuple[str, int]
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -518,7 +518,7 @@ def _render_inline_until(children: list[Token], index: int, close_type: str) -> 
 def _render_list(tokens: list[Token], index: int) -> tuple[str, int]
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -570,7 +570,7 @@ def _render_list(tokens: list[Token], index: int, *, ordered: bool) -> tuple[str
 def _render_list_item_lines(item_lines: list[str]) -> list[str]
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -608,7 +608,7 @@ def _render_list_item_lines(
 def _render_math_block(token: Token) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -629,7 +629,7 @@ def _render_math_block(token: Token, *, label: str | None = None) -> str:
 def _render_paragraph(tokens: list[Token], index: int) -> tuple[str, int]
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -648,7 +648,7 @@ def _render_paragraph(tokens: list[Token], index: int) -> tuple[str, int]:
 def _render_table(tokens: list[Token], index: int) -> tuple[str, int]
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -724,7 +724,7 @@ def _render_table(tokens: list[Token], index: int) -> tuple[str, int]:
 def _render_until_close(tokens: list[Token], index: int, close_type: str) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -749,7 +749,7 @@ def _render_until_close(tokens: list[Token], index: int, close_type: str) -> str
 def _table_column_widths(rows: list[list[str]], width: int) -> list[int]
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>

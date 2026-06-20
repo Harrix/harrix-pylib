@@ -58,7 +58,7 @@ def remove_hidden(root: etree._Element, stylesheet: StyleSheet) -> bool:
 def _float(value: str | None) -> float
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -81,7 +81,7 @@ def _float(value: str | None) -> float:
 def _is_hidden(style: dict[str, str], elem: etree._Element) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -106,7 +106,7 @@ def _is_hidden(style: dict[str, str], elem: etree._Element) -> bool:
 def _is_zero_sized(elem: etree._Element) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>

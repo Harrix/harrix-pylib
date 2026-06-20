@@ -56,7 +56,7 @@ def optimize_structure(root: etree._Element) -> bool:
 def _clean_number(value: str) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -81,7 +81,7 @@ def _clean_number(value: str) -> str:
 def _cleanup_numeric_values(root: etree._Element) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -110,7 +110,7 @@ def _cleanup_numeric_values(root: etree._Element) -> bool:
 def _cleanup_root_attrs(root: etree._Element) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -145,7 +145,7 @@ def _cleanup_root_attrs(root: etree._Element) -> bool:
 def _collapse_single_child_groups(root: etree._Element) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -175,7 +175,7 @@ def _collapse_single_child_groups(root: etree._Element) -> bool:
 def _index_to_short_id(index: int) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -198,7 +198,7 @@ def _index_to_short_id(index: int) -> str:
 def _is_id_referenced(root: etree._Element, elem_id: str) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -221,7 +221,7 @@ def _is_id_referenced(root: etree._Element, elem_id: str) -> bool:
 def _merge_element_attrs(source: etree._Element, target: etree._Element) -> None
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -248,7 +248,7 @@ def _merge_element_attrs(source: etree._Element, target: etree._Element) -> None
 def _remove_empty_containers(root: etree._Element) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -273,7 +273,7 @@ def _remove_empty_containers(root: etree._Element) -> bool:
 def _shorten_ids(root: etree._Element) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -318,7 +318,7 @@ def _shorten_ids(root: etree._Element) -> bool:
 def _strip_default_attrs(root: etree._Element) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>

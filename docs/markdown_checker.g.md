@@ -100,7 +100,7 @@ Rules:
 <details>
 <summary>Code:</summary>
 
-````python
+```python
 class MarkdownChecker:
 
     # Minimum length for a line to be treated as italic-only caption (e.g. _text_)
@@ -1193,7 +1193,7 @@ class MarkdownChecker:
         """Return True if line is a regular paragraph that should end with colon before code/image."""
         stripped = line.strip()
         return bool(stripped) and stripped != "```" and not stripped.startswith(("![", "#"))
-````
+```
 
 </details>
 
@@ -1398,7 +1398,7 @@ Check code block related rules.
 <details>
 <summary>Code:</summary>
 
-````python
+```python
 def _check_code_rules(
         self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set
     ) -> Generator[str, None, None]:
@@ -1418,7 +1418,7 @@ def _check_code_rules(
                         correct = self.INCORRECT_LANGUAGES[language]
                         error_msg = f'{self.RULES["H007"]}: "{language}" should be "{correct}"'
                         yield self._format_error("H007", error_msg, filename, line_num=actual_line_num, col=col)
-````
+```
 
 </details>
 
@@ -1433,7 +1433,7 @@ Check for missing colon before code block (H013).
 <details>
 <summary>Code:</summary>
 
-````python
+```python
 def _check_colon_before_code(
         self,
         filename: Path,
@@ -1471,7 +1471,7 @@ def _check_colon_before_code(
         if last_char != ":":
             error_msg = f'{self.RULES["H013"]}: last char is "{last_char}"'
             yield self._format_error("H013", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
-````
+```
 
 </details>
 
@@ -1810,7 +1810,7 @@ def _check_html_tags(self, filename: Path, line: str, _clean_line: str, line_num
 
 Check for HTML tags in content (H019). Exception: <details> and <summary> are allowed.
 
-Skips inline code segments (e.g. `` `<file>...</file>` `` in backticks).
+Skips inline code segments (e.g. ``<file>...</file>`` in backticks).
 
 <details>
 <summary>Code:</summary>
@@ -1891,7 +1891,7 @@ def _check_image_not_at_line_start(self, filename: Path, line: str, line_num: in
 def _check_incorrect_words(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for incorrect word forms (H006). Uses pre-compiled patterns from \_INCORRECT_WORD_PATTERNS.
+Check for incorrect word forms (H006). Uses pre-compiled patterns from _INCORRECT_WORD_PATTERNS.
 
 <details>
 <summary>Code:</summary>
@@ -2160,9 +2160,9 @@ Check for capitalized Russian polite pronouns (H023). Use lowercase when address
 Exception: pronoun at sentence start is allowed:
 
 - after line start or after .!?;
-- after opening guillemet « (direct speech, e.g. «Ваша задача); # ignore: HP001
-- after dash at line start (dialogue, e.g. — Ваша работа хороша). # ignore: HP001
-  Yields at most one error per line.
+- after opening guillemet « (direct speech, e.g. «Ваша задача);  # ignore: HP001
+- after dash at line start (dialogue, e.g. — Ваша работа хороша).  # ignore: HP001
+Yields at most one error per line.
 
 <details>
 <summary>Code:</summary>
@@ -2273,7 +2273,7 @@ def _check_space_before_punctuation(
 def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '\*' (H024).
+Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '*' (H024).
 
 Only checks text outside inline code and outside link URLs.
 Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C);
@@ -2636,10 +2636,10 @@ Return True if line is a regular paragraph that should end with colon before cod
 <details>
 <summary>Code:</summary>
 
-````python
+```python
 def _should_check_paragraph_end(self, line: str) -> bool:
         stripped = line.strip()
         return bool(stripped) and stripped != "```" and not stripped.startswith(("![", "#"))
-````
+```
 
 </details>

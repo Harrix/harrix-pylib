@@ -87,7 +87,7 @@ Return whether an unindented line continues the previous list item text.
 <details>
 <summary>Code:</summary>
 
-````python
+```python
 def is_list_item_continuation_line(previous_line: str, line: str) -> bool:
     if not previous_line.strip() or not line.strip():
         return False
@@ -101,7 +101,7 @@ def is_list_item_continuation_line(previous_line: str, line: str) -> bool:
     if is_list_continuation(previous_line):
         return True
     return bool(previous_line.startswith(" ") and not is_list_line(previous_line))
-````
+```
 
 </details>
 

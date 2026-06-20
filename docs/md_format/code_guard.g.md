@@ -140,7 +140,7 @@ def restore_code_blocks(text: str, blocks: list[CodeBlock]) -> str:
 def _join_lines(lines: list[str]) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -161,7 +161,7 @@ def _join_lines(lines: list[str], *, trailing_newline: bool) -> str:
 def _leading_whitespace(line: str) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -179,7 +179,7 @@ def _leading_whitespace(line: str) -> str:
 def _placeholder(index: int) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -197,7 +197,7 @@ def _placeholder(index: int) -> str:
 def _reindent_line(line: str, base_indent: str, current_indent: str) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>

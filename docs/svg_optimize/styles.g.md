@@ -316,7 +316,7 @@ def minify_defs(self, root: etree._Element) -> None:
 def _parse_inline(style: str) -> dict[str, str]
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
@@ -337,7 +337,7 @@ def _parse_inline(style: str) -> dict[str, str]:
 def _format_style(props: dict[str, str]) -> str
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>

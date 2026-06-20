@@ -304,6 +304,7 @@ author: Jane Doe
 author-email: jane.doe@example.com
 lang: ru
 ---
+
 ```
 
 <details>
@@ -366,6 +367,7 @@ author: Jane Doe
 author-email: jane.doe@example.com
 lang: ru
 ---
+
 ```
 
 <details>
@@ -618,7 +620,7 @@ h.md.append_yaml_tag("C:/Notes/note.md", ("author", "Anton Sergienko"))
 
 Before processing:
 
-```markdown
+````markdown
 ---
 categories: [it, program]
 tags: [VSCode, FAQ]
@@ -627,11 +629,11 @@ tags: [VSCode, FAQ]
 # Title
 
 Content here.
-```
+````
 
 After processing:
 
-```markdown
+````markdown
 ---
 categories: [it, program]
 tags: [VSCode, FAQ]
@@ -641,7 +643,7 @@ author: Anton Sergienko
 # Title
 
 Content here.
-```
+````
 
 <details>
 <summary>Code:</summary>
@@ -707,7 +709,7 @@ Args:
 
 - `subfolder` (`Path`): Subfolder to collect Markdown files from.
 - `should_include_file` (`Callable[[Path], bool]`): Predicate that decides whether
-  a file should be included.
+a file should be included.
 
 Returns:
 
@@ -716,7 +718,7 @@ Returns:
 Note:
 
 - Used by `combine_markdown_files()` in recursive mode when no `*.g.md` file
-  is present in the subfolder.
+is present in the subfolder.
 
 Example:
 
@@ -774,7 +776,7 @@ Note:
 - Local links and image paths will be adjusted to maintain proper references.
 - The combined file will be named `_foldername.g.md`.
 - If a subfolder contains a `.g.md` file, that file will be used instead of processing
-  individual Markdown files in that subfolder.
+individual Markdown files in that subfolder.
 
 Example:
 
@@ -989,7 +991,7 @@ Args:
 
 - `folder_path` (`str` or `Path`): Path to the root folder to process recursively.
 - `is_delete_g_md_files` (`bool`, optional): Whether to delete existing `.g.md` files before processing.
-  Defaults to `True`. Note: `*.include.g.md` files will not be deleted.
+Defaults to `True`. Note: `*.include.g.md` files will not be deleted.
 
 Returns:
 
@@ -998,16 +1000,16 @@ Returns:
 Note:
 
 - All `.g.md` files (except `*.include.g.md`) in the entire folder structure will be deleted
-  before processing (if `is_delete_g_md_files` is `True`).
+before processing (if `is_delete_g_md_files` is `True`).
 - Files with `*.include.g.md` extension will be included in processing.
 - Hidden folders (starting with `.`) will be skipped.
 - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
-  are ignored during processing.
+are ignored during processing.
 - Files will be combined in a folder if either:
   1. The folder directly contains at least 2 Markdown files, or
   2. The folder and its subfolders together contain at least 2 Markdown files.
 - Folders are processed from the deepest level up, allowing parent folders to use
-  already combined .g.md files from subfolders.
+already combined .g.md files from subfolders.
 
 Example:
 
@@ -1135,7 +1137,7 @@ Args:
 Returns:
 
 - `str`: The updated Markdown text with decreased heading levels. The YAML header,
-  if present, is preserved and included at the beginning of the output.
+if present, is preserved and included at the beginning of the output.
 
 Note:
 
@@ -1634,7 +1636,7 @@ Args:
 Returns:
 
 - `str`: The formatted YAML content followed by the Markdown content.
-  If no YAML front matter exists, returns the original text unchanged.
+If no YAML front matter exists, returns the original text unchanged.
 
 Note:
 
@@ -1728,6 +1730,7 @@ Line 3.
 Line 4.
 
 -- Modified title of book
+
 ```
 
 After processing:
@@ -1748,13 +1751,14 @@ After processing:
 > Line 4.
 >
 > -- _Name Surname, Modified title of book_
+
 ```
 
 Note:
 
 - If the file does not exist or is not a Markdown file, the function will return `None`.
 - If the file has been modified, it returns a message indicating the changes; otherwise,
-  it indicates no changes were made.
+it indicates no changes were made.
 
 Example:
 
@@ -1972,6 +1976,7 @@ _Figure 22: Alt ds sdsd text_
 Another text.
 
 ![Alt text](img/image3.png)
+
 ````
 
 After processing:
@@ -2111,6 +2116,7 @@ _Figure 22: Alt ds sdsd text_
 Another text.
 
 ![Alt text](img/image3.png)
+
 ````
 
 After processing:
@@ -2412,7 +2418,7 @@ def generate_summaries(folder: Path | str) -> str
 Generate two summary files for a directory of year-based Markdown files.
 
 1. table.include.g.md - A statistical table showing the count of book entries by year
-2. \_[directory_name].short.g.md - A hierarchical list of all book entries organized by year
+2. _[directory_name].short.g.md - A hierarchical list of all book entries organized by year
 
 Args:
 
@@ -2425,7 +2431,7 @@ Returns:
 Notes:
 
 - The function looks for Markdown files with years in their names (e.g., "2023.md",
-  "Before-2013-(Cinema).md", "After_2024.md")
+"Before-2013-(Cinema).md", "After_2024.md")
 - Book entries are identified by second-level headings (## Title)
 - Ratings are extracted from headings in format "## Title: N" where N is a number
 - YAML frontmatter from the first processed file will be copied to the summary files
@@ -2634,7 +2640,7 @@ Args:
 Returns:
 
 - `str`: A string containing the status of the TOC operation, including whether the TOC was refreshed or
-  if the file was unchanged.
+if the file was unchanged.
 
 Note:
 
@@ -2821,12 +2827,12 @@ Args:
 Returns:
 
 - `list[str]`: Sorted list of all variables from YAML from all Markdown files.
-  Example: `['categories', 'date', 'tags']`.
+Example: `['categories', 'date', 'tags']`.
 
 Note:
 
 - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
-  are ignored during processing.
+are ignored during processing.
 - Hidden files and folders (those with names starting with a dot) are ignored during processing.
 - The function recursively searches all subfolders.
 
@@ -2904,6 +2910,7 @@ tags: [VSCode, FAQ]
 ---
 
 # Installing VSCode
+
 ```
 
 Text after processing:
@@ -2972,8 +2979,8 @@ Returns:
 
 Note:
 
-- This function identifies code blocks by looking for lines with three or more backticks (`` ` ``),
-  optionally preceded by leading whitespace (e.g. fenced blocks inside list items).
+- This function identifies code blocks by looking for lines with three or more backticks (```),
+optionally preceded by leading whitespace (e.g. fenced blocks inside list items).
 - Code blocks can be nested, and this function will toggle the `code_block_delimiter` on matching delimiters.
 
 Example:
@@ -3036,7 +3043,7 @@ Args:
 Returns:
 
 - `Iterator[tuple[str, bool]]`: An iterator yielding tuples where the first element is a segment of the line,
-  and the second is a boolean indicating whether this segment is part of an inline code block.
+and the second is a boolean indicating whether this segment is part of an inline code block.
 
 Example:
 
@@ -3112,7 +3119,7 @@ Args:
 Returns:
 
 - `str`: The updated Markdown text with increased heading levels. The YAML header,
-  if present, is preserved and included at the beginning of the output.
+if present, is preserved and included at the beginning of the output.
 
 Note:
 
@@ -3208,7 +3215,7 @@ Args:
 
 - `folder` (`Path | str`): Directory to scan for note files.
 - `dir_name` (`str | None`): Folder name used to filter `_{dir_name}*` files.
-  Defaults to `folder.name`.
+Defaults to `folder.name`.
 
 Returns:
 
@@ -3557,6 +3564,7 @@ tags: [VSCode, FAQ]
 ---
 
 # Installing VSCode
+
 ```
 
 Markdown after processing:
@@ -3628,7 +3636,7 @@ Notes:
 - If `start_index` or `end_index` is not found, the file remains unchanged.
 - The function assumes that the file uses UTF-8 encoding for reading and writing.
 - If no section matches the `title_section`, or if the section spans till the end of the file,
-  only the content up to `end_index` (or the end of the file) will be replaced.
+only the content up to `end_index` (or the end of the file) will be replaced.
 
 Example:
 
@@ -3684,7 +3692,7 @@ Notes:
 
 - If `start_index` or `end_index` is not found, the text remains unchanged.
 - If no section matches the `title_section`, or if the section spans till the end of the text,
-  only the content up to `end_index` (or the end of the file) will be replaced.
+only the content up to `end_index` (or the end of the file) will be replaced.
 
 Example:
 
@@ -3821,24 +3829,25 @@ Code blocks are kept intact and not reordered.
 Args:
 
 - `filename` (`Path` | `str`): The path to the Markdown file to be processed. Can be either a `Path`
-  object or a string representing the file path.
+object or a string representing the file path.
 - `is_sort_section_from_yaml` (`bool`): Whether to check YAML front matter for `sort-section: true`
-  before sorting. If `True`, sorting only occurs when YAML contains `sort-section: true`.
-  If `False`, sorting is always performed. Defaults to `False`.
+before sorting. If `True`, sorting only occurs when YAML contains `sort-section: true`.
+
+If `False`, sorting is always performed. Defaults to `False`.
 
 Returns:
 
 - `str`: A message indicating whether the file was sorted and saved (`"✅ File {filename} applied."`)
-  or if no changes were made (`"File is not changed."`).
+or if no changes were made (`"File is not changed."`).
 
 Notes:
 
 - The function assumes that sections are marked by `##` at the beginning of a line,
-  and code blocks are delimited by triple backticks (```).
+and code blocks are delimited by triple backticks (```).
 - If there's no YAML front matter, the entire document is considered content.
 - The sorting of sections is done alphabetically, ignoring any code blocks or other formatting within the section.
 - When `is_sort_section_from_yaml=True`, the YAML parameter `sort-section` must be set to `true`
-  for sorting to occur.
+for sorting to occur.
 
 Example:
 
@@ -3874,6 +3883,7 @@ Example text.
 Another text.
 
 Another text.
+
 ```
 
 After sorting:
@@ -3898,6 +3908,7 @@ Another text.
 Example text.
 
 Example text.
+
 ```
 
 <details>
@@ -3933,8 +3944,9 @@ Args:
 
 - `markdown_text` (`str`): The Markdown text to process.
 - `is_sort_section_from_yaml` (`bool`): Whether to check YAML front matter for `sort-section: true`
-  before sorting. If `True`, sorting only occurs when YAML contains `sort-section: true`.
-  If `False`, sorting is always performed. Defaults to `False`.
+before sorting. If `True`, sorting only occurs when YAML contains `sort-section: true`.
+
+If `False`, sorting is always performed. Defaults to `False`.
 
 Returns:
 
@@ -3947,7 +3959,7 @@ Note:
 - Regular headings are sorted alphabetically.
 - Preserves `<details>...</details>` blocks that contain `<summary>📖 Contents ⬇️</summary>` (or in Russian).
 - When `is_sort_section_from_yaml=True`, the YAML parameter `sort-section` must be set to `true`
-  for sorting to occur.
+for sorting to occur.
 
 Example:
 
@@ -4268,7 +4280,7 @@ Returns:
 Note:
 
 - If there is no '---' or only one '---' in the note, the function returns an empty string for YAML content
-  and the entire note for the content part.
+and the entire note for the content part.
 - The function does not validate if the YAML content is properly formatted YAML.
 
 Example:
@@ -4302,7 +4314,7 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
 def _is_toc_details_open(lines: list[str], index: int) -> bool
 ```
 
-_No docstring provided._
+*No docstring provided.*
 
 <details>
 <summary>Code:</summary>
