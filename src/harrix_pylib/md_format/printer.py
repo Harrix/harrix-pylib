@@ -35,12 +35,19 @@ def _find_close(tokens: list[Token], index: int, close_type: str) -> int:
 
 
 def _format_self_referential_link(href: str, inner: str) -> str | None:
-    """Return angle-bracket autolink syntax when link text equals the destination."""
-    if inner == href and href.startswith(("http://", "https://")):
-        return f"<{href}>"
+    """Return angle-bracket autolink syntax for bare and self-referential URLs."""
     mailto_prefix = "mailto:"
     if href.startswith(mailto_prefix) and inner == href[len(mailto_prefix) :]:
         return f"<{inner}>"
+
+    if inner == href and href.startswith(("http://", "https://")):
+        return f"<{href}>"
+
+    if href.startswith(("http://", "https://")):
+        href_without_scheme = href.removeprefix("https://").removeprefix("http://").rstrip("/")
+        if inner.rstrip("/") == href_without_scheme:
+            return f"<{inner}>"
+
     return None
 
 

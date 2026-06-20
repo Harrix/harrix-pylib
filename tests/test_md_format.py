@@ -46,6 +46,20 @@ def test_format_markdown_content_preserves_email_autolink() -> None:
     assert "[user@example.com](mailto:user@example.com)" not in result
 
 
+def test_format_markdown_content_formats_bare_domain_as_angle_autolink() -> None:
+    source = "| Site | www.msi.com |\n| --- | --- |\n"
+    result = format_markdown_content(source)
+    assert "<www.msi.com>" in result
+    assert "[www.msi.com](http://www.msi.com)" not in result
+
+
+def test_format_markdown_content_preserves_named_link_with_different_text() -> None:
+    source = "Site: [MSI website](http://www.msi.com)\n"
+    result = format_markdown_content(source)
+    assert "[MSI website](http://www.msi.com)" in result
+    assert "<www.msi.com>" not in result
+
+
 def test_format_markdown_content_preserves_front_matter() -> None:
     source = "---\nhello: world\n---\n\n# Title\n"
     result = format_markdown_content(source)
