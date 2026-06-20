@@ -1,0 +1,4 @@
+fence 6: 'def cleanup(root: etree._Element) -> None\n'
+html 10: '<details>\n<summary>Code:</summary>\n'
+fence 11: 'def cleanup(root: etree._Element) -> None:\n    for tag in REMOVE_TAGS:\n        for elem in root.iter(tag):\n            parent = elem.getparent()\n            if parent is not None:\n                parent.remove(elem)\n'
+html 12: '</details>\n'

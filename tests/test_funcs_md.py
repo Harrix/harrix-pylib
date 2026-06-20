@@ -1613,6 +1613,32 @@ def test_remove_toc_content() -> None:
     assert md_after == h.md.remove_toc_content(md)
 
 
+def test_remove_toc_content_removes_multiple_consecutive_tocs() -> None:
+    toc = "<details>\n<summary>📖 Contents ⬇️</summary>\n\n## Contents\n\n- [Section](#section)\n\n</details>"
+    md = f"---\nlang: en\n---\n\n# Title\n\n{toc}\n\n{toc}\n\n## Section\n"
+    result = h.md.remove_toc_content(md)
+    assert "<details>" not in result
+    assert result.count("## Contents") == 0
+    assert "## Section" in result
+
+
+def test_remove_toc_content_handles_blank_line_after_details() -> None:
+    toc = "<details>\n\n<summary>📖 Contents ⬇️</summary>\n\n## Contents\n\n- [Section](#section)\n\n</details>"
+    md = f"---\nlang: en\n---\n\n# Title\n\n{toc}\n\n## Section\n"
+    result = h.md.remove_toc_content(md)
+    assert "<details>" not in result
+    assert "## Section" in result
+
+
+def test_generate_toc_with_links_content_replaces_multiple_tocs() -> None:
+    toc = "<details>\n\n<summary>📖 Contents ⬇️</summary>\n\n## Contents\n\n- [Section](#section)\n\n</details>"
+    md = f"---\nlang: en\n---\n\n# Title\n\n{toc}\n\n{toc}\n\n## Section\n\nText.\n"
+    result = h.md.generate_toc_with_links_content(md)
+    assert result.count("<details>") == 1
+    assert result.count("## Contents") == 1
+    assert "## Section" in result
+
+
 def test_remove_yaml_and_code_content() -> None:
     md = Path(h.dev.get_project_root() / "tests/data/remove_yaml_and_code_content.md").read_text(encoding="utf8")
     md_clean = h.md.remove_yaml_and_code_content(md)

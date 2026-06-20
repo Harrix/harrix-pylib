@@ -35,13 +35,16 @@ Install the following software:
 
    ```shell
    mkdir C:/GitHub
+
    cd C:/GitHub
-   git clone https://github.com/Harrix/harrix-pylib.git
+
+   git clone <https://github.com/Harrix/harrix-pylib.git>
+
    ```
 
 2. Open the folder `C:/GitHub/harrix-pylib` in Cursor (or VSCode).
 
-3. Open a terminal `Ctrl` + `` ` ``.
+3. Open a terminal `Ctrl` + ```.
 
 4. Run `uv sync`.
 

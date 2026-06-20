@@ -28,6 +28,9 @@ lang: en
 - [🔧 Function `delete_g_md_files_recursively`](#-function-delete_g_md_files_recursively)
 - [🔧 Function `download_and_replace_images`](#-function-download_and_replace_images)
 - [🔧 Function `download_and_replace_images_content`](#-function-download_and_replace_images_content)
+- [🔧 Function `format_markdown`](#-function-format_markdown)
+- [🔧 Function `format_markdown_content`](#-function-format_markdown_content)
+- [🔧 Function `format_markdown_folder`](#-function-format_markdown_folder)
 - [🔧 Function `format_quotes_as_markdown_content`](#-function-format_quotes_as_markdown_content)
 - [🔧 Function `format_yaml`](#-function-format_yaml)
 - [🔧 Function `format_yaml_content`](#-function-format_yaml_content)
@@ -60,6 +63,7 @@ lang: en
 - [🔧 Function `sort_sections_content`](#-function-sort_sections_content)
 - [🔧 Function `split_toc_content`](#-function-split_toc_content)
 - [🔧 Function `split_yaml_content`](#-function-split_yaml_content)
+- [🔧 Function `_is_toc_details_open`](#-function-_is_toc_details_open)
 
 </details>
 
@@ -1396,6 +1400,94 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
 
 </details>
 
+## 🔧 Function `format_markdown`
+
+```python
+def format_markdown(filename: Path | str) -> str
+```
+
+Format a Markdown file in place when content changes.
+
+Args:
+
+- `filename` (`Path | str`): Path to the Markdown file.
+- `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+
+Returns:
+
+- `str`: Status message.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def format_markdown(filename: Path | str, *, end_of_line: str = "crlf") -> str:
+    path = Path(filename)
+    document = read_markdown_text(path)
+    document_new = format_markdown_content(document, end_of_line=end_of_line)
+    if document != document_new:
+        path.write_text(document_new, encoding="utf-8", newline="")
+        return f"✅ File {path} applied."
+    return "File is not changed."
+```
+
+</details>
+
+## 🔧 Function `format_markdown_content`
+
+```python
+def format_markdown_content(markdown_text: str) -> str
+```
+
+Format Markdown content using the harrix-pylib markdown formatter.
+
+Args:
+
+- `markdown_text` (`str`): Markdown source text.
+- `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+
+Returns:
+
+- `str`: Formatted Markdown text.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def format_markdown_content(markdown_text: str, *, end_of_line: str = "crlf") -> str:
+    return _format_markdown_content(markdown_text, end_of_line=end_of_line)
+```
+
+</details>
+
+## 🔧 Function `format_markdown_folder`
+
+```python
+def format_markdown_folder(folder: Path | str) -> str
+```
+
+Recursively format Markdown files in a folder.
+
+Args:
+
+- `folder` (`Path | str`): Directory containing Markdown files.
+- `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+
+Returns:
+
+- `str`: Newline-separated status messages.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def format_markdown_folder(folder: Path | str, *, end_of_line: str = "crlf") -> str:
+    formatter = functools.partial(format_markdown, end_of_line=end_of_line)
+    return h.file.apply_func(folder, ".md", formatter)
+```
+
+</details>
+
 ## 🔧 Function `format_quotes_as_markdown_content`
 
 ```python
@@ -1515,9 +1607,7 @@ print(h.md.format_yaml(path))
 ```python
 def format_yaml(filename: Path | str) -> str:
     filename = Path(filename)
-    with filename.open(encoding="utf-8") as f:
-        document = f.read()
-
+    document = read_markdown_text(filename)
     document_new = format_yaml_content(document)
 
     if document != document_new:
@@ -1566,6 +1656,7 @@ print(h.md.format_yaml_content(text))
 
 ```python
 def format_yaml_content(markdown_text: str) -> str:
+    markdown_text = normalize_line_endings(markdown_text.lstrip("\ufeff"))
     yaml_md, content_md = split_yaml_content(markdown_text)
 
     # If no YAML front matter exists, return original text
@@ -2659,18 +2750,9 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     old_toc_position = None
 
     for i, line in enumerate(lines):
-        # Check for TOC opening tag (TOC cannot be inside code blocks)
-        if line.strip() == "<details>":
-            next_line_idx = i + 1
-            if (
-                next_line_idx < len(lines)
-                and "<summary>" in lines[next_line_idx]
-                and (
-                    "📖 Contents" in lines[next_line_idx] or "📖 Содержание ⬇️" in lines[next_line_idx]  # ignore: HP001
-                )
-            ):
-                old_toc_position = i
-                break
+        if _is_toc_details_open(lines, i):
+            old_toc_position = i
+            break
 
     # Delete old TOC and its header
     content_without_yaml = remove_yaml_content(remove_toc_content(markdown_text))
@@ -3360,40 +3442,41 @@ print(h.md.remove_toc_content(text))
 def remove_toc_content(markdown_text: str) -> str:
     yaml_md, _ = split_yaml_content(markdown_text)
 
-    # Delete TOC section enclosed in <details> tags
+    # Delete TOC section enclosed in <details> tags (all consecutive TOC blocks).
     new_lines = []
     lines = remove_yaml_content(markdown_text).splitlines()
     in_toc_section = False
-    toc_section_found = False
+    had_toc = False
+    skip_blank_after_toc = False
 
-    for i, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
+    for index, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
         if is_code_block:
-            new_lines.append(line)
+            if not in_toc_section:
+                new_lines.append(line)
             continue
 
-        # Check for TOC opening tag
-        if not toc_section_found and line.strip() == "<details>":
-            next_line_idx = i + 1
-            if (
-                next_line_idx < len(lines)
-                and "<summary>" in lines[next_line_idx]
-                and (
-                    "📖 Contents" in lines[next_line_idx] or "📖 Содержание ⬇️" in lines[next_line_idx]  # ignore: HP001
-                )
-            ):
-                in_toc_section = True
-                toc_section_found = True
+        if skip_blank_after_toc:
+            if not line.strip():
                 continue
+            skip_blank_after_toc = False
 
-        # Check for TOC closing tag
+        if not in_toc_section and _is_toc_details_open(lines, index):
+            in_toc_section = True
+            had_toc = True
+            continue
+
         if in_toc_section and line.strip() == "</details>":
             in_toc_section = False
+            skip_blank_after_toc = True
             continue
 
-        if not in_toc_section and (
-            not toc_section_found or len(new_lines) == 0 or new_lines[-1].strip() or line.strip()
-        ):
-            new_lines.append(line)
+        if in_toc_section:
+            continue
+
+        if had_toc and not new_lines and not line.strip():
+            continue
+
+        new_lines.append(line)
 
     content_without_yaml = "\n".join(new_lines)
     if content_without_yaml and content_without_yaml[-1] != "\n":
@@ -4209,6 +4292,34 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     if len(parts) < min_count_parts:
         return "", markdown_text
     return f"---{parts[1]}---", parts[2].lstrip()
+```
+
+</details>
+
+## 🔧 Function `_is_toc_details_open`
+
+```python
+def _is_toc_details_open(lines: list[str], index: int) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_toc_details_open(lines: list[str], index: int) -> bool:
+    if index >= len(lines) or lines[index].strip() != "<details>":
+        return False
+    scan = index + 1
+    while scan < len(lines) and not lines[scan].strip():
+        scan += 1
+    if scan >= len(lines):
+        return False
+    summary_line = lines[scan]
+    return "<summary>" in summary_line and (
+        "📖 Contents" in summary_line or "📖 Содержание" in summary_line  # ignore: HP001
+    )
 ```
 
 </details>

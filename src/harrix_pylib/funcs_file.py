@@ -19,7 +19,7 @@ def all_to_parent_folder(path: Path | str) -> str:
     Args:
 
     - `path` (`Path | str`): The path to the folder whose subfolders you want to flatten.
-      Can be either a `Path` object or a string.
+    Can be either a `Path` object or a string.
 
     Returns:
 
@@ -124,10 +124,10 @@ def apply_func(
     Args:
 
     - `path` (`Path | str`): The directory path where the files will be searched.
-      If provided as a string, it will be converted to a Path object.
+    If provided as a string, it will be converted to a Path object.
     - `ext` (`str`): The file extension to filter files. For example, ".txt".
     - `func` (`Callable`): A function that takes a single argument (the file path as a string)
-      and performs an operation on the file. It may return a value.
+    and performs an operation on the file. It may return a value.
 
     Returns:
 
@@ -136,10 +136,10 @@ def apply_func(
     Note:
 
     - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
-      are ignored during processing.
+    are ignored during processing.
     - Hidden files and folders (those with names starting with a dot) are ignored during processing.
     - Optional `skip_rel_prefixes` skips files whose path relative to the resolved root starts with one
-      of the given tuples (for example ``(("install", "dependencies"),)``).
+    of the given tuples (for example ``(("install", "dependencies"),)``).
     - The function handles different return types from the `func` parameter:
       - If `None`: Shows a simple success message
       - If `str`: Appends the string to the success message
@@ -263,10 +263,10 @@ def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -
     Args:
 
     - `path` (`Path | str`): The directory path where the files will be searched.
-      If provided as a string, it will be converted to a Path object.
+    If provided as a string, it will be converted to a Path object.
     - `ext` (`str`): The file extension to filter files. For example, ".md".
     - `func` (`Callable[[Path | str], list]`): A function that takes a file path and returns a list
-      representing check results or errors.
+    representing check results or errors.
 
     Returns:
 
@@ -275,7 +275,7 @@ def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -
     Note:
 
     - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
-      are ignored during processing.
+    are ignored during processing.
     - Hidden files and folders (those with names starting with a dot) are ignored during processing.
 
     Example:
@@ -364,12 +364,12 @@ def collect_text_files_to_markdown(file_paths: Sequence[str | Path], base_folder
 
     - `file_paths` (`Sequence[str | Path]`): File paths (absolute or relative) to text files.
     - `base_folder` (`str | Path | None`, *optional*): A base directory to strip from file paths
-      in the output. Defaults to `None`.
+    in the output. Defaults to `None`.
 
     Returns:
 
     - `str`: A markdown string containing all files with fenced code blocks,
-      safe for files that already contain backticks.
+    safe for files that already contain backticks.
 
     Example:
 
@@ -547,10 +547,10 @@ def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = Fals
 
     - `path` (`Path | str`): The root folder path to start the listing from.
     - `is_ignore_hidden_folders` (`bool`): If `True`, hidden folders and files (starting with a dot or
-      matching common ignore patterns like `.git`, `__pycache__`, `node_modules`, etc.) are ignored.
-      Defaults to `False`.
+    matching common ignore patterns like `.git`, `__pycache__`, `node_modules`, etc.) are ignored.
+    Defaults to `False`.
     - `is_only_files` (`bool`): If `True`, only files from the current directory are listed without
-      entering subdirectories. Defaults to `False`.
+    entering subdirectories. Defaults to `False`.
 
     Returns:
 
@@ -559,7 +559,7 @@ def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = Fals
     Note:
 
     - This function uses recursion to traverse folders. It handles `PermissionError`
-      by excluding folders without permission.
+    by excluding folders without permission.
     - Files are listed with their relative paths from the root directory.
     - When `is_ignore_hidden_folders` is `True`, ignored folders are completely skipped.
     - When `is_only_files` is `True`, only files from the current directory are processed.
@@ -639,7 +639,7 @@ def open_file_or_folder(path: Path | str) -> None:
 
     - Ensure the path provided is valid and accessible.
     - If the path does not exist or cannot be opened, the function might raise an exception,
-      depending on the underlying command's behavior.
+    depending on the underlying command's behavior.
 
     Example:
 
@@ -1783,9 +1783,9 @@ def should_ignore_path(
 
     - `path` (`Path | str`): The path to check for ignoring.
     - `additional_patterns` (`list[str] | None`): Additional patterns to ignore. Defaults to `None`.
-      Patterns may be a single path segment (for example ``node_modules``) or several segments joined with
-      ``/`` (for example ``install/dependencies``); multi-segment patterns match any consecutive subsequence
-      of ``path.parts`` (including paths nested below that folder).
+    Patterns may be a single path segment (for example ``node_modules``) or several segments joined with
+    ``/`` (for example ``install/dependencies``); multi-segment patterns match any consecutive subsequence
+    of ``path.parts`` (including paths nested below that folder).
     - `is_ignore_hidden` (`bool`): Whether to ignore hidden files/folders (starting with dot). Defaults to `True`.
 
     Returns:
@@ -1882,8 +1882,8 @@ def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False
 
     - `path` (`Path | str`): The root folder path to start the tree from.
     - `is_ignore_hidden_folders` (`bool`): If `True`, hidden folders and files (starting with a dot or
-      matching common ignore patterns like `.git`, `__pycache__`, `node_modules`, etc.) are shown in the tree
-      but their contents are not explored. Defaults to `False`.
+    matching common ignore patterns like `.git`, `__pycache__`, `node_modules`, etc.) are shown in the tree
+    but their contents are not explored. Defaults to `False`.
 
     Returns:
 
@@ -1892,7 +1892,7 @@ def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False
     Note:
 
     - This function uses recursion to traverse folders. It handles `PermissionError`
-      by excluding folders without permission.
+    by excluding folders without permission.
     - Uses ASCII characters to represent tree branches (`├──`, `└──`, `│`).
     - When `is_ignore_hidden_folders` is `True`, ignored folders are displayed but not traversed.
 

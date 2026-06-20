@@ -1,0 +1,8 @@
+tokens: ['fence']
+
+---
+
+```python
+
+class X
+```

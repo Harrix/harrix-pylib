@@ -1,0 +1,8 @@
+<details>
+<summary>Code:</summary>
+
+```python
+x = 1
+```
+
+</details>

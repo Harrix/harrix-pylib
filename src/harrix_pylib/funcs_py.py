@@ -232,16 +232,16 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
     Args:
 
     - `folder` (`Path | str`): The path to the project folder, can be either a `Path` object or a string. Defaults to
-      the current directory if not specified.
+    the current directory if not specified.
     - `beginning_of_md` (`str`): The content to prepend to each documentation file. This could include headers
-      or other Markdown formatting.
+    or other Markdown formatting.
     - `domain` (`str`): The domain or context in which the project is used, which might influence how
-      documentation is generated or formatted.
+    documentation is generated or formatted.
 
     Returns:
 
     - `str`: A string containing a summary of the operations performed, with each line indicating which file
-      was processed or created.
+    was processed or created.
 
     Example:
 
@@ -352,12 +352,12 @@ def generate_md_docs_content(file_path: Path | str) -> str:
     Args:
 
     - `file_path` (`Path | str`): The path to the Python file to be documented, can be either
-      a `Path` object or a string.
+    a `Path` object or a string.
 
     Returns:
 
     - `str`: A Markdown string containing documentation for the file, including its classes, methods,
-      and functions with their signatures, docstrings, and implementation details.
+    and functions with their signatures, docstrings, and implementation details.
 
     Example:
 
@@ -600,9 +600,9 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
 
     - This function uses `libcst` for parsing and manipulating Python ASTs.
     - Sorting prioritizes initial non-class, non-function statements, followed by sorted classes,
-      then sorted functions, and finally any trailing statements.
+    then sorted functions, and finally any trailing statements.
     - Within classes, `__init__` method is placed first among methods, followed by other methods
-      sorted alphabetically, with single underscore methods at the end.
+    sorted alphabetically, with single underscore methods at the end.
     - Functions and methods starting with single underscore are placed after regular ones.
 
     Example:

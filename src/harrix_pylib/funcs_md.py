@@ -13,6 +13,8 @@ import yaml
 from requests import RequestException
 
 import harrix_pylib as h
+from harrix_pylib.md_format.formatter import format_markdown_content as _format_markdown_content
+from harrix_pylib.md_format.formatter import normalize_line_endings, read_markdown_text
 
 
 def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_content: str) -> tuple[str, Path]:
@@ -542,7 +544,7 @@ def collect_subfolder_md(subfolder: Path, should_include_file: Callable[[Path], 
 
     - `subfolder` (`Path`): Subfolder to collect Markdown files from.
     - `should_include_file` (`Callable[[Path], bool]`): Predicate that decides whether
-      a file should be included.
+    a file should be included.
 
     Returns:
 
@@ -551,7 +553,7 @@ def collect_subfolder_md(subfolder: Path, should_include_file: Callable[[Path], 
     Note:
 
     - Used by `combine_markdown_files()` in recursive mode when no ``*.g.md`` file
-      is present in the subfolder.
+    is present in the subfolder.
 
     Example:
 
@@ -598,7 +600,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
     - Local links and image paths will be adjusted to maintain proper references.
     - The combined file will be named `_foldername.g.md`.
     - If a subfolder contains a `.g.md` file, that file will be used instead of processing
-      individual Markdown files in that subfolder.
+    individual Markdown files in that subfolder.
 
     Example:
 
@@ -802,7 +804,7 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_m
 
     - `folder_path` (`str` or `Path`): Path to the root folder to process recursively.
     - `is_delete_g_md_files` (`bool`, optional): Whether to delete existing `.g.md` files before processing.
-      Defaults to `True`. Note: `*.include.g.md` files will not be deleted.
+    Defaults to `True`. Note: `*.include.g.md` files will not be deleted.
 
     Returns:
 
@@ -811,16 +813,16 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_m
     Note:
 
     - All `.g.md` files (except `*.include.g.md`) in the entire folder structure will be deleted
-      before processing (if `is_delete_g_md_files` is `True`).
+    before processing (if `is_delete_g_md_files` is `True`).
     - Files with `*.include.g.md` extension will be included in processing.
     - Hidden folders (starting with `.`) will be skipped.
     - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
-      are ignored during processing.
+    are ignored during processing.
     - Files will be combined in a folder if either:
       1. The folder directly contains at least 2 Markdown files, or
       2. The folder and its subfolders together contain at least 2 Markdown files.
     - Folders are processed from the deepest level up, allowing parent folders to use
-      already combined .g.md files from subfolders.
+    already combined .g.md files from subfolders.
 
     Example:
 
@@ -937,7 +939,7 @@ def decrease_heading_level_content(markdown_text: str) -> str:
     Returns:
 
     - `str`: The updated Markdown text with decreased heading levels. The YAML header,
-      if present, is preserved and included at the beginning of the output.
+    if present, is preserved and included at the beginning of the output.
 
     Note:
 
@@ -1163,6 +1165,61 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
     return yaml_md + "\n\n" + content_md
 
 
+def format_markdown(filename: Path | str, *, end_of_line: str = "crlf") -> str:
+    """Format a Markdown file in place when content changes.
+
+    Args:
+
+    - `filename` (`Path | str`): Path to the Markdown file.
+    - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+
+    Returns:
+
+    - `str`: Status message.
+
+    """
+    path = Path(filename)
+    document = read_markdown_text(path)
+    document_new = format_markdown_content(document, end_of_line=end_of_line)
+    if document != document_new:
+        path.write_text(document_new, encoding="utf-8", newline="")
+        return f"✅ File {path} applied."
+    return "File is not changed."
+
+
+def format_markdown_content(markdown_text: str, *, end_of_line: str = "crlf") -> str:
+    """Format Markdown content using the harrix-pylib markdown formatter.
+
+    Args:
+
+    - `markdown_text` (`str`): Markdown source text.
+    - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+
+    Returns:
+
+    - `str`: Formatted Markdown text.
+
+    """
+    return _format_markdown_content(markdown_text, end_of_line=end_of_line)
+
+
+def format_markdown_folder(folder: Path | str, *, end_of_line: str = "crlf") -> str:
+    """Recursively format Markdown files in a folder.
+
+    Args:
+
+    - `folder` (`Path | str`): Directory containing Markdown files.
+    - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+
+    Returns:
+
+    - `str`: Newline-separated status messages.
+
+    """
+    formatter = functools.partial(format_markdown, end_of_line=end_of_line)
+    return h.file.apply_func(folder, ".md", formatter)
+
+
 def format_quotes_as_markdown_content(markdown_text: str) -> str:
     """Convert raw text with quotes into Markdown format.
 
@@ -1262,9 +1319,7 @@ def format_yaml(filename: Path | str) -> str:
 
     """
     filename = Path(filename)
-    with filename.open(encoding="utf-8") as f:
-        document = f.read()
-
+    document = read_markdown_text(filename)
     document_new = format_yaml_content(document)
 
     if document != document_new:
@@ -1284,7 +1339,7 @@ def format_yaml_content(markdown_text: str) -> str:
     Returns:
 
     - `str`: The formatted YAML content followed by the Markdown content.
-      If no YAML front matter exists, returns the original text unchanged.
+    If no YAML front matter exists, returns the original text unchanged.
 
     Note:
 
@@ -1302,6 +1357,7 @@ def format_yaml_content(markdown_text: str) -> str:
     ```
 
     """
+    markdown_text = normalize_line_endings(markdown_text.lstrip("\ufeff"))
     yaml_md, content_md = split_yaml_content(markdown_text)
 
     # If no YAML front matter exists, return original text
@@ -1394,7 +1450,7 @@ def generate_author_book(filename: Path | str) -> str | None:
 
     - If the file does not exist or is not a Markdown file, the function will return `None`.
     - If the file has been modified, it returns a message indicating the changes; otherwise,
-      it indicates no changes were made.
+    it indicates no changes were made.
 
     Example:
 
@@ -2001,7 +2057,7 @@ def generate_summaries(folder: Path | str) -> str:
     Notes:
 
     - The function looks for Markdown files with years in their names (e.g., "2023.md",
-      "Before-2013-(Cinema).md", "After_2024.md")
+    "Before-2013-(Cinema).md", "After_2024.md")
     - Book entries are identified by second-level headings (## Title)
     - Ratings are extracted from headings in format "## Title: N" where N is a number
     - YAML frontmatter from the first processed file will be copied to the summary files
@@ -2199,7 +2255,7 @@ def generate_toc_with_links(filename: Path | str) -> str:
     Returns:
 
     - `str`: A string containing the status of the TOC operation, including whether the TOC was refreshed or
-      if the file was unchanged.
+    if the file was unchanged.
 
     Note:
 
@@ -2300,18 +2356,9 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     old_toc_position = None
 
     for i, line in enumerate(lines):
-        # Check for TOC opening tag (TOC cannot be inside code blocks)
-        if line.strip() == "<details>":
-            next_line_idx = i + 1
-            if (
-                next_line_idx < len(lines)
-                and "<summary>" in lines[next_line_idx]
-                and (
-                    "📖 Contents" in lines[next_line_idx] or "📖 Содержание ⬇️" in lines[next_line_idx]  # ignore: HP001
-                )
-            ):
-                old_toc_position = i
-                break
+        if _is_toc_details_open(lines, i):
+            old_toc_position = i
+            break
 
     # Delete old TOC and its header
     content_without_yaml = remove_yaml_content(remove_toc_content(markdown_text))
@@ -2373,12 +2420,12 @@ def get_set_variables_from_yaml(folder_path: Path | str) -> list[str]:
     Returns:
 
     - `list[str]`: Sorted list of all variables from YAML from all Markdown files.
-      Example: `['categories', 'date', 'tags']`.
+    Example: `['categories', 'date', 'tags']`.
 
     Note:
 
     - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
-      are ignored during processing.
+    are ignored during processing.
     - Hidden files and folders (those with names starting with a dot) are ignored during processing.
     - The function recursively searches all subfolders.
 
@@ -2504,7 +2551,7 @@ def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
     Note:
 
     - This function identifies code blocks by looking for lines with three or more backticks (`` ` ``),
-      optionally preceded by leading whitespace (e.g. fenced blocks inside list items).
+    optionally preceded by leading whitespace (e.g. fenced blocks inside list items).
     - Code blocks can be nested, and this function will toggle the `code_block_delimiter` on matching delimiters.
 
     Example:
@@ -2556,7 +2603,7 @@ def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
     Returns:
 
     - `Iterator[tuple[str, bool]]`: An iterator yielding tuples where the first element is a segment of the line,
-      and the second is a boolean indicating whether this segment is part of an inline code block.
+    and the second is a boolean indicating whether this segment is part of an inline code block.
 
     Example:
 
@@ -2621,7 +2668,7 @@ def increase_heading_level_content(markdown_text: str) -> str:
     Returns:
 
     - `str`: The updated Markdown text with increased heading levels. The YAML header,
-      if present, is preserved and included at the beginning of the output.
+    if present, is preserved and included at the beginning of the output.
 
     Note:
 
@@ -2695,7 +2742,7 @@ def iter_note_md_in_folder(folder: Path | str, *, dir_name: str | None = None) -
 
     - `folder` (`Path | str`): Directory to scan for note files.
     - `dir_name` (`str | None`): Folder name used to filter ``_{dir_name}*`` files.
-      Defaults to ``folder.name``.
+    Defaults to ``folder.name``.
 
     Returns:
 
@@ -2881,40 +2928,41 @@ def remove_toc_content(markdown_text: str) -> str:
     """
     yaml_md, _ = split_yaml_content(markdown_text)
 
-    # Delete TOC section enclosed in <details> tags
+    # Delete TOC section enclosed in <details> tags (all consecutive TOC blocks).
     new_lines = []
     lines = remove_yaml_content(markdown_text).splitlines()
     in_toc_section = False
-    toc_section_found = False
+    had_toc = False
+    skip_blank_after_toc = False
 
-    for i, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
+    for index, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
         if is_code_block:
-            new_lines.append(line)
+            if not in_toc_section:
+                new_lines.append(line)
             continue
 
-        # Check for TOC opening tag
-        if not toc_section_found and line.strip() == "<details>":
-            next_line_idx = i + 1
-            if (
-                next_line_idx < len(lines)
-                and "<summary>" in lines[next_line_idx]
-                and (
-                    "📖 Contents" in lines[next_line_idx] or "📖 Содержание ⬇️" in lines[next_line_idx]  # ignore: HP001
-                )
-            ):
-                in_toc_section = True
-                toc_section_found = True
+        if skip_blank_after_toc:
+            if not line.strip():
                 continue
+            skip_blank_after_toc = False
 
-        # Check for TOC closing tag
+        if not in_toc_section and _is_toc_details_open(lines, index):
+            in_toc_section = True
+            had_toc = True
+            continue
+
         if in_toc_section and line.strip() == "</details>":
             in_toc_section = False
+            skip_blank_after_toc = True
             continue
 
-        if not in_toc_section and (
-            not toc_section_found or len(new_lines) == 0 or new_lines[-1].strip() or line.strip()
-        ):
-            new_lines.append(line)
+        if in_toc_section:
+            continue
+
+        if had_toc and not new_lines and not line.strip():
+            continue
+
+        new_lines.append(line)
 
     content_without_yaml = "\n".join(new_lines)
     if content_without_yaml and content_without_yaml[-1] != "\n":
@@ -3038,7 +3086,7 @@ def replace_section(filename: Path | str, replace_content: str, title_section: s
     - If `start_index` or `end_index` is not found, the file remains unchanged.
     - The function assumes that the file uses UTF-8 encoding for reading and writing.
     - If no section matches the `title_section`, or if the section spans till the end of the file,
-      only the content up to `end_index` (or the end of the file) will be replaced.
+    only the content up to `end_index` (or the end of the file) will be replaced.
 
     Example:
 
@@ -3087,7 +3135,7 @@ def replace_section_content(
 
     - If `start_index` or `end_index` is not found, the text remains unchanged.
     - If no section matches the `title_section`, or if the section spans till the end of the text,
-      only the content up to `end_index` (or the end of the file) will be replaced.
+    only the content up to `end_index` (or the end of the file) will be replaced.
 
     Example:
 
@@ -3198,24 +3246,24 @@ def sort_sections(filename: Path | str, *, is_sort_section_from_yaml: bool = Fal
     Args:
 
     - `filename` (`Path` | `str`): The path to the Markdown file to be processed. Can be either a `Path`
-      object or a string representing the file path.
+    object or a string representing the file path.
     - `is_sort_section_from_yaml` (`bool`): Whether to check YAML front matter for `sort-section: true`
-      before sorting. If `True`, sorting only occurs when YAML contains `sort-section: true`.
-      If `False`, sorting is always performed. Defaults to `False`.
+    before sorting. If `True`, sorting only occurs when YAML contains `sort-section: true`.
+    If `False`, sorting is always performed. Defaults to `False`.
 
     Returns:
 
     - `str`: A message indicating whether the file was sorted and saved (`"✅ File {filename} applied."`)
-      or if no changes were made (`"File is not changed."`).
+    or if no changes were made (`"File is not changed."`).
 
     Notes:
 
     - The function assumes that sections are marked by `##` at the beginning of a line,
-      and code blocks are delimited by triple backticks (```).
+    and code blocks are delimited by triple backticks (```).
     - If there's no YAML front matter, the entire document is considered content.
     - The sorting of sections is done alphabetically, ignoring any code blocks or other formatting within the section.
     - When `is_sort_section_from_yaml=True`, the YAML parameter `sort-section` must be set to `true`
-      for sorting to occur.
+    for sorting to occur.
 
     Example:
 
@@ -3301,8 +3349,8 @@ def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool
 
     - `markdown_text` (`str`): The Markdown text to process.
     - `is_sort_section_from_yaml` (`bool`): Whether to check YAML front matter for `sort-section: true`
-      before sorting. If `True`, sorting only occurs when YAML contains `sort-section: true`.
-      If `False`, sorting is always performed. Defaults to `False`.
+    before sorting. If `True`, sorting only occurs when YAML contains `sort-section: true`.
+    If `False`, sorting is always performed. Defaults to `False`.
 
     Returns:
 
@@ -3315,7 +3363,7 @@ def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool
     - Regular headings are sorted alphabetically.
     - Preserves `<details>...</details>` blocks that contain `<summary>📖 Contents ⬇️</summary>` (or in Russian).
     - When `is_sort_section_from_yaml=True`, the YAML parameter `sort-section` must be set to `true`
-      for sorting to occur.
+    for sorting to occur.
 
     Example:
 
@@ -3614,7 +3662,7 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     Note:
 
     - If there is no '---' or only one '---' in the note, the function returns an empty string for YAML content
-      and the entire note for the content part.
+    and the entire note for the content part.
     - The function does not validate if the YAML content is properly formatted YAML.
 
     Example:
@@ -3634,3 +3682,17 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     if len(parts) < min_count_parts:
         return "", markdown_text
     return f"---{parts[1]}---", parts[2].lstrip()
+
+
+def _is_toc_details_open(lines: list[str], index: int) -> bool:
+    if index >= len(lines) or lines[index].strip() != "<details>":
+        return False
+    scan = index + 1
+    while scan < len(lines) and not lines[scan].strip():
+        scan += 1
+    if scan >= len(lines):
+        return False
+    summary_line = lines[scan]
+    return "<summary>" in summary_line and (
+        "📖 Contents" in summary_line or "📖 Содержание" in summary_line  # ignore: HP001
+    )

@@ -375,41 +375,6 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H023: No empty line between paragraphs
-        # =====================================================================
-        no_empty_between_file = temp_path / "no_empty_between.md"
-        no_empty_between_file.write_text(
-            "---\nlang: en\n---\n\nFirst paragraph.\nSecond paragraph.\n",
-            encoding="utf-8",
-        )
-        errors = checker.check(no_empty_between_file, select={"H023"})
-        assert any("H023" in e for e in errors)
-
-        # With empty line between paragraphs — no error
-        with_empty_between_file = temp_path / "with_empty_between.md"
-        with_empty_between_file.write_text(
-            "---\nlang: en\n---\n\nFirst paragraph.\n\nSecond paragraph.\n",
-            encoding="utf-8",
-        )
-        errors = checker.check(with_empty_between_file, select={"H023"})
-        assert not errors
-
-        # List items without empty line — no H023 (list context)
-        list_file = temp_path / "list_no_empty.md"
-        list_file.write_text("---\nlang: en\n---\n\n* Item one\n* Item two\n", encoding="utf-8")
-        errors = checker.check(list_file, select={"H023"})
-        assert not errors
-
-        # Content inside <details> block — no H023 (details/summary are exceptions)
-        details_block_file = temp_path / "details_block.md"
-        details_block_file.write_text(
-            "---\nlang: en\n---\n\n<details>\n<summary>📖 Содержание</summary>\n\n## Содержание\n\n</details>\n",
-            encoding="utf-8",
-        )
-        errors = checker.check(details_block_file, select={"H023"})
-        assert not errors, "H023 must not flag content inside <details> block"
-
-        # =====================================================================
         # H013: Missing colon before code block
         # =====================================================================
         no_colon_code_file = temp_path / "no_colon_code.md"
@@ -800,15 +765,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(normal_space_file, select={"H022"})
         assert not errors
         # =====================================================================
-        # H024: Capitalized Russian polite pronoun (ru only)
+        # H023: Capitalized Russian polite pronoun (ru only)
         # =====================================================================
         ru_vy_file = temp_path / "ru_vy.md"
         ru_vy_file.write_text(
             "---\nlang: ru\n---\n\nОбращаемся к Вам с предложением.\n",  # noqa: RUF001
             encoding="utf-8",
         )
-        errors = checker.check(ru_vy_file, select={"H024"})
-        assert any("H024" in e for e in errors)
+        errors = checker.check(ru_vy_file, select={"H023"})
+        assert any("H023" in e for e in errors)
 
         # "Вы" at sentence start is allowed (only flag mid-sentence)
         ru_vy_sentence_start_file = temp_path / "ru_vy_sentence_start.md"
@@ -816,161 +781,161 @@ def test_markdown_checker() -> None:
             "---\nlang: ru\n---\n\nВы можете это увидеть.\n\nТут Вам не рады.\n",  # noqa: RUF001
             encoding="utf-8",
         )
-        errors = checker.check(ru_vy_sentence_start_file, select={"H024"})
-        h024_errors = [e for e in errors if "H024" in e]
-        assert len(h024_errors) == 1, "Exactly one H024 (Вам in middle), not Вы at start"
-        assert "вам" in h024_errors[0].lower()
+        errors = checker.check(ru_vy_sentence_start_file, select={"H023"})
+        h023_errors = [e for e in errors if "H023" in e]
+        assert len(h023_errors) == 1, "Exactly one H023 (Вам in middle), not Вы at start"
+        assert "вам" in h023_errors[0].lower()
 
-        # Lowercase "вы" should not trigger H024
+        # Lowercase "вы" should not trigger H023
         ru_vy_lower_file = temp_path / "ru_vy_lower.md"
         ru_vy_lower_file.write_text(
             "---\nlang: ru\n---\n\nОбращаемся к вам с предложением.\n",  # noqa: RUF001
             encoding="utf-8",
         )
-        errors = checker.check(ru_vy_lower_file, select={"H024"})
+        errors = checker.check(ru_vy_lower_file, select={"H023"})
         assert not errors
 
-        # lang: en with "Вы" should not trigger H024 (rule only for ru)
+        # lang: en with "Вы" should not trigger H023 (rule only for ru)
         en_vy_file = temp_path / "en_vy.md"
         en_vy_file.write_text("---\nlang: en\n---\n\nSome text with Вы.\n", encoding="utf-8")
-        errors = checker.check(en_vy_file, select={"H024"})
+        errors = checker.check(en_vy_file, select={"H023"})
         assert not errors
 
-        # "Вы" inside inline code should not trigger H024
+        # "Вы" inside inline code should not trigger H023
         ru_vy_code_file = temp_path / "ru_vy_code.md"
         ru_vy_code_file.write_text(
             "---\nlang: ru\n---\n\nUse variable `Вы` in code.\n",
             encoding="utf-8",
         )
-        errors = checker.check(ru_vy_code_file, select={"H024"})
+        errors = checker.check(ru_vy_code_file, select={"H023"})
         assert not errors
 
-        # "Ваша" after « (direct speech) is sentence start — no H024
+        # "Ваша" after « (direct speech) is sentence start — no H023
         ru_vy_guillemet_file = temp_path / "ru_vy_guillemet.md"
         ru_vy_guillemet_file.write_text(
             "---\nlang: ru\n---\n\nВедущий говорит: «Ваша задача определить, сколько я показываю гаражей».\n",  # noqa: RUF001
             encoding="utf-8",
         )
-        errors = checker.check(ru_vy_guillemet_file, select={"H024"})
+        errors = checker.check(ru_vy_guillemet_file, select={"H023"})
         assert not errors
 
-        # "Ваша" after dash at line start (dialogue) is sentence start — no H024
+        # "Ваша" after dash at line start (dialogue) is sentence start — no H023
         ru_vy_dash_dialogue_file = temp_path / "ru_vy_dash_dialogue.md"
         ru_vy_dash_dialogue_file.write_text(
             "---\nlang: ru\n---\n\n— Ваша работа хороша.\n",
             encoding="utf-8",
         )
-        errors = checker.check(ru_vy_dash_dialogue_file, select={"H024"})
+        errors = checker.check(ru_vy_dash_dialogue_file, select={"H023"})
         assert not errors
 
         # =====================================================================
-        # H025: Latin x or Cyrillic x instead of ×  # noqa: RUF003
+        # H024: Latin x or Cyrillic x instead of ×  # noqa: RUF003
         # =====================================================================
         x_instead_file = temp_path / "x_instead.md"
         x_instead_file.write_text(
             "---\nlang: ru\n---\n\nSize 5 x 10 cm.\n",
             encoding="utf-8",
         )
-        errors = checker.check(x_instead_file, select={"H025"})
-        assert any("H025" in e for e in errors)
+        errors = checker.check(x_instead_file, select={"H024"})
+        assert any("H024" in e for e in errors)
 
-        # x86 and x64 should not trigger H025
+        # x86 and x64 should not trigger H024
         x86_file = temp_path / "x86.md"
         x86_file.write_text("---\nlang: en\n---\n\nSupport x86 and x64.\n", encoding="utf-8")
-        errors = checker.check(x86_file, select={"H025"})
+        errors = checker.check(x86_file, select={"H024"})
         assert not errors
 
-        # "2x Type-C", "1x USB" (digit + x + space) should not trigger H025
+        # "2x Type-C", "1x USB" (digit + x + space) should not trigger H024
         digit_x_file = temp_path / "digit_x.md"
         digit_x_file.write_text(
             "---\nlang: en\n---\n\n2x Type-C, 1x USB, 1x Micro SD.\n",
             encoding="utf-8",
         )
-        errors = checker.check(digit_x_file, select={"H025"})
+        errors = checker.check(digit_x_file, select={"H024"})
         assert not errors
 
-        # x inside inline code should not trigger H025
+        # x inside inline code should not trigger H024
         x_code_file = temp_path / "x_code.md"
         x_code_file.write_text("---\nlang: en\n---\n\nUse `x` variable.\n", encoding="utf-8")
-        errors = checker.check(x_code_file, select={"H025"})
+        errors = checker.check(x_code_file, select={"H024"})
         assert not errors
 
-        # x inside link URL (e.g. resolution 3840x2160) should not trigger H025
+        # x inside link URL (e.g. resolution 3840x2160) should not trigger H024
         x_link_file = temp_path / "x_link.md"
         x_link_file.write_text(
             "---\nlang: ru\n---\n\n[Отзывы](https://market.yandex.ru/product--noutbuk-15-6-3840x2160/123).\n",
             encoding="utf-8",
         )
-        errors = checker.check(x_link_file, select={"H025"})
+        errors = checker.check(x_link_file, select={"H024"})
         assert not errors
 
-        # x followed by digit (e.g. PCIe x4, x16) should not trigger H025
+        # x followed by digit (e.g. PCIe x4, x16) should not trigger H024
         x4_file = temp_path / "x4.md"
         x4_file.write_text(
             "---\nlang: ru\n---\n\nNVMe, PCIe 4.0 x4.\n",
             encoding="utf-8",
         )
-        errors = checker.check(x4_file, select={"H025"})
+        errors = checker.check(x4_file, select={"H024"})
         assert not errors
 
         # =====================================================================
-        # H026: Image ![ not at start of line
+        # H025: Image ![ not at start of line
         # =====================================================================
         image_not_start_file = temp_path / "image_not_start.md"
         image_not_start_file.write_text(
             "---\nlang: en\n---\n\nText ![alt](img.png)\n",
             encoding="utf-8",
         )
-        errors = checker.check(image_not_start_file, select={"H026"})
-        assert any("H026" in e for e in errors)
+        errors = checker.check(image_not_start_file, select={"H025"})
+        assert any("H025" in e for e in errors)
 
-        # Image at start of line should not trigger H026
+        # Image at start of line should not trigger H025
         image_start_file = temp_path / "image_start.md"
         image_start_file.write_text("---\nlang: en\n---\n\n![Alt](img.png)\n", encoding="utf-8")
-        errors = checker.check(image_start_file, select={"H026"})
+        errors = checker.check(image_start_file, select={"H025"})
         assert not errors
 
         # =====================================================================
-        # H028: Horizontal bar ―
+        # H026: Horizontal bar ―
         # =====================================================================
         horizontal_bar_file = temp_path / "horizontal_bar.md"
         horizontal_bar_file.write_text(
             "---\nlang: ru\n---\n\n— Привет!\n― Как дела?\n",
             encoding="utf-8",
         )
-        errors = checker.check(horizontal_bar_file, select={"H028"})
-        assert any("H028" in e for e in errors)
+        errors = checker.check(horizontal_bar_file, select={"H026"})
+        assert any("H026" in e for e in errors)
 
         # =====================================================================
-        # H029: Space after №
+        # H027: Space after №
         # =====================================================================
         numero_no_space_file = temp_path / "numero_no_space.md"
         numero_no_space_file.write_text(
             "---\nlang: ru\n---\n\n№1 и №2.\n",
             encoding="utf-8",
         )
-        errors = checker.check(numero_no_space_file, select={"H029"})
-        assert any("H029" in e for e in errors)
+        errors = checker.check(numero_no_space_file, select={"H027"})
+        assert any("H027" in e for e in errors)
 
-        # № with space should not trigger H029
+        # № with space should not trigger H027
         numero_space_ok_file = temp_path / "numero_space_ok.md"
         numero_space_ok_file.write_text(
             "---\nlang: ru\n---\n\n№ 1 и № 2.\n",
             encoding="utf-8",
         )
-        errors = checker.check(numero_space_ok_file, select={"H029"})
+        errors = checker.check(numero_space_ok_file, select={"H027"})
         assert not errors
 
         # =====================================================================
-        # H030: Question mark followed by period
+        # H028: Question mark followed by period
         # =====================================================================
         qmark_period_file = temp_path / "qmark_period.md"
         qmark_period_file.write_text("---\nlang: en\n---\n\nReally?.\n", encoding="utf-8")
-        errors = checker.check(qmark_period_file, select={"H030"})
-        assert any("H030" in e for e in errors)
+        errors = checker.check(qmark_period_file, select={"H028"})
+        assert any("H028" in e for e in errors)
 
-        # Normal "?" or "." should not trigger H030
+        # Normal "?" or "." should not trigger H028
         normal_punct_file = temp_path / "normal_punct.md"
         normal_punct_file.write_text("---\nlang: en\n---\n\nReally? Yes.\n", encoding="utf-8")
-        errors = checker.check(normal_punct_file, select={"H030"})
+        errors = checker.check(normal_punct_file, select={"H028"})
         assert not errors
