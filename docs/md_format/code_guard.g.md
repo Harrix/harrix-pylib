@@ -11,7 +11,7 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `CodeBlock`](#%EF%B8%8F-class-codeblock)
+- [🏛️ Class `CodeBlock`](#️-class-codeblock)
 - [🔧 Function `extract_code_blocks`](#-function-extract_code_blocks)
 - [🔧 Function `restore_code_blocks`](#-function-restore_code_blocks)
 - [🔧 Function `_join_lines`](#-function-_join_lines)

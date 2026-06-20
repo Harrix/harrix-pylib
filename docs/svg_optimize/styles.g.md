@@ -11,13 +11,13 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `StyleSheet`](#%EF%B8%8F-class-stylesheet)
-  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
-  - [⚙️ Method `collect`](#%EF%B8%8F-method-collect)
-  - [⚙️ Method `compute_style`](#%EF%B8%8F-method-compute_style)
-  - [⚙️ Method `inline_styles`](#%EF%B8%8F-method-inline_styles)
-  - [⚙️ Method `minify_defs`](#%EF%B8%8F-method-minify_defs)
-  - [⚙️ Method `_parse_inline`](#%EF%B8%8F-method-_parse_inline)
+- [🏛️ Class `StyleSheet`](#️-class-stylesheet)
+  - [⚙️ Method `__init__`](#️-method-__init__)
+  - [⚙️ Method `collect`](#️-method-collect)
+  - [⚙️ Method `compute_style`](#️-method-compute_style)
+  - [⚙️ Method `inline_styles`](#️-method-inline_styles)
+  - [⚙️ Method `minify_defs`](#️-method-minify_defs)
+  - [⚙️ Method `_parse_inline`](#️-method-_parse_inline)
 - [🔧 Function `_format_style`](#-function-_format_style)
 
 </details>

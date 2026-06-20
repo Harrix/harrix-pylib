@@ -20,6 +20,7 @@ lang: en
 - [🔧 Function `_join_blocks`](#-function-_join_blocks)
 - [🔧 Function `_list_is_loose`](#-function-_list_is_loose)
 - [🔧 Function `_list_item_is_loose`](#-function-_list_item_is_loose)
+- [🔧 Function `_readable_link_href`](#-function-_readable_link_href)
 - [🔧 Function `_render_block`](#-function-_render_block)
 - [🔧 Function `_render_blockquote`](#-function-_render_blockquote)
 - [🔧 Function `_render_fence`](#-function-_render_fence)
@@ -290,6 +291,29 @@ def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_in
 
 </details>
 
+## 🔧 Function `_readable_link_href`
+
+```python
+def _readable_link_href(href: str) -> str
+```
+
+Decode percent-encoded URL fragments for readable Markdown output.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _readable_link_href(href: str) -> str:
+    if href.startswith("#"):
+        return unquote(href, encoding="utf-8")
+    parts = urlsplit(href)
+    if not parts.fragment:
+        return href
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, unquote(parts.fragment, encoding="utf-8")))
+```
+
+</details>
+
 ## 🔧 Function `_render_block`
 
 ```python
@@ -463,7 +487,7 @@ def _render_inline_token(children: list[Token], index: int) -> tuple[str, int]:
             return f'![{alt}]({src} "{title}")', index + 1
         return f"![{alt}]({src})", index + 1
     if child.type == "link_open":
-        href = str(child.attrGet("href") or "")
+        href = _readable_link_href(str(child.attrGet("href") or ""))
         title = child.attrGet("title")
         inner_parts: list[str] = []
         inner_index = index + 1

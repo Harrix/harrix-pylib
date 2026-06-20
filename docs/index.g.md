@@ -257,17 +257,17 @@ Doc: [img_tools.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_
 
 Doc: [markdown_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/markdown_checker.g.md)
 
-| Function/Class                                                                                                                            | Description                                                            |
-| ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| 🏛️ Class [`MarkdownChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/markdown_checker.g.md#%EF%B8%8F-class-markdownchecker) | Class for checking Markdown files for compliance with specified rules. |
+| Function/Class                                                                                                                   | Description                                                            |
+| -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 🏛️ Class [`MarkdownChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/markdown_checker.g.md#️-class-markdownchecker) | Class for checking Markdown files for compliance with specified rules. |
 
 ### 📄 File `python_checker.py`
 
 Doc: [python_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/python_checker.g.md)
 
-| Function/Class                                                                                                                      | Description                                                          |
-| ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 🏛️ Class [`PythonChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/python_checker.g.md#%EF%B8%8F-class-pythonchecker) | Class for checking Python files for compliance with specified rules. |
+| Function/Class                                                                                                             | Description                                                          |
+| -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 🏛️ Class [`PythonChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/python_checker.g.md#️-class-pythonchecker) | Class for checking Python files for compliance with specified rules. |
 
 ### 📄 File `code_guard.py`
 
@@ -275,7 +275,7 @@ Doc: [code_guard.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/cod
 
 | Function/Class                                                                                                                  | Description                                                                     |
 | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 🏛️ Class [`CodeBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#%EF%B8%8F-class-codeblock)         | Stored fenced code block extracted from Markdown body.                          |
+| 🏛️ Class [`CodeBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#️-class-codeblock)                  | Stored fenced code block extracted from Markdown body.                          |
 | 🔧 [`extract_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-extract_code_blocks) | Replace fenced code blocks with placeholders and store originals verbatim.      |
 | 🔧 [`restore_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-restore_code_blocks) | Restore fenced code blocks from placeholders.                                   |
 | 🔧 [`_join_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_join_lines)                 |                                                                                 |
@@ -323,9 +323,9 @@ Doc: [list_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/li
 
 Doc: [options.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/options.g.md)
 
-| Function/Class                                                                                                               | Description                  |
-| ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| 🏛️ Class [`FormatOptions`](https://github.com/Harrix/harrix-pylib/blob/main/docs/options.g.md#%EF%B8%8F-class-formatoptions) | Markdown formatting options. |
+| Function/Class                                                                                                      | Description                  |
+| ------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| 🏛️ Class [`FormatOptions`](https://github.com/Harrix/harrix-pylib/blob/main/docs/options.g.md#️-class-formatoptions) | Markdown formatting options. |
 
 ### 📄 File `parser.py`
 
@@ -350,6 +350,7 @@ Doc: [printer.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/printe
 | 🔧 [`_join_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_join_blocks)                                   |                                                                          |
 | 🔧 [`_list_is_loose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_list_is_loose)                               |                                                                          |
 | 🔧 [`_list_item_is_loose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_list_item_is_loose)                     |                                                                          |
+| 🔧 [`_readable_link_href`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_readable_link_href)                     | Decode percent-encoded URL fragments for readable Markdown output.       |
 | 🔧 [`_render_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_render_block)                                 |                                                                          |
 | 🔧 [`_render_blockquote`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_render_blockquote)                       |                                                                          |
 | 🔧 [`_render_fence`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_render_fence)                                 |                                                                          |
@@ -481,10 +482,10 @@ Doc: [structure.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/stru
 
 Doc: [styles.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md)
 
-| Function/Class                                                                                                        | Description                                          |
-| --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| 🏛️ Class [`StyleSheet`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md#%EF%B8%8F-class-stylesheet) | Collected CSS class rules from SVG <style> elements. |
-| 🔧 [`_format_style`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md#-function-_format_style)       |                                                      |
+| Function/Class                                                                                                  | Description                                          |
+| --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| 🏛️ Class [`StyleSheet`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md#️-class-stylesheet)    | Collected CSS class rules from SVG <style> elements. |
+| 🔧 [`_format_style`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md#-function-_format_style) |                                                      |
 
 ### 📄 File `xml_tags.py`
 

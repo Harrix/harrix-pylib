@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from urllib.parse import unquote, urlsplit, urlunsplit
 
 from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text_display_width
 
@@ -139,6 +140,16 @@ def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_in
     return block_count != paragraph_count + nested_list_count
 
 
+def _readable_link_href(href: str) -> str:
+    """Decode percent-encoded URL fragments for readable Markdown output."""
+    if href.startswith("#"):
+        return unquote(href, encoding="utf-8")
+    parts = urlsplit(href)
+    if not parts.fragment:
+        return href
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, unquote(parts.fragment, encoding="utf-8")))
+
+
 def _render_block(tokens: list[Token], index: int) -> tuple[str, int]:
     token = tokens[index]
     if token.type == "heading_open":
@@ -230,7 +241,7 @@ def _render_inline_token(children: list[Token], index: int) -> tuple[str, int]:
             return f'![{alt}]({src} "{title}")', index + 1
         return f"![{alt}]({src})", index + 1
     if child.type == "link_open":
-        href = str(child.attrGet("href") or "")
+        href = _readable_link_href(str(child.attrGet("href") or ""))
         title = child.attrGet("title")
         inner_parts: list[str] = []
         inner_index = index + 1

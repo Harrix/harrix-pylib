@@ -88,6 +88,17 @@ def test_format_markdown_content_formats_italic_with_underscores() -> None:
         assert "*No docstring provided.*" not in result
 
 
+def test_format_markdown_content_preserves_cyrillic_link_fragments() -> None:
+    source = (
+        "- [Жареная картошка](#жареная-картошка)\n"
+        "- [Заклинание «Соль-вода!» против ос и пчёл](#заклинание-соль-вода-против-ос-и-пчёл)\n"
+    )
+    result = format_markdown_content(source)
+    assert "[Жареная картошка](#жареная-картошка)" in result
+    assert "[Заклинание «Соль-вода!» против ос и пчёл](#заклинание-соль-вода-против-ос-и-пчёл)" in result
+    assert "%D0" not in result
+
+
 def test_format_markdown_content_formats_nested_lists() -> None:
     source = "- [List](#list)\n    - [File a](#a)\n    - [File b](#b)\n"
     result = format_markdown_content(source)
