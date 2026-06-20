@@ -230,7 +230,7 @@ def _render_inline_token(children: list[Token], index: int) -> tuple[str, int]:
             return f'![{alt}]({src} "{title}")', index + 1
         return f"![{alt}]({src})", index + 1
     if child.type == "link_open":
-        href = child.attrGet("href") or ""
+        href = str(child.attrGet("href") or "")
         title = child.attrGet("title")
         inner_parts: list[str] = []
         inner_index = index + 1

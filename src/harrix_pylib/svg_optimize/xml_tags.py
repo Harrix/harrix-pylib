@@ -14,7 +14,12 @@ def tag_local_name(tag: str | bytes | bytearray | etree.QName) -> str:
     """Return the local part of an element tag."""
     if isinstance(tag, etree.QName):
         return tag.localname
-    tag_str = tag.decode() if isinstance(tag, bytes | bytearray) else str(tag)
+    if isinstance(tag, bytes):
+        tag_str = tag.decode()
+    elif isinstance(tag, bytearray):
+        tag_str = tag.decode()
+    else:
+        tag_str = str(tag)
     if "}" in tag_str:
         return tag_str.rsplit("}", 1)[-1]
     return tag_str
