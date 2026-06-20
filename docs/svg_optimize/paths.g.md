@@ -160,7 +160,7 @@ def parse_path_data(path_data: str) -> list[tuple[str, list[float]]]:
 def _format_args_spaced(args: list[float]) -> str
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -178,7 +178,7 @@ def _format_args_spaced(args: list[float]) -> str:
 def _format_number(value: float) -> str
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -200,7 +200,7 @@ def _format_number(value: float) -> str:
 def _is_valid_command_list(commands: list[tuple[str, list[float]]]) -> bool
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -223,7 +223,7 @@ def _is_valid_command_list(commands: list[tuple[str, list[float]]]) -> bool:
 def _minimal_path_cleanup(path_data: str) -> str
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -254,7 +254,7 @@ def _minimal_path_cleanup(path_data: str) -> str:
 def _optimize_commands(commands: list[tuple[str, list[float]]]) -> list[tuple[str, list[float]]]
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -325,7 +325,7 @@ def _optimize_commands(commands: list[tuple[str, list[float]]]) -> list[tuple[st
 def _relative_line(pos: list[float], target: list[float]) -> tuple[str, list[float]]
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -349,7 +349,7 @@ def _relative_line(pos: list[float], target: list[float]) -> tuple[str, list[flo
 def _resolve_point(cmd: str, args: list[float], pos: list[float]) -> list[float]
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -369,7 +369,7 @@ def _resolve_point(cmd: str, args: list[float], pos: list[float]) -> list[float]
 def _trim_number(value: float) -> float
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -389,7 +389,7 @@ def _trim_number(value: float) -> float:
 def _update_pos_for_curve(cmd: str, args: list[float], pos: list[float]) -> list[float]
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>

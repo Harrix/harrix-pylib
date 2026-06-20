@@ -61,7 +61,7 @@ def convert_shapes(root: etree._Element) -> bool:
 def _circle_to_path(elem: etree._Element) -> str | None
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -91,7 +91,7 @@ def _circle_to_path(elem: etree._Element) -> str | None:
 def _ellipse_to_path(elem: etree._Element) -> str | None
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -122,7 +122,7 @@ def _ellipse_to_path(elem: etree._Element) -> str | None:
 def _line_to_path(elem: etree._Element) -> str | None
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -144,7 +144,7 @@ def _line_to_path(elem: etree._Element) -> str | None:
 def _num(value: str) -> float
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -162,7 +162,7 @@ def _num(value: str) -> float:
 def _parse_points(points_str: str) -> list[tuple[float, float]]
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -181,7 +181,7 @@ def _parse_points(points_str: str) -> list[tuple[float, float]]:
 def _polygon_to_path(elem: etree._Element) -> str | None
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -205,7 +205,7 @@ def _polygon_to_path(elem: etree._Element) -> str | None:
 def _polyline_to_path(elem: etree._Element) -> str | None
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -228,7 +228,7 @@ def _polyline_to_path(elem: etree._Element) -> str | None:
 def _rect_to_path(elem: etree._Element) -> str | None
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -262,7 +262,7 @@ def _rect_to_path(elem: etree._Element) -> str | None:
 def _shape_to_path(elem: etree._Element) -> str | None
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>

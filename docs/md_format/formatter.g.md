@@ -88,7 +88,7 @@ def read_markdown_text(filename: Path | str) -> str:
 def _format_with_options(text: str, options: FormatOptions) -> str
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -121,7 +121,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
 def _normalize_end_of_line(text: str, end_of_line: str) -> str
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>

@@ -448,7 +448,7 @@ Create a Markdown document containing the contents of text files.
 Args:
 
 - `file_paths` (`Sequence[str | Path]`): File paths (absolute or relative) to text files.
-- `base_folder` (`str | Path | None`, *optional*): A base directory to strip from file paths
+- `base_folder` (`str | Path | None`, _optional_): A base directory to strip from file paths
 in the output. Defaults to `None`.
 
 Returns:

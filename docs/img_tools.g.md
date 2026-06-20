@@ -341,7 +341,7 @@ def process_static_avif(
 def _exe(project_root: Path, name: str) -> Path
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -359,7 +359,7 @@ def _exe(project_root: Path, name: str) -> Path:
 def _ffmpeg_output(source: Path, ffmpeg: Path) -> str
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -384,7 +384,7 @@ def _ffmpeg_output(source: Path, ffmpeg: Path) -> str:
 def _is_avif_animated_with_avifdec(source: Path, project_root: Path) -> bool
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -417,7 +417,7 @@ def _is_avif_animated_with_avifdec(source: Path, project_root: Path) -> bool:
 def _reduce_frames(frame_files: list[Path], frames_to_keep_ratio: float, temp_path: Path) -> list[Path]
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -450,7 +450,7 @@ def _reduce_frames(frame_files: list[Path], frames_to_keep_ratio: float, temp_pa
 def _resize_frames(frame_files: list[Path], ffmpeg: Path, max_size: int) -> None
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -476,7 +476,7 @@ def _resize_frames(frame_files: list[Path], ffmpeg: Path, max_size: int) -> None
 def _run_checked(args: list[str]) -> str
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -505,7 +505,7 @@ def _run_checked(args: list[str]) -> str:
 def _scale_vf(max_size: int | None) -> str | None
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>
@@ -525,7 +525,7 @@ def _scale_vf(max_size: int | None) -> str | None:
 def _sequence_pattern(frame_file: Path) -> Path
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>

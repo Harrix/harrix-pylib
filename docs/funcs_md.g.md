@@ -4314,7 +4314,7 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
 def _is_toc_details_open(lines: list[str], index: int) -> bool
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>

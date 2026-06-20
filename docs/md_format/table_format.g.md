@@ -181,7 +181,7 @@ def unwrap_spurious_table_rows(body: str) -> str:
 def _is_emoji_base(char: str) -> bool
 ```
 
-*No docstring provided.*
+_No docstring provided._
 
 <details>
 <summary>Code:</summary>

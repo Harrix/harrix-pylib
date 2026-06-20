@@ -253,7 +253,7 @@ def _render_inline_token(children: list[Token], index: int) -> tuple[str, int]:
         return f"**{inner}**", next_index + 1
     if child.type == "em_open":
         inner, next_index = _render_inline_until(children, index + 1, "em_close")
-        return f"*{inner}*", next_index + 1
+        return f"_{inner}_", next_index + 1
     if child.type == "s_open":
         inner, next_index = _render_inline_until(children, index + 1, "s_close")
         return f"~~{inner}~~", next_index + 1

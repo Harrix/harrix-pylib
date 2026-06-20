@@ -81,6 +81,13 @@ def test_format_markdown_content_formats_lists() -> None:
     assert "- two" in result
 
 
+def test_format_markdown_content_formats_italic_with_underscores() -> None:
+    for source in ("*No docstring provided.*\n", "_No docstring provided._\n"):
+        result = format_markdown_content(source)
+        assert "_No docstring provided._" in result
+        assert "*No docstring provided.*" not in result
+
+
 def test_format_markdown_content_formats_nested_lists() -> None:
     source = "- [List](#list)\n    - [File a](#a)\n    - [File b](#b)\n"
     result = format_markdown_content(source)
