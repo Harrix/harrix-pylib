@@ -102,6 +102,13 @@ def test_format_markdown_content_preserves_cyrillic_link_fragments() -> None:
     assert "%D0" not in result
 
 
+def test_format_markdown_content_preserves_cyrillic_image_paths() -> None:
+    source = "![Настройки клавиатуры](Ноутбук__Gigabyte-Aero-15-OLED-XD/img/keyboard.png)\n"
+    result = format_markdown_content(source)
+    assert "![Настройки клавиатуры](Ноутбук__Gigabyte-Aero-15-OLED-XD/img/keyboard.png)" in result
+    assert "%D0" not in result
+
+
 def test_format_markdown_content_preserves_inline_code_with_backticks() -> None:
     source = "`` `\\n`$1`:` ``\n"
     result = format_markdown_content(source)

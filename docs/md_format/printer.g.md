@@ -350,19 +350,23 @@ def _max_backtick_run(text: str) -> int:
 def _readable_link_href(href: str) -> str
 ```
 
-Decode percent-encoded URL fragments for readable Markdown output.
+Decode percent-encoded Unicode in URLs for readable Markdown output.
 
 <details>
 <summary>Code:</summary>
 
 ```python
 def _readable_link_href(href: str) -> str:
+    if not href or "%" not in href:
+        return href
     if href.startswith("#"):
         return unquote(href, encoding="utf-8")
     parts = urlsplit(href)
-    if not parts.fragment:
-        return href
-    return urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, unquote(parts.fragment, encoding="utf-8")))
+    if not parts.scheme and not parts.netloc:
+        return unquote(href, encoding="utf-8")
+    decoded_fragment = unquote(parts.fragment, encoding="utf-8") if parts.fragment else parts.fragment
+    decoded_path = unquote(parts.path, encoding="utf-8")
+    return urlunsplit((parts.scheme, parts.netloc, decoded_path, parts.query, decoded_fragment))
 ```
 
 </details>
@@ -534,7 +538,7 @@ def _render_inline_token(children: list[Token], index: int, *, in_table: bool = 
         return child.content, index + 1
     if child.type == "image":
         alt = child.content
-        src = child.attrGet("src") or ""
+        src = _readable_link_href(str(child.attrGet("src") or ""))
         title = child.attrGet("title")
         if title:
             return f'![{alt}]({src} "{title}")', index + 1
