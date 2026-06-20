@@ -152,7 +152,7 @@ def test_generate_md_docs_strips_existing_front_matter_from_root_md() -> None:
         beginning = "---\nlang: en\nauthor: Test\n---"
         h.py.generate_md_docs(temp_path, beginning, "test")
         development_content = (temp_path / "docs" / "development.g.md").read_text(encoding="utf-8")
-        assert development_content.count("---") == 2
+        assert development_content.count("---") == 2  # noqa: PLR2004
         assert "author: Test" in development_content
         assert "# Development" in development_content
         assert "lang: en\n---\n\n---" not in development_content

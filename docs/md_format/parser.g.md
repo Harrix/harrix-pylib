@@ -12,7 +12,7 @@ lang: en
 def get_markdown_parser() -> MarkdownIt
 ```
 
-Return a configured markdown-it parser with GFM, math, and wiki-links.
+Return a configured `markdown-it` parser with GFM, math, and wiki-links.
 
 <details>
 <summary>Code:</summary>

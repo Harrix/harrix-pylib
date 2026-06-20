@@ -72,7 +72,7 @@ def test_prepend_markdown_header_strips_existing_front_matter() -> None:
     source = "---\nlang: ru\n---\n\n# Title\n"
     result = prepend_markdown_header(header, source)
     assert result.startswith("---\nlang: en\n---\n\n# Title")
-    assert result.count("---") == 2
+    assert result.count("---") == 2  # noqa: PLR2004
 
 
 def test_format_markdown_content_formats_lists() -> None:
@@ -114,19 +114,23 @@ def test_format_markdown_content_formats_tables() -> None:
 
 def test_format_markdown_content_aligns_table_columns() -> None:
     source = (
-        "| File                 | Config key                               | Purpose                                    |\n"
-        "| -------------------- | ---------------------------------------- | ------------------------------------------ |\n"
-        "| `pypi-token.txt`     | `pypi_token` in `config/config.json`     | PyPI token for publishing Python libraries |\n"
-        "| `bothub-api-key.txt` | `bothub_api_key` in `config/config.json` | BotHub access token for AI features        |\n"
+        "| File                 | Config key                               | "
+        "Purpose                                    |\n"
+        "| -------------------- | ---------------------------------------- | "
+        "------------------------------------------ |\n"
+        "| `pypi-token.txt`     | `pypi_token` in `config/config.json`     | "
+        "PyPI token for publishing Python libraries |\n"
+        "| `bothub-api-key.txt` | `bothub_api_key` in `config/config.json` | "
+        "BotHub access token for AI features        |\n"
     )
     result = format_markdown_content(source)
     assert (
-        "| File                 | Config key                               | Purpose                                    |"
-        in result
+        "| File                 | Config key                               | "
+        "Purpose                                    |" in result
     )
     assert (
-        "| -------------------- | ---------------------------------------- | ------------------------------------------ |"
-        in result
+        "| -------------------- | ---------------------------------------- | "
+        "------------------------------------------ |" in result
     )
 
 
@@ -151,7 +155,8 @@ def test_format_markdown_content_unwraps_spurious_table_rows() -> None:
         "| File | Config key | Purpose |\n"
         "| --- | --- | --- |\n"
         "| row1 | key1 | purpose1 |\n"
-        "| For school/corporate Wi-Fi, set optional `bothub.proxy` in `config/config.json` (see [DEVELOPMENT.md](../DEVELOPMENT.md)). |  |  |\n"
+        "| For school/corporate Wi-Fi, set optional `bothub.proxy` in "
+        "`config/config.json` (see [DEVELOPMENT.md](../DEVELOPMENT.md)). |  |  |\n"
     )
     result = format_markdown_content(source)
     assert "| row1 | key1" in result
@@ -164,12 +169,13 @@ def test_format_markdown_content_keeps_table_row_with_empty_cell() -> None:
     source = (
         "| Function/Class | Description |\n"
         "|----------------|-------------|\n"
-        "| 🏛️ Class [`StyleSheet`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md) | Collected CSS class rules from SVG <style> elements. |\n"
+        "| 🏛️ Class [`StyleSheet`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md) | "
+        "Collected CSS class rules from SVG <style> elements. |\n"
         "| 🔧 [`_format_style`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md) |  |\n"
     )
     result = format_markdown_content(source)
     table_lines = [line for line in result.splitlines() if line.strip().startswith("|")]
-    assert len(table_lines) == 4
+    assert len(table_lines) == 4  # noqa: PLR2004
     assert any("_format_style" in line and line.strip().endswith("|") for line in table_lines)
     col1_widths = [text_display_width(line.split("|")[1]) for line in table_lines]
     assert len(set(col1_widths)) == 1
@@ -217,10 +223,10 @@ def test_format_markdown_content_preserves_paragraph_blank_lines() -> None:
 
 
 def test_format_markdown_content_preserves_single_newline_paragraph() -> None:
-    source = "Первый абзац.\nВторой абзац.\n"
+    source = "Первый абзац.\nВторой абзац.\n"  # noqa: RUF001
     result = format_markdown_content(source)
-    assert "Первый абзац.\r\nВторой абзац." in result
-    assert "Первый абзац.\r\n\r\nВторой абзац." not in result
+    assert "Первый абзац.\r\nВторой абзац." in result  # noqa: RUF001
+    assert "Первый абзац.\r\n\r\nВторой абзац." not in result  # noqa: RUF001
 
 
 def test_read_markdown_text_handles_r_double_crlf_on_disk(tmp_path: Path) -> None:

@@ -176,7 +176,7 @@ Doc: [funcs_md.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs
 | 🔧 [`download_and_replace_images`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-download_and_replace_images)                               | Download remote images in Markdown text and replaces their URLs with local paths.                               |
 | 🔧 [`download_and_replace_images_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-download_and_replace_images_content)               | Download remote images in Markdown text and replaces their URLs with local paths.                               |
 | 🔧 [`format_markdown`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-format_markdown)                                                       | Format a Markdown file in place when content changes.                                                           |
-| 🔧 [`format_markdown_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-format_markdown_content)                                       | Format Markdown content using the harrix-pylib markdown formatter.                                              |
+| 🔧 [`format_markdown_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-format_markdown_content)                                       | Format Markdown content using the harrix-pylib Markdown formatter.                                              |
 | 🔧 [`format_markdown_folder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-format_markdown_folder)                                         | Recursively format Markdown files in a folder.                                                                  |
 | 🔧 [`format_quotes_as_markdown_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-format_quotes_as_markdown_content)                   | Convert raw text with quotes into Markdown format.                                                              |
 | 🔧 [`format_yaml`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-format_yaml)                                                               | Format YAML content in a file, ensuring proper indentation and structure.                                       |
@@ -325,9 +325,9 @@ Doc: [options.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/option
 
 Doc: [parser.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/parser.g.md)
 
-| Function/Class                                                                                                              | Description                                                            |
-| --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| 🔧 [`get_markdown_parser`](https://github.com/Harrix/harrix-pylib/blob/main/docs/parser.g.md#-function-get_markdown_parser) | Return a configured markdown-it parser with GFM, math, and wiki-links. |
+| Function/Class                                                                                                              | Description                                                              |
+| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 🔧 [`get_markdown_parser`](https://github.com/Harrix/harrix-pylib/blob/main/docs/parser.g.md#-function-get_markdown_parser) | Return a configured `markdown-it` parser with GFM, math, and wiki-links. |
 
 ### 📄 File `printer.py`
 

@@ -1441,7 +1441,7 @@ def format_markdown(filename: Path | str, *, end_of_line: str = "crlf") -> str:
 def format_markdown_content(markdown_text: str) -> str
 ```
 
-Format Markdown content using the harrix-pylib markdown formatter.
+Format Markdown content using the harrix-pylib Markdown formatter.
 
 Args:
 
@@ -2755,7 +2755,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     lines = content_without_yaml.splitlines()
     old_toc_position = None
 
-    for i, line in enumerate(lines):
+    for i, _line in enumerate(lines):
         if _is_toc_details_open(lines, i):
             old_toc_position = i
             break

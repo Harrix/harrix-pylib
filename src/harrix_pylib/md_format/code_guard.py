@@ -18,7 +18,7 @@ class CodeBlock:
 
 def extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
     """Replace fenced code blocks with placeholders and store originals verbatim."""
-    from harrix_pylib.funcs_md import identify_code_blocks
+    from harrix_pylib.funcs_md import identify_code_blocks  # noqa: PLC0415
 
     lines, has_trailing_newline = _split_lines(body)
     code_block_info = list(identify_code_blocks(lines))
@@ -74,8 +74,7 @@ def restore_code_blocks(text: str, blocks: list[CodeBlock]) -> str:
                 restored.append(line)
                 continue
             current_indent = _leading_whitespace(line)
-            for block_line in block.lines:
-                restored.append(_reindent_line(block_line, block.base_indent, current_indent))
+            restored.extend(_reindent_line(block_line, block.base_indent, current_indent) for block_line in block.lines)
             continue
         restored.append(line)
     return _join_lines(restored, trailing_newline=has_trailing_newline)

@@ -1,3 +1,5 @@
+"""Tests for markdown formatting corrupt pipeline."""
+
 from pathlib import Path
 
 import harrix_pylib as h
