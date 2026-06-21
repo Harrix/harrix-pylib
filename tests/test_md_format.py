@@ -33,6 +33,20 @@ def test_format_markdown_content_preserves_angle_autolink() -> None:
     assert "[https://github.com/Harrix/harrix-pylib]" not in result
 
 
+def test_format_markdown_content_preserves_angle_autolink_with_underscore_in_url() -> None:
+    source = "<https://en.wikipedia.org/wiki/Rod_(optical_phenomenon)>\n"
+    result = format_markdown_content(source)
+    assert "<https://en.wikipedia.org/wiki/Rod_(optical_phenomenon)>" in result
+    assert "\\_" not in result
+
+
+def test_format_markdown_content_preserves_named_link_url_with_underscore() -> None:
+    source = "[Rod](https://en.wikipedia.org/wiki/Rod_(optical_phenomenon))\n"
+    result = format_markdown_content(source)
+    assert "[Rod](https://en.wikipedia.org/wiki/Rod_(optical_phenomenon))" in result
+    assert "\\_" not in result
+
+
 def test_format_markdown_content_preserves_named_link() -> None:
     source = "GitHub: [harrix-pylib](https://github.com/Harrix/harrix-pylib)\n"
     result = format_markdown_content(source)
@@ -437,6 +451,25 @@ def test_format_markdown_content_keeps_mid_word_underscores() -> None:
     result = format_markdown_content(source)
     assert "foo_bar_baz" in result
     assert "foo\\_bar" not in result
+
+
+def test_format_markdown_content_keeps_prettier_literal_identifiers() -> None:
+    source = (
+        "from _INCORRECT_WORD_PATTERNS.\n"
+        "t._id, t.amount\n"
+        "_Fiction.g.md\n"
+        r"Oculus\Software\hyperbolic-magnetism-beat-saber\Beat Saber_Data" + "\n"
+        r"- `list[list[Any]]`: List of process habits records [_id, habit_name, value, date]." + "\n"
+        "If folder contains aggregated file _<FolderName>.g.md (e.g. Fiction -> _Fiction.g.md),\n"
+    )
+    result = format_markdown_content(source)
+    assert "_INCORRECT_WORD_PATTERNS" in result
+    assert "t._id, t.amount" in result
+    assert "_Fiction.g.md" in result
+    assert r"Oculus\Software\hyperbolic-magnetism-beat-saber\Beat Saber_Data" in result
+    assert r"[\_id, habit_name" in result
+    assert "_<FolderName>.g.md" in result
+    assert "\\\\Software" not in result
 
 
 def test_format_markdown_content_keeps_tight_list_with_nested_sublist() -> None:

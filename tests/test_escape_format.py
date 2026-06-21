@@ -18,5 +18,14 @@ def test_escape_markdown_text_keeps_non_emphasis_like_characters() -> None:
     assert escape_markdown_text("read:user") == "read:user"
 
 
+def test_escape_markdown_text_keeps_prettier_literal_cases() -> None:
+    assert escape_markdown_text(r"Oculus\Software\hyperbolic") == r"Oculus\Software\hyperbolic"
+    assert escape_markdown_text("from _INCORRECT_WORD_PATTERNS.") == "from _INCORRECT_WORD_PATTERNS."
+    assert escape_markdown_text("t._id, t.amount") == "t._id, t.amount"
+    assert escape_markdown_text("2. _[directory_name].short.g.md") == "2. _[directory_name].short.g.md"
+    assert escape_markdown_text("[_id, habit_name]") == r"[\_id, habit_name]"
+    assert escape_markdown_text("_Fiction.g.md") == "_Fiction.g.md"
+
+
 def test_escape_markdown_text_skips_code_block_placeholder() -> None:
     assert escape_markdown_text("HSKMDFMTCODE0") == "HSKMDFMTCODE0"
