@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from urllib.parse import unquote, urlsplit, urlunsplit
 
+from harrix_pylib.md_format.escape_format import escape_markdown_text
 from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text_display_width
 
 if TYPE_CHECKING:
@@ -246,7 +247,7 @@ def _render_inline(children: list[Token], *, in_table: bool = False) -> str:
 def _render_inline_token(children: list[Token], index: int, *, in_table: bool = False) -> tuple[str, int]:
     child = children[index]
     if child.type == "text":
-        return child.content, index + 1
+        return escape_markdown_text(child.content), index + 1
     if child.type == "code_inline":
         return _format_code_inline(child.content, in_table=in_table), index + 1
     if child.type == "softbreak":

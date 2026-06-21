@@ -413,6 +413,32 @@ def test_format_markdown_content_indents_list_item_soft_break() -> None:
     assert "- Пример.\r\n  Переод строки." in bullet_result
 
 
+def test_format_markdown_content_escapes_emphasis_like_characters() -> None:
+    source = (
+        "к сверхмассивной чёрной дыре Стрелец А* в центре Млечного Пути\n"  # noqa: RUF001
+        "Все исключения поддерживают метод what() , который возвращает строку типа char* с описанием.\n"  # noqa: RUF001
+        "Вариант 3: имена типов дополняются префиксом «t_»\n"
+    )
+    result = format_markdown_content(source)
+    assert "Стрелец А\\* в центре" in result  # noqa: RUF001
+    assert "char\\* с описанием" in result  # noqa: RUF001
+    assert "«t\\_»" in result
+
+
+def test_format_markdown_content_does_not_escape_spaced_multiplication() -> None:
+    source = "The result is 5 * 2 for simple math.\n"
+    result = format_markdown_content(source)
+    assert "5 * 2" in result
+    assert "5 \\* 2" not in result
+
+
+def test_format_markdown_content_keeps_mid_word_underscores() -> None:
+    source = "Use foo_bar_baz in code.\n"
+    result = format_markdown_content(source)
+    assert "foo_bar_baz" in result
+    assert "foo\\_bar" not in result
+
+
 def test_format_markdown_content_keeps_tight_list_with_nested_sublist() -> None:
     source = (
         "- [Class `StyleSheet`](#class)\n\n"
