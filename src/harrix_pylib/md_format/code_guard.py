@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-PLACEHOLDER_PREFIX = "HSK_MD_FMT_CODE_"
+PLACEHOLDER_PREFIX = "HSKMDFMTCODE"
 
 
 @dataclass(frozen=True)

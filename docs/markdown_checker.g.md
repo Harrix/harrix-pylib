@@ -2162,7 +2162,7 @@ Exception: pronoun at sentence start is allowed:
 - after line start or after .!?;
 - after opening guillemet « (direct speech, e.g. «Ваша задача);  # ignore: HP001
 - after dash at line start (dialogue, e.g. — Ваша работа хороша).  # ignore: HP001
-Yields at most one error per line.
+  Yields at most one error per line.
 
 <details>
 <summary>Code:</summary>

@@ -387,11 +387,30 @@ def test_format_markdown_content_preserves_unindented_list_item_continuation() -
     )
     result = format_markdown_content(source)
     assert (
-        "calculation.\r\nIf `None`, will try to find git root or use current working directory. Defaults to `None`."
+        "calculation.\r\n  If `None`, will try to find git root or use current working directory. Defaults to `None`."
         in result
     )
     assert "calculation.\r\n\r\nIf `None`" not in result
-    assert "calculation.\r\n  If `None`" not in result
+
+
+def test_format_markdown_content_indents_list_item_soft_break() -> None:
+    source = (
+        "2. Create a personal access token when it is generated — if you lose it, you will have to\n"
+        "regenerate the token.\n"
+    )
+    result = format_markdown_content(source)
+    assert "you will have to\r\n   regenerate the token." in result
+
+    long_source = (
+        "224. Create a personal access token when it is generated — if you lose it, you will have to\n"
+        "regenerate the token.\n"
+    )
+    long_result = format_markdown_content(long_source)
+    assert "you will have to\r\n     regenerate the token." in long_result
+
+    bullet_source = "- Пример.\nПереод строки.\n"  # noqa: RUF001
+    bullet_result = format_markdown_content(bullet_source)
+    assert "- Пример.\r\n  Переод строки." in bullet_result
 
 
 def test_format_markdown_content_keeps_tight_list_with_nested_sublist() -> None:

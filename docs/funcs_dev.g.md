@@ -34,7 +34,7 @@ Args:
 
 - `filename` (`str`): Path to the JSON configuration file. Defaults to `None`.
 - `is_temp` (`bool`): If `True`, load the temporary config file (`config-temp.json`)
-instead of the main config file. Defaults to `False`.
+  instead of the main config file. Defaults to `False`.
 
 Returns:
 
@@ -113,7 +113,7 @@ Args:
 - `config` (`dict`): Configuration dictionary to save.
 - `filename` (`str`): Path to the JSON configuration file.
 - `is_temp` (`bool`): If `True`, save to the temporary config file (`config-temp.json`)
-instead of the main config file. Defaults to `False`.
+  instead of the main config file. Defaults to `False`.
 
 Examples:
 
@@ -171,11 +171,11 @@ and saves the updated configuration back to the file.
 Args:
 
 - `key` (`str`): Configuration key to update. Supports nested keys using dot notation
-(e.g., `"section.key"` for nested dictionaries).
+  (e.g., `"section.key"` for nested dictionaries).
 - `value` (`object`): New value to set for the configuration key.
 - `filename` (`str`): Path to the JSON configuration file.
 - `is_temp` (`bool`): If `True`, update the temporary config file (`config-temp.json`)
-instead of the main config file. Defaults to `False`.
+  instead of the main config file. Defaults to `False`.
 
 Examples:
 
@@ -579,7 +579,7 @@ to automatically open this file after writing.
 Args:
 
 - `is_show_output` (`bool`): If `True`, automatically open the output file
-after writing. Defaults to `True`.
+  after writing. Defaults to `True`.
 
 Returns:
 
@@ -588,14 +588,14 @@ Returns:
 The decorator adds the following methods to the wrapped function:
 
 - `add_line` (`Callable`): A method to add lines to the output list, which
-will be written to the file.
+  will be written to the file.
 
 Note:
 
 - This decorator changes the behavior of the decorated function by capturing
-its output and timing its execution.
+  its output and timing its execution.
 - The `output.txt` file is created in a `temp` folder under the project root.
-If the folder does not exist, it will be created.
+  If the folder does not exist, it will be created.
 
 Examples:
 

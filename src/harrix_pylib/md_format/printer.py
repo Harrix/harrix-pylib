@@ -364,7 +364,7 @@ def _render_list_item_lines(
         block_lines = block.splitlines()
         if block_index == 0:
             rendered.append(prefix + block_lines[0])
-            rendered.extend(block_lines[1:])
+            rendered.extend(f"{indent}{continuation_line}" for continuation_line in block_lines[1:])
             continue
         if loose:
             rendered.append("")
