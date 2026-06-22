@@ -466,7 +466,7 @@ def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> st
 
     Before processing:
 
-    ````markdown
+    ```markdown
     ---
     categories: [it, program]
     tags: [VSCode, FAQ]
@@ -475,11 +475,11 @@ def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> st
     # Title
 
     Content here.
-    ````
+    ```
 
     After processing:
 
-    ````markdown
+    ```markdown
     ---
     categories: [it, program]
     tags: [VSCode, FAQ]
@@ -489,7 +489,7 @@ def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> st
     # Title
 
     Content here.
-    ````
+    ```
 
     """
     expected_tuple_length = 2

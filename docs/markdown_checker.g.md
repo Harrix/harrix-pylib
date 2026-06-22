@@ -100,7 +100,7 @@ Rules:
 <details>
 <summary>Code:</summary>
 
-```python
+````python
 class MarkdownChecker:
 
     # Minimum length for a line to be treated as italic-only caption (e.g. _text_)
@@ -1193,7 +1193,7 @@ class MarkdownChecker:
         """Return True if line is a regular paragraph that should end with colon before code/image."""
         stripped = line.strip()
         return bool(stripped) and stripped != "```" and not stripped.startswith(("![", "#"))
-```
+````
 
 </details>
 
@@ -1398,7 +1398,7 @@ Check code block related rules.
 <details>
 <summary>Code:</summary>
 
-```python
+````python
 def _check_code_rules(
         self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set
     ) -> Generator[str, None, None]:
@@ -1418,7 +1418,7 @@ def _check_code_rules(
                         correct = self.INCORRECT_LANGUAGES[language]
                         error_msg = f'{self.RULES["H007"]}: "{language}" should be "{correct}"'
                         yield self._format_error("H007", error_msg, filename, line_num=actual_line_num, col=col)
-```
+````
 
 </details>
 
@@ -1433,7 +1433,7 @@ Check for missing colon before code block (H013).
 <details>
 <summary>Code:</summary>
 
-```python
+````python
 def _check_colon_before_code(
         self,
         filename: Path,
@@ -1471,7 +1471,7 @@ def _check_colon_before_code(
         if last_char != ":":
             error_msg = f'{self.RULES["H013"]}: last char is "{last_char}"'
             yield self._format_error("H013", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
-```
+````
 
 </details>
 
@@ -2636,10 +2636,10 @@ Return True if line is a regular paragraph that should end with colon before cod
 <details>
 <summary>Code:</summary>
 
-```python
+````python
 def _should_check_paragraph_end(self, line: str) -> bool:
         stripped = line.strip()
         return bool(stripped) and stripped != "```" and not stripped.startswith(("![", "#"))
-```
+````
 
 </details>

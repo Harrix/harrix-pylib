@@ -439,6 +439,12 @@ def generate_md_docs_content(file_path: Path | str) -> str:
 
         return "".join(node_lines)
 
+    def append_fenced_code(markdown_lines: list[str], content: str) -> None:
+        open_fence, close_fence = _fence_for_content(content)
+        markdown_lines.append(open_fence)
+        markdown_lines.append(content)
+        markdown_lines.append(f"{close_fence}\n")
+
     file_path = Path(file_path)
     with Path(file_path).open(encoding="utf-8") as f:
         source = f.read()
@@ -456,9 +462,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             class_code = get_node_code(node, source_lines)
             # Add the class name and its signature
             markdown_lines.append(f"## 🏛️ Class `{class_name}`\n")
-            markdown_lines.append("```python")
-            markdown_lines.append(f"{class_signature}")
-            markdown_lines.append("```\n")
+            append_fenced_code(markdown_lines, class_signature)
             if class_docstring:
                 markdown_lines.append(f"{class_docstring}\n")
             else:
@@ -466,9 +470,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             # Add the code to the details block
             markdown_lines.append("<details>")
             markdown_lines.append("<summary>Code:</summary>\n")
-            markdown_lines.append("```python")
-            markdown_lines.append(class_code.strip())
-            markdown_lines.append("```\n")
+            append_fenced_code(markdown_lines, class_code.strip())
             markdown_lines.append("</details>\n")
 
             # Process class methods
@@ -480,9 +482,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
                     method_code = get_node_code(class_node, source_lines)
                     # Add the method name and its signature
                     markdown_lines.append(f"### ⚙️ Method `{method_name}`\n")
-                    markdown_lines.append("```python")
-                    markdown_lines.append(f"{method_signature}")
-                    markdown_lines.append("```\n")
+                    append_fenced_code(markdown_lines, method_signature)
                     if method_docstring:
                         markdown_lines.append(f"{method_docstring}\n")
                     else:
@@ -490,9 +490,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
                     # Add the code to the details block
                     markdown_lines.append("<details>")
                     markdown_lines.append("<summary>Code:</summary>\n")
-                    markdown_lines.append("```python")
-                    markdown_lines.append(method_code.strip())
-                    markdown_lines.append("```\n")
+                    append_fenced_code(markdown_lines, method_code.strip())
                     markdown_lines.append("</details>\n")
         elif isinstance(node, ast.FunctionDef):
             # Module level function
@@ -501,9 +499,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             func_signature = get_function_signature(node)
             func_code = get_node_code(node, source_lines)
             markdown_lines.append(f"## 🔧 Function `{func_name}`\n")
-            markdown_lines.append("```python")
-            markdown_lines.append(f"{func_signature}")
-            markdown_lines.append("```\n")
+            append_fenced_code(markdown_lines, func_signature)
             if func_docstring:
                 markdown_lines.append(f"{func_docstring}\n")
             else:
@@ -511,9 +507,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             # Add the code to the details block
             markdown_lines.append("<details>")
             markdown_lines.append("<summary>Code:</summary>\n")
-            markdown_lines.append("```python")
-            markdown_lines.append(func_code.strip())
-            markdown_lines.append("```\n")
+            append_fenced_code(markdown_lines, func_code.strip())
             markdown_lines.append("</details>\n")
     # Join all lines
     return "\n".join(markdown_lines)
@@ -893,3 +887,21 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
     # Write the sorted code back to the file
     with Path(filename).open("w", encoding="utf-8") as f:
         f.write(new_code)
+
+
+def _fence_for_content(content: str, *, language: str = "python") -> tuple[str, str]:
+    """Return opening and closing Markdown fences long enough to contain `content`."""
+    fence = "`" * max(3, _max_backtick_run(content) + 1)
+    return f"{fence}{language}", fence
+
+
+def _max_backtick_run(text: str) -> int:
+    max_run = 0
+    current = 0
+    for char in text:
+        if char == "`":
+            current += 1
+            max_run = max(max_run, current)
+        else:
+            current = 0
+    return max_run

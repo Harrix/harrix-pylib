@@ -483,13 +483,13 @@ _No docstring provided._
 <details>
 <summary>Code:</summary>
 
-```python
+````python
 def _render_fence(token: Token) -> str:
     info = (token.info or "").strip()
     fence = "```"
     content = token.content.strip("\n")
     return f"{fence}{info}\n{content}\n{fence}\n"
-```
+````
 
 </details>
 

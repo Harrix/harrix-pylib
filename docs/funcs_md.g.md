@@ -620,7 +620,7 @@ h.md.append_yaml_tag("C:/Notes/note.md", ("author", "Anton Sergienko"))
 
 Before processing:
 
-````markdown
+```markdown
 ---
 categories: [it, program]
 tags: [VSCode, FAQ]
@@ -629,11 +629,11 @@ tags: [VSCode, FAQ]
 # Title
 
 Content here.
-````
+```
 
 After processing:
 
-````markdown
+```markdown
 ---
 categories: [it, program]
 tags: [VSCode, FAQ]
@@ -643,7 +643,7 @@ author: Anton Sergienko
 # Title
 
 Content here.
-````
+```
 
 <details>
 <summary>Code:</summary>

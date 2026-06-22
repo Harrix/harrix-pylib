@@ -231,6 +231,8 @@ Doc: [funcs_py.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs
 | 🔧 [`generate_md_docs_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-generate_md_docs_content)           | Generate Markdown documentation for a single Python file.                                   |
 | 🔧 [`lint_and_fix_python_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-lint_and_fix_python_code)           | Lints and fixes the provided Python code using the `ruff` formatter.                        |
 | 🔧 [`sort_py_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-sort_py_code)                                   | Sorts the Python code in the given file by organizing classes, functions, and statements.   |
+| 🔧 [`_fence_for_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-_fence_for_content)                       | Return opening and closing Markdown fences long enough to contain `content`.                |
+| 🔧 [`_max_backtick_run`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-_max_backtick_run)                         |                                                                                             |
 
 ### 📄 File `img_tools.py`
 

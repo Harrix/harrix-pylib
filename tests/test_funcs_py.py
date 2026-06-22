@@ -210,6 +210,54 @@ class ExampleClass:
         assert "A method that does nothing" in md_content, "Method docstring should be included."
 
 
+def test_generate_md_docs_content_uses_longer_fence_for_nested_backticks() -> None:
+    content = '''
+class ExampleAction:
+    """Process quote files separated by `---`."""
+
+    def execute(self) -> None:
+        """Run the action."""
+        self.show_instructions("""Given a file like `C:/test/Name-Surname/Title-of-book.md` with content:
+
+````markdown
+# Title of book
+
+Line 1.
+
+---
+
+Line 2.
+````
+
+After processing:
+
+````markdown
+# Title of book
+
+> Line 1.
+>
+> -- _Name Surname, Title of book_
+````
+""")
+'''
+
+    with TemporaryDirectory() as temp_folder:
+        temp_path = Path(temp_folder)
+        test_file = temp_path / "example_action.py"
+        test_file.write_text(content, encoding="utf8")
+
+        md_content = h.py.generate_md_docs_content(str(test_file))
+
+        assert "Process quote files separated by `---`." in md_content
+        assert "`````python" in md_content
+        assert "````markdown" in md_content
+        details_start = md_content.index("<details>")
+        details_end = md_content.index("</details>", details_start)
+        details_block = md_content[details_start:details_end]
+        assert details_block.count("`````") == 2  # noqa: PLR2004
+        assert "```python\ndef execute" not in details_block
+
+
 def test_lint_and_fix_python_code() -> None:
     python_code = "def greet(name):\n    print('Hello, ' +    name)"
     expected_formatted_code = 'def greet(name):\n    print("Hello, " + name)\n'
