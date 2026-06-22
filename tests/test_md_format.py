@@ -455,32 +455,39 @@ def test_format_markdown_content_keeps_mid_word_underscores() -> None:
 
 def test_format_markdown_content_keeps_prettier_literal_identifiers() -> None:
     source = (
-        "from _INCORRECT_WORD_PATTERNS.\n"
-        "t._id, t.amount\n"
-        "_Fiction.g.md\n"
         r"Oculus\Software\hyperbolic-magnetism-beat-saber\Beat Saber_Data" + "\n"
         r"- `list[list[Any]]`: List of process habits records [_id, habit_name, value, date]." + "\n"
-        "If folder contains aggregated file _<FolderName>.g.md (e.g. Fiction -> _Fiction.g.md),\n"
+        "2. _[directory_name].short.g.md\n"
+        "Use foo_bar_baz in code.\n"
     )
     result = format_markdown_content(source)
-    assert "_INCORRECT_WORD_PATTERNS" in result
-    assert "t._id, t.amount" in result
-    assert "_Fiction.g.md" in result
     assert r"Oculus\Software\hyperbolic-magnetism-beat-saber\Beat Saber_Data" in result
     assert r"[\_id, habit_name" in result
-    assert "_<FolderName>.g.md" in result
+    assert "_[directory_name].short.g.md" in result
+    assert "foo_bar_baz" in result
     assert "\\\\Software" not in result
 
 
-def test_format_markdown_content_escapes_all_caps_macros() -> None:
+def test_format_markdown_content_escapes_identifier_underscores() -> None:
     source = (
-        "В Windows все наборы инструментов, за исключением порта GCC Cygwin, "  # noqa: RUF001
-        "определяют макрос _WIN32. Макрос, определяемый автоматически, "
-        "называется предопределенным макросом.\n"
+        "Table save handlers are provided by _get_save_handlers(); _auto_save_row\n"
+        "- `table_name` (`str`): Name of the table to delete from. Must be in _SAFE_TABLES.\n"
+        "- `monthly_data` (`list`): Monthly data from _get_monthly_data_for_exercise.\n"
+        "Return a path in folder that does not exist, using base_name and suffix with _1, _2 if needed.\n"
+        "If folder contains aggregated file _<FolderName>.g.md (e.g. Fiction -> _Fiction.g.md),\n"
+        "В Windows все наборы инструментов определяют макрос _WIN32.\n"  # noqa: RUF001
+        "t._id, t.amount\n"
     )
     result = format_markdown_content(source)
+    assert "\\_get_save_handlers" in result
+    assert "\\_auto_save_row" in result
+    assert "\\_SAFE_TABLES" in result
+    assert "\\_get_monthly_data_for_exercise" in result
+    assert "\\_1, \\_2" in result
+    assert "\\_<FolderName>.g.md" in result
+    assert "-> \\_Fiction.g.md" in result
     assert "\\_WIN32" in result
-    assert "макрос _WIN32" not in result
+    assert "t.\\_id, t.amount" in result
 
 
 def test_format_markdown_content_keeps_tight_list_with_nested_sublist() -> None:

@@ -270,7 +270,7 @@ def _render_inline_token(children: list[Token], index: int, *, in_table: bool = 
             and children[index + 1].type == "html_inline"
             and (children[index + 1].content or "").startswith("<")
         ):
-            return escape_markdown_text(content[:-1]) + "_", index + 1
+            return escape_markdown_text(content[:-1]) + "\\_", index + 1
         return escape_markdown_text(content), index + 1
     if child.type == "code_inline":
         return _format_code_inline(child.content, in_table=in_table), index + 1

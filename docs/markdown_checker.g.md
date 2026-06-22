@@ -1891,7 +1891,7 @@ def _check_image_not_at_line_start(self, filename: Path, line: str, line_num: in
 def _check_incorrect_words(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for incorrect word forms (H006). Uses pre-compiled patterns from _INCORRECT_WORD_PATTERNS.
+Check for incorrect word forms (H006). Uses pre-compiled patterns from \_INCORRECT_WORD_PATTERNS.
 
 <details>
 <summary>Code:</summary>

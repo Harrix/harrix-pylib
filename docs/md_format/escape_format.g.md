@@ -12,8 +12,8 @@ lang: en
 ## Contents
 
 - [🔧 Function `escape_markdown_text`](#-function-escape_markdown_text)
-- [🔧 Function `_is_all_caps_macro_underscore`](#-function-_is_all_caps_macro_underscore)
 - [🔧 Function `_is_alphanumeric`](#-function-_is_alphanumeric)
+- [🔧 Function `_is_identifier_leading_underscore`](#-function-_is_identifier_leading_underscore)
 - [🔧 Function `_is_left_flanking`](#-function-_is_left_flanking)
 - [🔧 Function `_is_punctuation`](#-function-_is_punctuation)
 - [🔧 Function `_is_right_flanking`](#-function-_is_right_flanking)
@@ -60,38 +60,6 @@ def escape_markdown_text(text: str) -> str:
 
 </details>
 
-## 🔧 Function `_is_all_caps_macro_underscore`
-
-```python
-def _is_all_caps_macro_underscore(text: str, index: int) -> bool
-```
-
-Match C-style macros like `_WIN32` and `_DEBUG`.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _is_all_caps_macro_underscore(text: str, index: int) -> bool:
-    if text[index] != "_" or index + 1 >= len(text):
-        return False
-    if index > 0 and (text[index - 1].isalnum() or text[index - 1] == "_"):
-        return False
-
-    end = index + 1
-    while end < len(text) and (text[end].isalnum() or text[end] == "_"):
-        end += 1
-
-    token = text[index:end]
-    if len(token) < _MIN_MACRO_TOKEN_LEN or "_" in token[1:]:
-        return False
-
-    suffix = token[1:]
-    return any(char.isalpha() for char in suffix) and suffix.isupper()
-```
-
-</details>
-
 ## 🔧 Function `_is_alphanumeric`
 
 ```python
@@ -106,6 +74,40 @@ _No docstring provided._
 ```python
 def _is_alphanumeric(char: str) -> bool:
     return char.isalnum()
+```
+
+</details>
+
+## 🔧 Function `_is_identifier_leading_underscore`
+
+```python
+def _is_identifier_leading_underscore(text: str, index: int) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_identifier_leading_underscore(text: str, index: int) -> bool:
+    if text[index] != "_" or index + 1 >= len(text):
+        return False
+
+    next_char = text[index + 1]
+    if next_char == "[":
+        return False
+    if not (next_char.isalnum() or next_char in _IDENTIFIER_UNDERSCORE_AFTER):
+        return False
+
+    if index == 0:
+        return True
+
+    previous = text[index - 1]
+    if previous in _IDENTIFIER_UNDERSCORE_BEFORE:
+        return True
+
+    return index >= len(_ARROW_PREFIX) and text[index - len(_ARROW_PREFIX) : index] == _ARROW_PREFIX
 ```
 
 </details>
@@ -231,14 +233,14 @@ _No docstring provided._
 
 ```python
 def _should_escape_underscore(text: str, index: int) -> bool:
+    if index + 1 < len(text) and text[index + 1] == "[":
+        return False
     if index > 0 and text[index - 1] == "[" and index + 1 < len(text) and _is_alphanumeric(text[index + 1]):
         return True
-    if _is_all_caps_macro_underscore(text, index):
+    if _is_identifier_leading_underscore(text, index):
         return True
-    if index + 1 < len(text) and _is_alphanumeric(text[index + 1]):
-        return False
-    if index + 1 < len(text) and text[index + 1] in _UNDERSCORE_LITERAL_PREFIXES:
-        return False
+    if index > 0 and text[index - 1] == "." and index + 1 < len(text) and _is_alphanumeric(text[index + 1]):
+        return True
     if index > 0 and _is_alphanumeric(text[index - 1]) and index + 1 < len(text) and _is_punctuation(text[index + 1]):
         return True
     if index > 0 and _is_alphanumeric(text[index - 1]):
