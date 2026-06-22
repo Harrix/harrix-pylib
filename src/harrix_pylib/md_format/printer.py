@@ -96,6 +96,22 @@ def _join_blocks(parts: list[str]) -> str:
     return "\n\n".join(cleaned) + "\n"
 
 
+def _link_raw_text(children: list[Token], link_open_index: int) -> str | None:
+    """Return raw link label text when it contains only text and soft breaks."""
+    parts: list[str] = []
+    inner_index = link_open_index + 1
+    while inner_index < len(children) and children[inner_index].type != "link_close":
+        token = children[inner_index]
+        if token.type == "text":
+            parts.append(token.content)
+        elif token.type == "softbreak":
+            parts.append("\n")
+        else:
+            return None
+        inner_index += 1
+    return "".join(parts)
+
+
 def _list_is_loose(tokens: list[Token], index: int, close_index: int) -> bool:
     item_index = index + 1
     while item_index < close_index:
@@ -162,22 +178,6 @@ def _max_backtick_run(text: str) -> int:
         else:
             current = 0
     return max_run
-
-
-def _link_raw_text(children: list[Token], link_open_index: int) -> str | None:
-    """Return raw link label text when it contains only text and soft breaks."""
-    parts: list[str] = []
-    inner_index = link_open_index + 1
-    while inner_index < len(children) and children[inner_index].type != "link_close":
-        token = children[inner_index]
-        if token.type == "text":
-            parts.append(token.content)
-        elif token.type == "softbreak":
-            parts.append("\n")
-        else:
-            return None
-        inner_index += 1
-    return "".join(parts)
 
 
 def _readable_link_href(href: str) -> str:

@@ -19,6 +19,7 @@ lang: en
 - [🔧 Function `_format_table_separator`](#-function-_format_table_separator)
 - [🔧 Function `_is_spurious_table_row`](#-function-_is_spurious_table_row)
 - [🔧 Function `_join_blocks`](#-function-_join_blocks)
+- [🔧 Function `_link_raw_text`](#-function-_link_raw_text)
 - [🔧 Function `_list_is_loose`](#-function-_list_is_loose)
 - [🔧 Function `_list_item_is_loose`](#-function-_list_item_is_loose)
 - [🔧 Function `_max_backtick_run`](#-function-_max_backtick_run)
@@ -230,6 +231,35 @@ def _join_blocks(parts: list[str]) -> str:
     if not cleaned:
         return ""
     return "\n\n".join(cleaned) + "\n"
+```
+
+</details>
+
+## 🔧 Function `_link_raw_text`
+
+```python
+def _link_raw_text(children: list[Token], link_open_index: int) -> str | None
+```
+
+Return raw link label text when it contains only text and soft breaks.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _link_raw_text(children: list[Token], link_open_index: int) -> str | None:
+    parts: list[str] = []
+    inner_index = link_open_index + 1
+    while inner_index < len(children) and children[inner_index].type != "link_close":
+        token = children[inner_index]
+        if token.type == "text":
+            parts.append(token.content)
+        elif token.type == "softbreak":
+            parts.append("\n")
+        else:
+            return None
+        inner_index += 1
+    return "".join(parts)
 ```
 
 </details>
@@ -522,7 +552,15 @@ _No docstring provided._
 def _render_inline_token(children: list[Token], index: int, *, in_table: bool = False) -> tuple[str, int]:
     child = children[index]
     if child.type == "text":
-        return child.content, index + 1
+        content = child.content
+        if (
+            content.endswith("_")
+            and index + 1 < len(children)
+            and children[index + 1].type == "html_inline"
+            and (children[index + 1].content or "").startswith("<")
+        ):
+            return escape_markdown_text(content[:-1]) + "_", index + 1
+        return escape_markdown_text(content), index + 1
     if child.type == "code_inline":
         return _format_code_inline(child.content, in_table=in_table), index + 1
     if child.type == "softbreak":
@@ -546,17 +584,22 @@ def _render_inline_token(children: list[Token], index: int, *, in_table: bool = 
     if child.type == "link_open":
         href = _readable_link_href(str(child.attrGet("href") or ""))
         title = child.attrGet("title")
+        inner_index = index + 1
+        while inner_index < len(children) and children[inner_index].type != "link_close":
+            inner_index += 1
+        next_index = inner_index + 1 if inner_index < len(children) else inner_index
+        if not title:
+            raw_inner = _link_raw_text(children, index)
+            if raw_inner is not None:
+                autolink = _format_self_referential_link(href, raw_inner)
+                if autolink is not None:
+                    return autolink, next_index
         inner_parts: list[str] = []
         inner_index = index + 1
         while inner_index < len(children) and children[inner_index].type != "link_close":
             chunk, inner_index = _render_inline_token(children, inner_index, in_table=in_table)
             inner_parts.append(chunk)
         inner = "".join(inner_parts)
-        next_index = inner_index + 1 if inner_index < len(children) else inner_index
-        if not title:
-            autolink = _format_self_referential_link(href, inner)
-            if autolink is not None:
-                return autolink, next_index
         if title:
             return f'[{inner}]({href} "{title}")', next_index
         return f"[{inner}]({href})", next_index

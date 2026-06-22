@@ -28,6 +28,7 @@ lang: en
   - [📄 File `markdown_checker.py`](#-file-markdown_checkerpy)
   - [📄 File `python_checker.py`](#-file-python_checkerpy)
   - [📄 File `code_guard.py`](#-file-code_guardpy)
+  - [📄 File `escape_format.py`](#-file-escape_formatpy)
   - [📄 File `formatter.py`](#-file-formatterpy)
   - [📄 File `front_matter.py`](#-file-front_matterpy)
   - [📄 File `list_format.py`](#-file-list_formatpy)
@@ -284,6 +285,21 @@ Doc: [code_guard.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/cod
 | 🔧 [`_reindent_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_reindent_line)           |                                                                                 |
 | 🔧 [`_split_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_split_lines)               | Split text into lines without the trailing split artifact from a final newline. |
 
+### 📄 File `escape_format.py`
+
+Doc: [escape_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md)
+
+| Function/Class                                                                                                                                 | Description                                                |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 🔧 [`escape_markdown_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-escape_markdown_text)           | Escape emphasis-like `*` and `_` characters in plain text. |
+| 🔧 [`_is_alphanumeric`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_alphanumeric)                   |                                                            |
+| 🔧 [`_is_left_flanking`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_left_flanking)                 |                                                            |
+| 🔧 [`_is_punctuation`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_punctuation)                     |                                                            |
+| 🔧 [`_is_right_flanking`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_right_flanking)               |                                                            |
+| 🔧 [`_is_whitespace`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_whitespace)                       |                                                            |
+| 🔧 [`_should_escape_asterisk`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_asterisk)     |                                                            |
+| 🔧 [`_should_escape_underscore`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_underscore) |                                                            |
+
 ### 📄 File `formatter.py`
 
 Doc: [formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md)
@@ -349,6 +365,7 @@ Doc: [printer.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/printe
 | 🔧 [`_format_table_separator`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_format_table_separator)             |                                                                          |
 | 🔧 [`_is_spurious_table_row`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_is_spurious_table_row)               |                                                                          |
 | 🔧 [`_join_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_join_blocks)                                   |                                                                          |
+| 🔧 [`_link_raw_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_link_raw_text)                               | Return raw link label text when it contains only text and soft breaks.   |
 | 🔧 [`_list_is_loose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_list_is_loose)                               |                                                                          |
 | 🔧 [`_list_item_is_loose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_list_item_is_loose)                     |                                                                          |
 | 🔧 [`_max_backtick_run`](https://github.com/Harrix/harrix-pylib/blob/main/docs/printer.g.md#-function-_max_backtick_run)                         |                                                                          |

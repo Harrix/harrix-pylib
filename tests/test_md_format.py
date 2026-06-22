@@ -472,6 +472,17 @@ def test_format_markdown_content_keeps_prettier_literal_identifiers() -> None:
     assert "\\\\Software" not in result
 
 
+def test_format_markdown_content_escapes_all_caps_macros() -> None:
+    source = (
+        "В Windows все наборы инструментов, за исключением порта GCC Cygwin, "
+        "определяют макрос _WIN32. Макрос, определяемый автоматически, "
+        "называется предопределенным макросом.\n"
+    )
+    result = format_markdown_content(source)
+    assert "\\_WIN32" in result
+    assert "макрос _WIN32" not in result
+
+
 def test_format_markdown_content_keeps_tight_list_with_nested_sublist() -> None:
     source = (
         "- [Class `StyleSheet`](#class)\n\n"

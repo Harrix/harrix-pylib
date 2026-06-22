@@ -27,5 +27,11 @@ def test_escape_markdown_text_keeps_prettier_literal_cases() -> None:
     assert escape_markdown_text("_Fiction.g.md") == "_Fiction.g.md"
 
 
+def test_escape_markdown_text_escapes_all_caps_macros() -> None:
+    assert escape_markdown_text("определяют макрос _WIN32.") == "определяют макрос \\_WIN32."
+    assert escape_markdown_text("use _DEBUG flag") == "use \\_DEBUG flag"
+    assert escape_markdown_text(r"определяют макрос \_WIN32.") == "определяют макрос \\_WIN32."
+
+
 def test_escape_markdown_text_skips_code_block_placeholder() -> None:
     assert escape_markdown_text("HSKMDFMTCODE0") == "HSKMDFMTCODE0"

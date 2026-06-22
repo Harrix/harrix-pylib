@@ -1,17 +1,40 @@
-"""Escape literal Markdown syntax in plain text."""
+---
+author: Anton Sergienko
+author-email: anton.b.sergienko@gmail.com
+lang: en
+---
 
-from __future__ import annotations
+# 📄 File `escape_format.py`
 
-import unicodedata
+<details>
+<summary>📖 Contents ⬇️</summary>
 
-from harrix_pylib.md_format.code_guard import PLACEHOLDER_PREFIX
+## Contents
 
-_PUNCTUATION = frozenset("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\u3000\uff5e")
-_UNDERSCORE_LITERAL_PREFIXES = frozenset("[.<")
+- [🔧 Function `escape_markdown_text`](#-function-escape_markdown_text)
+- [🔧 Function `_is_alphanumeric`](#-function-_is_alphanumeric)
+- [🔧 Function `_is_left_flanking`](#-function-_is_left_flanking)
+- [🔧 Function `_is_punctuation`](#-function-_is_punctuation)
+- [🔧 Function `_is_right_flanking`](#-function-_is_right_flanking)
+- [🔧 Function `_is_whitespace`](#-function-_is_whitespace)
+- [🔧 Function `_should_escape_asterisk`](#-function-_should_escape_asterisk)
+- [🔧 Function `_should_escape_underscore`](#-function-_should_escape_underscore)
 
+</details>
 
+## 🔧 Function `escape_markdown_text`
+
+```python
+def escape_markdown_text(text: str) -> str
+```
+
+Escape emphasis-like `*` and `_` characters in plain text.
+
+<details>
+<summary>Code:</summary>
+
+```python
 def escape_markdown_text(text: str) -> str:
-    """Escape emphasis-like ``*`` and ``_`` characters in plain text."""
     if text.startswith(PLACEHOLDER_PREFIX):
         return text
 
@@ -32,12 +55,40 @@ def escape_markdown_text(text: str) -> str:
             parts.append(char)
         index += 1
     return "".join(parts)
+```
 
+</details>
 
+## 🔧 Function `_is_alphanumeric`
+
+```python
+def _is_alphanumeric(char: str) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
 def _is_alphanumeric(char: str) -> bool:
     return char.isalnum()
+```
 
+</details>
 
+## 🔧 Function `_is_left_flanking`
+
+```python
+def _is_left_flanking(text: str, index: int) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
 def _is_left_flanking(text: str, index: int) -> bool:
     if index + 1 < len(text) and _is_whitespace(text[index + 1]):
         return False
@@ -48,14 +99,42 @@ def _is_left_flanking(text: str, index: int) -> bool:
     ):
         return True
     return index > 0 and (_is_whitespace(text[index - 1]) or _is_punctuation(text[index - 1]))
+```
 
+</details>
 
+## 🔧 Function `_is_punctuation`
+
+```python
+def _is_punctuation(char: str) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
 def _is_punctuation(char: str) -> bool:
     if char in _PUNCTUATION:
         return True
     return unicodedata.category(char).startswith("P")
+```
 
+</details>
 
+## 🔧 Function `_is_right_flanking`
+
+```python
+def _is_right_flanking(text: str, index: int) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
 def _is_right_flanking(text: str, index: int) -> bool:
     if index > 0 and _is_whitespace(text[index - 1]):
         return False
@@ -66,39 +145,60 @@ def _is_right_flanking(text: str, index: int) -> bool:
     ):
         return True
     return index + 1 < len(text) and (_is_whitespace(text[index + 1]) or _is_punctuation(text[index + 1]))
+```
 
+</details>
 
+## 🔧 Function `_is_whitespace`
+
+```python
+def _is_whitespace(char: str) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
 def _is_whitespace(char: str) -> bool:
     return char.isspace()
+```
 
+</details>
 
+## 🔧 Function `_should_escape_asterisk`
+
+```python
+def _should_escape_asterisk(text: str, index: int) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
 def _should_escape_asterisk(text: str, index: int) -> bool:
     return _is_left_flanking(text, index) or _is_right_flanking(text, index)
+```
 
+</details>
 
-def _is_all_caps_macro_underscore(text: str, index: int) -> bool:
-    """Match C-style macros like ``_WIN32`` and ``_DEBUG``."""
-    if text[index] != "_" or index + 1 >= len(text):
-        return False
-    if index > 0 and (text[index - 1].isalnum() or text[index - 1] == "_"):
-        return False
+## 🔧 Function `_should_escape_underscore`
 
-    end = index + 1
-    while end < len(text) and (text[end].isalnum() or text[end] == "_"):
-        end += 1
+```python
+def _should_escape_underscore(text: str, index: int) -> bool
+```
 
-    token = text[index:end]
-    if len(token) < 2 or "_" in token[1:]:
-        return False
+_No docstring provided._
 
-    suffix = token[1:]
-    return any(char.isalpha() for char in suffix) and suffix.isupper()
+<details>
+<summary>Code:</summary>
 
-
+```python
 def _should_escape_underscore(text: str, index: int) -> bool:
     if index > 0 and text[index - 1] == "[" and index + 1 < len(text) and _is_alphanumeric(text[index + 1]):
-        return True
-    if _is_all_caps_macro_underscore(text, index):
         return True
     if index + 1 < len(text) and _is_alphanumeric(text[index + 1]):
         return False
@@ -114,3 +214,6 @@ def _should_escape_underscore(text: str, index: int) -> bool:
     can_open = left and (not right or (index > 0 and _is_punctuation(text[index - 1])))
     can_close = right and (not left or (index + 1 < len(text) and _is_punctuation(text[index + 1])))
     return can_open or can_close
+```
+
+</details>

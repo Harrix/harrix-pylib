@@ -2273,7 +2273,7 @@ def _check_space_before_punctuation(
 def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '*' (H024).
+Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '\*' (H024).
 
 Only checks text outside inline code and outside link URLs.
 Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C);
