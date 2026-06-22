@@ -513,8 +513,8 @@ def test_format_markdown_content_keeps_tight_simple_list() -> None:
 
 def test_format_markdown_content_collapses_redundant_inline_spaces() -> None:
     source = (
-        "- after opening guillemet « (direct speech, e.g. «Ваша задача);  # ignore: HP001\n"  # noqa: RUF001
-        "- after dash at line start (dialogue, e.g. — Ваша работа хороша).  # ignore: HP001\n"  # noqa: RUF001
+        "- after opening guillemet « (direct speech, e.g. «Ваша задача);  # ignore: HP001\n"
+        "- after dash at line start (dialogue, e.g. — Ваша работа хороша).  # ignore: HP001\n"
     )
     result = format_markdown_content(source)
     assert ");  # ignore" not in result
