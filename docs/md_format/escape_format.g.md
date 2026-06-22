@@ -12,6 +12,7 @@ lang: en
 ## Contents
 
 - [🔧 Function `escape_markdown_text`](#-function-escape_markdown_text)
+- [🔧 Function `_is_all_caps_macro_underscore`](#-function-_is_all_caps_macro_underscore)
 - [🔧 Function `_is_alphanumeric`](#-function-_is_alphanumeric)
 - [🔧 Function `_is_left_flanking`](#-function-_is_left_flanking)
 - [🔧 Function `_is_punctuation`](#-function-_is_punctuation)
@@ -55,6 +56,38 @@ def escape_markdown_text(text: str) -> str:
             parts.append(char)
         index += 1
     return "".join(parts)
+```
+
+</details>
+
+## 🔧 Function `_is_all_caps_macro_underscore`
+
+```python
+def _is_all_caps_macro_underscore(text: str, index: int) -> bool
+```
+
+Match C-style macros like `_WIN32` and `_DEBUG`.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_all_caps_macro_underscore(text: str, index: int) -> bool:
+    if text[index] != "_" or index + 1 >= len(text):
+        return False
+    if index > 0 and (text[index - 1].isalnum() or text[index - 1] == "_"):
+        return False
+
+    end = index + 1
+    while end < len(text) and (text[end].isalnum() or text[end] == "_"):
+        end += 1
+
+    token = text[index:end]
+    if len(token) < _MIN_MACRO_TOKEN_LEN or "_" in token[1:]:
+        return False
+
+    suffix = token[1:]
+    return any(char.isalpha() for char in suffix) and suffix.isupper()
 ```
 
 </details>
@@ -199,6 +232,8 @@ _No docstring provided._
 ```python
 def _should_escape_underscore(text: str, index: int) -> bool:
     if index > 0 and text[index - 1] == "[" and index + 1 < len(text) and _is_alphanumeric(text[index + 1]):
+        return True
+    if _is_all_caps_macro_underscore(text, index):
         return True
     if index + 1 < len(text) and _is_alphanumeric(text[index + 1]):
         return False

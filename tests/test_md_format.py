@@ -474,7 +474,7 @@ def test_format_markdown_content_keeps_prettier_literal_identifiers() -> None:
 
 def test_format_markdown_content_escapes_all_caps_macros() -> None:
     source = (
-        "В Windows все наборы инструментов, за исключением порта GCC Cygwin, "
+        "В Windows все наборы инструментов, за исключением порта GCC Cygwin, "  # noqa: RUF001
         "определяют макрос _WIN32. Макрос, определяемый автоматически, "
         "называется предопределенным макросом.\n"
     )
