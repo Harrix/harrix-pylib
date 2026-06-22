@@ -474,7 +474,7 @@ def test_format_markdown_content_escapes_identifier_underscores() -> None:
         "- `table_name` (`str`): Name of the table to delete from. Must be in _SAFE_TABLES.\n"
         "- `monthly_data` (`list`): Monthly data from _get_monthly_data_for_exercise.\n"
         "Return a path in folder that does not exist, using base_name and suffix with _1, _2 if needed.\n"
-        "If folder contains aggregated file _<FolderName>.g.md (e.g. Fiction -> _Fiction.g.md),\n"
+        "If folder contains aggregated file `_<FolderName>.g.md` (e.g. `Fiction` -> `_Fiction.g.md`),\n"
         "В Windows все наборы инструментов определяют макрос _WIN32.\n"  # noqa: RUF001
         "t._id, t.amount\n"
     )
