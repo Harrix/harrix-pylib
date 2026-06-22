@@ -553,6 +553,8 @@ def _render_inline_token(children: list[Token], index: int, *, in_table: bool = 
     child = children[index]
     if child.type == "text":
         content = child.content
+        if not in_table:
+            content = normalize_inline_spaces(content)
         if (
             content.endswith("_")
             and index + 1 < len(children)

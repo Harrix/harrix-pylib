@@ -30,6 +30,7 @@
   - [📄 File `parser.py`](#-file-parserpy)
   - [📄 File `printer.py`](#-file-printerpy)
   - [📄 File `table_format.py`](#-file-table_formatpy)
+  - [📄 File `text_format.py`](#-file-text_formatpy)
   - [📄 File `wiki_plugin.py`](#-file-wiki_pluginpy)
   - [📄 File `cleanup.py`](#-file-cleanuppy)
   - [📄 File `hidden.py`](#-file-hiddenpy)
@@ -395,6 +396,14 @@ Doc: [table_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/t
 | 🔧 [`text_display_width`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-text_display_width)                         | Return the terminal display width of text (emoji and CJK count as 2 columns). |
 | 🔧 [`unwrap_spurious_table_rows`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-unwrap_spurious_table_rows)         | Turn ``                                                                       |
 | 🔧 [`_is_emoji_base`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-_is_emoji_base)                                 |                                                                               |
+
+### 📄 File `text_format.py`
+
+Doc: [text_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_format.g.md)
+
+| Function/Class                                                                                                                           | Description                                                              |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 🔧 [`normalize_inline_spaces`](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_format.g.md#-function-normalize_inline_spaces) | Collapse consecutive spaces and tabs in phrasing text to a single space. |
 
 ### 📄 File `wiki_plugin.py`
 

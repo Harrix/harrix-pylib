@@ -2417,8 +2417,8 @@ def generate_summaries(folder: Path | str) -> str
 
 Generate two summary files for a directory of year-based Markdown files.
 
-1. table.include.g.md - A statistical table showing the count of book entries by year
-2. _[directory_name].short.g.md - A hierarchical list of all book entries organized by year
+1. `table.include.g.md` - A statistical table showing the count of book entries by year
+2. `_[directory_name].short.g.md` - A hierarchical list of all book entries organized by year
 
 Args:
 

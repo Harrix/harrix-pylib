@@ -2160,8 +2160,8 @@ Check for capitalized Russian polite pronouns (H023). Use lowercase when address
 Exception: pronoun at sentence start is allowed:
 
 - after line start or after .!?;
-- after opening guillemet « (direct speech, e.g. «Ваша задача);  # ignore: HP001
-- after dash at line start (dialogue, e.g. — Ваша работа хороша).  # ignore: HP001
+- after opening guillemet « (direct speech, e.g. «Ваша задача); # ignore: HP001
+- after dash at line start (dialogue, e.g. — Ваша работа хороша). # ignore: HP001
   Yields at most one error per line.
 
 <details>

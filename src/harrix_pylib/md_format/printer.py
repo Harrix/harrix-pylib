@@ -7,6 +7,7 @@ from urllib.parse import unquote, urlsplit, urlunsplit
 
 from harrix_pylib.md_format.escape_format import escape_markdown_text
 from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text_display_width
+from harrix_pylib.md_format.text_format import normalize_inline_spaces
 
 if TYPE_CHECKING:
     from markdown_it.token import Token
@@ -264,6 +265,8 @@ def _render_inline_token(children: list[Token], index: int, *, in_table: bool = 
     child = children[index]
     if child.type == "text":
         content = child.content
+        if not in_table:
+            content = normalize_inline_spaces(content)
         if (
             content.endswith("_")
             and index + 1 < len(children)

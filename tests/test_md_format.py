@@ -509,3 +509,21 @@ def test_format_markdown_content_keeps_tight_simple_list() -> None:
     result = format_markdown_content(source)
     assert "- one\r\n- two" in result
     assert "- one\r\n\r\n- two" not in result
+
+
+def test_format_markdown_content_collapses_redundant_inline_spaces() -> None:
+    source = (
+        "- after opening guillemet « (direct speech, e.g. «Ваша задача);  # ignore: HP001\n"  # noqa: RUF001
+        "- after dash at line start (dialogue, e.g. — Ваша работа хороша).  # ignore: HP001\n"  # noqa: RUF001
+    )
+    result = format_markdown_content(source)
+    assert ");  # ignore" not in result
+    assert "); # ignore: HP001" in result
+    assert ").  # ignore" not in result
+    assert "). # ignore: HP001" in result
+
+
+def test_format_markdown_content_preserves_table_cell_spacing() -> None:
+    source = "| a  b | x |\n| --- | --- |\n"
+    result = format_markdown_content(source)
+    assert "a  b" in result
