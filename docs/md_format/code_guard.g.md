@@ -19,6 +19,7 @@ lang: en
 - [🔧 Function `_placeholder`](#-function-_placeholder)
 - [🔧 Function `_reindent_line`](#-function-_reindent_line)
 - [🔧 Function `_split_lines`](#-function-_split_lines)
+- [🔧 Function `_trim_trailing_blank_lines_before_closing_fence`](#-function-_trim_trailing_blank_lines_before_closing_fence)
 
 </details>
 
@@ -76,6 +77,7 @@ def extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
             block_lines.append(lines[line_index])
             line_index += 1
 
+        block_lines = _trim_trailing_blank_lines_before_closing_fence(block_lines)
         base_indent = _leading_whitespace(block_lines[0])
         blocks.append(CodeBlock(index=index, lines=block_lines, base_indent=base_indent))
         placeholder_line = f"{base_indent}{_placeholder(index)}"
@@ -232,6 +234,32 @@ def _split_lines(text: str) -> tuple[list[str], bool]:
     if has_trailing_newline and lines:
         lines.pop()
     return lines, has_trailing_newline
+```
+
+</details>
+
+## 🔧 Function `_trim_trailing_blank_lines_before_closing_fence`
+
+```python
+def _trim_trailing_blank_lines_before_closing_fence(block_lines: list[str]) -> list[str]
+```
+
+Drop blank lines immediately before the closing fence line.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _trim_trailing_blank_lines_before_closing_fence(block_lines: list[str]) -> list[str]:
+    if len(block_lines) < _MIN_FENCED_BLOCK_LINES:
+        return block_lines
+
+    trimmed = list(block_lines)
+    closing_index = len(trimmed) - 1
+    while closing_index >= _MIN_FENCED_BLOCK_LINES and trimmed[closing_index - 1].strip() == "":
+        trimmed.pop(closing_index - 1)
+        closing_index -= 1
+    return trimmed
 ```
 
 </details>

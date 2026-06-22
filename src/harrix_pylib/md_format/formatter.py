@@ -11,6 +11,7 @@ from harrix_pylib.md_format.front_matter import (
     compact_front_matter,
     join_front_matter,
     split_front_matter,
+    trim_trailing_blank_lines,
 )
 from harrix_pylib.md_format.list_format import ensure_blank_line_after_lists
 from harrix_pylib.md_format.options import FormatOptions
@@ -60,6 +61,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
         tokens = parser.parse(body)
         rendered_body = restore_code_blocks(render_tokens(tokens), code_blocks)
         result = join_front_matter(front_matter, rendered_body)
+    result = trim_trailing_blank_lines(result)
     return _normalize_end_of_line(result, options.end_of_line)
 
 

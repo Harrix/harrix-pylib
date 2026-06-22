@@ -39,7 +39,6 @@ Install the following software:
    cd C:/GitHub
 
    git clone <https://github.com/Harrix/harrix-pylib.git>
-
    ```
 
 2. Open the folder `C:/GitHub/harrix-pylib` in Cursor (or VSCode).

@@ -16,6 +16,7 @@ lang: en
 - [🔧 Function `join_front_matter`](#-function-join_front_matter)
 - [🔧 Function `prepend_markdown_header`](#-function-prepend_markdown_header)
 - [🔧 Function `split_front_matter`](#-function-split_front_matter)
+- [🔧 Function `trim_trailing_blank_lines`](#-function-trim_trailing_blank_lines)
 
 </details>
 
@@ -139,6 +140,32 @@ def split_front_matter(markdown_text: str) -> tuple[str, str]:
     if len(parts) < _MIN_FRONT_MATTER_PARTS:
         return "", markdown_text
     return f"---{parts[1]}---", parts[2].lstrip()
+```
+
+</details>
+
+## 🔧 Function `trim_trailing_blank_lines`
+
+```python
+def trim_trailing_blank_lines(text: str) -> str
+```
+
+Remove trailing blank lines while keeping a single final newline.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def trim_trailing_blank_lines(text: str) -> str:
+    lines = text.split("\n")
+    has_trailing_newline = text.endswith("\n")
+    if has_trailing_newline and lines:
+        lines.pop()
+    while lines and lines[-1] == "":
+        lines.pop()
+    if not lines:
+        return "\n"
+    return "\n".join(lines) + "\n"
 ```
 
 </details>

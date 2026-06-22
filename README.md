@@ -271,16 +271,17 @@ Doc: [python_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs
 
 Doc: [code_guard.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md)
 
-| Function/Class                                                                                                                  | Description                                                                     |
-| ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 🏛️ Class [`CodeBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#️-class-codeblock)                  | Stored fenced code block extracted from Markdown body.                          |
-| 🔧 [`extract_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-extract_code_blocks) | Replace fenced code blocks with placeholders and store originals verbatim.      |
-| 🔧 [`restore_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-restore_code_blocks) | Restore fenced code blocks from placeholders.                                   |
-| 🔧 [`_join_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_join_lines)                 |                                                                                 |
-| 🔧 [`_leading_whitespace`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_leading_whitespace) |                                                                                 |
-| 🔧 [`_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_placeholder)               |                                                                                 |
-| 🔧 [`_reindent_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_reindent_line)           |                                                                                 |
-| 🔧 [`_split_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_split_lines)               | Split text into lines without the trailing split artifact from a final newline. |
+| Function/Class                                                                                                                                                                          | Description                                                                     |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 🏛️ Class [`CodeBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#️-class-codeblock)                                                                          | Stored fenced code block extracted from Markdown body.                          |
+| 🔧 [`extract_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-extract_code_blocks)                                                         | Replace fenced code blocks with placeholders and store originals verbatim.      |
+| 🔧 [`restore_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-restore_code_blocks)                                                         | Restore fenced code blocks from placeholders.                                   |
+| 🔧 [`_join_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_join_lines)                                                                         |                                                                                 |
+| 🔧 [`_leading_whitespace`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_leading_whitespace)                                                         |                                                                                 |
+| 🔧 [`_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_placeholder)                                                                       |                                                                                 |
+| 🔧 [`_reindent_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_reindent_line)                                                                   |                                                                                 |
+| 🔧 [`_split_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_split_lines)                                                                       | Split text into lines without the trailing split artifact from a final newline. |
+| 🔧 [`_trim_trailing_blank_lines_before_closing_fence`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_trim_trailing_blank_lines_before_closing_fence) | Drop blank lines immediately before the closing fence line.                     |
 
 ### 📄 File `escape_format.py`
 
@@ -321,6 +322,7 @@ Doc: [front_matter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/f
 | 🔧 [`join_front_matter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-join_front_matter)                   | Join front matter and formatted body.                                      |
 | 🔧 [`prepend_markdown_header`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-prepend_markdown_header)       | Prepend YAML or Markdown prefix without duplicating existing front matter. |
 | 🔧 [`split_front_matter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-split_front_matter)                 | Split YAML front matter from Markdown body.                                |
+| 🔧 [`trim_trailing_blank_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-trim_trailing_blank_lines)   | Remove trailing blank lines while keeping a single final newline.          |
 
 ### 📄 File `list_format.py`
 

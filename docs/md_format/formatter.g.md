@@ -110,6 +110,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
         tokens = parser.parse(body)
         rendered_body = restore_code_blocks(render_tokens(tokens), code_blocks)
         result = join_front_matter(front_matter, rendered_body)
+    result = trim_trailing_blank_lines(result)
     return _normalize_end_of_line(result, options.end_of_line)
 ```
 

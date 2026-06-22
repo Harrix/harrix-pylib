@@ -304,7 +304,6 @@ author: Jane Doe
 author-email: jane.doe@example.com
 lang: ru
 ---
-
 ```
 
 <details>
@@ -367,7 +366,6 @@ author: Jane Doe
 author-email: jane.doe@example.com
 lang: ru
 ---
-
 ```
 
 <details>
@@ -1730,7 +1728,6 @@ Line 3.
 Line 4.
 
 -- Modified title of book
-
 ```
 
 After processing:
@@ -1751,7 +1748,6 @@ After processing:
 > Line 4.
 >
 > -- _Name Surname, Modified title of book_
-
 ```
 
 Note:
@@ -1976,7 +1972,6 @@ _Figure 22: Alt ds sdsd text_
 Another text.
 
 ![Alt text](img/image3.png)
-
 ````
 
 After processing:
@@ -2116,7 +2111,6 @@ _Figure 22: Alt ds sdsd text_
 Another text.
 
 ![Alt text](img/image3.png)
-
 ````
 
 After processing:
@@ -2910,7 +2904,6 @@ tags: [VSCode, FAQ]
 ---
 
 # Installing VSCode
-
 ```
 
 Text after processing:
@@ -3564,7 +3557,6 @@ tags: [VSCode, FAQ]
 ---
 
 # Installing VSCode
-
 ```
 
 Markdown after processing:
@@ -3883,7 +3875,6 @@ Example text.
 Another text.
 
 Another text.
-
 ```
 
 After sorting:
@@ -3908,7 +3899,6 @@ Another text.
 Example text.
 
 Example text.
-
 ```
 
 <details>

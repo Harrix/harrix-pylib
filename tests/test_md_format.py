@@ -527,3 +527,28 @@ def test_format_markdown_content_preserves_table_cell_spacing() -> None:
     source = "| a  b | x |\n| --- | --- |\n"
     result = format_markdown_content(source)
     assert "a  b" in result
+
+
+def test_format_markdown_content_trims_trailing_blank_line_after_list() -> None:
+    source = (
+        "## CLI commands\n\n"
+        "CLI commands after installation.\n\n"
+        "- `uv self update` — update uv itself.\n"
+        "- `uv sync --upgrade` — update all project libraries.\n\n"
+    )
+    result = format_markdown_content(source).replace("\r\n", "\n")
+    assert result.endswith("- `uv sync --upgrade` — update all project libraries.\n")
+    assert not result.endswith("- `uv sync --upgrade` — update all project libraries.\n\n")
+
+
+def test_format_markdown_content_trims_trailing_blank_line_inside_fenced_block() -> None:
+    source = (
+        "````markdown\n"
+        "## CLI commands\n\n"
+        "- `uv self update` — update uv itself.\n"
+        "- `uv sync --upgrade` — update all project libraries.\n\n"
+        "````\n"
+    )
+    result = format_markdown_content(source).replace("\r\n", "\n")
+    assert result.endswith("- `uv sync --upgrade` — update all project libraries.\n````\n")
+    assert "libraries.\n\n````" not in result

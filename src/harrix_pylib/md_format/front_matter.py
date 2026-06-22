@@ -63,3 +63,16 @@ def split_front_matter(markdown_text: str) -> tuple[str, str]:
     if len(parts) < _MIN_FRONT_MATTER_PARTS:
         return "", markdown_text
     return f"---{parts[1]}---", parts[2].lstrip()
+
+
+def trim_trailing_blank_lines(text: str) -> str:
+    """Remove trailing blank lines while keeping a single final newline."""
+    lines = text.split("\n")
+    has_trailing_newline = text.endswith("\n")
+    if has_trailing_newline and lines:
+        lines.pop()
+    while lines and lines[-1] == "":
+        lines.pop()
+    if not lines:
+        return "\n"
+    return "\n".join(lines) + "\n"

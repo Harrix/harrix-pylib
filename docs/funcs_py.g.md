@@ -50,7 +50,6 @@ CLI commands after installation.
 - `ruff format` — format the project's Python files.
 - `ruff check` — lint the project's Python files.
 - `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
-
 ```
 
 Returns:
@@ -675,7 +674,6 @@ Example:
     import harrix_pylib as h
 
     h.py.sort_py_code("C:/projects/project/main.py", is_use_ruff_format=True)
-
 ```
 
 Before sorting:
