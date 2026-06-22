@@ -126,4 +126,7 @@ def _trim_trailing_blank_lines_before_closing_fence(block_lines: list[str]) -> l
     while closing_index >= _MIN_FENCED_BLOCK_LINES and trimmed[closing_index - 1].strip() == "":
         trimmed.pop(closing_index - 1)
         closing_index -= 1
+    if len(trimmed) == _MIN_FENCED_BLOCK_LINES:
+        # Ensure an empty fenced block stays a fenced block (not inline code).
+        trimmed.insert(1, "")
     return trimmed

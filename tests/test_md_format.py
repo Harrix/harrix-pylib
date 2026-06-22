@@ -555,3 +555,9 @@ def test_format_markdown_content_trims_trailing_blank_line_inside_fenced_block()
     result = format_markdown_content(source).replace("\r\n", "\n")
     assert result.endswith("- `uv sync --upgrade` — update all project libraries.\n````\n")
     assert "libraries.\n\n````" not in result
+
+
+def test_format_markdown_content_keeps_blank_line_in_empty_fenced_block() -> None:
+    source = "```\n```\n"
+    result = format_markdown_content(source).replace("\r\n", "\n")
+    assert result == "```\n\n```\n"

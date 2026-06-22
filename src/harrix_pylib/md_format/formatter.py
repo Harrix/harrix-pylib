@@ -19,6 +19,8 @@ from harrix_pylib.md_format.parser import get_markdown_parser
 from harrix_pylib.md_format.printer import render_tokens
 from harrix_pylib.md_format.table_format import ensure_blank_line_after_tables, unwrap_spurious_table_rows
 
+_EMPTY_FENCE_RE = re.compile(r"(?m)^(?P<indent>[ \t]*)(?P<fence>`{3,}|~{3,})[ \t]*\n(?P=indent)(?P=fence)[ \t]*$")
+
 
 def format_markdown_content(text: str, *, end_of_line: str = "crlf") -> str:
     """Format Markdown text with Prettier-like defaults."""
@@ -45,11 +47,17 @@ def read_markdown_text(filename: Path | str) -> str:
     return normalize_line_endings(data.decode("utf-8"))
 
 
+def _ensure_blank_line_in_empty_fences(body: str) -> str:
+    """Ensure empty fenced blocks are parsed as fences, not inline code."""
+    return _EMPTY_FENCE_RE.sub(r"\g<indent>\g<fence>\n\n\g<indent>\g<fence>", body)
+
+
 def _format_with_options(text: str, options: FormatOptions) -> str:
     normalized = normalize_line_endings(text)
     front_matter, body = split_front_matter(normalized)
     if front_matter:
         front_matter = compact_front_matter(front_matter)
+    body = _ensure_blank_line_in_empty_fences(body)
     body, code_blocks = extract_code_blocks(body)
     body = collapse_extra_blank_lines(body)
     body = unwrap_spurious_table_rows(ensure_blank_line_after_tables(body))

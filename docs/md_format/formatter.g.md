@@ -14,6 +14,7 @@ lang: en
 - [🔧 Function `format_markdown_content`](#-function-format_markdown_content)
 - [🔧 Function `normalize_line_endings`](#-function-normalize_line_endings)
 - [🔧 Function `read_markdown_text`](#-function-read_markdown_text)
+- [🔧 Function `_ensure_blank_line_in_empty_fences`](#-function-_ensure_blank_line_in_empty_fences)
 - [🔧 Function `_format_with_options`](#-function-_format_with_options)
 - [🔧 Function `_normalize_end_of_line`](#-function-_normalize_end_of_line)
 
@@ -82,6 +83,24 @@ def read_markdown_text(filename: Path | str) -> str:
 
 </details>
 
+## 🔧 Function `_ensure_blank_line_in_empty_fences`
+
+```python
+def _ensure_blank_line_in_empty_fences(body: str) -> str
+```
+
+Ensure empty fenced blocks are parsed as fences, not inline code.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _ensure_blank_line_in_empty_fences(body: str) -> str:
+    return _EMPTY_FENCE_RE.sub(r"\g<indent>\g<fence>\n\n\g<indent>\g<fence>", body)
+```
+
+</details>
+
 ## 🔧 Function `_format_with_options`
 
 ```python
@@ -99,6 +118,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     front_matter, body = split_front_matter(normalized)
     if front_matter:
         front_matter = compact_front_matter(front_matter)
+    body = _ensure_blank_line_in_empty_fences(body)
     body, code_blocks = extract_code_blocks(body)
     body = collapse_extra_blank_lines(body)
     body = unwrap_spurious_table_rows(ensure_blank_line_after_tables(body))

@@ -303,13 +303,14 @@ Doc: [escape_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/
 
 Doc: [formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md)
 
-| Function/Class                                                                                                                         | Description                                                             |
-| -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 🔧 [`format_markdown_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-format_markdown_content) | Format Markdown text with Prettier-like defaults.                       |
-| 🔧 [`normalize_line_endings`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-normalize_line_endings)   | Normalize mixed or corrupted line endings to LF.                        |
-| 🔧 [`read_markdown_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-read_markdown_text)           | Read Markdown from disk without universal-newline mangling of `\r\r\n`. |
-| 🔧 [`_format_with_options`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-_format_with_options)       |                                                                         |
-| 🔧 [`_normalize_end_of_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-_normalize_end_of_line)   |                                                                         |
+| Function/Class                                                                                                                                               | Description                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| 🔧 [`format_markdown_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-format_markdown_content)                       | Format Markdown text with Prettier-like defaults.                       |
+| 🔧 [`normalize_line_endings`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-normalize_line_endings)                         | Normalize mixed or corrupted line endings to LF.                        |
+| 🔧 [`read_markdown_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-read_markdown_text)                                 | Read Markdown from disk without universal-newline mangling of `\r\r\n`. |
+| 🔧 [`_ensure_blank_line_in_empty_fences`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-_ensure_blank_line_in_empty_fences) | Ensure empty fenced blocks are parsed as fences, not inline code.       |
+| 🔧 [`_format_with_options`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-_format_with_options)                             |                                                                         |
+| 🔧 [`_normalize_end_of_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-_normalize_end_of_line)                         |                                                                         |
 
 ### 📄 File `front_matter.py`
 
