@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import zipfile
 from collections.abc import Callable, Iterator, Sequence
-from datetime import datetime
+from datetime import date
 from pathlib import Path
 
 import pypdf
@@ -447,7 +447,7 @@ def convert_filename_date(name: str) -> str | None:
 
     day, month, year = match.group(1), match.group(2), match.group(3)
     try:
-        datetime(int(year), int(month), int(day))
+        date(int(year), int(month), int(day))
     except ValueError:
         return None
 
