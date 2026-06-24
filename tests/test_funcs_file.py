@@ -1419,3 +1419,52 @@ def test_collect_text_files_to_markdown() -> None:
             assert f"File `{other_file_normalized}`:" in mixed_result  # absolute path
         finally:
             other_temp.cleanup()
+
+
+def test_convert_filename_date() -> None:
+    """Test convert_filename_date with various filename patterns."""
+    assert h.file.convert_filename_date("CamScanner 31.07.2025 21.23_485.jpg") == "CamScanner 2025.07.31 21.23_485.jpg"
+    assert h.file.convert_filename_date("CamScanner 2025.07.31 21.23_485.jpg") is None
+    assert h.file.convert_filename_date("photo.jpg") is None
+    assert h.file.convert_filename_date("bad 31.02.2025.jpg") is None
+    assert (
+        h.file.convert_filename_date("prefix 01.01.2025 suffix 02.02.2025.txt")
+        == "prefix 2025.01.01 suffix 02.02.2025.txt"
+    )
+
+
+def test_rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd() -> None:
+    """Test recursive rename of DD.MM.YYYY dates in filenames."""
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        root_file = temp_path / "CamScanner 31.07.2025 21.23_485.jpg"
+        root_file.write_text("root")
+        already_ok = temp_path / "report 2025.07.31 final.jpg"
+        already_ok.write_text("ok")
+        no_date = temp_path / "photo.jpg"
+        no_date.write_text("plain")
+
+        sub_dir = temp_path / "sub"
+        sub_dir.mkdir()
+        sub_file = sub_dir / "scan 15.12.2024.pdf"
+        sub_file.write_text("sub")
+
+        result = h.file.rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd(temp_path)
+
+        assert "✅ Renamed 2 files" in result
+        assert (temp_path / "CamScanner 2025.07.31 21.23_485.jpg").exists()
+        assert not root_file.exists()
+        assert (sub_dir / "scan 2024.12.15.pdf").exists()
+        assert not sub_file.exists()
+        assert already_ok.exists()
+        assert no_date.exists()
+        assert "CamScanner 31.07.2025 21.23_485.jpg → CamScanner 2025.07.31 21.23_485.jpg" in result
+
+        # Target conflict: two files would map to the same new name
+        conflict_source = temp_path / "dup 01.01.2025.txt"
+        conflict_source.write_text("conflict")
+        (temp_path / "dup 2025.01.01.txt").write_text("existing")
+        conflict_result = h.file.rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd(temp_path)
+        assert "Skipped (target exists)" in conflict_result
+        assert conflict_source.exists()

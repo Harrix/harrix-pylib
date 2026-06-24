@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import zipfile
 from collections.abc import Callable, Iterator, Sequence
+from datetime import datetime
 from pathlib import Path
 
 import pypdf
@@ -423,6 +424,38 @@ def collect_text_files_to_markdown(file_paths: Sequence[str | Path], base_folder
         markdown_parts.append(f"File `{rel_path}`:\n\n{fence}{ext}\n" + "\n".join(lines) + f"\n{fence}\n")
 
     return "\n".join(markdown_parts)
+
+
+def convert_filename_date(name: str) -> str | None:
+    """Convert a DD.MM.YYYY date fragment in a filename to YYYY.MM.DD.
+
+    Args:
+
+    - `name` (`str`): Filename (without path) to inspect.
+
+    Returns:
+
+    - `str | None`: New filename if a valid DD.MM.YYYY fragment was converted, else `None`.
+
+    """
+    if _YYYY_MM_DD_PATTERN.search(name):
+        return None
+
+    match = _DD_MM_YYYY_PATTERN.search(name)
+    if not match:
+        return None
+
+    day, month, year = match.group(1), match.group(2), match.group(3)
+    try:
+        datetime(int(year), int(month), int(day))
+    except ValueError:
+        return None
+
+    new_date = f"{year}.{month}.{day}"
+    new_name = name[: match.start()] + new_date + name[match.end() :]
+    if new_name == name:
+        return None
+    return new_name
 
 
 def extract_zip_archive(filename: Path | str) -> str:
@@ -1333,6 +1366,105 @@ def rename_files_by_mapping(folder_path: Path | str, rename_mapping: dict[str, s
         return result_message
 
 
+def rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd(folder_path: Path | str) -> str:
+    """Rename files recursively by converting DD.MM.YYYY dates in filenames to YYYY.MM.DD.
+
+    Args:
+
+    - `folder_path` (`Path | str`): Root folder to process recursively.
+
+    Returns:
+
+    - `str`: Status message with per-file rename log lines.
+
+    Note:
+
+    - Skips files that already contain a YYYY.MM.DD date fragment.
+    - Skips files without a valid DD.MM.YYYY date fragment.
+    - Skips rename when the target filename already exists.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    result = h.file.rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd("C:/Scans/")
+    print(result)
+    ```
+
+    """
+
+    def collect_all_files(root_path: Path) -> list[Path]:
+        files: list[Path] = []
+        try:
+            for item in root_path.iterdir():
+                if item.is_dir():
+                    if should_ignore_path(item):
+                        continue
+                    files.extend(collect_all_files(item))
+                elif item.is_file():
+                    files.append(item)
+        except (OSError, PermissionError):
+            pass
+        return files
+
+    folder_path = Path(folder_path)
+
+    if not folder_path.exists():
+        return f"❌ Folder {folder_path} does not exist."
+
+    if not folder_path.is_dir():
+        return f"❌ {folder_path} is not a directory."
+
+    try:
+        all_files = collect_all_files(folder_path)
+        if not all_files:
+            return f"📁 No files found to process in {folder_path.name}."
+
+        renamed_count = 0
+        skipped_count = 0
+        log_lines: list[str] = []
+
+        for file_path in all_files:
+            new_name = convert_filename_date(file_path.name)
+            if new_name is None:
+                continue
+
+            new_path = file_path.parent / new_name
+            if new_path.exists():
+                log_lines.append(f"⚠️ Skipped (target exists): {file_path.name} → {new_name}")
+                skipped_count += 1
+                continue
+
+            try:
+                file_path.rename(new_path)
+                log_lines.append(f"✅ {file_path.name} → {new_name}")
+                renamed_count += 1
+            except (OSError, PermissionError):
+                log_lines.append(f"❌ Failed to rename: {file_path.name}")
+                skipped_count += 1
+
+        if renamed_count == 0 and skipped_count == 0:
+            result_message = f"📁 No files with DD.MM.YYYY dates found in {folder_path.name}."
+        elif renamed_count == 0:
+            result_message = f"⚠️ No files were renamed in {folder_path.name}. {skipped_count} were skipped."
+        elif skipped_count == 0:
+            if renamed_count == 1:
+                result_message = f"✅ Renamed 1 file in {folder_path.name}."
+            else:
+                result_message = f"✅ Renamed {renamed_count} files in {folder_path.name}."
+        else:
+            result_message = f"✅ Renamed {renamed_count} files in {folder_path.name}. {skipped_count} were skipped."
+
+        if log_lines:
+            result_message = result_message + "\n" + "\n".join(log_lines)
+
+    except Exception as e:
+        return f"❌ Error renaming files: {e!s}"
+    else:
+        return result_message
+
+
 def rename_largest_images_to_featured(path: Path | str) -> str:
     """Find the largest image in each subdirectory of the given path and renames it to 'featured-image'.
 
@@ -1999,3 +2131,7 @@ def _transliterate_filename(filename_stem: str) -> str:
         return filename_stem
     else:
         return filename_stem
+
+
+_DD_MM_YYYY_PATTERN = re.compile(r"(?<!\d)(\d{2})\.(\d{2})\.(\d{4})(?!\d)")
+_YYYY_MM_DD_PATTERN = re.compile(r"(?<!\d)(\d{4})\.(\d{2})\.(\d{2})(?!\d)")
