@@ -234,7 +234,11 @@ def _render_blockquote(tokens: list[Token], index: int) -> tuple[str, int]:
         chunk, inner_index = _render_block(tokens, inner_index)
         if chunk:
             inner_parts.append(chunk)
-    quoted = "\n".join(f"> {line}" if line else ">" for block in inner_parts for line in block.rstrip().splitlines())
+    quoted_blocks: list[str] = []
+    for block in inner_parts:
+        quoted_lines = [f"> {line}" if line else ">" for line in block.rstrip().splitlines()]
+        quoted_blocks.append("\n".join(quoted_lines))
+    quoted = "\n>\n".join(quoted_blocks)
     return quoted + "\n", close_index + 1
 
 

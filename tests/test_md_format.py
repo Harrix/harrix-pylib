@@ -561,3 +561,9 @@ def test_format_markdown_content_keeps_blank_line_in_empty_fenced_block() -> Non
     source = "```\n```\n"
     result = format_markdown_content(source).replace("\r\n", "\n")
     assert result == "```\n\n```\n"
+
+
+def test_format_markdown_content_preserves_blank_line_between_blockquote_paragraphs() -> None:
+    source = "> The first paragraph in the quote.\n>\n> The second paragraph in the quote.\n"
+    result = format_markdown_content(source).replace("\r\n", "\n")
+    assert result == ("> The first paragraph in the quote.\n>\n> The second paragraph in the quote.\n")
