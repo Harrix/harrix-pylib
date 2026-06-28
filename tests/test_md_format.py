@@ -567,3 +567,18 @@ def test_format_markdown_content_preserves_blank_line_between_blockquote_paragra
     source = "> The first paragraph in the quote.\n>\n> The second paragraph in the quote.\n"
     result = format_markdown_content(source).replace("\r\n", "\n")
     assert result == ("> The first paragraph in the quote.\n>\n> The second paragraph in the quote.\n")
+
+
+def test_format_markdown_content_renders_hard_breaks_with_backslash() -> None:
+    source = (
+        "У лукоморья дуб зелёный;\\\n"  # noqa: RUF001
+        "Златая цепь на дубе том:\\\n"
+        "И днём и ночью кот учёный\\\n"
+    )
+    result = format_markdown_content(source).replace("\r\n", "\n")
+    assert result == source
+    assert "  \n" not in result
+
+    two_space_source = "line one  \nline two\n"
+    two_space_result = format_markdown_content(two_space_source).replace("\r\n", "\n")
+    assert two_space_result == "line one\\\nline two\n"

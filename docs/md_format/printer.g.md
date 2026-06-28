@@ -572,7 +572,7 @@ def _render_inline_token(children: list[Token], index: int, *, in_table: bool = 
     if child.type == "softbreak":
         return "\n", index + 1
     if child.type == "hardbreak":
-        return "  \n", index + 1
+        return "\\\n", index + 1
     if child.type == "wiki_link":
         return f"[[{child.content}]]", index + 1
     if child.type in {"math_inline", "math_inline_double"}:
