@@ -569,6 +569,17 @@ def test_format_markdown_content_preserves_blank_line_between_blockquote_paragra
     assert result == ("> The first paragraph in the quote.\n>\n> The second paragraph in the quote.\n")
 
 
+def test_format_markdown_content_preserves_escaped_ordered_list_like_line_start_in_blockquote() -> None:
+    source = (
+        "> В этом абзаце 39. означает номер фрагмента, а не элемент списка.\n"  # noqa: RUF001
+        ">\n"
+        "> 39\\. Первый фрагмент текста. 40. Второй фрагмент. 41. Третий фрагмент.\n"
+    )
+    result = format_markdown_content(source).replace("\r\n", "\n")
+    assert "> 39\\. Первый фрагмент текста. 40. Второй фрагмент. 41. Третий фрагмент." in result
+    assert "> 39. Первый фрагмент" not in result
+
+
 def test_format_markdown_content_renders_hard_breaks_with_backslash() -> None:
     source = (
         "У лукоморья дуб зелёный;\\\n"  # noqa: RUF001

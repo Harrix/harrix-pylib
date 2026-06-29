@@ -289,18 +289,20 @@ Doc: [code_guard.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/cod
 
 Doc: [escape_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md)
 
-| Function/Class                                                                                                                                                 | Description                                                     |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| 🔧 [`escape_markdown_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-escape_markdown_text)                           | Escape emphasis-like `*` and `_` characters in plain text.      |
-| 🔧 [`_is_alphanumeric`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_alphanumeric)                                   |                                                                 |
-| 🔧 [`_is_identifier_leading_underscore`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_identifier_leading_underscore) |                                                                 |
-| 🔧 [`_is_left_flanking`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_left_flanking)                                 |                                                                 |
-| 🔧 [`_is_punctuation`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_punctuation)                                     |                                                                 |
-| 🔧 [`_is_right_flanking`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_right_flanking)                               |                                                                 |
-| 🔧 [`_is_whitespace`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_whitespace)                                       |                                                                 |
-| 🔧 [`_should_escape_asterisk`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_asterisk)                     |                                                                 |
-| 🔧 [`_should_escape_intraword_asterisk`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_intraword_asterisk) | Escape `*` between letters when at least one side is non-ASCII. |
-| 🔧 [`_should_escape_underscore`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_underscore)                 |                                                                 |
+| Function/Class                                                                                                                                                       | Description                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| 🔧 [`escape_markdown_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-escape_markdown_text)                                 | Escape emphasis-like `*` and `_` characters in plain text.                |
+| 🔧 [`escape_ordered_list_like_line_starts`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-escape_ordered_list_like_line_starts) | Re-escape `39.`-like line starts so they are not parsed as ordered lists. |
+| 🔧 [`_escape_ordered_list_like_line_start`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_escape_ordered_list_like_line_start) |                                                                           |
+| 🔧 [`_is_alphanumeric`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_alphanumeric)                                         |                                                                           |
+| 🔧 [`_is_identifier_leading_underscore`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_identifier_leading_underscore)       |                                                                           |
+| 🔧 [`_is_left_flanking`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_left_flanking)                                       |                                                                           |
+| 🔧 [`_is_punctuation`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_punctuation)                                           |                                                                           |
+| 🔧 [`_is_right_flanking`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_right_flanking)                                     |                                                                           |
+| 🔧 [`_is_whitespace`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_whitespace)                                             |                                                                           |
+| 🔧 [`_should_escape_asterisk`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_asterisk)                           |                                                                           |
+| 🔧 [`_should_escape_intraword_asterisk`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_intraword_asterisk)       | Escape `*` between letters when at least one side is non-ASCII.           |
+| 🔧 [`_should_escape_underscore`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_underscore)                       |                                                                           |
 
 ### 📄 File `formatter.py`
 

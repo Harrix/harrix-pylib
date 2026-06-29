@@ -12,6 +12,8 @@ lang: en
 ## Contents
 
 - [🔧 Function `escape_markdown_text`](#-function-escape_markdown_text)
+- [🔧 Function `escape_ordered_list_like_line_starts`](#-function-escape_ordered_list_like_line_starts)
+- [🔧 Function `_escape_ordered_list_like_line_start`](#-function-_escape_ordered_list_like_line_start)
 - [🔧 Function `_is_alphanumeric`](#-function-_is_alphanumeric)
 - [🔧 Function `_is_identifier_leading_underscore`](#-function-_is_identifier_leading_underscore)
 - [🔧 Function `_is_left_flanking`](#-function-_is_left_flanking)
@@ -57,6 +59,47 @@ def escape_markdown_text(text: str) -> str:
             parts.append(char)
         index += 1
     return "".join(parts)
+```
+
+</details>
+
+## 🔧 Function `escape_ordered_list_like_line_starts`
+
+```python
+def escape_ordered_list_like_line_starts(text: str) -> str
+```
+
+Re-escape `39.`-like line starts so they are not parsed as ordered lists.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def escape_ordered_list_like_line_starts(text: str) -> str:
+    if not text:
+        return text
+    return "\n".join(_escape_ordered_list_like_line_start(line) for line in text.split("\n"))
+```
+
+</details>
+
+## 🔧 Function `_escape_ordered_list_like_line_start`
+
+```python
+def _escape_ordered_list_like_line_start(line: str) -> str
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _escape_ordered_list_like_line_start(line: str) -> str:
+    match = _ORDERED_LIST_LINE_START_RE.match(line)
+    if not match:
+        return line
+    return f"{match.group(1)}\\.{match.group(2)}"
 ```
 
 </details>
@@ -244,7 +287,7 @@ def _should_escape_intraword_asterisk(text: str, index: int) -> bool:
     if not (_is_alphanumeric(previous) and _is_alphanumeric(next_char)):
         return False
 
-    return ord(previous) > 127 or ord(next_char) > 127
+    return ord(previous) > _ASCII_MAX_CODE_POINT or ord(next_char) > _ASCII_MAX_CODE_POINT
 ```
 
 </details>

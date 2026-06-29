@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import unicodedata
 
 from harrix_pylib.md_format.code_guard import PLACEHOLDER_PREFIX
@@ -10,6 +11,8 @@ _PUNCTUATION = frozenset("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\u3000\uff5e")
 _IDENTIFIER_UNDERSCORE_BEFORE = frozenset(" \t\r\n(;,.")
 _IDENTIFIER_UNDERSCORE_AFTER = frozenset("<")
 _ARROW_PREFIX = "->"
+_ASCII_MAX_CODE_POINT = 127
+_ORDERED_LIST_LINE_START_RE = re.compile(r"^(\s*\d+)\.(.*)$")
 
 
 def escape_markdown_text(text: str) -> str:
@@ -34,6 +37,20 @@ def escape_markdown_text(text: str) -> str:
             parts.append(char)
         index += 1
     return "".join(parts)
+
+
+def escape_ordered_list_like_line_starts(text: str) -> str:
+    """Re-escape ``39.``-like line starts so they are not parsed as ordered lists."""
+    if not text:
+        return text
+    return "\n".join(_escape_ordered_list_like_line_start(line) for line in text.split("\n"))
+
+
+def _escape_ordered_list_like_line_start(line: str) -> str:
+    match = _ORDERED_LIST_LINE_START_RE.match(line)
+    if not match:
+        return line
+    return f"{match.group(1)}\\.{match.group(2)}"
 
 
 def _is_alphanumeric(char: str) -> bool:
@@ -110,7 +127,7 @@ def _should_escape_intraword_asterisk(text: str, index: int) -> bool:
     if not (_is_alphanumeric(previous) and _is_alphanumeric(next_char)):
         return False
 
-    return ord(previous) > 127 or ord(next_char) > 127
+    return ord(previous) > _ASCII_MAX_CODE_POINT or ord(next_char) > _ASCII_MAX_CODE_POINT
 
 
 def _should_escape_underscore(text: str, index: int) -> bool:

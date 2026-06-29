@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from harrix_pylib.md_format.escape_format import escape_markdown_text
+from harrix_pylib.md_format.escape_format import escape_markdown_text, escape_ordered_list_like_line_starts
 
 
 def test_escape_markdown_text_escapes_user_examples() -> None:
@@ -22,9 +22,9 @@ def test_escape_markdown_text_keeps_non_emphasis_like_characters() -> None:
 def test_escape_markdown_text_escapes_intraword_asterisk_with_non_ascii_letters() -> None:
     assert (
         escape_markdown_text("Двигатель. Его мощность ток*напражение")  # noqa: RUF001
-        == "Двигатель. Его мощность ток\\*напражение"
+        == "Двигатель. Его мощность ток\\*напражение"  # noqa: RUF001
     )
-    assert escape_markdown_text("ток*напражение") == "ток\\*напражение"  # noqa: RUF001
+    assert escape_markdown_text("ток*напражение") == "ток\\*напражение"
 
 
 def test_escape_markdown_text_keeps_prettier_literal_cases() -> None:
@@ -55,3 +55,14 @@ def test_escape_markdown_text_escapes_identifier_underscores() -> None:
 
 def test_escape_markdown_text_skips_code_block_placeholder() -> None:
     assert escape_markdown_text("HSKMDFMTCODE0") == "HSKMDFMTCODE0"
+
+
+def test_escape_ordered_list_like_line_starts() -> None:
+    assert escape_ordered_list_like_line_starts("39. Первый фрагмент текста.") == "39\\. Первый фрагмент текста."
+    assert (
+        escape_ordered_list_like_line_starts("Здесь 39. означает номер пункта.") == "Здесь 39. означает номер пункта."
+    )
+    assert (
+        escape_ordered_list_like_line_starts("39. Первая строка\n40. Вторая строка")
+        == "39\\. Первая строка\n40\\. Вторая строка"
+    )
