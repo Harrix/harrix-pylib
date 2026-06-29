@@ -16,6 +16,15 @@ def test_escape_markdown_text_keeps_non_emphasis_like_characters() -> None:
     assert escape_markdown_text("foo_bar_baz") == "foo_bar_baz"
     assert escape_markdown_text("a * b * c") == "a * b * c"
     assert escape_markdown_text("read:user") == "read:user"
+    assert escape_markdown_text("foo*bar") == "foo*bar"
+
+
+def test_escape_markdown_text_escapes_intraword_asterisk_with_non_ascii_letters() -> None:
+    assert (
+        escape_markdown_text("Двигатель. Его мощность ток*напражение")  # noqa: RUF001
+        == "Двигатель. Его мощность ток\\*напражение"
+    )
+    assert escape_markdown_text("ток*напражение") == "ток\\*напражение"  # noqa: RUF001
 
 
 def test_escape_markdown_text_keeps_prettier_literal_cases() -> None:

@@ -95,7 +95,22 @@ def _is_whitespace(char: str) -> bool:
 
 
 def _should_escape_asterisk(text: str, index: int) -> bool:
+    if _should_escape_intraword_asterisk(text, index):
+        return True
     return _is_left_flanking(text, index) or _is_right_flanking(text, index)
+
+
+def _should_escape_intraword_asterisk(text: str, index: int) -> bool:
+    """Escape ``*`` between letters when at least one side is non-ASCII."""
+    if index == 0 or index + 1 >= len(text):
+        return False
+
+    previous = text[index - 1]
+    next_char = text[index + 1]
+    if not (_is_alphanumeric(previous) and _is_alphanumeric(next_char)):
+        return False
+
+    return ord(previous) > 127 or ord(next_char) > 127
 
 
 def _should_escape_underscore(text: str, index: int) -> bool:

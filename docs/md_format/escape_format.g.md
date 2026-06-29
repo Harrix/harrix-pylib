@@ -19,6 +19,7 @@ lang: en
 - [🔧 Function `_is_right_flanking`](#-function-_is_right_flanking)
 - [🔧 Function `_is_whitespace`](#-function-_is_whitespace)
 - [🔧 Function `_should_escape_asterisk`](#-function-_should_escape_asterisk)
+- [🔧 Function `_should_escape_intraword_asterisk`](#-function-_should_escape_intraword_asterisk)
 - [🔧 Function `_should_escape_underscore`](#-function-_should_escape_underscore)
 
 </details>
@@ -215,7 +216,35 @@ _No docstring provided._
 
 ```python
 def _should_escape_asterisk(text: str, index: int) -> bool:
+    if _should_escape_intraword_asterisk(text, index):
+        return True
     return _is_left_flanking(text, index) or _is_right_flanking(text, index)
+```
+
+</details>
+
+## 🔧 Function `_should_escape_intraword_asterisk`
+
+```python
+def _should_escape_intraword_asterisk(text: str, index: int) -> bool
+```
+
+Escape `*` between letters when at least one side is non-ASCII.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _should_escape_intraword_asterisk(text: str, index: int) -> bool:
+    if index == 0 or index + 1 >= len(text):
+        return False
+
+    previous = text[index - 1]
+    next_char = text[index + 1]
+    if not (_is_alphanumeric(previous) and _is_alphanumeric(next_char)):
+        return False
+
+    return ord(previous) > 127 or ord(next_char) > 127
 ```
 
 </details>
