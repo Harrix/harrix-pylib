@@ -66,3 +66,4 @@ def test_escape_ordered_list_like_line_starts() -> None:
         escape_ordered_list_like_line_starts("39. Первая строка\n40. Вторая строка")
         == "39\\. Первая строка\n40\\. Вторая строка"
     )
+    assert escape_ordered_list_like_line_starts("9.5 - Тихоокеанский рубеж") == "9.5 - Тихоокеанский рубеж"
