@@ -15,7 +15,12 @@ def extract_bullet_list_marker_groups(body: str) -> tuple[str, list[list[str]]]:
     for line in lines:
         match = _BULLET_ITEM_RE.match(line)
         if match:
-            current.append(match.group(2))
+            marker = match.group(2)
+            if current and marker != current[-1] and len({*current}) == 1:
+                groups.append(current)
+                current = [marker]
+            else:
+                current.append(marker)
             continue
         if current:
             groups.append(current)

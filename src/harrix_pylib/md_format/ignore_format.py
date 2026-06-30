@@ -38,6 +38,9 @@ def extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
                     line_index += 1
                     break
                 line_index += 1
+            if any(block_line.lstrip().startswith(">") for block_line in block_lines):
+                result.extend(block_lines)
+                continue
             blocks.append(IgnoreBlock(index=index, text=_join_lines(block_lines, trailing_newline=False)))
             result.append(_placeholder(index))
             index += 1

@@ -78,6 +78,26 @@ def render_tokens(
     return _join_blocks(parts)
 
 
+def _format_hr_markup(markup: str, *, preserve: bool = False) -> str:
+    if not preserve:
+        return "---"
+    chars = {char for char in markup if not char.isspace()}
+    if chars == {"*"}:
+        return "***"
+    if chars == {"-"}:
+        return "---"
+    if chars == {"_"}:
+        return "___"
+    stripped = markup.strip()
+    return stripped if stripped else "---"
+
+
+def _normalize_bullet_marker(marker: str) -> str:
+    if marker == "+":
+        return "*"
+    return marker
+
+
 def _alignment_separator(align: str) -> str:
     if align == "left":
         return ":--"
@@ -177,6 +197,8 @@ def _plain_paragraph_source_line(
     source_line = _paragraph_single_text_source_line(tokens, index, source_lines)
     if source_line is None:
         return None
+    if "\u00a0" in source_line:
+        return source_line.rstrip("\n")
     if (
         options.prose_wrap == "always"
         and _should_wrap_prose(source_line.rstrip("\n"), prefix="", width=options.print_width)
@@ -246,11 +268,24 @@ def _format_self_referential_link(href: str, inner: str) -> str | None:
     return None
 
 
-def _format_table_row(cells: list[str], column_widths: list[int], alignments: list[str]) -> str:
+def _format_table_row(
+    cells: list[str],
+    column_widths: list[int],
+    alignments: list[str],
+    *,
+    strip_trailing_empty: bool = False,
+) -> str:
     padded = cells + [""] * (len(column_widths) - len(cells))
     align_row = alignments + ["---"] * (len(column_widths) - len(alignments))
+    effective_width = len(column_widths)
+    if strip_trailing_empty:
+        while effective_width > 1 and not padded[effective_width - 1].strip():
+            effective_width -= 1
+    padded = padded[:effective_width]
+    column_widths = column_widths[:effective_width]
+    align_row = align_row[:effective_width]
     formatted_cells: list[str] = []
-    for index, cell in enumerate(padded[: len(column_widths)]):
+    for index, cell in enumerate(padded):
         width = column_widths[index]
         cell_width = text_display_width(cell)
         padding = max(width - cell_width, 0)
@@ -509,6 +544,7 @@ def _render_block(
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
     preserve_source_line: bool = True,
+    in_list_item: bool = False,
 ) -> tuple[str, int]:
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list_layouts or []
@@ -576,7 +612,7 @@ def _render_block(
     if token.type == "code_block":
         return f"    {token.content.rstrip()}\n", index + 1
     if token.type == "hr":
-        return "---\n", index + 1
+        return f"{_format_hr_markup(token.markup or '---', preserve=in_list_item)}\n", index + 1
     if token.type == "math_block":
         return _render_math_block(token), index + 1
     if token.type == "math_block_label":
@@ -606,6 +642,31 @@ def _render_block(
             canonicalize_bullets=canonicalize_bullets,
         ), index + 1
     return "", index + 1
+
+
+def _blockquote_needs_blank_line(previous: str, current: str) -> bool:
+    previous_lines = [line for line in previous.rstrip().splitlines() if line.strip()]
+    current_lines = [line for line in current.lstrip().splitlines() if line.strip()]
+    if not previous_lines or not current_lines:
+        return False
+    previous_last = previous_lines[-1].lstrip("> ").strip()
+    current_first = current_lines[0].lstrip("> ").strip()
+    if current_first.startswith("|"):
+        return True
+    if previous_last.startswith("|"):
+        return True
+    return False
+
+
+def _join_blockquote_blocks(blocks: list[str]) -> str:
+    if not blocks:
+        return ""
+    joined: list[str] = [blocks[0].rstrip("\n")]
+    for block in blocks[1:]:
+        if _blockquote_needs_blank_line(joined[-1], block):
+            joined.append(">")
+        joined.append(block.rstrip("\n"))
+    return "\n".join(joined) + "\n"
 
 
 def _render_blockquote(
@@ -658,8 +719,8 @@ def _render_blockquote(
         else:
             quoted_lines = [f"> {line}" if line else ">" for line in block.rstrip().splitlines()]
             quoted_blocks.append("\n".join(quoted_lines))
-    quoted = "\n>\n".join(quoted_blocks)
-    return quoted + "\n", close_index + 1
+    quoted = _join_blockquote_blocks(quoted_blocks)
+    return quoted, close_index + 1
 
 
 def _render_fence(token: Token) -> str:
@@ -924,7 +985,11 @@ def _render_list(
         if ordered:
             marker = f"{ordered_list_item_number(source_markers, rendered_item_count)}."
         elif rendered_item_count < len(bullet_markers):
-            marker = "-" if canonicalize_bullets else bullet_markers[rendered_item_count]
+            marker = (
+                "-"
+                if canonicalize_bullets
+                else _normalize_bullet_marker(bullet_markers[rendered_item_count])
+            )
         else:
             marker = "-"
         if checkbox:
@@ -961,6 +1026,7 @@ def _render_list(
                     source_lines=source_lines,
                     canonicalize_bullets=canonicalize_bullets,
                     preserve_source_line=False,
+                    in_list_item=True,
                 )
                 if chunk:
                     item_lines.append(chunk.rstrip("\n"))
@@ -1056,6 +1122,7 @@ def _render_paragraph(
         wrap
         and options.prose_wrap == "always"
         and "\\_" not in text
+        and "\u00a0" not in text
         and _should_wrap_prose(text.rstrip("\n"), prefix="", width=options.print_width)
     ):
         text = wrap_paragraph_prose(text.rstrip("\n"), width=options.print_width)
@@ -1169,7 +1236,10 @@ def _render_table(
     lines = [
         _format_table_row(header, column_widths, align_row),
         _format_table_separator(column_widths, align_row),
-        *(_format_table_row(row, column_widths, align_row) for row in filtered_body_rows),
+        *(
+            _format_table_row(row, column_widths, align_row, strip_trailing_empty=True)
+            for row in filtered_body_rows
+        ),
     ]
     result = "\n".join(lines) + "\n"
     if trailing_paragraphs:

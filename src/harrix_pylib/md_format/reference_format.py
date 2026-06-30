@@ -5,7 +5,11 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from harrix_pylib.md_format.link_title_format import _canonicalize_link_title_content, format_link_title
+from harrix_pylib.md_format.link_title_format import (
+    _canonicalize_link_title_content,
+    _split_trailing_link_title,
+    format_link_title,
+)
 from harrix_pylib.md_format.options import DEFAULT_PRINT_WIDTH, FormatOptions
 from harrix_pylib.md_format.prose_wrap import wrap_prose
 from harrix_pylib.md_format.table_format import text_display_width
@@ -234,38 +238,3 @@ def _split_link_definition_rest(rest: str) -> tuple[str, str | None]:
         return url, title
     return rest, None
 
-
-def _is_escaped_at(text: str, index: int) -> bool:
-    backslashes = 0
-    position = index - 1
-    while position >= 0 and text[position] == "\\":
-        backslashes += 1
-        position -= 1
-    return backslashes % 2 == 1
-
-
-def _split_trailing_link_title(rest: str) -> tuple[str, str | None]:
-    rest = rest.rstrip()
-    if rest.endswith(")"):
-        depth = 0
-        for index in range(len(rest) - 1, -1, -1):
-            char = rest[index]
-            if char == ")" and not _is_escaped_at(rest, index):
-                depth += 1
-            elif char == "(" and not _is_escaped_at(rest, index):
-                depth -= 1
-                if depth == 0:
-                    if index == 0 or rest[index - 1].isspace():
-                        return rest[:index].rstrip(), rest[index:]
-                    return rest, None
-    if not rest or rest[-1] not in "\"'":
-        return rest, None
-    delimiter = rest[-1]
-    index = len(rest) - 2
-    while index >= 0:
-        if rest[index] == delimiter and not _is_escaped_at(rest, index):
-            if index == 0 or rest[index - 1].isspace():
-                return rest[:index].rstrip(), rest[index:]
-            return rest, None
-        index -= 1
-    return rest, None

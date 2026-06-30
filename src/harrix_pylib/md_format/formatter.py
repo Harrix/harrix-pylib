@@ -18,6 +18,7 @@ from harrix_pylib.md_format.front_matter import (
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles, extract_backslash_hard_breaks
 from harrix_pylib.md_format.ignore_format import extract_ignore_blocks, restore_ignore_blocks
 from harrix_pylib.md_format.list_format import ensure_blank_line_after_lists
+from harrix_pylib.md_format.link_title_format import normalize_inline_link_titles
 from harrix_pylib.md_format.list_loose_format import extract_list_layouts
 from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.ordered_list_format import extract_ordered_list_marker_groups
@@ -88,6 +89,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     body = collapse_extra_blank_lines(body)
     body = unwrap_spurious_table_rows(ensure_blank_line_after_tables(body))
     body = ensure_blank_line_after_lists(body)
+    body = normalize_inline_link_titles(body)
     if not body.strip() and front_matter and not reference_blocks:
         result = front_matter.rstrip() + "\n"
     elif not body.strip() and not front_matter and reference_blocks:
