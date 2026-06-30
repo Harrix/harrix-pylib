@@ -139,12 +139,8 @@ def _format_code_inline(
     return f"{fence}{content}{fence}"
 
 
-def _plain_paragraph_source_line(
-    tokens: list[Token],
-    index: int,
-    source_lines: list[str] | None,
-    *,
-    options: FormatOptions,
+def _paragraph_single_text_source_line(
+    tokens: list[Token], index: int, source_lines: list[str] | None
 ) -> str | None:
     if not source_lines:
         return None
@@ -158,13 +154,39 @@ def _plain_paragraph_source_line(
     line_index = paragraph_map[0]
     if line_index < 0 or line_index >= len(source_lines):
         return None
-    source_line = source_lines[line_index]
+    return source_lines[line_index]
+
+
+def _source_line_is_more_literal(source_line: str, rendered_line: str) -> bool:
+    if source_line.count("\\") > rendered_line.count("\\"):
+        return True
+    if "&" in source_line and source_line != rendered_line:
+        if "&amp;" in source_line or "&#" in source_line:
+            return True
+    return False
+
+
+def _plain_paragraph_source_line(
+    tokens: list[Token],
+    index: int,
+    source_lines: list[str] | None,
+    *,
+    options: FormatOptions,
+    rendered_line: str,
+) -> str | None:
+    source_line = _paragraph_single_text_source_line(tokens, index, source_lines)
+    if source_line is None:
+        return None
     if (
         options.prose_wrap == "always"
         and _should_wrap_prose(source_line.rstrip("\n"), prefix="", width=options.print_width)
     ):
         return None
-    return source_line
+    if rendered_line.rstrip("\n") == source_line.rstrip("\n"):
+        return None
+    if _source_line_is_more_literal(source_line, rendered_line):
+        return source_line
+    return None
 
 
 def _plain_heading_source_line(
@@ -560,7 +582,13 @@ def _render_block(
     if token.type == "math_block_label":
         return _render_math_block(token, label=token.info), index + 1
     if token.type == "table_open":
-        return _render_table(tokens, index, options=options, hard_break_styles=break_styles)
+        return _render_table(
+            tokens,
+            index,
+            options=options,
+            hard_break_styles=break_styles,
+            source_lines=source_lines if preserve_source_line else None,
+        )
     if token.type == "html_block":
         return f"{token.content.rstrip()}\n", index + 1
     if token.type in {"dl_open", "dt_open", "dd_open"}:
@@ -962,6 +990,8 @@ def _render_list_item_lines(
     options: FormatOptions,
 ) -> list[str]:
     if not item_lines:
+        if marker.endswith("."):
+            return [marker]
         return [f"{marker} "]
 
     prefix = f"{marker} "
@@ -1009,9 +1039,6 @@ def _render_paragraph(
     hard_break_styles: HardBreakStyles | None = None,
     source_lines: list[str] | None = None,
 ) -> tuple[str, int]:
-    source_line = _plain_paragraph_source_line(tokens, index, source_lines, options=options)
-    if source_line is not None:
-        return f"{source_line}\n", index + 3
     inline_code_line = _plain_inline_code_source_line(tokens, index, source_lines)
     if inline_code_line is not None:
         return f"{inline_code_line}\n", index + 3
@@ -1032,11 +1059,47 @@ def _render_paragraph(
         and _should_wrap_prose(text.rstrip("\n"), prefix="", width=options.print_width)
     ):
         text = wrap_paragraph_prose(text.rstrip("\n"), width=options.print_width)
+    source_line = _plain_paragraph_source_line(
+        tokens, index, source_lines, options=options, rendered_line=text.rstrip("\n")
+    )
+    if source_line is not None:
+        return f"{source_line}\n", index + 3
     return f"{text}\n", index + 3
 
 
+def _parse_table_row_cells(line: str) -> list[str] | None:
+    stripped = line.strip()
+    if not stripped.startswith("|"):
+        return None
+    return [cell.strip() for cell in stripped.strip("|").split("|")]
+
+
+def _parse_table_rows(text: str) -> list[list[str]]:
+    rows: list[list[str]] = []
+    for line in text.splitlines():
+        cells = _parse_table_row_cells(line)
+        if cells is not None:
+            rows.append(cells)
+    return rows
+
+
+def _prefer_source_table_block(source_text: str, formatted_text: str) -> str | None:
+    source_rows = _parse_table_rows(source_text)
+    formatted_rows = _parse_table_rows(formatted_text)
+    if not source_rows or source_rows != formatted_rows:
+        return None
+    if len(source_text) >= len(formatted_text):
+        return source_text if source_text.endswith("\n") else f"{source_text}\n"
+    return None
+
+
 def _render_table(
-    tokens: list[Token], index: int, *, options: FormatOptions, hard_break_styles: HardBreakStyles | None = None
+    tokens: list[Token],
+    index: int,
+    *,
+    options: FormatOptions,
+    hard_break_styles: HardBreakStyles | None = None,
+    source_lines: list[str] | None = None,
 ) -> tuple[str, int]:
     close_index = _find_close(tokens, index, "table_close")
     rows: list[list[str]] = []
@@ -1111,6 +1174,12 @@ def _render_table(
     result = "\n".join(lines) + "\n"
     if trailing_paragraphs:
         result += "\n".join(f"{paragraph}\n" for paragraph in trailing_paragraphs)
+    table_map = tokens[index].map
+    if source_lines and table_map:
+        source_text = "\n".join(source_lines[table_map[0] : table_map[1]])
+        preferred = _prefer_source_table_block(source_text, result)
+        if preferred is not None:
+            return preferred, close_index + 1
     return result, close_index + 1
 
 

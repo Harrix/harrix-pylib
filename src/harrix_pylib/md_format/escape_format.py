@@ -64,6 +64,8 @@ def _escape_ordered_list_like_line_start(line: str) -> str:
     after_period = match.group(2)
     if after_period and after_period[0].isdigit():
         return line
+    if after_period and after_period[0].isalpha():
+        return line
     return f"{match.group(1)}\\.{after_period}"
 
 
@@ -159,6 +161,10 @@ def _should_escape_intraword_asterisk(text: str, index: int) -> bool:
 
 def _should_escape_underscore(text: str, index: int) -> bool:
     if _is_single_char_emphasis_underscore(text, index):
+        return False
+    if index > 0 and text[index - 1] == "_":
+        return False
+    if index + 1 < len(text) and text[index + 1] == "_":
         return False
     if index + 1 < len(text) and text[index + 1] == "[":
         return False

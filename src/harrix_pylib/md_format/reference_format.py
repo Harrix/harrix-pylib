@@ -125,10 +125,11 @@ def _format_footnote_block(lines: list[str], *, print_width: int) -> list[str]:
 
 
 def _format_reference_title(title: str) -> str:
+    unescaped = _unescape_reference_title(title)
     if title.startswith("(") and title.endswith(")"):
-        inner = _unescape_reference_title(title)
-        if " " in inner:
-            return f"({inner})"
+        if " " in unescaped:
+            return f"({unescaped})"
+        return format_link_title(unescaped)
     return format_link_title(_canonicalize_reference_title(title))
 
 
@@ -226,13 +227,45 @@ def _split_link_definition_rest(rest: str) -> tuple[str, str | None]:
         return rest[:-3].rstrip(), None
     if len(rest) >= 2 and rest.startswith("<") and rest.endswith(">"):
         return rest, None
-    title_match = re.search(
-        r'\s+("(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|\((?:\\.|[^)\\])*\))\s*$',
-        rest,
-    )
-    if title_match:
-        title = title_match.group(1)
+    url, title = _split_trailing_link_title(rest)
+    if title is not None:
         if title in {'""', "''"}:
-            return rest[: title_match.start()].rstrip(), None
-        return rest[: title_match.start()].rstrip(), title
+            return url, None
+        return url, title
+    return rest, None
+
+
+def _is_escaped_at(text: str, index: int) -> bool:
+    backslashes = 0
+    position = index - 1
+    while position >= 0 and text[position] == "\\":
+        backslashes += 1
+        position -= 1
+    return backslashes % 2 == 1
+
+
+def _split_trailing_link_title(rest: str) -> tuple[str, str | None]:
+    rest = rest.rstrip()
+    if rest.endswith(")"):
+        depth = 0
+        for index in range(len(rest) - 1, -1, -1):
+            char = rest[index]
+            if char == ")" and not _is_escaped_at(rest, index):
+                depth += 1
+            elif char == "(" and not _is_escaped_at(rest, index):
+                depth -= 1
+                if depth == 0:
+                    if index == 0 or rest[index - 1].isspace():
+                        return rest[:index].rstrip(), rest[index:]
+                    return rest, None
+    if not rest or rest[-1] not in "\"'":
+        return rest, None
+    delimiter = rest[-1]
+    index = len(rest) - 2
+    while index >= 0:
+        if rest[index] == delimiter and not _is_escaped_at(rest, index):
+            if index == 0 or rest[index - 1].isspace():
+                return rest[:index].rstrip(), rest[index:]
+            return rest, None
+        index -= 1
     return rest, None
