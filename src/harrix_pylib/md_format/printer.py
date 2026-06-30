@@ -7,6 +7,7 @@ from urllib.parse import unquote, urlsplit, urlunsplit
 
 from harrix_pylib.md_format.escape_format import escape_markdown_text, escape_ordered_list_like_line_starts
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles
+from harrix_pylib.md_format.link_title_format import format_link_title
 from harrix_pylib.md_format.list_loose_format import ListLayout
 from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.ordered_list_format import ordered_list_item_number
@@ -43,6 +44,16 @@ def render_tokens(
     parts: list[str] = []
     index = 0
     while index < len(tokens):
+        merged, next_index = _try_render_merged_paragraphs(
+            tokens,
+            index,
+            options=fmt_options,
+            hard_break_styles=break_styles,
+        )
+        if merged is not None:
+            parts.append(merged)
+            index = next_index
+            continue
         chunk, index = _render_block(
             tokens,
             index,
@@ -325,6 +336,54 @@ def _readable_link_href(href: str) -> str:
     return urlunsplit((parts.scheme, parts.netloc, decoded_path, parts.query, decoded_fragment))
 
 
+def _paragraph_run_end(tokens: list[Token], start: int) -> int | None:
+    if tokens[start].type != "paragraph_open" or not tokens[start].map:
+        return None
+    run_end = start
+    last_line_end = tokens[start].map[1]
+    while run_end + 3 < len(tokens) and tokens[run_end + 3].type == "paragraph_open":
+        next_map = tokens[run_end + 3].map
+        if not next_map or next_map[0] != last_line_end:
+            break
+        last_line_end = next_map[1]
+        run_end += 3
+    if run_end == start:
+        return None
+    return run_end + 3
+
+
+def _try_render_merged_paragraphs(
+    tokens: list[Token],
+    index: int,
+    *,
+    options: FormatOptions,
+    hard_break_styles: HardBreakStyles | None = None,
+) -> tuple[str | None, int]:
+    if options.prose_wrap != "always":
+        return None, index
+    run_end = _paragraph_run_end(tokens, index)
+    if run_end is None:
+        return None, index
+    break_styles = hard_break_styles or HardBreakStyles()
+    parts: list[str] = []
+    paragraph_index = index
+    while paragraph_index < run_end:
+        inline = tokens[paragraph_index + 1]
+        parts.append(
+            _render_inline(
+                inline.children or [],
+                options=options,
+                hard_break_styles=break_styles,
+                softbreak_as_space=True,
+            ).strip()
+        )
+        paragraph_index += 3
+    merged = normalize_inline_spaces(escape_ordered_list_like_line_starts(" ".join(part for part in parts if part)))
+    if "\\_" not in merged and _should_wrap_prose(merged, prefix="", width=options.print_width):
+        merged = wrap_prose(merged, width=options.print_width)
+    return f"{merged}\n", run_end
+
+
 def _render_block(
     tokens: list[Token],
     index: int,
@@ -472,6 +531,7 @@ def _render_inline(
     in_table: bool = False,
     options: FormatOptions | None = None,
     hard_break_styles: HardBreakStyles | None = None,
+    softbreak_as_space: bool = False,
 ) -> str:
     fmt_options = options or _DEFAULT_OPTIONS
     break_styles = hard_break_styles or HardBreakStyles()
@@ -479,7 +539,12 @@ def _render_inline(
     index = 0
     while index < len(children):
         chunk, index = _render_inline_token(
-            children, index, in_table=in_table, options=fmt_options, hard_break_styles=break_styles
+            children,
+            index,
+            in_table=in_table,
+            options=fmt_options,
+            hard_break_styles=break_styles,
+            softbreak_as_space=softbreak_as_space,
         )
         parts.append(chunk)
     return "".join(parts)
@@ -492,6 +557,7 @@ def _render_inline_token(
     in_table: bool = False,
     options: FormatOptions | None = None,
     hard_break_styles: HardBreakStyles | None = None,
+    softbreak_as_space: bool = False,
 ) -> tuple[str, int]:
     fmt_options = options or _DEFAULT_OPTIONS
     break_styles = hard_break_styles or HardBreakStyles()
@@ -507,10 +573,19 @@ def _render_inline_token(
             and (children[index + 1].content or "").startswith("<")
         ):
             return escape_markdown_text(content[:-1]) + "\\_", index + 1
-        return escape_markdown_text(content), index + 1
+        rendered = escape_markdown_text(content)
+        if (
+            content.endswith("\\")
+            and index + 1 < len(children)
+            and children[index + 1].type == "softbreak"
+        ):
+            rendered += "\\"
+        return rendered, index + 1
     if child.type == "code_inline":
         return _format_code_inline(child.content, in_table=in_table), index + 1
     if child.type == "softbreak":
+        if softbreak_as_space and not _softbreak_follows_trailing_backslash(children, index):
+            return " ", index + 1
         return "\n", index + 1
     if child.type == "hardbreak":
         if break_styles.next_is_backslash():
@@ -528,7 +603,7 @@ def _render_inline_token(
         src = _readable_link_href(str(child.attrGet("src") or ""))
         title = child.attrGet("title")
         if title:
-            return f'![{alt}]({src} "{title}")', index + 1
+            return f"![{alt}]({src} {format_link_title(title)})", index + 1
         return f"![{alt}]({src})", index + 1
     if child.type == "link_open":
         href = _readable_link_href(str(child.attrGet("href") or ""))
@@ -552,7 +627,7 @@ def _render_inline_token(
             inner_parts.append(chunk)
         inner = "".join(inner_parts)
         if title:
-            return f'[{inner}]({href} "{title}")', next_index
+            return f"[{inner}]({href} {format_link_title(title)})", next_index
         return f"[{inner}]({href})", next_index
     if child.type == "link_close":
         return "", index + 1
@@ -622,6 +697,19 @@ def _render_inline_until(
         )
         parts.append(chunk)
     return "".join(parts), index
+
+
+def _softbreak_follows_trailing_backslash(children: list[Token], index: int) -> bool:
+    prev_index = index - 1
+    while prev_index >= 0:
+        child = children[prev_index]
+        if child.type == "text":
+            return child.content.endswith("\\")
+        if child.type in {"link_close", "em_close", "strong_close", "s_close"}:
+            prev_index -= 1
+            continue
+        return False
+    return False
 
 
 def _render_list(
@@ -760,8 +848,14 @@ def _render_paragraph(
     hard_break_styles: HardBreakStyles | None = None,
 ) -> tuple[str, int]:
     inline = tokens[index + 1]
+    use_space_breaks = wrap and options.prose_wrap == "always"
     text = escape_ordered_list_like_line_starts(
-        _render_inline(inline.children or [], options=options, hard_break_styles=hard_break_styles)
+        _render_inline(
+            inline.children or [],
+            options=options,
+            hard_break_styles=hard_break_styles,
+            softbreak_as_space=use_space_breaks,
+        )
     )
     if (
         wrap

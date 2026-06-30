@@ -28,31 +28,57 @@ def extract_list_layouts(body: str) -> tuple[str, list[ListLayout]]:
     return _join_lines(lines, trailing_newline=trailing), layouts
 
 
+def _blank_separates_sibling_items(lines: list[str], item_index: int, base_indent: int) -> bool:
+    """True when a blank line in source separates two same-level list markers."""
+    if item_index == 0 or lines[item_index - 1].strip():
+        return False
+    parent_marker = _parent_list_marker_line(lines, item_index - 1, base_indent)
+    if parent_marker is None:
+        return True
+    return "](" not in parent_marker
+
+
+def _parent_list_marker_line(lines: list[str], from_index: int, base_indent: int) -> str | None:
+    index = from_index
+    while index >= 0:
+        line = lines[index]
+        if is_list_line(line) and _line_indent(line) == base_indent:
+            return line
+        index -= 1
+    return None
+
+
 def _consume_item(
     lines: list[str], start: int, base_indent: int, nested_layouts: list[ListLayout]
 ) -> tuple[int, bool]:
     index = start + 1
-    saw_blank = False
-    saw_nested_list = False
+    loose = False
+    pending_blank = False
     while index < len(lines):
         line = lines[index]
         if not line.strip():
-            saw_blank = True
+            pending_blank = True
             index += 1
             continue
         indent = _line_indent(line)
         if is_list_line(line) and indent == base_indent:
             break
         if is_list_line(line) and indent > base_indent:
-            saw_nested_list = True
+            if pending_blank:
+                parent_marker = lines[start]
+                if "](" not in parent_marker:
+                    loose = True
+            pending_blank = False
             index = _scan_list(lines, index, nested_layouts)
             continue
         if indent > base_indent:
-            saw_blank = False
+            if pending_blank:
+                loose = True
+            pending_blank = False
             index += 1
             continue
         break
-    return index, saw_blank and saw_nested_list
+    return index, loose
 
 
 def _line_indent(line: str) -> int:
@@ -68,10 +94,8 @@ def _scan_list(lines: list[str], start: int, layouts: list[ListLayout]) -> int:
     while index < len(lines):
         if not (is_list_line(lines[index]) and _line_indent(lines[index]) == base_indent):
             break
-        if index != start and index > 0 and not lines[index - 1].strip():
-            gaps_before_item.append(True)
-        elif index != start:
-            gaps_before_item.append(False)
+        if index != start:
+            gaps_before_item.append(_blank_separates_sibling_items(lines, index, base_indent))
         item_end, item_loose = _consume_item(lines, index, base_indent, nested_layouts)
         loose_items.append(item_loose)
         index = item_end

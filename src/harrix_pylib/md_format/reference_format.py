@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from harrix_pylib.md_format.link_title_format import format_link_title
 from harrix_pylib.md_format.options import DEFAULT_PRINT_WIDTH, FormatOptions
 from harrix_pylib.md_format.prose_wrap import wrap_prose
 from harrix_pylib.md_format.table_format import text_display_width
@@ -125,16 +126,45 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
     if title is None:
         body = url
     else:
-        body = f"{url} {title}"
+        body = f"{url} {format_link_title(_unescape_reference_title(title))}"
     if text_display_width(label_prefix + body) <= print_width:
         if title is None:
             return [f"{label_prefix}{url}"]
-        return [f"{label_prefix}{url} {title}"]
+        return [f"{label_prefix}{url} {format_link_title(_unescape_reference_title(title))}"]
     lines = [f"{indent}[{label}]:"]
     lines.extend(wrap_prose(url, width=print_width, prefix=continuation, continuation=continuation).split("\n"))
     if title is not None:
-        lines.extend(wrap_prose(title, width=print_width, prefix=continuation, continuation=continuation).split("\n"))
+        lines.extend(
+            wrap_prose(
+                format_link_title(_unescape_reference_title(title)),
+                width=print_width,
+                prefix=continuation,
+                continuation=continuation,
+            ).split("\n")
+        )
     return lines
+
+
+def _unescape_reference_title(quoted: str) -> str:
+    if not quoted:
+        return quoted
+    if quoted[0] == "(" and quoted.endswith(")"):
+        inner = quoted[1:-1]
+    elif len(quoted) >= 2 and quoted[0] == quoted[-1] and quoted[0] in {'"', "'"}:
+        inner = quoted[1:-1]
+    else:
+        return quoted
+    result: list[str] = []
+    index = 0
+    while index < len(inner):
+        char = inner[index]
+        if char == "\\" and index + 1 < len(inner):
+            result.append(inner[index + 1])
+            index += 2
+            continue
+        result.append(char)
+        index += 1
+    return "".join(result)
 
 
 def _format_reference_block(
