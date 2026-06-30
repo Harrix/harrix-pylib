@@ -5,12 +5,13 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from harrix_pylib.md_format.link_title_format import format_link_title
+from harrix_pylib.md_format.link_title_format import _canonicalize_link_title_content, format_link_title
 from harrix_pylib.md_format.options import DEFAULT_PRINT_WIDTH, FormatOptions
 from harrix_pylib.md_format.prose_wrap import wrap_prose
 from harrix_pylib.md_format.table_format import text_display_width
 
 PLACEHOLDER_PREFIX = "HSKMDFMTREF"
+_PLACEHOLDER_RE = re.compile(r"HSKMDFMTREF\d+")
 _LINK_DEF_RE = re.compile(r"^(\s*)\[([^\]]+)\]:\s*(.*)$")
 _FOOTNOTE_DEF_RE = re.compile(r"^(\s*)\[\^([^\]]+)\]:\s*(.*)$")
 
@@ -56,7 +57,11 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
             break
 
         blocks.append(ReferenceBlock(index=index, lines=block_lines, kind=kind))
-        result.append(_placeholder(index))
+        placeholder = _placeholder(index)
+        if result and result[-1].startswith(PLACEHOLDER_PREFIX) and not result[-1].endswith("\n"):
+            result[-1] = f"{result[-1]} {placeholder}"
+        else:
+            result.append(placeholder)
         index += 1
         if line_index < len(lines) and not lines[line_index].strip():
             next_index = line_index + 1
@@ -84,20 +89,22 @@ def restore_reference_blocks(
     lines, trailing = _split_lines(text)
     restored: list[str] = []
     for line in lines:
-        stripped = line.strip()
-        if stripped.startswith(PLACEHOLDER_PREFIX):
-            try:
-                block_index = int(stripped.removeprefix(PLACEHOLDER_PREFIX))
-            except ValueError:
-                restored.append(line)
-                continue
+        if not _PLACEHOLDER_RE.search(line):
+            restored.append(line)
+            continue
+        last = 0
+        for match in _PLACEHOLDER_RE.finditer(line):
+            if match.start() > last:
+                restored.append(line[last : match.start()])
+            block_index = int(match.group().removeprefix(PLACEHOLDER_PREFIX))
             block = blocks_by_index.get(block_index)
             if block is None:
-                restored.append(line)
-                continue
-            restored.extend(_format_reference_block(block, options=fmt_options, print_width=width))
-            continue
-        restored.append(line)
+                restored.append(match.group())
+            else:
+                restored.extend(_format_reference_block(block, options=fmt_options, print_width=width))
+            last = match.end()
+        if last < len(line):
+            restored.append(line[last:])
     return _join_lines(restored, trailing_newline=trailing)
 
 
@@ -115,6 +122,18 @@ def _format_footnote_block(lines: list[str], *, print_width: int) -> list[str]:
     return wrapped.split("\n")
 
 
+def _format_reference_title(title: str) -> str:
+    if title.startswith("(") and title.endswith(")"):
+        inner = _unescape_reference_title(title)
+        if " " in inner:
+            return f"({inner})"
+    return format_link_title(_canonicalize_reference_title(title))
+
+
+def _canonicalize_reference_title(title: str) -> str:
+    return _canonicalize_link_title_content(_unescape_reference_title(title))
+
+
 def _format_link_definition(line: str, *, print_width: int) -> list[str]:
     match = _LINK_DEF_RE.match(line)
     if not match:
@@ -126,17 +145,17 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
     if title is None:
         body = url
     else:
-        body = f"{url} {format_link_title(_unescape_reference_title(title))}"
+        body = f"{url} {_format_reference_title(title)}"
     if text_display_width(label_prefix + body) <= print_width:
         if title is None:
             return [f"{label_prefix}{url}"]
-        return [f"{label_prefix}{url} {format_link_title(_unescape_reference_title(title))}"]
+        return [f"{label_prefix}{url} {_format_reference_title(title)}"]
     lines = [f"{indent}[{label}]:"]
     lines.extend(wrap_prose(url, width=print_width, prefix=continuation, continuation=continuation).split("\n"))
     if title is not None:
         lines.extend(
             wrap_prose(
-                format_link_title(_unescape_reference_title(title)),
+                _format_reference_title(title),
                 width=print_width,
                 prefix=continuation,
                 continuation=continuation,
@@ -205,7 +224,10 @@ def _split_link_definition_rest(rest: str) -> tuple[str, str | None]:
         return rest[:-3].rstrip(), None
     if len(rest) >= 2 and rest.startswith("<") and rest.endswith(">"):
         return rest, None
-    title_match = re.search(r'\s+("(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|\S+)\s*$', rest)
+    title_match = re.search(
+        r'\s+("(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|\((?:\\.|[^)\\])*\))\s*$',
+        rest,
+    )
     if title_match:
         title = title_match.group(1)
         if title in {'""', "''"}:

@@ -32,6 +32,7 @@ def render_tokens(
     options: FormatOptions | None = None,
     task_list_markers: list[TaskListMarker] | None = None,
     ordered_list_marker_groups: list[list[int]] | None = None,
+    bullet_list_marker_groups: list[list[str]] | None = None,
     hard_break_styles: HardBreakStyles | None = None,
     list_layouts: list[ListLayout] | None = None,
 ) -> str:
@@ -39,6 +40,7 @@ def render_tokens(
     fmt_options = options or _DEFAULT_OPTIONS
     markers = task_list_markers or []
     ordered_groups = list(ordered_list_marker_groups or [])
+    bullet_groups = list(bullet_list_marker_groups or [])
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list(list_layouts or [])
     parts: list[str] = []
@@ -60,6 +62,7 @@ def render_tokens(
             options=fmt_options,
             task_list_markers=markers,
             ordered_list_marker_groups=ordered_groups,
+            bullet_list_marker_groups=bullet_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
         )
@@ -108,11 +111,17 @@ def _find_close(tokens: list[Token], index: int, close_type: str) -> int:
 def _format_code_inline(content: str, *, in_table: bool = False) -> str:
     if in_table and "|" in content:
         content = content.replace("|", "\\|")
-    if "`" not in content:
+    max_run = _max_backtick_run(content)
+    if max_run == 0:
         return f"`{content}`"
-    fence = "`" * (_max_backtick_run(content) + 1)
+    if max_run >= 3:
+        return f"` {content} `"
     if content.startswith("`") or content.endswith("`"):
+        fence = "`" * (max_run + 1)
         return f"{fence} {content} {fence}"
+    if max_run >= 3:
+        return f"` {content} `"
+    fence = "`" * (max_run + 1)
     return f"{fence}{content}{fence}"
 
 
@@ -392,6 +401,7 @@ def _render_block(
     wrap_paragraph: bool = True,
     task_list_markers: list[TaskListMarker] | None = None,
     ordered_list_marker_groups: list[list[int]] | None = None,
+    bullet_list_marker_groups: list[list[str]] | None = None,
     hard_break_styles: HardBreakStyles | None = None,
     list_layouts: list[ListLayout] | None = None,
 ) -> tuple[str, int]:
@@ -409,6 +419,7 @@ def _render_block(
             options=options,
             task_list_markers=task_list_markers,
             ordered_list_marker_groups=ordered_list_marker_groups,
+            bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
         )
@@ -420,6 +431,7 @@ def _render_block(
             options=options,
             task_list_markers=task_list_markers or [],
             ordered_list_marker_groups=ordered_list_marker_groups,
+            bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
         )
@@ -431,6 +443,7 @@ def _render_block(
             options=options,
             task_list_markers=task_list_markers or [],
             ordered_list_marker_groups=ordered_list_marker_groups,
+            bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
         )
@@ -456,6 +469,7 @@ def _render_block(
             options=options,
             task_list_markers=task_list_markers,
             ordered_list_marker_groups=ordered_list_marker_groups,
+            bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
         ), index + 1
@@ -469,6 +483,7 @@ def _render_blockquote(
     options: FormatOptions,
     task_list_markers: list[TaskListMarker] | None = None,
     ordered_list_marker_groups: list[list[int]] | None = None,
+    bullet_list_marker_groups: list[list[str]] | None = None,
     hard_break_styles: HardBreakStyles | None = None,
     list_layouts: list[ListLayout] | None = None,
 ) -> tuple[str, int]:
@@ -485,6 +500,7 @@ def _render_blockquote(
             options=options,
             task_list_markers=markers,
             ordered_list_marker_groups=ordered_list_marker_groups,
+            bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
         )
@@ -720,6 +736,7 @@ def _render_list(
     options: FormatOptions,
     task_list_markers: list[TaskListMarker],
     ordered_list_marker_groups: list[list[int]] | None = None,
+    bullet_list_marker_groups: list[list[str]] | None = None,
     hard_break_styles: HardBreakStyles | None = None,
     list_layouts: list[ListLayout] | None = None,
 ) -> tuple[str, int]:
@@ -731,8 +748,11 @@ def _render_list(
     loose = _list_is_loose(tokens, index, close_index)
     lines: list[str] = []
     source_markers: list[int] = []
+    bullet_markers: list[str] = []
     if ordered and ordered_list_marker_groups:
         source_markers = ordered_list_marker_groups.pop(0)
+    elif not ordered and bullet_list_marker_groups:
+        bullet_markers = bullet_list_marker_groups.pop(0)
     item_index = index + 1
     rendered_item_count = 0
     while item_index < close_index:
@@ -743,6 +763,8 @@ def _render_list(
         checkbox = _list_item_checkbox(tokens, item_index)
         if ordered:
             marker = f"{ordered_list_item_number(source_markers, rendered_item_count)}."
+        elif rendered_item_count < len(bullet_markers):
+            marker = bullet_markers[rendered_item_count]
         else:
             marker = "-"
         if checkbox:
@@ -758,6 +780,7 @@ def _render_list(
                     options=options,
                     task_list_markers=task_list_markers,
                     ordered_list_marker_groups=ordered_list_marker_groups,
+                    bullet_list_marker_groups=bullet_list_marker_groups,
                     hard_break_styles=break_styles,
                     list_layouts=layouts,
                 )
@@ -770,6 +793,7 @@ def _render_list(
                     wrap_paragraph=False,
                     task_list_markers=task_list_markers,
                     ordered_list_marker_groups=ordered_list_marker_groups,
+                    bullet_list_marker_groups=bullet_list_marker_groups,
                     hard_break_styles=break_styles,
                     list_layouts=layouts,
                 )
@@ -848,7 +872,7 @@ def _render_paragraph(
     hard_break_styles: HardBreakStyles | None = None,
 ) -> tuple[str, int]:
     inline = tokens[index + 1]
-    use_space_breaks = wrap and options.prose_wrap == "always"
+    use_space_breaks = options.prose_wrap == "always"
     text = escape_ordered_list_like_line_starts(
         _render_inline(
             inline.children or [],
@@ -954,6 +978,7 @@ def _render_until_close(
     options: FormatOptions,
     task_list_markers: list[TaskListMarker] | None = None,
     ordered_list_marker_groups: list[list[int]] | None = None,
+    bullet_list_marker_groups: list[list[str]] | None = None,
     hard_break_styles: HardBreakStyles | None = None,
     list_layouts: list[ListLayout] | None = None,
 ) -> str:
@@ -970,6 +995,7 @@ def _render_until_close(
             options=options,
             task_list_markers=markers,
             ordered_list_marker_groups=ordered_list_marker_groups,
+            bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
         )

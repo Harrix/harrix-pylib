@@ -4,21 +4,50 @@ from __future__ import annotations
 
 import re
 
-_INLINE_LINK_RE = re.compile(r"(\[[^\]]*\]\()([^)]+)(\))")
+_LINK_PREFIX_RE = re.compile(r"!?\[[^\]]*\]\(")
 
 
 def format_link_title(title: str) -> str:
     """Return a canonical quoted title for inline links and images."""
+    title = _canonicalize_link_title_content(title)
     candidates: list[str] = []
     for delimiter in ('"', "'"):
         escaped = _escape_title_content(title, delimiter)
         candidates.append(f"{delimiter}{escaped}{delimiter}")
-    return min(candidates, key=len)
+    return min(candidates, key=lambda candidate: (len(candidate), candidate[0] != '"'))
 
 
 def normalize_inline_link_titles(body: str) -> str:
     """Normalize quoted titles in inline links before parsing."""
-    return _INLINE_LINK_RE.sub(_normalize_inline_link_match, body)
+    parts: list[str] = []
+    last = 0
+    while last < len(body):
+        match = _LINK_PREFIX_RE.search(body, last)
+        if match is None:
+            parts.append(body[last:])
+            break
+        parts.append(body[last : match.start()])
+        open_paren = match.end() - 1
+        close_index = _find_link_close_paren(body, open_paren)
+        if close_index is None:
+            parts.append(body[match.start() : match.end()])
+            last = match.end()
+            continue
+        prefix = body[match.start():open_paren]
+        destination = body[match.end() : close_index]
+        suffix = body[close_index]
+        parts.append(_normalize_inline_link(prefix, destination, suffix))
+        last = close_index + 1
+    return "".join(parts)
+
+
+def _canonicalize_link_title_content(content: str) -> str:
+    """Normalize lightly escaped one-character titles from CommonMark parsing."""
+    if len(content) == 2 and content[0] == "\\" and content[1] in "\"'":
+        return content[1]
+    if len(content) == 2 and content[0] == "\\" and content[1] == ")":
+        return ")"
+    return content
 
 
 def _escape_title_content(content: str, delimiter: str) -> str:
@@ -30,29 +59,43 @@ def _escape_title_content(content: str, delimiter: str) -> str:
     return "".join(escaped)
 
 
-def _normalize_inline_link_match(match: re.Match[str]) -> str:
-    prefix, destination, suffix = match.group(1), match.group(2), match.group(3)
-    url, title = _split_inline_destination(destination)
+def _find_link_close_paren(text: str, open_paren: int) -> int | None:
+    if open_paren >= len(text) or text[open_paren] != "(":
+        return None
+    depth = 1
+    for index in range(open_paren + 1, len(text)):
+        char = text[index]
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+            if depth == 0:
+                return index
+    return None
+
+
+def _normalize_inline_link(prefix: str, destination: str, suffix: str) -> str:
+    url, title = split_inline_destination(destination)
     if title is None:
-        return match.group(0)
+        return f"{prefix}{destination}{suffix}"
     return f"{prefix}{url} {format_link_title(_unescape_title(title))}{suffix}"
 
 
-def _split_inline_destination(destination: str) -> tuple[str, str | None]:
+def split_inline_destination(destination: str) -> tuple[str, str | None]:
     destination = destination.strip()
-    if destination.startswith("<") and ">" in destination:
+    if destination.startswith("<") and destination.endswith(">"):
         return destination, None
     title_match = re.search(
         r'\s+("(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|\((?:\\.|[^)\\])*\))\s*$',
         destination,
     )
-    if not title_match:
-        return destination, None
-    title = title_match.group(1)
-    url = destination[: title_match.start()].rstrip()
-    if title in {'""', "''"}:
-        return url, None
-    return url, title
+    if title_match:
+        title = title_match.group(1)
+        url = destination[: title_match.start()].rstrip()
+        if title in {'""', "''"}:
+            return url, None
+        return url, title
+    return destination, None
 
 
 def _unescape_title(quoted: str) -> str:

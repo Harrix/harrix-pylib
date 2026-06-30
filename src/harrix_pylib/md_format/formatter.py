@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 from harrix_pylib.md_format.autolink_format import extract_angle_autolinks, restore_angle_autolinks
+from harrix_pylib.md_format.bullet_list_format import extract_bullet_list_marker_groups
 from harrix_pylib.md_format.code_guard import extract_code_blocks, restore_code_blocks
 from harrix_pylib.md_format.front_matter import (
     collapse_extra_blank_lines,
@@ -81,6 +82,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     body, code_blocks = extract_code_blocks(body)
     body, reference_blocks = extract_reference_blocks(body)
     body, ordered_list_marker_groups = extract_ordered_list_marker_groups(body)
+    body, bullet_list_marker_groups = extract_bullet_list_marker_groups(body)
     body, list_layouts = extract_list_layouts(body)
     body, task_list_markers = extract_task_list_markers(body)
     body = collapse_extra_blank_lines(body)
@@ -99,6 +101,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
             options=options,
             task_list_markers=task_list_markers,
             ordered_list_marker_groups=ordered_list_marker_groups,
+            bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=hard_break_styles,
             list_layouts=list_layouts,
         )
