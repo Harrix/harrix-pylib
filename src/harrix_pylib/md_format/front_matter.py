@@ -8,11 +8,21 @@ from dataclasses import dataclass
 _MIN_FRONT_MATTER_PARTS = 3
 _YAML_BLOCK_PREFIX = "HSKMDFMTYAML"
 _YAML_BLOCK_RE = re.compile(rf"{_YAML_BLOCK_PREFIX}\d+")
+_TOML_BLOCK_PREFIX = "HSKMDFMTTOML"
+_TOML_BLOCK_RE = re.compile(rf"{_TOML_BLOCK_PREFIX}\d+")
 
 
 @dataclass(frozen=True)
 class YamlBlock:
     """Stored YAML block from the markdown body."""
+
+    index: int
+    lines: list[str]
+
+
+@dataclass(frozen=True)
+class TomlBlock:
+    """Stored TOML front matter style block from the markdown body."""
 
     index: int
     lines: list[str]
@@ -88,6 +98,51 @@ def restore_yaml_blocks(text: str, blocks: list[YamlBlock]) -> str:
     return _YAML_BLOCK_RE.sub(replace, text)
 
 
+def extract_toml_blocks(body: str) -> tuple[str, list[TomlBlock]]:
+    """Replace standalone TOML blocks in the markdown body with placeholders."""
+    lines, trailing = _split_lines(body)
+    result: list[str] = []
+    blocks: list[TomlBlock] = []
+    index = 0
+    line_index = 0
+
+    while line_index < len(lines):
+        if lines[line_index].strip() != "+++":
+            result.append(lines[line_index])
+            line_index += 1
+            continue
+
+        close_index = _find_delimited_block_close(lines, line_index + 1, delimiter="+++")
+        if close_index is None:
+            result.append(lines[line_index])
+            line_index += 1
+            continue
+
+        block_lines = lines[line_index : close_index + 1]
+        blocks.append(TomlBlock(index=index, lines=block_lines))
+        result.append(f"{_TOML_BLOCK_PREFIX}{index}")
+        index += 1
+        line_index = close_index + 1
+
+    return _join_lines(result, trailing_newline=trailing), blocks
+
+
+def restore_toml_blocks(text: str, blocks: list[TomlBlock]) -> str:
+    """Restore TOML body blocks."""
+    if not blocks:
+        return text
+    blocks_by_index = {block.index: block for block in blocks}
+
+    def replace(match: re.Match[str]) -> str:
+        block_index = int(match.group().removeprefix(_TOML_BLOCK_PREFIX))
+        block = blocks_by_index.get(block_index)
+        if block is None:
+            return match.group()
+        return "\n".join(line.rstrip() for line in block.lines)
+
+    return _TOML_BLOCK_RE.sub(replace, text)
+
+
 def join_front_matter(front_matter: str, body: str) -> str:
     """Join front matter and formatted body."""
     if not front_matter:
@@ -124,8 +179,12 @@ def split_front_matter(markdown_text: str) -> tuple[str, str]:
 
 
 def _find_yaml_block_close(lines: list[str], start_index: int) -> int | None:
+    return _find_delimited_block_close(lines, start_index, delimiter="---")
+
+
+def _find_delimited_block_close(lines: list[str], start_index: int, *, delimiter: str) -> int | None:
     for line_index in range(start_index, len(lines)):
-        if lines[line_index].strip() == "---":
+        if lines[line_index].strip() == delimiter:
             return line_index
         if lines[line_index].strip() == "":
             return None

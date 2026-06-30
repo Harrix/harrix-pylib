@@ -261,7 +261,10 @@ def _unparsed_image_reference_source_line(
         match = _EMPTY_IMAGE_REFERENCE_RE.match(stripped)
         if match is None:
             return _strip_list_item_content(source_line)
-        alt = " ".join(match.group("alt").split())
+        raw_alt = match.group("alt")
+        alt = " ".join(raw_alt.split())
+        if raw_alt == alt:
+            return f"![{alt}][]"
         return f"![ {alt} ][]"
     return _strip_list_item_content(source_line)
 
@@ -394,9 +397,10 @@ def _format_table_row(
     column_widths = column_widths[:effective_width]
     align_row = align_row[:effective_width]
     formatted_cells: list[str] = []
+    padded = [_escape_table_cell(cell) for cell in padded]
     for index, cell in enumerate(padded):
         width = column_widths[index]
-        cell_width = text_display_width(cell)
+        cell_width = _table_cell_display_width(cell)
         padding = max(width - cell_width, 0)
         align = align_row[index] if index < len(align_row) else "---"
         if align in {":--", "---"}:
@@ -409,6 +413,21 @@ def _format_table_row(
     return "| " + " | ".join(formatted_cells) + " |"
 
 
+def _escape_table_cell(cell: str) -> str:
+    if "|" not in cell:
+        return cell
+    if "`" in cell:
+        return cell
+    if "<" in cell and ">" in cell:
+        return cell.replace("|", "&#124;")
+    return cell.replace("|", r"\\|")
+
+
+def _table_cell_display_width(cell: str) -> int:
+    escaped_pipe_width = sum(len(match.group(1)) // 2 for match in re.finditer(r"(\\+)\|", cell))
+    return text_display_width(cell) - escaped_pipe_width
+
+
 def _format_table_separator(column_widths: list[int], alignments: list[str]) -> str:
     separators: list[str] = []
     for index, width in enumerate(column_widths):
@@ -418,11 +437,9 @@ def _format_table_separator(column_widths: list[int], alignments: list[str]) -> 
             if core == ":--":
                 core = ":" + "-" * (width - 1)
             elif core == "--:":
-                core = "-" * (width - 2) + ": "
                 core = "-" * (width - 1) + ":"
             elif core == ":-:":
-                side = max((width - 3) // 2, 0)
-                core = ":" + "-" * side + ":" + "-" * max(width - side - 3, 0)
+                core = ":" + "-" * max(width - 2, 1) + ":"
             else:
                 core = "-" * width
         separators.append(core)
@@ -1451,7 +1468,11 @@ def _render_table(
             trailing_paragraphs.append(padded_row[0].strip())
         else:
             filtered_body_rows.append(padded_row[:width])
-    column_widths = _table_column_widths([header, *filtered_body_rows], width)
+    width_rows = [
+        [_escape_table_cell(cell) for cell in row]
+        for row in [header, *filtered_body_rows]
+    ]
+    column_widths = _table_column_widths(width_rows, width)
     align_row = rows[1] if len(rows) > 1 else ["---"] * width
     lines = [
         _format_table_row(header, column_widths, align_row),
@@ -1544,6 +1565,11 @@ def _source_blocks_are_adjacent(
         "bullet_list_open",
         "ordered_list_open",
     }:
+        if previous_type == current_type == "bullet_list_open":
+            previous_source_line = source_lines[previous_map[0]] if previous_map[0] < len(source_lines) else ""
+            current_source_line = source_lines[current_map[0]] if current_map[0] < len(source_lines) else ""
+            if _source_bullet_marker(previous_source_line) != _source_bullet_marker(current_source_line):
+                return False
         return True
     if "html_block" not in {previous_type, current_type}:
         return False
@@ -1556,6 +1582,13 @@ def _source_blocks_are_adjacent(
     return not _LIST_MARKER_LINE_RE.match(previous_source_line.lstrip())
 
 
+def _source_bullet_marker(line: str) -> str | None:
+    match = re.match(r"\s*([-*+])\s+", line)
+    if match is None:
+        return None
+    return match.group(1)
+
+
 def _should_wrap_prose(text: str, *, prefix: str, width: int) -> bool:
     return text_display_width(prefix + text) > width
 
@@ -1564,7 +1597,7 @@ def _table_column_widths(rows: list[list[str]], width: int) -> list[int]:
     column_widths = [3] * width
     for row in rows:
         for index, cell in enumerate(row[:width]):
-            column_widths[index] = max(column_widths[index], text_display_width(cell), 3)
+            column_widths[index] = max(column_widths[index], _table_cell_display_width(cell), 3)
     return column_widths
 
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import html
 import re
 from dataclasses import dataclass
 
@@ -87,16 +86,18 @@ def _extract_link_destinations_from_text(
             continue
         prefix = body[match.start() : match.end()]
         destination = body[match.end() : close_index]
+        url, title = split_inline_destination(destination)
         suffix = body[close_index]
-        entries.append(LinkDestination(index=index, destination=destination))
-        parts.append(f"{prefix}{_placeholder(index)}{suffix}")
+        entries.append(LinkDestination(index=index, destination=url))
+        title_suffix = f" {title}" if title is not None else ""
+        parts.append(f"{prefix}{_placeholder(index)}{title_suffix}{suffix}")
         index += 1
         last = close_index + 1
     return "".join(parts), entries
 
 
 def _format_link_url(url: str) -> str:
-    url = html.unescape(url)
+    url = url.replace("&amp;", "&")
     if url.startswith("<") and url.endswith(">"):
         return url
     if "()" in url:

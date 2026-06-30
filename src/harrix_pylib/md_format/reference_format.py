@@ -128,13 +128,17 @@ def restore_reference_blocks(
             line_index += 1
             continue
 
+        emitted_block = False
         for match in _PLACEHOLDER_RE.finditer(merged_line):
             block_index = int(match.group().removeprefix(PLACEHOLDER_PREFIX))
             block = blocks_by_index.get(block_index)
             if block is None:
                 restored.append(match.group())
             else:
+                if emitted_block and block.kind == "footnote":
+                    restored.append("")
                 restored.extend(_format_reference_block(block, options=fmt_options, print_width=width))
+                emitted_block = True
         line_index += 1
     return _join_lines(restored, trailing_newline=trailing)
 
@@ -149,8 +153,11 @@ def _format_footnote_block(lines: list[str], *, print_width: int) -> list[str]:
     continuation = indent + "    "
     body_parts = [first_text, *[line[4:] if line.startswith("    ") else line for line in lines[1:]]]
     body = " ".join(part.strip() for part in body_parts if part.strip())
-    wrapped = wrap_prose(body, width=print_width, prefix=prefix, continuation=continuation)
-    return wrapped.split("\n")
+    wrapped_inline = wrap_prose(body, width=print_width, prefix=prefix, continuation=continuation).split("\n")
+    if len(wrapped_inline) == 1:
+        return wrapped_inline
+    wrapped_body = wrap_prose(body, width=print_width, prefix=continuation, continuation=continuation)
+    return [prefix.rstrip(), *wrapped_body.split("\n")]
 
 
 def _format_reference_title(title: str) -> str:
@@ -168,7 +175,7 @@ def _canonicalize_reference_title(title: str) -> str:
 
 def format_reference_link_url(url: str) -> str:
     """Return canonical URL text for link-reference definitions."""
-    return html.unescape(url)
+    return url.replace("&amp;", "&")
 
 
 def _reference_label_markup(label: str) -> str:

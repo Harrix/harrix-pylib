@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 
 PLACEHOLDER_PREFIX = "HSKMDFMTIGN"
+_PLACEHOLDER_RE = re.compile(r"HSKMDFMTIGN\d+")
 _IGNORE_LINE_RE = re.compile(r"<!--\s*prettier-ignore\s*-->")
 _IGNORE_START_RE = re.compile(r"<!--\s*prettier-ignore-start\s*-->")
 _IGNORE_END_RE = re.compile(r"<!--\s*prettier-ignore-end\s*-->")
@@ -76,6 +77,16 @@ def restore_ignore_blocks(text: str, blocks: list[IgnoreBlock]) -> str:
     restored: list[str] = []
     for line in lines:
         stripped = line.strip()
+        inline_match = _PLACEHOLDER_RE.search(line)
+        if inline_match and inline_match.start() > 0:
+            prefix = line[: inline_match.start()].rstrip()
+            if prefix:
+                restored.append(prefix)
+            block_index = int(inline_match.group().removeprefix(PLACEHOLDER_PREFIX))
+            block = blocks_by_index.get(block_index)
+            if block is not None:
+                restored.extend(block.text.split("\n"))
+                continue
         if stripped.startswith(PLACEHOLDER_PREFIX):
             try:
                 block_index = int(stripped.removeprefix(PLACEHOLDER_PREFIX))
