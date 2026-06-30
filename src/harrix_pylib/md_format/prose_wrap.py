@@ -9,8 +9,8 @@ from harrix_pylib.md_format.table_format import text_display_width
 
 _INLINE_SEGMENT_RE = re.compile(
     r"(`+[^`]*`+)"
-    r"|(\[[^\]]*\]\([^)]*\))"
-    r"|(!\[[^\]]*\]\([^)]*\))"
+    r"|(!?\[[^\]]*\]\(<[^>]+>\))"
+    r"|(!?\[[^\]]*\]\([^)]*\))"
     r"|(<[^>\n]+>)"
     r"|(\*\*[^*]+\*\*)"
     r"|(_[^_]+_)"

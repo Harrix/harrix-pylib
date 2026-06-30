@@ -8,6 +8,10 @@ from urllib.parse import unquote, urlsplit, urlunsplit
 
 from harrix_pylib.md_format.escape_format import escape_markdown_text, escape_ordered_list_like_line_starts
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles
+from harrix_pylib.md_format.link_destination_format import (
+    LinkDestination,
+    formatted_href_from_placeholder,
+)
 from harrix_pylib.md_format.link_title_format import format_link_title
 from harrix_pylib.md_format.list_loose_format import ListLayout
 from harrix_pylib.md_format.options import FormatOptions
@@ -26,6 +30,8 @@ if TYPE_CHECKING:
 
 _DEFAULT_OPTIONS = FormatOptions()
 _SINGLE_TICK_INLINE_CODE_RE = re.compile(r"^`(?:[^`]|`(?!`))*`$")
+_LIST_MARKER_LINE_RE = re.compile(r"^[-*+]\s|^\d+[.)]\s")
+_ACTIVE_LINK_DESTINATIONS: dict[int, LinkDestination] | None = None
 
 
 def render_tokens(
@@ -38,8 +44,40 @@ def render_tokens(
     hard_break_styles: HardBreakStyles | None = None,
     list_layouts: list[ListLayout] | None = None,
     source_lines: list[str] | None = None,
+    link_destinations: list[LinkDestination] | None = None,
 ) -> str:
     """Render top-level block tokens to Markdown."""
+    global _ACTIVE_LINK_DESTINATIONS
+    previous_destinations = _ACTIVE_LINK_DESTINATIONS
+    _ACTIVE_LINK_DESTINATIONS = (
+        {entry.index: entry for entry in link_destinations} if link_destinations else None
+    )
+    try:
+        return _render_tokens_impl(
+            tokens,
+            options=options,
+            task_list_markers=task_list_markers,
+            ordered_list_marker_groups=ordered_list_marker_groups,
+            bullet_list_marker_groups=bullet_list_marker_groups,
+            hard_break_styles=hard_break_styles,
+            list_layouts=list_layouts,
+            source_lines=source_lines,
+        )
+    finally:
+        _ACTIVE_LINK_DESTINATIONS = previous_destinations
+
+
+def _render_tokens_impl(
+    tokens: list[Token],
+    *,
+    options: FormatOptions | None = None,
+    task_list_markers: list[TaskListMarker] | None = None,
+    ordered_list_marker_groups: list[list[int]] | None = None,
+    bullet_list_marker_groups: list[list[str]] | None = None,
+    hard_break_styles: HardBreakStyles | None = None,
+    list_layouts: list[ListLayout] | None = None,
+    source_lines: list[str] | None = None,
+) -> str:
     fmt_options = options or _DEFAULT_OPTIONS
     markers = task_list_markers or []
     ordered_groups = list(ordered_list_marker_groups or [])
@@ -470,7 +508,13 @@ def _max_backtick_run(text: str) -> int:
 
 def _readable_link_href(href: str) -> str:
     """Decode percent-encoded Unicode in URLs for readable Markdown output."""
-    if not href or "%" not in href:
+    if _ACTIVE_LINK_DESTINATIONS is not None:
+        formatted = formatted_href_from_placeholder(href, _ACTIVE_LINK_DESTINATIONS)
+        if formatted is not None:
+            return formatted
+    if not href or href.startswith("HSKMDFMTLD"):
+        return href
+    if "%" not in href:
         return href
     if href.startswith("#"):
         return unquote(href, encoding="utf-8")
@@ -655,7 +699,11 @@ def _blockquote_needs_blank_line(previous: str, current: str) -> bool:
         return True
     if previous_last.startswith("|"):
         return True
-    return False
+    if previous_last.startswith("<!--") and current_first.startswith("<!--"):
+        return False
+    if current_first.startswith(("-", "|", "#", "```", "<")):
+        return False
+    return True
 
 
 def _join_blockquote_blocks(blocks: list[str]) -> str:
@@ -704,7 +752,7 @@ def _render_blockquote(
         )
         if chunk:
             inner_parts.append(chunk)
-    if options.prose_wrap == "always" and inner_parts and all(
+    if options.prose_wrap == "always" and len(inner_parts) == 1 and inner_parts and all(
         not part.lstrip().startswith(("-", "|", "#", "```")) for part in inner_parts
     ):
         merged = normalize_inline_spaces(
@@ -947,6 +995,14 @@ def _softbreak_follows_trailing_backslash(children: list[Token], index: int) -> 
     return False
 
 
+def _is_list_block(block: str) -> bool:
+    for line in block.splitlines():
+        if not line.strip():
+            continue
+        return bool(_LIST_MARKER_LINE_RE.match(line.lstrip()))
+    return False
+
+
 def _render_list(
     tokens: list[Token],
     index: int,
@@ -960,6 +1016,7 @@ def _render_list(
     list_layouts: list[ListLayout] | None = None,
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
+    list_depth: int = 0,
 ) -> tuple[str, int]:
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list_layouts or []
@@ -1010,6 +1067,7 @@ def _render_list(
                     list_layouts=layouts,
                     source_lines=source_lines,
                     canonicalize_bullets=canonicalize_bullets,
+                    list_depth=list_depth + 1,
                 )
                 item_lines.append(nested.rstrip("\n"))
             else:
@@ -1042,7 +1100,15 @@ def _render_list(
             item_loose = layout.loose_items[rendered_item_count]
         else:
             item_loose = _list_item_is_loose(tokens, item_index, item_close)
-        lines.extend(_render_list_item_lines(item_lines, marker=marker, loose=item_loose, options=options))
+        lines.extend(
+            _render_list_item_lines(
+                item_lines,
+                marker=marker,
+                loose=item_loose,
+                options=options,
+                base_indent=list_depth * 2,
+            )
+        )
         rendered_item_count += 1
         item_index = item_close + 1
     return "\n".join(lines) + "\n", close_index + 1
@@ -1054,14 +1120,20 @@ def _render_list_item_lines(
     marker: str,
     loose: bool,
     options: FormatOptions,
+    base_indent: int = 0,
 ) -> list[str]:
     if not item_lines:
         if marker.endswith("."):
-            return [marker]
-        return [f"{marker} "]
+            return [(" " * base_indent) + marker]
+        return [(" " * base_indent) + f"{marker} "]
 
-    prefix = f"{marker} "
+    prefix = (" " * base_indent) + f"{marker} "
     indent = " " * len(prefix)
+    continuation_indent = (
+        (" " * len(prefix))
+        if base_indent == 0 or marker.endswith(".")
+        else (" " * (base_indent + 2))
+    )
     rendered: list[str] = []
     for block_index, block in enumerate(item_lines):
         if (
@@ -1085,7 +1157,10 @@ def _render_list_item_lines(
             continue
         if loose:
             rendered.append("")
-        rendered.extend(f"{indent}{continuation_line}" for continuation_line in block_lines)
+        if _is_list_block(block):
+            rendered.extend(block.splitlines())
+        else:
+            rendered.extend(f"{continuation_indent}{continuation_line}" for continuation_line in block_lines)
     return rendered
 
 
@@ -1130,8 +1205,8 @@ def _render_paragraph(
         tokens, index, source_lines, options=options, rendered_line=text.rstrip("\n")
     )
     if source_line is not None:
-        return f"{source_line}\n", index + 3
-    return f"{text}\n", index + 3
+        return f"{source_line.rstrip()}\n", index + 3
+    return f"{text.rstrip()}\n", index + 3
 
 
 def _parse_table_row_cells(line: str) -> list[str] | None:

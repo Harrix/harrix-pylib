@@ -17,6 +17,7 @@ from harrix_pylib.md_format.front_matter import (
 )
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles, extract_backslash_hard_breaks
 from harrix_pylib.md_format.ignore_format import extract_ignore_blocks, restore_ignore_blocks
+from harrix_pylib.md_format.link_destination_format import extract_link_destinations
 from harrix_pylib.md_format.list_format import ensure_blank_line_after_lists
 from harrix_pylib.md_format.link_title_format import normalize_inline_link_titles
 from harrix_pylib.md_format.list_loose_format import extract_list_layouts
@@ -89,6 +90,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     body = collapse_extra_blank_lines(body)
     body = unwrap_spurious_table_rows(ensure_blank_line_after_tables(body))
     body = ensure_blank_line_after_lists(body)
+    body, link_destinations = extract_link_destinations(body)
     body = normalize_inline_link_titles(body)
     if not body.strip() and front_matter and not reference_blocks:
         result = front_matter.rstrip() + "\n"
@@ -108,6 +110,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
             hard_break_styles=hard_break_styles,
             list_layouts=list_layouts,
             source_lines=source_lines,
+            link_destinations=link_destinations,
         )
         rendered_body = restore_code_blocks(rendered_body, code_blocks)
         rendered_body = restore_angle_autolinks(rendered_body, angle_autolinks)

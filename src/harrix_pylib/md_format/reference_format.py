@@ -8,8 +8,10 @@ from dataclasses import dataclass
 from harrix_pylib.md_format.link_title_format import (
     _canonicalize_link_title_content,
     _split_trailing_link_title,
+    _unescape_title,
     format_link_title,
 )
+from harrix_pylib.md_format.link_destination_format import format_link_url
 from harrix_pylib.md_format.options import DEFAULT_PRINT_WIDTH, FormatOptions
 from harrix_pylib.md_format.prose_wrap import wrap_prose
 from harrix_pylib.md_format.table_format import text_display_width
@@ -129,16 +131,16 @@ def _format_footnote_block(lines: list[str], *, print_width: int) -> list[str]:
 
 
 def _format_reference_title(title: str) -> str:
-    unescaped = _unescape_reference_title(title)
+    unescaped = _unescape_title(title)
     if title.startswith("(") and title.endswith(")"):
         if " " in unescaped:
             return f"({unescaped})"
         return format_link_title(unescaped)
-    return format_link_title(_canonicalize_reference_title(title))
+    return format_link_title(unescaped)
 
 
 def _canonicalize_reference_title(title: str) -> str:
-    return _canonicalize_link_title_content(_unescape_reference_title(title))
+    return _canonicalize_link_title_content(_unescape_title(title))
 
 
 def _format_link_definition(line: str, *, print_width: int) -> list[str]:
@@ -147,6 +149,7 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
         return [line]
     indent, label, rest = match.group(1), match.group(2), match.group(3).rstrip()
     url, title = _split_link_definition_rest(rest)
+    url = format_link_url(url)
     label_prefix = f"{indent}[{label}]: "
     continuation = indent + "  "
     if title is None:
@@ -169,28 +172,6 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
             ).split("\n")
         )
     return lines
-
-
-def _unescape_reference_title(quoted: str) -> str:
-    if not quoted:
-        return quoted
-    if quoted[0] == "(" and quoted.endswith(")"):
-        inner = quoted[1:-1]
-    elif len(quoted) >= 2 and quoted[0] == quoted[-1] and quoted[0] in {'"', "'"}:
-        inner = quoted[1:-1]
-    else:
-        return quoted
-    result: list[str] = []
-    index = 0
-    while index < len(inner):
-        char = inner[index]
-        if char == "\\" and index + 1 < len(inner):
-            result.append(inner[index + 1])
-            index += 2
-            continue
-        result.append(char)
-        index += 1
-    return "".join(result)
 
 
 def _format_reference_block(
