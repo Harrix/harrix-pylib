@@ -16,7 +16,7 @@ from harrix_pylib.md_format.link_title_format import format_link_title
 from harrix_pylib.md_format.list_loose_format import ListLayout
 from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.ordered_list_format import ordered_list_item_number
-from harrix_pylib.md_format.prose_wrap import wrap_paragraph_prose, wrap_prose
+from harrix_pylib.md_format.prose_wrap import _is_cjk, wrap_paragraph_prose, wrap_prose
 from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text_display_width
 from harrix_pylib.md_format.task_list_format import (
     TaskListMarker,
@@ -89,6 +89,7 @@ def _render_tokens_impl(
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list(list_layouts or [])
     parts: list[str] = []
+    part_indices: list[int] = []
     index = 0
     while index < len(tokens):
         merged, next_index = _try_render_merged_paragraphs(
@@ -99,8 +100,10 @@ def _render_tokens_impl(
         )
         if merged is not None:
             parts.append(merged)
+            part_indices.append(index)
             index = next_index
             continue
+        block_index = index
         chunk, index = _render_block(
             tokens,
             index,
@@ -115,7 +118,8 @@ def _render_tokens_impl(
         )
         if chunk:
             parts.append(chunk)
-    return _join_blocks(parts)
+            part_indices.append(block_index)
+    return _join_blocks(parts, tokens=tokens, part_indices=part_indices, source_lines=source_lines)
 
 
 def _format_hr_markup(markup: str, *, preserve: bool = False) -> str:
@@ -282,6 +286,8 @@ def _plain_paragraph_source_line(
         return None
     if "\u00a0" in source_line:
         return source_line.rstrip("\n")
+    if "\u3000" in source_line:
+        return source_line.rstrip("\n")
     if (
         options.prose_wrap == "always"
         and _should_wrap_prose(source_line.rstrip("\n"), prefix="", width=options.print_width)
@@ -330,6 +336,26 @@ def _plain_inline_code_source_line(
     if not _SINGLE_TICK_INLINE_CODE_RE.fullmatch(source_line):
         return None
     return source_line
+
+
+def _broken_wiki_link_source_paragraph(
+    tokens: list[Token], index: int, source_lines: list[str] | None
+) -> str | None:
+    if not source_lines:
+        return None
+    paragraph_map = tokens[index].map
+    if not paragraph_map or paragraph_map[1] - paragraph_map[0] != 2:
+        return None
+    source = "\n".join(source_lines[paragraph_map[0] : paragraph_map[1]])
+    stripped = source.lstrip()
+    if stripped.startswith(("[[", "\\", "[")):
+        return None
+    if "[[" not in source or "]]" not in source:
+        return None
+    first_line, _, second_line = source.partition("\n")
+    if "[[" not in first_line or "]]" in first_line or "]]" not in second_line:
+        return None
+    return source
 
 
 def _format_self_referential_link(href: str, inner: str) -> str | None:
@@ -431,16 +457,32 @@ def _is_spurious_table_row(cells: list[str], width: int) -> bool:
     return looks_like_prose_table_row(cells[0].strip())
 
 
-def _join_blocks(parts: list[str]) -> str:
+def _join_blocks(
+    parts: list[str],
+    *,
+    tokens: list[Token] | None = None,
+    part_indices: list[int] | None = None,
+    source_lines: list[str] | None = None,
+) -> str:
     cleaned: list[str] = []
-    for part in parts:
+    cleaned_indices: list[int] = []
+    for part_index, part in enumerate(parts):
         stripped = part.strip("\n")
         if not stripped:
             continue
-        if cleaned and _should_join_without_blank_line(cleaned[-1], stripped):
+        current_token_index = part_indices[part_index] if part_indices and part_index < len(part_indices) else None
+        previous_token_index = cleaned_indices[-1] if cleaned_indices else None
+        if cleaned and (
+            _should_join_without_blank_line(cleaned[-1], stripped)
+            or _source_blocks_are_adjacent(tokens, previous_token_index, current_token_index, source_lines)
+        ):
             cleaned[-1] = cleaned[-1].rstrip("\n") + "\n" + stripped + "\n"
+            if current_token_index is not None:
+                cleaned_indices[-1] = current_token_index
         else:
             cleaned.append(stripped + "\n")
+            if current_token_index is not None:
+                cleaned_indices.append(current_token_index)
     if not cleaned:
         return ""
     return "\n\n".join(block.rstrip("\n") for block in cleaned) + "\n"
@@ -517,13 +559,17 @@ def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_in
                 previous_block_end = tokens[nested_close].map[1]
             child_index = nested_close + 1
             continue
+        if token.type == "html_block":
+            if token.map:
+                previous_block_end = token.map[1]
+            child_index += 1
+            continue
         if token.type in {
             "fence",
             "code_block",
             "blockquote_open",
             "table_open",
             "heading_open",
-            "html_block",
             "hr",
             "math_block",
             "math_block_label",
@@ -747,7 +793,7 @@ def _blockquote_needs_blank_line(previous: str, current: str) -> bool:
         return True
     if previous_last.startswith("<!--") and current_first.startswith("<!--"):
         return False
-    if current_first.startswith(("-", "|", "#", "```", "<")):
+    if current_first.startswith(("-", "|", "#", "```")):
         return False
     return True
 
@@ -901,6 +947,8 @@ def _render_inline_token(
         return _format_code_inline(child.content, in_table=in_table), index + 1
     if child.type == "softbreak":
         if softbreak_as_space and not _softbreak_follows_trailing_backslash(children, index):
+            if _softbreak_between_cjk_text(children, index):
+                return "", index + 1
             return " ", index + 1
         return "\n", index + 1
     if child.type == "hardbreak":
@@ -1041,6 +1089,36 @@ def _softbreak_follows_trailing_backslash(children: list[Token], index: int) -> 
     return False
 
 
+def _softbreak_between_cjk_text(children: list[Token], index: int) -> bool:
+    before = _inline_text_before(children, index)
+    after = _inline_text_after(children, index)
+    return bool(before and after and _is_cjk(before[-1]) and _is_cjk(after[0]))
+
+
+def _inline_text_before(children: list[Token], index: int) -> str:
+    prev_index = index - 1
+    while prev_index >= 0:
+        child = children[prev_index]
+        if child.type == "text":
+            return child.content
+        if child.type == "code_inline":
+            return child.content
+        prev_index -= 1
+    return ""
+
+
+def _inline_text_after(children: list[Token], index: int) -> str:
+    next_index = index + 1
+    while next_index < len(children):
+        child = children[next_index]
+        if child.type == "text":
+            return child.content
+        if child.type == "code_inline":
+            return child.content
+        next_index += 1
+    return ""
+
+
 def _is_list_block(block: str) -> bool:
     for line in block.splitlines():
         if not line.strip():
@@ -1173,7 +1251,10 @@ def _render_list_item_lines(
             return [(" " * base_indent) + marker]
         return [(" " * base_indent) + f"{marker} "]
 
-    prefix = (" " * base_indent) + f"{marker} "
+    align_ordered_marker = marker.endswith((".", ")")) and any(
+        block.lstrip().startswith("<") for block in item_lines
+    )
+    prefix = (" " * base_indent) + _list_marker_prefix(marker, align=align_ordered_marker)
     indent = " " * len(prefix)
     continuation_indent = (
         (" " * len(prefix))
@@ -1210,6 +1291,12 @@ def _render_list_item_lines(
     return rendered
 
 
+def _list_marker_prefix(marker: str, *, align: bool = False) -> str:
+    if align and marker.endswith((".", ")")):
+        return f"{marker}{' ' * max(1, 4 - len(marker))}"
+    return f"{marker} "
+
+
 def _render_math_block(token: Token, *, label: str | None = None) -> str:
     content = token.content.strip()
     if label:
@@ -1231,6 +1318,9 @@ def _render_paragraph(
         inline_code_line = _plain_inline_code_source_line(tokens, index, source_lines)
         if inline_code_line is not None:
             return f"{inline_code_line}\n", index + 3
+        broken_wiki_line = _broken_wiki_link_source_paragraph(tokens, index, source_lines)
+        if broken_wiki_line is not None:
+            return f"{broken_wiki_line.rstrip()}\n", index + 3
     image_reference_line = _unparsed_image_reference_source_line(tokens, index, source_lines)
     if image_reference_line is not None:
         return f"{image_reference_line.rstrip()}\n", index + 3
@@ -1432,6 +1522,38 @@ def _should_join_without_blank_line(previous: str, current: str) -> bool:
     if current.lstrip().startswith("<!-- prettier-ignore"):
         return True
     return False
+
+
+def _source_blocks_are_adjacent(
+    tokens: list[Token] | None,
+    previous_index: int | None,
+    current_index: int | None,
+    source_lines: list[str] | None,
+) -> bool:
+    if tokens is None or source_lines is None or previous_index is None or current_index is None:
+        return False
+    previous_map = tokens[previous_index].map
+    current_map = tokens[current_index].map
+    if not previous_map or not current_map:
+        return False
+    if previous_map[1] != current_map[0]:
+        return False
+    previous_type = tokens[previous_index].type
+    current_type = tokens[current_index].type
+    if previous_type in {"bullet_list_open", "ordered_list_open"} and current_type in {
+        "bullet_list_open",
+        "ordered_list_open",
+    }:
+        return True
+    if "html_block" not in {previous_type, current_type}:
+        return False
+    if previous_type in {"bullet_list_open", "ordered_list_open"} or current_type in {
+        "bullet_list_open",
+        "ordered_list_open",
+    }:
+        return False
+    previous_source_line = source_lines[previous_map[0]] if previous_map[0] < len(source_lines) else ""
+    return not _LIST_MARKER_LINE_RE.match(previous_source_line.lstrip())
 
 
 def _should_wrap_prose(text: str, *, prefix: str, width: int) -> bool:

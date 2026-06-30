@@ -9,6 +9,7 @@ from harrix_pylib.md_format.table_format import text_display_width
 
 _INLINE_SEGMENT_RE = re.compile(
     r"(`+[^`]*`+)"
+    r"|(\[\[\[?[^\n]*?\]\]\]?)"
     r"|(!?\[[^\]]*\]\(<[^>]+>\))"
     r"|(!?\[[^\]]*\]\([^)]*\))"
     r"|(<[^>\n]+>)"
@@ -189,10 +190,25 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
         if segment.isspace():
             continue
 
+        if segment.startswith("[[") and "](" in segment:
+            current += segment
+            current_width += segment_width
+            continue
+
+        if current.startswith("[[") and re.fullmatch(r"[.,;:!?]+", segment):
+            current += segment
+            current_width += segment_width
+            continue
+
         if current not in {first_prefix, next_prefix} and current.strip():
             lines.append(current.rstrip())
             current = next_prefix
             current_width = text_display_width(next_prefix)
+
+        if segment.startswith("[["):
+            current += segment
+            current_width += segment_width
+            continue
 
         if segment_width > width - text_display_width(next_prefix):
             for char in segment:

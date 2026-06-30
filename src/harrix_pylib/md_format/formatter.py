@@ -11,7 +11,9 @@ from harrix_pylib.md_format.code_guard import extract_code_blocks, restore_code_
 from harrix_pylib.md_format.front_matter import (
     collapse_extra_blank_lines,
     compact_front_matter,
+    extract_yaml_blocks,
     join_front_matter,
+    restore_yaml_blocks,
     split_front_matter,
     trim_trailing_blank_lines,
 )
@@ -82,6 +84,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     body, hard_break_styles = extract_backslash_hard_breaks(body)
     body, angle_autolinks = extract_angle_autolinks(body)
     body, code_blocks = extract_code_blocks(body)
+    body, yaml_blocks = extract_yaml_blocks(body)
     body, reference_blocks = extract_reference_blocks(body)
     body, ordered_list_marker_groups = extract_ordered_list_marker_groups(body)
     body, bullet_list_marker_groups = extract_bullet_list_marker_groups(body)
@@ -115,6 +118,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
         rendered_body = restore_code_blocks(rendered_body, code_blocks)
         rendered_body = restore_angle_autolinks(rendered_body, angle_autolinks)
         rendered_body = restore_reference_blocks(rendered_body, reference_blocks, options=options)
+        rendered_body = restore_yaml_blocks(rendered_body, yaml_blocks)
         rendered_body = restore_ignore_blocks(rendered_body, ignore_blocks)
         result = join_front_matter(front_matter, rendered_body) if front_matter else rendered_body
     result = trim_trailing_blank_lines(result)
