@@ -80,6 +80,16 @@ def test_format_markdown_content_preserves_angle_autolink_with_underscore_in_url
     assert "\\_" not in result
 
 
+def test_format_markdown_content_preserves_many_angle_autolinks_without_placeholder_collision() -> None:
+    """Placeholder restore must match full indices (AL1 must not corrupt AL10)."""
+    links = [f"<https://example.com/{index}>" for index in range(12)]
+    source = "\n".join(f"- {link}" for link in links) + "\n"
+    result = format_markdown_content(source, end_of_line="lf")
+    for index, link in enumerate(links):
+        assert link in result
+    assert result.count("<https://example.com/1>") == 1
+
+
 def test_format_markdown_content_preserves_named_link_url_with_underscore() -> None:
     source = "[Rod](https://en.wikipedia.org/wiki/Rod_(optical_phenomenon))\n"
     result = format_markdown_content(source)
