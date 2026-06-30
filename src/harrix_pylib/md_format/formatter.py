@@ -13,9 +13,11 @@ from harrix_pylib.md_format.front_matter import (
     split_front_matter,
     trim_trailing_blank_lines,
 )
+from harrix_pylib.md_format.hard_break_format import HardBreakStyles, extract_backslash_hard_breaks
 from harrix_pylib.md_format.ignore_format import extract_ignore_blocks, restore_ignore_blocks
 from harrix_pylib.md_format.list_format import ensure_blank_line_after_lists
 from harrix_pylib.md_format.options import FormatOptions
+from harrix_pylib.md_format.ordered_list_format import extract_ordered_list_marker_groups
 from harrix_pylib.md_format.parser import get_markdown_parser
 from harrix_pylib.md_format.printer import render_tokens
 from harrix_pylib.md_format.reference_format import extract_reference_blocks, restore_reference_blocks
@@ -62,8 +64,10 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
         front_matter = compact_front_matter(front_matter)
     body = _ensure_blank_line_in_empty_fences(body)
     body, ignore_blocks = extract_ignore_blocks(body)
+    body, hard_break_styles = extract_backslash_hard_breaks(body)
     body, code_blocks = extract_code_blocks(body)
     body, reference_blocks = extract_reference_blocks(body)
+    body, ordered_list_marker_groups = extract_ordered_list_marker_groups(body)
     body, task_list_markers = extract_task_list_markers(body)
     body = collapse_extra_blank_lines(body)
     body = unwrap_spurious_table_rows(ensure_blank_line_after_tables(body))
@@ -76,7 +80,13 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     else:
         parser = get_markdown_parser()
         tokens = parser.parse(body)
-        rendered_body = render_tokens(tokens, options=options, task_list_markers=task_list_markers)
+        rendered_body = render_tokens(
+            tokens,
+            options=options,
+            task_list_markers=task_list_markers,
+            ordered_list_marker_groups=ordered_list_marker_groups,
+            hard_break_styles=hard_break_styles,
+        )
         rendered_body = restore_code_blocks(rendered_body, code_blocks)
         rendered_body = restore_reference_blocks(rendered_body, reference_blocks, print_width=options.print_width)
         rendered_body = restore_ignore_blocks(rendered_body, ignore_blocks)

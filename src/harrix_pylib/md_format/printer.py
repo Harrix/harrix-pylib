@@ -6,7 +6,9 @@ from typing import TYPE_CHECKING
 from urllib.parse import unquote, urlsplit, urlunsplit
 
 from harrix_pylib.md_format.escape_format import escape_markdown_text, escape_ordered_list_like_line_starts
+from harrix_pylib.md_format.hard_break_format import HardBreakStyles
 from harrix_pylib.md_format.options import FormatOptions
+from harrix_pylib.md_format.ordered_list_format import ordered_list_item_number
 from harrix_pylib.md_format.prose_wrap import wrap_prose
 from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text_display_width
 from harrix_pylib.md_format.task_list_format import (
@@ -27,14 +29,25 @@ def render_tokens(
     *,
     options: FormatOptions | None = None,
     task_list_markers: list[TaskListMarker] | None = None,
+    ordered_list_marker_groups: list[list[int]] | None = None,
+    hard_break_styles: HardBreakStyles | None = None,
 ) -> str:
     """Render top-level block tokens to Markdown."""
     fmt_options = options or _DEFAULT_OPTIONS
     markers = task_list_markers or []
+    ordered_groups = list(ordered_list_marker_groups or [])
+    break_styles = hard_break_styles or HardBreakStyles()
     parts: list[str] = []
     index = 0
     while index < len(tokens):
-        chunk, index = _render_block(tokens, index, options=fmt_options, task_list_markers=markers)
+        chunk, index = _render_block(
+            tokens,
+            index,
+            options=fmt_options,
+            task_list_markers=markers,
+            ordered_list_marker_groups=ordered_groups,
+            hard_break_styles=break_styles,
+        )
         if chunk:
             parts.append(chunk)
     return _join_blocks(parts)
@@ -48,6 +61,20 @@ def _alignment_separator(align: str) -> str:
     if align == "right":
         return "--:"
     return "---"
+
+
+def _choose_emphasis_delimiter(markup: str, prev: str, next_text: str) -> str:
+    if markup == "_":
+        return "_"
+    if prev and prev[-1] in "!！" and next_text and next_text[0] in "!！":
+        return "_"
+    if not _has_digit_emphasis_neighbor(prev, next_text):
+        return "_"
+    return "*"
+
+
+def _contains_strong(children: list[Token], start: int, end: int) -> bool:
+    return any(children[index].type == "strong_open" for index in range(start, end + 1))
 
 
 def _find_close(tokens: list[Token], index: int, close_type: str) -> int:
@@ -128,6 +155,20 @@ def _format_table_separator(column_widths: list[int], alignments: list[str]) -> 
                 core = "-" * width
         separators.append(core)
     return "| " + " | ".join(separators) + " |"
+
+
+def _has_digit_emphasis_neighbor(prev: str, next_text: str) -> bool:
+    return bool(prev and prev[-1].isdigit()) or bool(next_text and next_text[0].isdigit())
+
+
+def _inline_neighbor_text(children: list[Token], open_index: int, close_index: int) -> tuple[str, str]:
+    prev = ""
+    if open_index > 0 and children[open_index - 1].type == "text":
+        prev = children[open_index - 1].content
+    next_text = ""
+    if close_index + 1 < len(children) and children[close_index + 1].type == "text":
+        next_text = children[close_index + 1].content
+    return prev, next_text
 
 
 def _is_block_marker_line(text: str) -> bool:
@@ -271,18 +312,44 @@ def _render_block(
     options: FormatOptions,
     wrap_paragraph: bool = True,
     task_list_markers: list[TaskListMarker] | None = None,
+    ordered_list_marker_groups: list[list[int]] | None = None,
+    hard_break_styles: HardBreakStyles | None = None,
 ) -> tuple[str, int]:
+    break_styles = hard_break_styles or HardBreakStyles()
     token = tokens[index]
     if token.type == "heading_open":
-        return _render_heading(tokens, index, options=options)
+        return _render_heading(tokens, index, options=options, hard_break_styles=break_styles)
     if token.type == "paragraph_open":
-        return _render_paragraph(tokens, index, options=options, wrap=wrap_paragraph)
+        return _render_paragraph(tokens, index, options=options, wrap=wrap_paragraph, hard_break_styles=break_styles)
     if token.type == "blockquote_open":
-        return _render_blockquote(tokens, index, options=options, task_list_markers=task_list_markers)
+        return _render_blockquote(
+            tokens,
+            index,
+            options=options,
+            task_list_markers=task_list_markers,
+            ordered_list_marker_groups=ordered_list_marker_groups,
+            hard_break_styles=break_styles,
+        )
     if token.type == "bullet_list_open":
-        return _render_list(tokens, index, ordered=False, options=options, task_list_markers=task_list_markers or [])
+        return _render_list(
+            tokens,
+            index,
+            ordered=False,
+            options=options,
+            task_list_markers=task_list_markers or [],
+            ordered_list_marker_groups=ordered_list_marker_groups,
+            hard_break_styles=break_styles,
+        )
     if token.type == "ordered_list_open":
-        return _render_list(tokens, index, ordered=True, options=options, task_list_markers=task_list_markers or [])
+        return _render_list(
+            tokens,
+            index,
+            ordered=True,
+            options=options,
+            task_list_markers=task_list_markers or [],
+            ordered_list_marker_groups=ordered_list_marker_groups,
+            hard_break_styles=break_styles,
+        )
     if token.type == "fence":
         return _render_fence(token), index + 1
     if token.type == "code_block":
@@ -294,25 +361,45 @@ def _render_block(
     if token.type == "math_block_label":
         return _render_math_block(token, label=token.info), index + 1
     if token.type == "table_open":
-        return _render_table(tokens, index, options=options)
+        return _render_table(tokens, index, options=options, hard_break_styles=break_styles)
     if token.type == "html_block":
         return f"{token.content.rstrip()}\n", index + 1
     if token.type in {"dl_open", "dt_open", "dd_open"}:
         return _render_until_close(
-            tokens, index, token.type.replace("_open", "_close"), options=options, task_list_markers=task_list_markers
+            tokens,
+            index,
+            token.type.replace("_open", "_close"),
+            options=options,
+            task_list_markers=task_list_markers,
+            ordered_list_marker_groups=ordered_list_marker_groups,
+            hard_break_styles=break_styles,
         ), index + 1
     return "", index + 1
 
 
 def _render_blockquote(
-    tokens: list[Token], index: int, *, options: FormatOptions, task_list_markers: list[TaskListMarker] | None = None
+    tokens: list[Token],
+    index: int,
+    *,
+    options: FormatOptions,
+    task_list_markers: list[TaskListMarker] | None = None,
+    ordered_list_marker_groups: list[list[int]] | None = None,
+    hard_break_styles: HardBreakStyles | None = None,
 ) -> tuple[str, int]:
     markers = task_list_markers or []
+    break_styles = hard_break_styles or HardBreakStyles()
     close_index = _find_close(tokens, index, "blockquote_close")
     inner_parts: list[str] = []
     inner_index = index + 1
     while inner_index < close_index:
-        chunk, inner_index = _render_block(tokens, inner_index, options=options, task_list_markers=markers)
+        chunk, inner_index = _render_block(
+            tokens,
+            inner_index,
+            options=options,
+            task_list_markers=markers,
+            ordered_list_marker_groups=ordered_list_marker_groups,
+            hard_break_styles=break_styles,
+        )
         if chunk:
             inner_parts.append(chunk)
     quoted_blocks: list[str] = []
@@ -333,27 +420,44 @@ def _render_fence(token: Token) -> str:
     return f"{fence}{info}\n{content}\n{fence}\n"
 
 
-def _render_heading(tokens: list[Token], index: int, *, options: FormatOptions) -> tuple[str, int]:
+def _render_heading(
+    tokens: list[Token], index: int, *, options: FormatOptions, hard_break_styles: HardBreakStyles | None = None
+) -> tuple[str, int]:
     level = int(tokens[index].tag[1])
     inline = tokens[index + 1]
-    text = _render_inline(inline.children or [], options=options)
+    text = _render_inline(inline.children or [], options=options, hard_break_styles=hard_break_styles)
     return f"{'#' * level} {text}\n", index + 3
 
 
-def _render_inline(children: list[Token], *, in_table: bool = False, options: FormatOptions | None = None) -> str:
+def _render_inline(
+    children: list[Token],
+    *,
+    in_table: bool = False,
+    options: FormatOptions | None = None,
+    hard_break_styles: HardBreakStyles | None = None,
+) -> str:
     fmt_options = options or _DEFAULT_OPTIONS
+    break_styles = hard_break_styles or HardBreakStyles()
     parts: list[str] = []
     index = 0
     while index < len(children):
-        chunk, index = _render_inline_token(children, index, in_table=in_table, options=fmt_options)
+        chunk, index = _render_inline_token(
+            children, index, in_table=in_table, options=fmt_options, hard_break_styles=break_styles
+        )
         parts.append(chunk)
     return "".join(parts)
 
 
 def _render_inline_token(
-    children: list[Token], index: int, *, in_table: bool = False, options: FormatOptions | None = None
+    children: list[Token],
+    index: int,
+    *,
+    in_table: bool = False,
+    options: FormatOptions | None = None,
+    hard_break_styles: HardBreakStyles | None = None,
 ) -> tuple[str, int]:
     fmt_options = options or _DEFAULT_OPTIONS
+    break_styles = hard_break_styles or HardBreakStyles()
     child = children[index]
     if child.type == "text":
         content = child.content
@@ -372,6 +476,8 @@ def _render_inline_token(
     if child.type == "softbreak":
         return "\n", index + 1
     if child.type == "hardbreak":
+        if break_styles.next_is_backslash():
+            return "\\\n", index + 1
         return "  \n", index + 1
     if child.type == "wiki_link":
         return f"[[{child.content}]]", index + 1
@@ -403,7 +509,9 @@ def _render_inline_token(
         inner_parts: list[str] = []
         inner_index = index + 1
         while inner_index < len(children) and children[inner_index].type != "link_close":
-            chunk, inner_index = _render_inline_token(children, inner_index, in_table=in_table, options=fmt_options)
+            chunk, inner_index = _render_inline_token(
+                children, inner_index, in_table=in_table, options=fmt_options, hard_break_styles=break_styles
+            )
             inner_parts.append(chunk)
         inner = "".join(inner_parts)
         if title:
@@ -413,16 +521,46 @@ def _render_inline_token(
         return "", index + 1
     if child.type == "strong_open":
         inner, next_index = _render_inline_until(
-            children, index + 1, "strong_close", in_table=in_table, options=fmt_options
+            children,
+            index + 1,
+            "strong_close",
+            in_table=in_table,
+            options=fmt_options,
+            hard_break_styles=break_styles,
         )
         return f"**{inner}**", next_index + 1
     if child.type == "em_open":
+        close_index = index + 1
+        while close_index < len(children) and children[close_index].type != "em_close":
+            close_index += 1
         inner, next_index = _render_inline_until(
-            children, index + 1, "em_close", in_table=in_table, options=fmt_options
+            children,
+            index + 1,
+            "em_close",
+            in_table=in_table,
+            options=fmt_options,
+            hard_break_styles=break_styles,
         )
-        return f"_{inner}_", next_index + 1
+        prev, next_text = _inline_neighbor_text(children, index, close_index)
+        if _contains_strong(children, index, close_index):
+            has_outer_space = (prev.endswith(" ") if prev else False) or (
+                next_text.startswith(" ") if next_text else False
+            )
+            if has_outer_space:
+                rendered = f"_{inner}_"
+                if prev and prev[-1].isalnum():
+                    rendered = f" {rendered}"
+                if next_text and next_text[0].isalnum():
+                    rendered = f"{rendered} "
+            else:
+                rendered = f"*{inner}*"
+            return rendered, next_index + 1
+        delimiter = _choose_emphasis_delimiter(child.markup or "*", prev, next_text)
+        return f"{delimiter}{inner}{delimiter}", next_index + 1
     if child.type == "s_open":
-        inner, next_index = _render_inline_until(children, index + 1, "s_close", in_table=in_table, options=fmt_options)
+        inner, next_index = _render_inline_until(
+            children, index + 1, "s_close", in_table=in_table, options=fmt_options, hard_break_styles=break_styles
+        )
         return f"~~{inner}~~", next_index + 1
     if child.type in {"strong_close", "em_close", "s_close"}:
         return "", index + 1
@@ -430,12 +568,21 @@ def _render_inline_token(
 
 
 def _render_inline_until(
-    children: list[Token], index: int, close_type: str, *, in_table: bool = False, options: FormatOptions | None = None
+    children: list[Token],
+    index: int,
+    close_type: str,
+    *,
+    in_table: bool = False,
+    options: FormatOptions | None = None,
+    hard_break_styles: HardBreakStyles | None = None,
 ) -> tuple[str, int]:
     fmt_options = options or _DEFAULT_OPTIONS
+    break_styles = hard_break_styles or HardBreakStyles()
     parts: list[str] = []
     while index < len(children) and children[index].type != close_type:
-        chunk, index = _render_inline_token(children, index, in_table=in_table, options=fmt_options)
+        chunk, index = _render_inline_token(
+            children, index, in_table=in_table, options=fmt_options, hard_break_styles=break_styles
+        )
         parts.append(chunk)
     return "".join(parts), index
 
@@ -447,12 +594,17 @@ def _render_list(
     ordered: bool,
     options: FormatOptions,
     task_list_markers: list[TaskListMarker],
+    ordered_list_marker_groups: list[list[int]] | None = None,
+    hard_break_styles: HardBreakStyles | None = None,
 ) -> tuple[str, int]:
+    break_styles = hard_break_styles or HardBreakStyles()
     close_type = "ordered_list_close" if ordered else "bullet_list_close"
     close_index = _find_close(tokens, index, close_type)
     loose = _list_is_loose(tokens, index, close_index)
     lines: list[str] = []
-    item_number = int(tokens[index].attrGet("start") or 1)
+    source_markers: list[int] = []
+    if ordered and ordered_list_marker_groups:
+        source_markers = ordered_list_marker_groups.pop(0)
     item_index = index + 1
     rendered_item_count = 0
     while item_index < close_index:
@@ -461,7 +613,10 @@ def _render_list(
             continue
         item_close = _find_close(tokens, item_index, "list_item_close")
         checkbox = _list_item_checkbox(tokens, item_index)
-        marker = f"{item_number}." if ordered else "-"
+        if ordered:
+            marker = f"{ordered_list_item_number(source_markers, rendered_item_count)}."
+        else:
+            marker = "-"
         if checkbox:
             marker = f"- {checkbox}".rstrip()
         item_lines: list[str] = []
@@ -474,6 +629,8 @@ def _render_list(
                     ordered=tokens[child_index].type == "ordered_list_open",
                     options=options,
                     task_list_markers=task_list_markers,
+                    ordered_list_marker_groups=ordered_list_marker_groups,
+                    hard_break_styles=break_styles,
                 )
                 item_lines.append(nested.rstrip("\n"))
             else:
@@ -483,6 +640,8 @@ def _render_list(
                     options=options,
                     wrap_paragraph=False,
                     task_list_markers=task_list_markers,
+                    ordered_list_marker_groups=ordered_list_marker_groups,
+                    hard_break_styles=break_styles,
                 )
                 if chunk:
                     item_lines.append(chunk.rstrip("\n"))
@@ -494,7 +653,6 @@ def _render_list(
             lines.append("")
         item_loose = _list_item_is_loose(tokens, item_index, item_close)
         lines.extend(_render_list_item_lines(item_lines, marker=marker, loose=item_loose, options=options))
-        item_number += 1
         rendered_item_count += 1
         item_index = item_close + 1
     return "\n".join(lines) + "\n", close_index + 1
@@ -518,6 +676,9 @@ def _render_list_item_lines(
             block_index == 0
             and options.prose_wrap == "always"
             and "\n" not in block
+            and "# ignore:" not in block
+            and "](" not in block
+            and "\\_" not in block
             and not _is_block_marker_line(block)
             and _should_wrap_prose(block, prefix=prefix, width=options.print_width)
         ):
@@ -543,19 +704,31 @@ def _render_math_block(token: Token, *, label: str | None = None) -> str:
     return f"$$\n{content}\n$$\n"
 
 
-def _render_paragraph(tokens: list[Token], index: int, *, options: FormatOptions, wrap: bool = True) -> tuple[str, int]:
+def _render_paragraph(
+    tokens: list[Token],
+    index: int,
+    *,
+    options: FormatOptions,
+    wrap: bool = True,
+    hard_break_styles: HardBreakStyles | None = None,
+) -> tuple[str, int]:
     inline = tokens[index + 1]
-    text = escape_ordered_list_like_line_starts(_render_inline(inline.children or [], options=options))
+    text = escape_ordered_list_like_line_starts(
+        _render_inline(inline.children or [], options=options, hard_break_styles=hard_break_styles)
+    )
     if (
         wrap
         and options.prose_wrap == "always"
+        and "\\_" not in text
         and _should_wrap_prose(text.rstrip("\n"), prefix="", width=options.print_width)
     ):
         text = wrap_prose(text.rstrip("\n"), width=options.print_width)
     return f"{text}\n", index + 3
 
 
-def _render_table(tokens: list[Token], index: int, *, options: FormatOptions) -> tuple[str, int]:
+def _render_table(
+    tokens: list[Token], index: int, *, options: FormatOptions, hard_break_styles: HardBreakStyles | None = None
+) -> tuple[str, int]:
     close_index = _find_close(tokens, index, "table_close")
     rows: list[list[str]] = []
     is_header = False
@@ -589,7 +762,11 @@ def _render_table(tokens: list[Token], index: int, *, options: FormatOptions) ->
                     else:
                         cell_alignments.append("default")
                     inline = tokens[cell_index + 1]
-                    cells.append(_render_inline(inline.children or [], in_table=True, options=options))
+                    cells.append(
+                        _render_inline(
+                            inline.children or [], in_table=True, options=options, hard_break_styles=hard_break_styles
+                        )
+                    )
                     cell_index += 3
                 else:
                     cell_index += 1
@@ -635,13 +812,23 @@ def _render_until_close(
     *,
     options: FormatOptions,
     task_list_markers: list[TaskListMarker] | None = None,
+    ordered_list_marker_groups: list[list[int]] | None = None,
+    hard_break_styles: HardBreakStyles | None = None,
 ) -> str:
     markers = task_list_markers or []
+    break_styles = hard_break_styles or HardBreakStyles()
     close_index = _find_close(tokens, index, close_type)
     parts: list[str] = []
     inner_index = index + 1
     while inner_index < close_index:
-        chunk, inner_index = _render_block(tokens, inner_index, options=options, task_list_markers=markers)
+        chunk, inner_index = _render_block(
+            tokens,
+            inner_index,
+            options=options,
+            task_list_markers=markers,
+            ordered_list_marker_groups=ordered_list_marker_groups,
+            hard_break_styles=break_styles,
+        )
         if chunk:
             parts.append(chunk)
     return _join_blocks(parts)
@@ -652,7 +839,7 @@ def _should_join_without_blank_line(previous: str, current: str) -> bool:
     if not prev_lines:
         return False
     last_line = prev_lines[-1].strip()
-    if last_line.startswith("<!--") and last_line.endswith("-->"):
+    if last_line.startswith("<!-- prettier-ignore"):
         return True
     if current.lstrip().startswith("<!-- prettier-ignore"):
         return True

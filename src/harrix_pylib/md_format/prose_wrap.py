@@ -60,9 +60,43 @@ def _segments(text: str) -> list[str]:
     return segments
 
 
+def _wrap_plain_words(text: str, *, width: int, first_prefix: str, next_prefix: str) -> list[str]:
+    words = re.split(r"(\s+)", text)
+    lines: list[str] = []
+    current = first_prefix
+    current_width = text_display_width(first_prefix)
+
+    for part in words:
+        if not part:
+            continue
+        part_width = text_display_width(part)
+        if part.isspace():
+            if current_width + part_width <= width:
+                current += part
+                current_width += part_width
+            continue
+        if current not in {first_prefix, next_prefix} and current_width + part_width > width:
+            lines.append(current.rstrip())
+            current = next_prefix + part
+            current_width = text_display_width(current)
+            continue
+        if current in {first_prefix, next_prefix}:
+            current += part
+        else:
+            current += part if current.endswith((" ", "\t")) or current == first_prefix else f" {part}"
+        current_width = text_display_width(current)
+
+    if current.strip() or current in {first_prefix, next_prefix}:
+        lines.append(current.rstrip())
+    return lines or [first_prefix.rstrip()]
+
+
 def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: str) -> list[str]:
     if text_display_width(first_prefix + text) <= width:
         return [first_prefix + text]
+
+    if not re.search(r"[*_`\[\]!<>~\\]", text):
+        return _wrap_plain_words(text, width=width, first_prefix=first_prefix, next_prefix=next_prefix)
 
     lines: list[str] = []
     current = first_prefix

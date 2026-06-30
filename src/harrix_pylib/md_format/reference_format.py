@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 
 from harrix_pylib.md_format.prose_wrap import wrap_prose
+from harrix_pylib.md_format.table_format import text_display_width
 
 PLACEHOLDER_PREFIX = "HSKMDFMTREF"
 _LINK_DEF_RE = re.compile(r"^(\s*)\[([^\]]+)\]:\s*(.*)$")
@@ -55,6 +56,12 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
         blocks.append(ReferenceBlock(index=index, lines=block_lines, kind=kind))
         result.append(_placeholder(index))
         index += 1
+        if line_index < len(lines) and not lines[line_index].strip():
+            next_index = line_index + 1
+            if next_index < len(lines):
+                next_line = lines[next_index]
+                if _LINK_DEF_RE.match(next_line) or _FOOTNOTE_DEF_RE.match(next_line):
+                    line_index += 1
 
     return _join_lines(result, trailing_newline=trailing), blocks
 
@@ -102,10 +109,23 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
     match = _LINK_DEF_RE.match(line)
     if not match:
         return [line]
-    indent, label, rest = match.group(1), match.group(2), match.group(3)
-    prefix = f"{indent}[{label}]: "
-    wrapped = wrap_prose(rest, width=print_width, prefix=prefix, continuation=indent + " " * 4)
-    return wrapped.split("\n")
+    indent, label, rest = match.group(1), match.group(2), match.group(3).rstrip()
+    url, title = _split_link_definition_rest(rest)
+    label_prefix = f"{indent}[{label}]: "
+    continuation = indent + "  "
+    if title is None:
+        body = url
+    else:
+        body = f"{url} {title}"
+    if text_display_width(label_prefix + body) <= print_width:
+        if title is None:
+            return [f"{label_prefix}{url}"]
+        return [f"{label_prefix}{url} {title}"]
+    lines = [f"{indent}[{label}]:"]
+    lines.extend(wrap_prose(url, width=print_width, prefix=continuation, continuation=continuation).split("\n"))
+    if title is not None:
+        lines.extend(wrap_prose(title, width=print_width, prefix=continuation, continuation=continuation).split("\n"))
+    return lines
 
 
 def _format_reference_block(block: ReferenceBlock, *, print_width: int) -> list[str]:
@@ -134,3 +154,18 @@ def _split_lines(text: str) -> tuple[list[str], bool]:
     if has_trailing_newline and lines:
         lines.pop()
     return lines, has_trailing_newline
+
+
+def _split_link_definition_rest(rest: str) -> tuple[str, str | None]:
+    rest = rest.strip()
+    if rest.endswith(' ""') or rest.endswith(" ''"):
+        return rest[:-3].rstrip(), None
+    if len(rest) >= 2 and rest.startswith("<") and rest.endswith(">"):
+        return rest, None
+    title_match = re.search(r'\s+("(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|\S+)\s*$', rest)
+    if title_match:
+        title = title_match.group(1)
+        if title in {'""', "''"}:
+            return rest[: title_match.start()].rstrip(), None
+        return rest[: title_match.start()].rstrip(), title
+    return rest, None

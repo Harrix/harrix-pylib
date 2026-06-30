@@ -70,6 +70,15 @@ def _is_alphanumeric(char: str) -> bool:
     return char.isalnum()
 
 
+def _is_failed_emphasis_underscore(text: str, index: int) -> bool:
+    """Do not escape ``_`` in ``!_1_2``-style literals that are not emphasis."""
+    if text[index] != "_":
+        return False
+    if index + 2 < len(text) and text[index + 2] == "_" and len(text[index + 1]) == 1:
+        return True
+    return index >= 2 and text[index - 2] == "_" and text[index - 1] != "_" and len(text[index - 1]) == 1
+
+
 def _is_identifier_leading_underscore(text: str, index: int) -> bool:
     if text[index] != "_" or index + 1 >= len(text):
         return False
@@ -120,6 +129,10 @@ def _is_right_flanking(text: str, index: int) -> bool:
     return index + 1 < len(text) and (_is_whitespace(text[index + 1]) or _is_punctuation(text[index + 1]))
 
 
+def _is_single_char_emphasis_underscore(text: str, index: int) -> bool:
+    return _is_failed_emphasis_underscore(text, index)
+
+
 def _is_whitespace(char: str) -> bool:
     return char.isspace()
 
@@ -144,6 +157,8 @@ def _should_escape_intraword_asterisk(text: str, index: int) -> bool:
 
 
 def _should_escape_underscore(text: str, index: int) -> bool:
+    if _is_single_char_emphasis_underscore(text, index):
+        return False
     if index + 1 < len(text) and text[index + 1] == "[":
         return False
     if index > 0 and text[index - 1] == "[" and index + 1 < len(text) and _is_alphanumeric(text[index + 1]):
