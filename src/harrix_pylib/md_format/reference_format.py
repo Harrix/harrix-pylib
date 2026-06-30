@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import re
 from dataclasses import dataclass
 
@@ -11,13 +12,13 @@ from harrix_pylib.md_format.link_title_format import (
     _unescape_title,
     format_link_title,
 )
-from harrix_pylib.md_format.link_destination_format import format_link_url
 from harrix_pylib.md_format.options import DEFAULT_PRINT_WIDTH, FormatOptions
 from harrix_pylib.md_format.prose_wrap import wrap_prose
 from harrix_pylib.md_format.table_format import text_display_width
 
 PLACEHOLDER_PREFIX = "HSKMDFMTREF"
 _PLACEHOLDER_RE = re.compile(r"HSKMDFMTREF\d+")
+_URL_RE = re.compile(r"https?://\S+")
 _LINK_DEF_RE = re.compile(r"^(\s*)\[([^\]]+)\]:\s*(.*)$")
 _FOOTNOTE_DEF_RE = re.compile(r"^(\s*)\[\^([^\]]+)\]:\s*(.*)$")
 
@@ -64,7 +65,13 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
 
         blocks.append(ReferenceBlock(index=index, lines=block_lines, kind=kind))
         placeholder = _placeholder(index)
-        if result and result[-1].startswith(PLACEHOLDER_PREFIX) and not result[-1].endswith("\n"):
+        previous_line = result[-1] if result else ""
+        if (
+            result
+            and PLACEHOLDER_PREFIX not in previous_line
+            and not _LINK_DEF_RE.match(previous_line)
+            and not _FOOTNOTE_DEF_RE.match(previous_line)
+        ):
             result[-1] = f"{result[-1]} {placeholder}"
         else:
             result.append(placeholder)
@@ -94,25 +101,41 @@ def restore_reference_blocks(
     blocks_by_index = {block.index: block for block in blocks}
     lines, trailing = _split_lines(text)
     restored: list[str] = []
-    for line in lines:
+    line_index = 0
+    while line_index < len(lines):
+        line = lines[line_index]
         if not _PLACEHOLDER_RE.search(line):
             restored.append(line)
+            line_index += 1
             continue
-        last = 0
-        for match in _PLACEHOLDER_RE.finditer(line):
-            if match.start() > last:
-                gap = line[last : match.start()]
-                if gap.strip():
-                    restored.append(gap)
+
+        merged_line = line
+        while line_index + 1 < len(lines):
+            next_line = lines[line_index + 1]
+            if not _PLACEHOLDER_RE.search(next_line):
+                break
+            next_match = _PLACEHOLDER_RE.search(next_line)
+            if next_match is None or next_match.start() > 0:
+                break
+            if _PLACEHOLDER_RE.sub("", next_line).strip():
+                break
+            merged_line = f"{merged_line} {next_line.strip()}"
+            line_index += 1
+
+        first_match = _PLACEHOLDER_RE.search(merged_line)
+        if first_match and first_match.start() > 0:
+            restored.extend(_restore_inline_reference_line(merged_line, blocks_by_index, print_width=width))
+            line_index += 1
+            continue
+
+        for match in _PLACEHOLDER_RE.finditer(merged_line):
             block_index = int(match.group().removeprefix(PLACEHOLDER_PREFIX))
             block = blocks_by_index.get(block_index)
             if block is None:
                 restored.append(match.group())
             else:
                 restored.extend(_format_reference_block(block, options=fmt_options, print_width=width))
-            last = match.end()
-        if last < len(line):
-            restored.append(line[last:])
+        line_index += 1
     return _join_lines(restored, trailing_newline=trailing)
 
 
@@ -143,14 +166,26 @@ def _canonicalize_reference_title(title: str) -> str:
     return _canonicalize_link_title_content(_unescape_title(title))
 
 
+def format_reference_link_url(url: str) -> str:
+    """Return canonical URL text for link-reference definitions."""
+    return html.unescape(url)
+
+
+def _reference_label_markup(label: str) -> str:
+    normalized = _normalize_reference_label(label)
+    if " " in normalized:
+        return f"[ {normalized} ]"
+    return f"[{normalized}]"
+
+
 def _format_link_definition(line: str, *, print_width: int) -> list[str]:
     match = _LINK_DEF_RE.match(line)
     if not match:
         return [line]
     indent, label, rest = match.group(1), match.group(2), match.group(3).rstrip()
     url, title = _split_link_definition_rest(rest)
-    url = format_link_url(url)
-    label_prefix = f"{indent}[{label}]: "
+    url = format_reference_link_url(url)
+    label_prefix = f"{indent}{_reference_label_markup(label)}: "
     continuation = indent + "  "
     if title is None:
         body = url
@@ -160,7 +195,7 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
         if title is None:
             return [f"{label_prefix}{url}"]
         return [f"{label_prefix}{url} {_format_reference_title(title)}"]
-    lines = [f"{indent}[{label}]:"]
+    lines = [f"{indent}{_reference_label_markup(label)}:"]
     lines.extend(wrap_prose(url, width=print_width, prefix=continuation, continuation=continuation).split("\n"))
     if title is not None:
         lines.extend(
@@ -218,4 +253,91 @@ def _split_link_definition_rest(rest: str) -> tuple[str, str | None]:
             return url, None
         return url, title
     return rest, None
+
+
+def _normalize_reference_label(label: str) -> str:
+    return " ".join(label.split())
+
+
+def _format_inline_reference_part(line: str) -> str:
+    match = _LINK_DEF_RE.match(line)
+    if not match:
+        return line
+    label = _normalize_reference_label(match.group(2))
+    url, title = _split_link_definition_rest(match.group(3).rstrip())
+    url = format_reference_link_url(url)
+    if title is None:
+        return f"[{label}]: {url}"
+    return f"[{label}]: {url} {_format_reference_title(title)}"
+
+
+def _restore_inline_reference_line(
+    line: str, blocks_by_index: dict[int, ReferenceBlock], *, print_width: int
+) -> list[str]:
+    ref_parts: list[str] = []
+    first_match = _PLACEHOLDER_RE.search(line)
+    prefix = line[: first_match.start()].rstrip() if first_match else ""
+    for match in _PLACEHOLDER_RE.finditer(line):
+        block_index = int(match.group().removeprefix(PLACEHOLDER_PREFIX))
+        block = blocks_by_index.get(block_index)
+        if block is None:
+            continue
+        ref_parts.append(_format_inline_reference_part(block.lines[0]))
+    body = " ".join(ref_parts)
+    if not prefix:
+        return _wrap_inline_reference_body(body, width=print_width)
+    wrapped = _wrap_inline_reference_body(f"{prefix} {body}", width=print_width)
+    return wrapped
+
+
+def _wrap_inline_reference_body(text: str, *, width: int) -> list[str]:
+    match = re.match(r"^(?P<prefix>.*?)(?P<refs>(?:\[[^\]]+\]: https?://\S+\s*)+)$", text)
+    if match is None:
+        return _wrap_protected_urls(text, width=width)
+    prefix = match.group("prefix").rstrip()
+    ref_parts = re.findall(r"(\[[^\]]+\]:) (https?://\S+)", match.group("refs"))
+    if not ref_parts:
+        return [text.rstrip()]
+
+    labels = [label for label, _ in ref_parts]
+    urls = [url for _, url in ref_parts]
+    lines: list[str] = []
+    url_index = 0
+    if prefix:
+        lines.append(f"{prefix} {labels[0]}".rstrip())
+        url_index = 0
+
+    while url_index < len(urls):
+        current = urls[url_index]
+        next_label_index = url_index + 1
+        while next_label_index < len(urls):
+            trial = f"{current} {labels[next_label_index]} {urls[next_label_index]}"
+            if text_display_width(trial) <= width:
+                current = trial
+                next_label_index += 1
+            else:
+                break
+        if next_label_index < len(urls):
+            trial = f"{current} {labels[next_label_index]}"
+            if text_display_width(trial) <= width:
+                lines.append(trial)
+                url_index = next_label_index
+                continue
+        lines.append(current)
+        url_index = next_label_index
+    return lines
+
+
+def _wrap_protected_urls(text: str, *, width: int) -> list[str]:
+    protected_urls: list[str] = []
+
+    def protect_url(match: re.Match[str]) -> str:
+        protected_urls.append(match.group(0))
+        return f"\x00URL{len(protected_urls) - 1}\x00"
+
+    protected = _URL_RE.sub(protect_url, text)
+    wrapped = wrap_prose(protected, width=width)
+    for index, url in enumerate(protected_urls):
+        wrapped = wrapped.replace(f"\x00URL{index}\x00", url)
+    return wrapped.split("\n")
 

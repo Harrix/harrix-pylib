@@ -30,6 +30,8 @@ if TYPE_CHECKING:
 
 _DEFAULT_OPTIONS = FormatOptions()
 _SINGLE_TICK_INLINE_CODE_RE = re.compile(r"^`(?:[^`]|`(?!`))*`$")
+_EMPTY_IMAGE_REFERENCE_RE = re.compile(r"^(?P<prefix>.*?!\[)(?P<alt>.*?)(\]\[\])$")
+_LIST_ITEM_CONTENT_RE = re.compile(r"^(\s*)[-+*]\s+(.*)$")
 _LIST_MARKER_LINE_RE = re.compile(r"^[-*+]\s|^\d+[.)]\s")
 _ACTIVE_LINK_DESTINATIONS: dict[int, LinkDestination] | None = None
 
@@ -222,6 +224,49 @@ def _source_line_is_more_literal(source_line: str, rendered_line: str) -> bool:
         if "&amp;" in source_line or "&#" in source_line:
             return True
     return False
+
+
+def _paragraph_source_line(tokens: list[Token], index: int, source_lines: list[str] | None) -> str | None:
+    if not source_lines:
+        return None
+    paragraph_map = tokens[index].map
+    if not paragraph_map or paragraph_map[1] - paragraph_map[0] != 1:
+        return None
+    line_index = paragraph_map[0]
+    if line_index < 0 or line_index >= len(source_lines):
+        return None
+    return source_lines[line_index]
+
+
+def _unparsed_image_reference_source_line(
+    tokens: list[Token], index: int, source_lines: list[str] | None
+) -> str | None:
+    source_line = _paragraph_source_line(tokens, index, source_lines)
+    if source_line is None:
+        return None
+    inline = tokens[index + 1]
+    children = inline.children or []
+    if any(child.type == "image" for child in children):
+        return None
+    if not children or not all(child.type in {"text", "code_inline"} for child in children):
+        return None
+    stripped = source_line.lstrip()
+    if "![" not in stripped or "][" not in stripped:
+        return None
+    if stripped.endswith("][]"):
+        match = _EMPTY_IMAGE_REFERENCE_RE.match(stripped)
+        if match is None:
+            return _strip_list_item_content(source_line)
+        alt = " ".join(match.group("alt").split())
+        return f"![ {alt} ][]"
+    return _strip_list_item_content(source_line)
+
+
+def _strip_list_item_content(line: str) -> str:
+    match = _LIST_ITEM_CONTENT_RE.match(line)
+    if match is None:
+        return line
+    return match.group(2)
 
 
 def _plain_paragraph_source_line(
@@ -608,7 +653,8 @@ def _render_block(
             options=options,
             wrap=wrap_paragraph,
             hard_break_styles=break_styles,
-            source_lines=source_lines if preserve_source_line else None,
+            source_lines=source_lines,
+            preserve_source_line=preserve_source_line,
         )
     if token.type == "blockquote_open":
         return _render_blockquote(
@@ -1179,10 +1225,15 @@ def _render_paragraph(
     wrap: bool = True,
     hard_break_styles: HardBreakStyles | None = None,
     source_lines: list[str] | None = None,
+    preserve_source_line: bool = True,
 ) -> tuple[str, int]:
-    inline_code_line = _plain_inline_code_source_line(tokens, index, source_lines)
-    if inline_code_line is not None:
-        return f"{inline_code_line}\n", index + 3
+    if preserve_source_line:
+        inline_code_line = _plain_inline_code_source_line(tokens, index, source_lines)
+        if inline_code_line is not None:
+            return f"{inline_code_line}\n", index + 3
+    image_reference_line = _unparsed_image_reference_source_line(tokens, index, source_lines)
+    if image_reference_line is not None:
+        return f"{image_reference_line.rstrip()}\n", index + 3
     inline = tokens[index + 1]
     use_space_breaks = options.prose_wrap == "always"
     text = escape_ordered_list_like_line_starts(
@@ -1201,8 +1252,12 @@ def _render_paragraph(
         and _should_wrap_prose(text.rstrip("\n"), prefix="", width=options.print_width)
     ):
         text = wrap_paragraph_prose(text.rstrip("\n"), width=options.print_width)
-    source_line = _plain_paragraph_source_line(
-        tokens, index, source_lines, options=options, rendered_line=text.rstrip("\n")
+    source_line = (
+        _plain_paragraph_source_line(
+            tokens, index, source_lines, options=options, rendered_line=text.rstrip("\n")
+        )
+        if preserve_source_line
+        else None
     )
     if source_line is not None:
         return f"{source_line.rstrip()}\n", index + 3

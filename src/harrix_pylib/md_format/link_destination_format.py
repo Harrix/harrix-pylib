@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import re
 from dataclasses import dataclass
 
@@ -95,6 +96,7 @@ def _extract_link_destinations_from_text(
 
 
 def _format_link_url(url: str) -> str:
+    url = html.unescape(url)
     if url.startswith("<") and url.endswith(">"):
         return url
     if "()" in url:
