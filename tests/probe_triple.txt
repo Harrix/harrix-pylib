@@ -1,7 +1,0 @@
-tokens: ['heading_open', 'inline', 'heading_close', 'heading_open', 'inline', 'heading_close']
-
----
-
-# H1
-
-## H2
