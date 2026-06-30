@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 import harrix_pylib as h
 from harrix_pylib.md_format.formatter import format_markdown_content, read_markdown_text
 from harrix_pylib.md_format.front_matter import prepend_markdown_header
@@ -13,6 +15,32 @@ from harrix_pylib.md_format.table_format import text_display_width
 def _read_fixture(name: str) -> str:
     path = Path(__file__).parent / "data" / "md_format" / name
     return path.read_text(encoding="utf-8")
+
+
+def _fixture_pairs() -> list[tuple[str, str]]:
+    root = Path(__file__).parent / "data" / "md_format"
+    pairs: list[tuple[str, str]] = []
+    for before_path in sorted(root.glob("*__before.md")):
+        stem = before_path.name[: -len("__before.md")]
+        after_name = f"{stem}__after.md"
+        if (root / after_name).is_file():
+            pairs.append((before_path.name, after_name))
+    return pairs
+
+
+_FIXTURE_PAIRS = _fixture_pairs()
+
+
+@pytest.mark.parametrize(
+    ("before_name", "after_name"),
+    _FIXTURE_PAIRS,
+    ids=[before_name[: -len("__before.md")] for before_name, _ in _FIXTURE_PAIRS],
+)
+def test_format_markdown_content_matches_fixture(before_name: str, after_name: str) -> None:
+    before = _read_fixture(before_name)
+    expected = _read_fixture(after_name)
+    result = format_markdown_content(before, end_of_line="lf")
+    assert result == expected
 
 
 def test_format_markdown_content_uses_crlf_by_default() -> None:
