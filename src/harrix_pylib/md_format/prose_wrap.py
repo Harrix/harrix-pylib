@@ -28,7 +28,7 @@ def wrap_prose(text: str, *, width: int, prefix: str = "", continuation: str | N
         return text
     continuation = continuation if continuation is not None else prefix
     lines = _wrap_text_lines(text, width=width, first_prefix=prefix, next_prefix=continuation)
-    return "\n".join(lines)
+    return "\n".join(_avoid_list_marker_line_starts(lines))
 
 
 def wrap_paragraph_prose(text: str, *, width: int) -> str:
@@ -87,6 +87,46 @@ def _wrap_prose_after_hard_break(text: str, *, width: int) -> str:
     if current:
         lines.append(" ".join(current))
     return "\n".join(lines)
+
+
+_ORDERED_LIST_LINE_START_RE = re.compile(r"^(\d+)\.(.*)$")
+
+
+def _avoid_list_marker_line_starts(lines: list[str]) -> list[str]:
+    if len(lines) < 2:
+        return lines
+    fixed = list(lines)
+    for index in range(1, len(fixed)):
+        line = fixed[index]
+        leading = line[: len(line) - len(line.lstrip())]
+        stripped = line.lstrip()
+        previous = fixed[index - 1].rstrip()
+        if not previous:
+            continue
+        if stripped.startswith("- "):
+            last_space = previous.rfind(" ")
+            if last_space <= 0:
+                continue
+            word = previous[last_space + 1 :]
+            fixed[index - 1] = previous[:last_space]
+            fixed[index] = f"{leading}{word} {stripped}"
+            continue
+        ordered_match = _ORDERED_LIST_LINE_START_RE.match(stripped)
+        if ordered_match is None:
+            continue
+        after_period = ordered_match.group(2)
+        if not after_period or after_period[0] != " ":
+            continue
+        after_content = after_period[1:]
+        if not after_content or after_content[0].isdigit():
+            continue
+        last_space = previous.rfind(" ")
+        if last_space <= 0:
+            continue
+        word = previous[last_space + 1 :]
+        fixed[index - 1] = previous[:last_space]
+        fixed[index] = f"{leading}{word} {stripped}"
+    return fixed
 
 
 def _is_cjk(char: str) -> bool:

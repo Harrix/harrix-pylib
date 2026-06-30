@@ -188,6 +188,8 @@ def _format_code_inline(
         content = content.replace("|", "\\|")
     max_run = _max_backtick_run(content)
     if max_run == 0:
+        if content and not content.strip():
+            return f"`{content}`"
         if content.startswith(" ") or content.endswith(" "):
             return f"` {content} `"
         return f"`{content}`"
@@ -650,6 +652,29 @@ def _paragraph_run_end(tokens: list[Token], start: int) -> int | None:
     return run_end + 3
 
 
+def _merged_run_is_whitespace_inline_code(tokens: list[Token], start: int, run_end: int) -> bool:
+    paragraph_index = start
+    while paragraph_index < run_end:
+        inline = tokens[paragraph_index + 1]
+        children = inline.children or []
+        if len(children) != 1 or children[0].type != "code_inline":
+            return False
+        if children[0].content.strip():
+            return False
+        paragraph_index += 3
+    return paragraph_index > start
+
+
+def _render_merged_whitespace_inline_code(tokens: list[Token], start: int, run_end: int) -> str:
+    contents: list[str] = []
+    paragraph_index = start
+    while paragraph_index < run_end:
+        children = tokens[paragraph_index + 1].children or []
+        contents.append(children[0].content)
+        paragraph_index += 3
+    return _format_code_inline(" ".join(contents))
+
+
 def _try_render_merged_paragraphs(
     tokens: list[Token],
     index: int,
@@ -662,6 +687,8 @@ def _try_render_merged_paragraphs(
     run_end = _paragraph_run_end(tokens, index)
     if run_end is None:
         return None, index
+    if _merged_run_is_whitespace_inline_code(tokens, index, run_end):
+        return f"{_render_merged_whitespace_inline_code(tokens, index, run_end)}\n", run_end
     break_styles = hard_break_styles or HardBreakStyles()
     parts: list[str] = []
     paragraph_index = index
@@ -1172,6 +1199,12 @@ def _render_list(
         source_markers = ordered_list_marker_groups.pop(0)
     elif not ordered and bullet_list_marker_groups:
         bullet_markers = bullet_list_marker_groups.pop(0)
+    has_nested_bullets = _list_has_nested_bullets(tokens, index + 1, close_index)
+    has_following_nested_dashes = _star_marker_becomes_dash(
+        bullet_markers,
+        bullet_list_marker_groups,
+        has_nested_bullets=has_nested_bullets,
+    )
     item_index = index + 1
     rendered_item_count = 0
     while item_index < close_index:
@@ -1182,12 +1215,16 @@ def _render_list(
         checkbox = _list_item_checkbox(tokens, item_index)
         if ordered:
             marker = f"{ordered_list_item_number(source_markers, rendered_item_count)}."
+        elif list_depth > 0:
+            marker = "-"
         elif rendered_item_count < len(bullet_markers):
-            marker = (
-                "-"
-                if canonicalize_bullets
-                else _normalize_bullet_marker(bullet_markers[rendered_item_count])
-            )
+            source_marker = bullet_markers[rendered_item_count]
+            if canonicalize_bullets and source_marker == "-":
+                marker = "-"
+            elif has_following_nested_dashes and source_marker == "*":
+                marker = "-"
+            else:
+                marker = _normalize_bullet_marker(source_marker)
         else:
             marker = "-"
         if checkbox:
@@ -1255,6 +1292,37 @@ def _render_list(
     return "\n".join(lines) + "\n", close_index + 1
 
 
+def _list_has_nested_bullets(tokens: list[Token], start: int, end: int) -> bool:
+    depth = 0
+    for index in range(start, end):
+        token = tokens[index]
+        if token.type == "bullet_list_open":
+            if depth > 0:
+                return True
+            depth += 1
+        elif token.type == "bullet_list_close":
+            depth -= 1
+    return False
+
+
+def _star_marker_becomes_dash(
+    bullet_markers: list[str],
+    remaining_groups: list[list[str]],
+    *,
+    has_nested_bullets: bool,
+) -> bool:
+    if has_nested_bullets:
+        return True
+    nested_dash_groups = sum(
+        1
+        for offset in range(min(len(bullet_markers), len(remaining_groups)))
+        if len(remaining_groups[offset]) == 1 and remaining_groups[offset][0] == "-"
+    )
+    if nested_dash_groups > 0:
+        return True
+    return len(bullet_markers) == 1
+
+
 def _render_list_item_lines(
     item_lines: list[str],
     *,
@@ -1285,13 +1353,18 @@ def _render_list_item_lines(
             and options.prose_wrap == "always"
             and "\n" not in block
             and "# ignore:" not in block
-            and "](" not in block
+            and ("](" not in block or ") - " in block)
             and "\\_" not in block
             and not _is_block_marker_line(block)
             and _should_wrap_prose(block, prefix=prefix, width=options.print_width)
         ):
             rendered.extend(
-                wrap_prose(block, width=options.print_width, prefix=prefix, continuation=indent).split("\n")
+                _wrap_list_item_prose(
+                    block,
+                    prefix=prefix,
+                    continuation=indent,
+                    width=options.print_width,
+                )
             )
             continue
         block_lines = block.splitlines()
@@ -1312,6 +1385,17 @@ def _list_marker_prefix(marker: str, *, align: bool = False) -> str:
     if align and marker.endswith((".", ")")):
         return f"{marker}{' ' * max(1, 4 - len(marker))}"
     return f"{marker} "
+
+
+def _wrap_list_item_prose(block: str, *, prefix: str, continuation: str, width: int) -> list[str]:
+    split_at = block.find(") - ")
+    if split_at < 0:
+        return wrap_prose(block, width=width, prefix=prefix, continuation=continuation).split("\n")
+    head = block[: split_at + 1]
+    tail = block[split_at + 4 :]
+    lines = [prefix + f"{head} -"]
+    lines.extend(wrap_prose(tail, width=width, prefix=continuation, continuation=continuation).split("\n"))
+    return lines
 
 
 def _render_math_block(token: Token, *, label: str | None = None) -> str:

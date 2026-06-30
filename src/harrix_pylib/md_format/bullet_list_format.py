@@ -8,25 +8,37 @@ _BULLET_ITEM_RE = re.compile(r"^(\s*)([-*+])\s+")
 
 
 def extract_bullet_list_marker_groups(body: str) -> tuple[str, list[list[str]]]:
-    """Collect source bullet markers for each contiguous bullet list."""
+    """Collect source bullet markers for each bullet list in document order."""
     lines, trailing = _split_lines(body)
     groups: list[list[str]] = []
-    current: list[str] = []
-    for line in lines:
+    stack: list[tuple[int, int]] = []
+    line_index = 0
+    while line_index < len(lines):
+        line = lines[line_index]
         match = _BULLET_ITEM_RE.match(line)
-        if match:
-            marker = match.group(2)
-            if current and marker != current[-1] and len({*current}) == 1:
-                groups.append(current)
-                current = [marker]
-            else:
-                current.append(marker)
+        if not match:
+            if not line.strip():
+                peek_index = line_index + 1
+                while peek_index < len(lines) and not lines[peek_index].strip():
+                    peek_index += 1
+                if peek_index < len(lines) and _BULLET_ITEM_RE.match(lines[peek_index]):
+                    while stack:
+                        stack.pop()
+            elif not line.startswith(" "):
+                while stack:
+                    stack.pop()
+            line_index += 1
             continue
-        if current:
-            groups.append(current)
-            current = []
-    if current:
-        groups.append(current)
+        indent = len(match.group(1))
+        marker = match.group(2)
+        while stack and stack[-1][0] > indent:
+            stack.pop()
+        if stack and stack[-1][0] == indent:
+            groups[stack[-1][1]].append(marker)
+        else:
+            groups.append([marker])
+            stack.append((indent, len(groups) - 1))
+        line_index += 1
     return _join_lines(lines, trailing_newline=trailing), groups
 
 

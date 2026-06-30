@@ -53,9 +53,17 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
         line_index += 1
         while line_index < len(lines):
             next_line = lines[line_index]
-            if not next_line.strip():
-                break
             if _LINK_DEF_RE.match(next_line) or _FOOTNOTE_DEF_RE.match(next_line):
+                break
+            if not next_line.strip():
+                if kind != "footnote":
+                    break
+                peek_index = line_index + 1
+                while peek_index < len(lines) and not lines[peek_index].strip():
+                    peek_index += 1
+                if peek_index < len(lines) and lines[peek_index].startswith("    "):
+                    line_index += 1
+                    continue
                 break
             if kind == "footnote" and next_line.startswith("    "):
                 block_lines.append(next_line)
@@ -151,13 +159,87 @@ def _format_footnote_block(lines: list[str], *, print_width: int) -> list[str]:
     indent, label, first_text = match.group(1), match.group(2), match.group(3)
     prefix = f"{indent}[^{label}]: "
     continuation = indent + "    "
-    body_parts = [first_text, *[line[4:] if line.startswith("    ") else line for line in lines[1:]]]
-    body = " ".join(part.strip() for part in body_parts if part.strip())
+    indented_lines = [line for line in lines[1:] if line.startswith("    ")]
+    if indented_lines and not _footnote_indented_lines_are_block_content(indented_lines):
+        body_parts = [first_text, *[line[4:] if line.startswith("    ") else line for line in lines[1:]]]
+        body = " ".join(part.strip() for part in body_parts if part.strip())
+        wrapped_inline = wrap_prose(body, width=print_width, prefix=prefix, continuation=continuation).split("\n")
+        if len(wrapped_inline) == 1:
+            return wrapped_inline
+        wrapped_body = wrap_prose(body, width=print_width, prefix=continuation, continuation=continuation)
+        return [prefix.rstrip(), *wrapped_body.split("\n")]
+    if indented_lines and _footnote_indented_lines_are_block_content(indented_lines):
+        return _format_footnote_indented_block(
+            indent=indent,
+            label=label,
+            first_text=first_text,
+            indented_lines=indented_lines,
+            prefix=prefix,
+            continuation=continuation,
+            print_width=print_width,
+        )
+    body = first_text.strip()
     wrapped_inline = wrap_prose(body, width=print_width, prefix=prefix, continuation=continuation).split("\n")
     if len(wrapped_inline) == 1:
         return wrapped_inline
     wrapped_body = wrap_prose(body, width=print_width, prefix=continuation, continuation=continuation)
     return [prefix.rstrip(), *wrapped_body.split("\n")]
+
+
+def _format_footnote_indented_block(
+    *,
+    indent: str,
+    label: str,
+    first_text: str,
+    indented_lines: list[str],
+    prefix: str,
+    continuation: str,
+    print_width: int,
+) -> list[str]:
+    first_stripped = first_text.strip()
+    blockquote_lines = _footnote_blockquote_lines(first_stripped, indented_lines)
+    if blockquote_lines is not None and len(blockquote_lines) > 1:
+        result = [f"{indent}[^{label}]:"]
+        for line in blockquote_lines:
+            result.append(f"{continuation}{line.rstrip()}")
+        return result
+    if not first_stripped:
+        result = [f"{indent}[^{label}]:"]
+    elif text_display_width(prefix + first_stripped) <= print_width:
+        result = [f"{indent}[^{label}]: {first_stripped}"]
+    else:
+        result = [f"{indent}[^{label}]:"]
+        result.extend(
+            wrap_prose(first_stripped, width=print_width, prefix=continuation, continuation=continuation).split("\n")
+        )
+    if indented_lines:
+        if result and not result[-1].rstrip().endswith(":"):
+            result.append("")
+        result.extend(indented_lines)
+    return result
+
+
+def _footnote_indented_lines_are_block_content(indented_lines: list[str]) -> bool:
+    for line in indented_lines:
+        stripped = line.lstrip()
+        if stripped.startswith((">", "```", "~~~")):
+            return True
+    return False
+
+
+def _footnote_blockquote_lines(first_text: str, indented_lines: list[str]) -> list[str] | None:
+    lines: list[str] = []
+    if first_text.startswith(">"):
+        lines.append(first_text)
+    for line in indented_lines:
+        stripped = line.lstrip()
+        if not stripped:
+            continue
+        if stripped.startswith(">"):
+            lines.append(stripped)
+            continue
+        return None
+    return lines if lines else None
 
 
 def _format_reference_title(title: str) -> str:
