@@ -99,7 +99,10 @@ def _escape_ordered_list_like_line_start(line: str) -> str:
     match = _ORDERED_LIST_LINE_START_RE.match(line)
     if not match:
         return line
-    return f"{match.group(1)}\\.{match.group(2)}"
+    after_period = match.group(2)
+    if after_period and after_period[0].isdigit():
+        return line
+    return f"{match.group(1)}\\.{after_period}"
 ```
 
 </details>

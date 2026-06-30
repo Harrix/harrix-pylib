@@ -236,10 +236,7 @@ def _render_blockquote(tokens: list[Token], index: int) -> tuple[str, int]:
             inner_parts.append(chunk)
     quoted_blocks: list[str] = []
     for block in inner_parts:
-        quoted_lines: list[str] = []
-        for raw_line in block.rstrip().splitlines():
-            line = escape_ordered_list_like_line_starts(raw_line) if raw_line else raw_line
-            quoted_lines.append(f"> {line}" if line else ">")
+        quoted_lines = [f"> {line}" if line else ">" for line in block.rstrip().splitlines()]
         quoted_blocks.append("\n".join(quoted_lines))
     quoted = "\n>\n".join(quoted_blocks)
     return quoted + "\n", close_index + 1

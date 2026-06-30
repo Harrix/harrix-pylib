@@ -580,13 +580,26 @@ def test_format_markdown_content_preserves_escaped_ordered_list_like_line_start_
     assert "> 39. Первый фрагмент" not in result
 
 
-def test_format_markdown_content_keeps_decimal_ratings_in_bullet_list_items() -> None:
+def test_format_markdown_content_preserves_ordered_list_in_blockquote() -> None:
     source = (
-        "- 10 - Транс\n"
-        "- 7,5 - Чудеса\n"
-        "- 9.5 - Тихоокеанский рубеж\n"
-        "- 9,5 - Воображариум\n"
+        "> Вводный абзац перед списком.\n"
+        ">\n"
+        "> 1. Первый пункт списка.\n"
+        "> 2. Второй пункт списка.\n"
+        "> 3. Третий пункт списка.\n"
+        ">\n"
+        "> Заключительный абзац после списка.\n"
     )
+    result = format_markdown_content(source).replace("\r\n", "\n")
+    assert "> 1. Первый пункт списка.\n" in result
+    assert "> 2. Второй пункт списка.\n" in result
+    assert "> 3. Третий пункт списка.\n" in result
+    assert "> 1\\. Первый" not in result
+    assert "> 2\\. Второй" not in result
+
+
+def test_format_markdown_content_keeps_decimal_ratings_in_bullet_list_items() -> None:
+    source = "- 10 - Транс\n- 7,5 - Чудеса\n- 9.5 - Тихоокеанский рубеж\n- 9,5 - Воображариум\n"
     result = format_markdown_content(source).replace("\r\n", "\n")
     assert "- 9.5 - Тихоокеанский рубеж\n" in result
     assert "- 9\\.5 -" not in result
