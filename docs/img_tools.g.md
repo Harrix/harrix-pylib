@@ -15,12 +15,14 @@ lang: en
 - [🔧 Function `get_frame_rate`](#-function-get_frame_rate)
 - [🔧 Function `is_avif_animated`](#-function-is_avif_animated)
 - [🔧 Function `optimize_avif`](#-function-optimize_avif)
-- [🔧 Function `optimize_image_with_tools`](#-function-optimize_image_with_tools)
+- [🔧 Function `optimize_image_with_tools`](#-function-optimize_image_with_tools
+  )
 - [🔧 Function `process_animated_avif`](#-function-process_animated_avif)
 - [🔧 Function `process_static_avif`](#-function-process_static_avif)
 - [🔧 Function `_exe`](#-function-_exe)
 - [🔧 Function `_ffmpeg_output`](#-function-_ffmpeg_output)
-- [🔧 Function `_is_avif_animated_with_avifdec`](#-function-_is_avif_animated_with_avifdec)
+- [🔧 Function `_is_avif_animated_with_avifdec`](#-function-_is_avif_animated_wi
+  th_avifdec)
 - [🔧 Function `_reduce_frames`](#-function-_reduce_frames)
 - [🔧 Function `_resize_frames`](#-function-_resize_frames)
 - [🔧 Function `_run_checked`](#-function-_run_checked)
@@ -176,9 +178,11 @@ Args:
 
 - `filename` (`Path | str`): Source image path.
 - `output_filename` (`Path | str`): Destination path.
-- `project_root` (`Path | str`): Folder containing ffmpeg.exe, avifenc.exe, avifdec.exe.
+- `project_root` (`Path | str`): Folder containing ffmpeg.exe, avifenc.exe,
+  avifdec.exe.
 - `quality` (`bool`): Use higher quality settings. Defaults to `False`.
-- `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
+- `max_size` (`int | None`): Maximum width or height in pixels. Defaults to
+  `None`.
 
 Returns:
 

@@ -12,17 +12,22 @@ lang: en
 ## Contents
 
 - [🔧 Function `escape_markdown_text`](#-function-escape_markdown_text)
-- [🔧 Function `escape_ordered_list_like_line_starts`](#-function-escape_ordered_list_like_line_starts)
-- [🔧 Function `_escape_ordered_list_like_line_start`](#-function-_escape_ordered_list_like_line_start)
+- [🔧 Function `escape_ordered_list_like_line_starts`](#-function-escape_ordered
+  _list_like_line_starts)
+- [🔧 Function `_escape_ordered_list_like_line_start`](#-function-_escape_ordere
+  d_list_like_line_start)
 - [🔧 Function `_is_alphanumeric`](#-function-_is_alphanumeric)
-- [🔧 Function `_is_identifier_leading_underscore`](#-function-_is_identifier_leading_underscore)
+- [🔧 Function `_is_identifier_leading_underscore`](#-function-_is_identifier_le
+  ading_underscore)
 - [🔧 Function `_is_left_flanking`](#-function-_is_left_flanking)
 - [🔧 Function `_is_punctuation`](#-function-_is_punctuation)
 - [🔧 Function `_is_right_flanking`](#-function-_is_right_flanking)
 - [🔧 Function `_is_whitespace`](#-function-_is_whitespace)
 - [🔧 Function `_should_escape_asterisk`](#-function-_should_escape_asterisk)
-- [🔧 Function `_should_escape_intraword_asterisk`](#-function-_should_escape_intraword_asterisk)
-- [🔧 Function `_should_escape_underscore`](#-function-_should_escape_underscore)
+- [🔧 Function `_should_escape_intraword_asterisk`](#-function-_should_escape_in
+  traword_asterisk)
+- [🔧 Function `_should_escape_underscore`](#-function-_should_escape_underscore
+  )
 
 </details>
 
@@ -39,6 +44,8 @@ Escape emphasis-like `*` and `_` characters in plain text.
 
 ```python
 def escape_markdown_text(text: str) -> str:
+    if any(text.startswith(prefix) for prefix in PLACEHOLDER_PREFIXES):
+        return text
     if text.startswith(PLACEHOLDER_PREFIX):
         return text
 

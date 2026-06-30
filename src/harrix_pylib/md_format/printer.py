@@ -6,22 +6,48 @@ from typing import TYPE_CHECKING
 from urllib.parse import unquote, urlsplit, urlunsplit
 
 from harrix_pylib.md_format.escape_format import escape_markdown_text, escape_ordered_list_like_line_starts
+from harrix_pylib.md_format.options import FormatOptions
+from harrix_pylib.md_format.prose_wrap import wrap_prose
 from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text_display_width
+from harrix_pylib.md_format.task_list_format import (
+    TaskListMarker,
+    strip_task_placeholder,
+    task_list_marker_for_text,
+)
 from harrix_pylib.md_format.text_format import normalize_inline_spaces
 
 if TYPE_CHECKING:
     from markdown_it.token import Token
 
+_DEFAULT_OPTIONS = FormatOptions()
 
-def render_tokens(tokens: list[Token]) -> str:
+
+def render_tokens(
+    tokens: list[Token],
+    *,
+    options: FormatOptions | None = None,
+    task_list_markers: list[TaskListMarker] | None = None,
+) -> str:
     """Render top-level block tokens to Markdown."""
+    fmt_options = options or _DEFAULT_OPTIONS
+    markers = task_list_markers or []
     parts: list[str] = []
     index = 0
     while index < len(tokens):
-        chunk, index = _render_block(tokens, index)
+        chunk, index = _render_block(tokens, index, options=fmt_options, task_list_markers=markers)
         if chunk:
             parts.append(chunk)
     return _join_blocks(parts)
+
+
+def _alignment_separator(align: str) -> str:
+    if align == "left":
+        return ":--"
+    if align == "center":
+        return ":-:"
+    if align == "right":
+        return "--:"
+    return "---"
 
 
 def _find_close(tokens: list[Token], index: int, close_type: str) -> int:
@@ -65,20 +91,48 @@ def _format_self_referential_link(href: str, inner: str) -> str | None:
     return None
 
 
-def _format_table_row(cells: list[str], column_widths: list[int]) -> str:
+def _format_table_row(cells: list[str], column_widths: list[int], alignments: list[str]) -> str:
     padded = cells + [""] * (len(column_widths) - len(cells))
-    return (
-        "| "
-        + " | ".join(
-            f"{padded[index]}{' ' * (column_widths[index] - text_display_width(padded[index]))}"
-            for index in range(len(column_widths))
-        )
-        + " |"
-    )
+    align_row = alignments + ["---"] * (len(column_widths) - len(alignments))
+    formatted_cells: list[str] = []
+    for index, cell in enumerate(padded[: len(column_widths)]):
+        width = column_widths[index]
+        cell_width = text_display_width(cell)
+        padding = max(width - cell_width, 0)
+        align = align_row[index] if index < len(align_row) else "---"
+        if align in {":--", "---"}:
+            formatted_cells.append(f"{cell}{' ' * padding}")
+        elif align == ":-:":
+            left_pad = padding // 2
+            formatted_cells.append(f"{' ' * left_pad}{cell}{' ' * (padding - left_pad)}")
+        else:
+            formatted_cells.append(f"{' ' * padding}{cell}")
+    return "| " + " | ".join(formatted_cells) + " |"
 
 
-def _format_table_separator(column_widths: list[int]) -> str:
-    return "| " + " | ".join("-" * width for width in column_widths) + " |"
+def _format_table_separator(column_widths: list[int], alignments: list[str]) -> str:
+    separators: list[str] = []
+    for index, width in enumerate(column_widths):
+        align = alignments[index] if index < len(alignments) else "---"
+        core = align if align in {":--", ":-:", "--:"} else "---"
+        if len(core) < width:
+            if core == ":--":
+                core = ":" + "-" * (width - 1)
+            elif core == "--:":
+                core = "-" * (width - 2) + ": "
+                core = "-" * (width - 1) + ":"
+            elif core == ":-:":
+                side = max((width - 3) // 2, 0)
+                core = ":" + "-" * side + ":" + "-" * max(width - side - 3, 0)
+            else:
+                core = "-" * width
+        separators.append(core)
+    return "| " + " | ".join(separators) + " |"
+
+
+def _is_block_marker_line(text: str) -> bool:
+    stripped = text.lstrip()
+    return stripped.startswith(("-", ">", "|", "#", "```", "~"))
 
 
 def _is_spurious_table_row(cells: list[str], width: int) -> bool:
@@ -91,10 +145,18 @@ def _is_spurious_table_row(cells: list[str], width: int) -> bool:
 
 
 def _join_blocks(parts: list[str]) -> str:
-    cleaned = [part.strip("\n") for part in parts if part.strip()]
+    cleaned: list[str] = []
+    for part in parts:
+        stripped = part.strip("\n")
+        if not stripped:
+            continue
+        if cleaned and _should_join_without_blank_line(cleaned[-1], stripped):
+            cleaned[-1] = cleaned[-1].rstrip("\n") + "\n" + stripped + "\n"
+        else:
+            cleaned.append(stripped + "\n")
     if not cleaned:
         return ""
-    return "\n\n".join(cleaned) + "\n"
+    return "\n\n".join(block.rstrip("\n") for block in cleaned) + "\n"
 
 
 def _link_raw_text(children: list[Token], link_open_index: int) -> str | None:
@@ -124,6 +186,13 @@ def _list_is_loose(tokens: list[Token], index: int, close_index: int) -> bool:
             return True
         item_index = item_close + 1
     return False
+
+
+def _list_item_checkbox(tokens: list[Token], item_open_index: int) -> str | None:
+    checked = tokens[item_open_index].attrGet("checked")
+    if checked is None:
+        return None
+    return "[x] " if checked else "[ ] "
 
 
 def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_index: int) -> bool:
@@ -195,18 +264,25 @@ def _readable_link_href(href: str) -> str:
     return urlunsplit((parts.scheme, parts.netloc, decoded_path, parts.query, decoded_fragment))
 
 
-def _render_block(tokens: list[Token], index: int) -> tuple[str, int]:
+def _render_block(
+    tokens: list[Token],
+    index: int,
+    *,
+    options: FormatOptions,
+    wrap_paragraph: bool = True,
+    task_list_markers: list[TaskListMarker] | None = None,
+) -> tuple[str, int]:
     token = tokens[index]
     if token.type == "heading_open":
-        return _render_heading(tokens, index)
+        return _render_heading(tokens, index, options=options)
     if token.type == "paragraph_open":
-        return _render_paragraph(tokens, index)
+        return _render_paragraph(tokens, index, options=options, wrap=wrap_paragraph)
     if token.type == "blockquote_open":
-        return _render_blockquote(tokens, index)
+        return _render_blockquote(tokens, index, options=options, task_list_markers=task_list_markers)
     if token.type == "bullet_list_open":
-        return _render_list(tokens, index, ordered=False)
+        return _render_list(tokens, index, ordered=False, options=options, task_list_markers=task_list_markers or [])
     if token.type == "ordered_list_open":
-        return _render_list(tokens, index, ordered=True)
+        return _render_list(tokens, index, ordered=True, options=options, task_list_markers=task_list_markers or [])
     if token.type == "fence":
         return _render_fence(token), index + 1
     if token.type == "code_block":
@@ -218,26 +294,34 @@ def _render_block(tokens: list[Token], index: int) -> tuple[str, int]:
     if token.type == "math_block_label":
         return _render_math_block(token, label=token.info), index + 1
     if token.type == "table_open":
-        return _render_table(tokens, index)
+        return _render_table(tokens, index, options=options)
     if token.type == "html_block":
         return f"{token.content.rstrip()}\n", index + 1
     if token.type in {"dl_open", "dt_open", "dd_open"}:
-        return _render_until_close(tokens, index, token.type.replace("_open", "_close")), index + 1
+        return _render_until_close(
+            tokens, index, token.type.replace("_open", "_close"), options=options, task_list_markers=task_list_markers
+        ), index + 1
     return "", index + 1
 
 
-def _render_blockquote(tokens: list[Token], index: int) -> tuple[str, int]:
+def _render_blockquote(
+    tokens: list[Token], index: int, *, options: FormatOptions, task_list_markers: list[TaskListMarker] | None = None
+) -> tuple[str, int]:
+    markers = task_list_markers or []
     close_index = _find_close(tokens, index, "blockquote_close")
     inner_parts: list[str] = []
     inner_index = index + 1
     while inner_index < close_index:
-        chunk, inner_index = _render_block(tokens, inner_index)
+        chunk, inner_index = _render_block(tokens, inner_index, options=options, task_list_markers=markers)
         if chunk:
             inner_parts.append(chunk)
     quoted_blocks: list[str] = []
     for block in inner_parts:
-        quoted_lines = [f"> {line}" if line else ">" for line in block.rstrip().splitlines()]
-        quoted_blocks.append("\n".join(quoted_lines))
+        if options.prose_wrap == "always":
+            quoted_blocks.append(_wrap_blockquote_block(block, options=options))
+        else:
+            quoted_lines = [f"> {line}" if line else ">" for line in block.rstrip().splitlines()]
+            quoted_blocks.append("\n".join(quoted_lines))
     quoted = "\n>\n".join(quoted_blocks)
     return quoted + "\n", close_index + 1
 
@@ -249,23 +333,27 @@ def _render_fence(token: Token) -> str:
     return f"{fence}{info}\n{content}\n{fence}\n"
 
 
-def _render_heading(tokens: list[Token], index: int) -> tuple[str, int]:
+def _render_heading(tokens: list[Token], index: int, *, options: FormatOptions) -> tuple[str, int]:
     level = int(tokens[index].tag[1])
     inline = tokens[index + 1]
-    text = _render_inline(inline.children or [])
+    text = _render_inline(inline.children or [], options=options)
     return f"{'#' * level} {text}\n", index + 3
 
 
-def _render_inline(children: list[Token], *, in_table: bool = False) -> str:
+def _render_inline(children: list[Token], *, in_table: bool = False, options: FormatOptions | None = None) -> str:
+    fmt_options = options or _DEFAULT_OPTIONS
     parts: list[str] = []
     index = 0
     while index < len(children):
-        chunk, index = _render_inline_token(children, index, in_table=in_table)
+        chunk, index = _render_inline_token(children, index, in_table=in_table, options=fmt_options)
         parts.append(chunk)
     return "".join(parts)
 
 
-def _render_inline_token(children: list[Token], index: int, *, in_table: bool = False) -> tuple[str, int]:
+def _render_inline_token(
+    children: list[Token], index: int, *, in_table: bool = False, options: FormatOptions | None = None
+) -> tuple[str, int]:
+    fmt_options = options or _DEFAULT_OPTIONS
     child = children[index]
     if child.type == "text":
         content = child.content
@@ -284,7 +372,7 @@ def _render_inline_token(children: list[Token], index: int, *, in_table: bool = 
     if child.type == "softbreak":
         return "\n", index + 1
     if child.type == "hardbreak":
-        return "\\\n", index + 1
+        return "  \n", index + 1
     if child.type == "wiki_link":
         return f"[[{child.content}]]", index + 1
     if child.type in {"math_inline", "math_inline_double"}:
@@ -315,7 +403,7 @@ def _render_inline_token(children: list[Token], index: int, *, in_table: bool = 
         inner_parts: list[str] = []
         inner_index = index + 1
         while inner_index < len(children) and children[inner_index].type != "link_close":
-            chunk, inner_index = _render_inline_token(children, inner_index, in_table=in_table)
+            chunk, inner_index = _render_inline_token(children, inner_index, in_table=in_table, options=fmt_options)
             inner_parts.append(chunk)
         inner = "".join(inner_parts)
         if title:
@@ -324,13 +412,17 @@ def _render_inline_token(children: list[Token], index: int, *, in_table: bool = 
     if child.type == "link_close":
         return "", index + 1
     if child.type == "strong_open":
-        inner, next_index = _render_inline_until(children, index + 1, "strong_close", in_table=in_table)
+        inner, next_index = _render_inline_until(
+            children, index + 1, "strong_close", in_table=in_table, options=fmt_options
+        )
         return f"**{inner}**", next_index + 1
     if child.type == "em_open":
-        inner, next_index = _render_inline_until(children, index + 1, "em_close", in_table=in_table)
+        inner, next_index = _render_inline_until(
+            children, index + 1, "em_close", in_table=in_table, options=fmt_options
+        )
         return f"_{inner}_", next_index + 1
     if child.type == "s_open":
-        inner, next_index = _render_inline_until(children, index + 1, "s_close", in_table=in_table)
+        inner, next_index = _render_inline_until(children, index + 1, "s_close", in_table=in_table, options=fmt_options)
         return f"~~{inner}~~", next_index + 1
     if child.type in {"strong_close", "em_close", "s_close"}:
         return "", index + 1
@@ -338,16 +430,24 @@ def _render_inline_token(children: list[Token], index: int, *, in_table: bool = 
 
 
 def _render_inline_until(
-    children: list[Token], index: int, close_type: str, *, in_table: bool = False
+    children: list[Token], index: int, close_type: str, *, in_table: bool = False, options: FormatOptions | None = None
 ) -> tuple[str, int]:
+    fmt_options = options or _DEFAULT_OPTIONS
     parts: list[str] = []
     while index < len(children) and children[index].type != close_type:
-        chunk, index = _render_inline_token(children, index, in_table=in_table)
+        chunk, index = _render_inline_token(children, index, in_table=in_table, options=fmt_options)
         parts.append(chunk)
     return "".join(parts), index
 
 
-def _render_list(tokens: list[Token], index: int, *, ordered: bool) -> tuple[str, int]:
+def _render_list(
+    tokens: list[Token],
+    index: int,
+    *,
+    ordered: bool,
+    options: FormatOptions,
+    task_list_markers: list[TaskListMarker],
+) -> tuple[str, int]:
     close_type = "ordered_list_close" if ordered else "bullet_list_close"
     close_index = _find_close(tokens, index, close_type)
     loose = _list_is_loose(tokens, index, close_index)
@@ -360,7 +460,10 @@ def _render_list(tokens: list[Token], index: int, *, ordered: bool) -> tuple[str
             item_index += 1
             continue
         item_close = _find_close(tokens, item_index, "list_item_close")
+        checkbox = _list_item_checkbox(tokens, item_index)
         marker = f"{item_number}." if ordered else "-"
+        if checkbox:
+            marker = f"- {checkbox}".rstrip()
         item_lines: list[str] = []
         child_index = item_index + 1
         while child_index < item_close:
@@ -369,16 +472,28 @@ def _render_list(tokens: list[Token], index: int, *, ordered: bool) -> tuple[str
                     tokens,
                     child_index,
                     ordered=tokens[child_index].type == "ordered_list_open",
+                    options=options,
+                    task_list_markers=task_list_markers,
                 )
                 item_lines.append(nested.rstrip("\n"))
             else:
-                chunk, child_index = _render_block(tokens, child_index)
+                chunk, child_index = _render_block(
+                    tokens,
+                    child_index,
+                    options=options,
+                    wrap_paragraph=False,
+                    task_list_markers=task_list_markers,
+                )
                 if chunk:
                     item_lines.append(chunk.rstrip("\n"))
+        task_marker = task_list_marker_for_text(item_lines[0], task_list_markers) if item_lines else None
+        if task_marker:
+            marker = f"- {task_marker}".rstrip()
+            item_lines[0] = strip_task_placeholder(item_lines[0])
         if loose and rendered_item_count > 0:
             lines.append("")
         item_loose = _list_item_is_loose(tokens, item_index, item_close)
-        lines.extend(_render_list_item_lines(item_lines, marker=marker, loose=item_loose))
+        lines.extend(_render_list_item_lines(item_lines, marker=marker, loose=item_loose, options=options))
         item_number += 1
         rendered_item_count += 1
         item_index = item_close + 1
@@ -390,6 +505,7 @@ def _render_list_item_lines(
     *,
     marker: str,
     loose: bool,
+    options: FormatOptions,
 ) -> list[str]:
     if not item_lines:
         return [f"{marker} "]
@@ -398,6 +514,17 @@ def _render_list_item_lines(
     indent = " " * len(prefix)
     rendered: list[str] = []
     for block_index, block in enumerate(item_lines):
+        if (
+            block_index == 0
+            and options.prose_wrap == "always"
+            and "\n" not in block
+            and not _is_block_marker_line(block)
+            and _should_wrap_prose(block, prefix=prefix, width=options.print_width)
+        ):
+            rendered.extend(
+                wrap_prose(block, width=options.print_width, prefix=prefix, continuation=indent).split("\n")
+            )
+            continue
         block_lines = block.splitlines()
         if block_index == 0:
             rendered.append(prefix + block_lines[0])
@@ -416,17 +543,24 @@ def _render_math_block(token: Token, *, label: str | None = None) -> str:
     return f"$$\n{content}\n$$\n"
 
 
-def _render_paragraph(tokens: list[Token], index: int) -> tuple[str, int]:
+def _render_paragraph(tokens: list[Token], index: int, *, options: FormatOptions, wrap: bool = True) -> tuple[str, int]:
     inline = tokens[index + 1]
-    text = escape_ordered_list_like_line_starts(_render_inline(inline.children or []))
+    text = escape_ordered_list_like_line_starts(_render_inline(inline.children or [], options=options))
+    if (
+        wrap
+        and options.prose_wrap == "always"
+        and _should_wrap_prose(text.rstrip("\n"), prefix="", width=options.print_width)
+    ):
+        text = wrap_prose(text.rstrip("\n"), width=options.print_width)
     return f"{text}\n", index + 3
 
 
-def _render_table(tokens: list[Token], index: int) -> tuple[str, int]:
+def _render_table(tokens: list[Token], index: int, *, options: FormatOptions) -> tuple[str, int]:
     close_index = _find_close(tokens, index, "table_close")
     rows: list[list[str]] = []
     is_header = False
     alignments: list[str] = []
+    cell_alignments: list[str] = []
     row_index = index + 1
     while row_index < close_index:
         token = tokens[row_index]
@@ -445,13 +579,22 @@ def _render_table(tokens: list[Token], index: int) -> tuple[str, int]:
             cell_index = row_index + 1
             while cell_index < row_close:
                 if tokens[cell_index].type in {"th_open", "td_open"}:
+                    style = str(tokens[cell_index].attrGet("style") or "")
+                    if "text-align:center" in style:
+                        cell_alignments.append("center")
+                    elif "text-align:right" in style:
+                        cell_alignments.append("right")
+                    elif "text-align:left" in style:
+                        cell_alignments.append("left")
+                    else:
+                        cell_alignments.append("default")
                     inline = tokens[cell_index + 1]
-                    cells.append(_render_inline(inline.children or [], in_table=True))
+                    cells.append(_render_inline(inline.children or [], in_table=True, options=options))
                     cell_index += 3
                 else:
                     cell_index += 1
             if is_header and not alignments:
-                alignments = ["---"] * len(cells)
+                alignments = [_alignment_separator(align) for align in cell_alignments]
                 rows.append(cells)
                 rows.append(alignments)
             else:
@@ -473,10 +616,11 @@ def _render_table(tokens: list[Token], index: int) -> tuple[str, int]:
         else:
             filtered_body_rows.append(padded_row[:width])
     column_widths = _table_column_widths([header, *filtered_body_rows], width)
+    align_row = rows[1] if len(rows) > 1 else ["---"] * width
     lines = [
-        _format_table_row(header, column_widths),
-        _format_table_separator(column_widths),
-        *(_format_table_row(row, column_widths) for row in filtered_body_rows),
+        _format_table_row(header, column_widths, align_row),
+        _format_table_separator(column_widths, align_row),
+        *(_format_table_row(row, column_widths, align_row) for row in filtered_body_rows),
     ]
     result = "\n".join(lines) + "\n"
     if trailing_paragraphs:
@@ -484,15 +628,39 @@ def _render_table(tokens: list[Token], index: int) -> tuple[str, int]:
     return result, close_index + 1
 
 
-def _render_until_close(tokens: list[Token], index: int, close_type: str) -> str:
+def _render_until_close(
+    tokens: list[Token],
+    index: int,
+    close_type: str,
+    *,
+    options: FormatOptions,
+    task_list_markers: list[TaskListMarker] | None = None,
+) -> str:
+    markers = task_list_markers or []
     close_index = _find_close(tokens, index, close_type)
     parts: list[str] = []
     inner_index = index + 1
     while inner_index < close_index:
-        chunk, inner_index = _render_block(tokens, inner_index)
+        chunk, inner_index = _render_block(tokens, inner_index, options=options, task_list_markers=markers)
         if chunk:
             parts.append(chunk)
     return _join_blocks(parts)
+
+
+def _should_join_without_blank_line(previous: str, current: str) -> bool:
+    prev_lines = previous.strip("\n").splitlines()
+    if not prev_lines:
+        return False
+    last_line = prev_lines[-1].strip()
+    if last_line.startswith("<!--") and last_line.endswith("-->"):
+        return True
+    if current.lstrip().startswith("<!-- prettier-ignore"):
+        return True
+    return False
+
+
+def _should_wrap_prose(text: str, *, prefix: str, width: int) -> bool:
+    return text_display_width(prefix + text) > width
 
 
 def _table_column_widths(rows: list[list[str]], width: int) -> list[int]:
@@ -501,3 +669,16 @@ def _table_column_widths(rows: list[list[str]], width: int) -> list[int]:
         for index, cell in enumerate(row[:width]):
             column_widths[index] = max(column_widths[index], text_display_width(cell), 3)
     return column_widths
+
+
+def _wrap_blockquote_block(block: str, *, options: FormatOptions) -> str:
+    lines = block.rstrip().splitlines()
+    wrapped_lines: list[str] = []
+    for line in lines:
+        if not line.strip():
+            wrapped_lines.append(">")
+            continue
+        prefix = "> "
+        wrapped = wrap_prose(line, width=options.print_width, prefix=prefix, continuation=prefix)
+        wrapped_lines.extend(wrapped.split("\n"))
+    return "\n".join(wrapped_lines)

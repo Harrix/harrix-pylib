@@ -14,7 +14,8 @@ lang: en
 - [🔧 Function `format_markdown_content`](#-function-format_markdown_content)
 - [🔧 Function `normalize_line_endings`](#-function-normalize_line_endings)
 - [🔧 Function `read_markdown_text`](#-function-read_markdown_text)
-- [🔧 Function `_ensure_blank_line_in_empty_fences`](#-function-_ensure_blank_line_in_empty_fences)
+- [🔧 Function `_ensure_blank_line_in_empty_fences`](#-function-_ensure_blank_li
+  ne_in_empty_fences)
 - [🔧 Function `_format_with_options`](#-function-_format_with_options)
 - [🔧 Function `_normalize_end_of_line`](#-function-_normalize_end_of_line)
 
@@ -33,7 +34,7 @@ Format Markdown text with Prettier-like defaults.
 
 ```python
 def format_markdown_content(text: str, *, end_of_line: str = "crlf") -> str:
-    options = FormatOptions(end_of_line=end_of_line)
+    options = FormatOptions(end_of_line=end_of_line, prose_wrap="always")
     return _format_with_options(text, options)
 ```
 
@@ -48,8 +49,10 @@ def normalize_line_endings(text: str) -> str
 Normalize mixed or corrupted line endings to LF.
 
 Handles CRLF applied twice (`\r\r\n`), which otherwise becomes a blank
-line between every source line after the legacy two-step `\r` cleanup or
-after :func:`pathlib.Path.read_text` universal-newline translation.
+line
+between every source line after the legacy two-step `\r` cleanup or
+after :func:
+`pathlib.Path.read_text` universal-newline translation.
 
 <details>
 <summary>Code:</summary>
@@ -119,17 +122,26 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     if front_matter:
         front_matter = compact_front_matter(front_matter)
     body = _ensure_blank_line_in_empty_fences(body)
+    body, ignore_blocks = extract_ignore_blocks(body)
     body, code_blocks = extract_code_blocks(body)
+    body, reference_blocks = extract_reference_blocks(body)
+    body, task_list_markers = extract_task_list_markers(body)
     body = collapse_extra_blank_lines(body)
     body = unwrap_spurious_table_rows(ensure_blank_line_after_tables(body))
     body = ensure_blank_line_after_lists(body)
-    if not body.strip() and front_matter:
+    if not body.strip() and front_matter and not reference_blocks:
         result = front_matter.rstrip() + "\n"
+    elif not body.strip() and not front_matter and reference_blocks:
+        rendered_body = restore_reference_blocks("", reference_blocks, print_width=options.print_width)
+        result = rendered_body
     else:
         parser = get_markdown_parser()
         tokens = parser.parse(body)
-        rendered_body = restore_code_blocks(render_tokens(tokens), code_blocks)
-        result = join_front_matter(front_matter, rendered_body)
+        rendered_body = render_tokens(tokens, options=options, task_list_markers=task_list_markers)
+        rendered_body = restore_code_blocks(rendered_body, code_blocks)
+        rendered_body = restore_reference_blocks(rendered_body, reference_blocks, print_width=options.print_width)
+        rendered_body = restore_ignore_blocks(rendered_body, ignore_blocks)
+        result = join_front_matter(front_matter, rendered_body) if front_matter else rendered_body
     result = trim_trailing_blank_lines(result)
     return _normalize_end_of_line(result, options.end_of_line)
 ```

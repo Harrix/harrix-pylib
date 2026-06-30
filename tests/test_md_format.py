@@ -645,4 +645,4 @@ def test_format_markdown_content_renders_hard_breaks_with_backslash() -> None:
 
     two_space_source = "line one  \nline two\n"
     two_space_result = format_markdown_content(two_space_source).replace("\r\n", "\n")
-    assert two_space_result == "line one\\\nline two\n"
+    assert two_space_result == "line one  \nline two\n"

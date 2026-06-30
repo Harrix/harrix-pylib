@@ -11,12 +11,14 @@ lang: en
 
 ## Contents
 
-- [🔧 Function `collapse_extra_blank_lines`](#-function-collapse_extra_blank_lines)
+- [🔧 Function `collapse_extra_blank_lines`](#-function-collapse_extra_blank_lin
+  es)
 - [🔧 Function `compact_front_matter`](#-function-compact_front_matter)
 - [🔧 Function `join_front_matter`](#-function-join_front_matter)
 - [🔧 Function `prepend_markdown_header`](#-function-prepend_markdown_header)
 - [🔧 Function `split_front_matter`](#-function-split_front_matter)
-- [🔧 Function `trim_trailing_blank_lines`](#-function-trim_trailing_blank_lines)
+- [🔧 Function `trim_trailing_blank_lines`](#-function-trim_trailing_blank_lines
+  )
 
 </details>
 

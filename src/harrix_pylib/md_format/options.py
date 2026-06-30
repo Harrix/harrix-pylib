@@ -10,5 +10,5 @@ class FormatOptions:
     """Markdown formatting options."""
 
     end_of_line: str = "crlf"
-    prose_wrap: str = "preserve"
+    prose_wrap: str = "always"
     print_width: int = 80

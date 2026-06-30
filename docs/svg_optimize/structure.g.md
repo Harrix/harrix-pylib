@@ -15,7 +15,8 @@ lang: en
 - [🔧 Function `_clean_number`](#-function-_clean_number)
 - [🔧 Function `_cleanup_numeric_values`](#-function-_cleanup_numeric_values)
 - [🔧 Function `_cleanup_root_attrs`](#-function-_cleanup_root_attrs)
-- [🔧 Function `_collapse_single_child_groups`](#-function-_collapse_single_child_groups)
+- [🔧 Function `_collapse_single_child_groups`](#-function-_collapse_single_chil
+  d_groups)
 - [🔧 Function `_index_to_short_id`](#-function-_index_to_short_id)
 - [🔧 Function `_is_id_referenced`](#-function-_is_id_referenced)
 - [🔧 Function `_merge_element_attrs`](#-function-_merge_element_attrs)

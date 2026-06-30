@@ -11,9 +11,11 @@ lang: en
 
 ## Contents
 
-- [🔧 Function `ensure_blank_line_after_lists`](#-function-ensure_blank_line_after_lists)
+- [🔧 Function `ensure_blank_line_after_lists`](#-function-ensure_blank_line_aft
+  er_lists)
 - [🔧 Function `is_list_continuation`](#-function-is_list_continuation)
-- [🔧 Function `is_list_item_continuation_line`](#-function-is_list_item_continuation_line)
+- [🔧 Function `is_list_item_continuation_line`](#-function-is_list_item_continu
+  ation_line)
 - [🔧 Function `is_list_line`](#-function-is_list_line)
 
 </details>

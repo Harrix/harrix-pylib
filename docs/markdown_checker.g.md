@@ -22,7 +22,8 @@ lang: en
   - [⚙️ Method `_check_code_rules`](#️-method-_check_code_rules)
   - [⚙️ Method `_check_colon_before_code`](#️-method-_check_colon_before_code)
   - [⚙️ Method `_check_colon_before_image`](#️-method-_check_colon_before_image)
-  - [⚙️ Method `_check_consecutive_empty_lines`](#️-method-_check_consecutive_empty_lines)
+  - [⚙️ Method `_check_consecutive_empty_lines`](#️-method-_check_consecutive_empty
+    _lines)
   - [⚙️ Method `_check_content_rules`](#️-method-_check_content_rules)
   - [⚙️ Method `_check_dash_usage`](#️-method-_check_dash_usage)
   - [⚙️ Method `_check_double_spaces`](#️-method-_check_double_spaces)
@@ -31,15 +32,20 @@ lang: en
   - [⚙️ Method `_check_horizontal_bar`](#️-method-_check_horizontal_bar)
   - [⚙️ Method `_check_html_tags`](#️-method-_check_html_tags)
   - [⚙️ Method `_check_image_caption`](#️-method-_check_image_caption)
-  - [⚙️ Method `_check_image_not_at_line_start`](#️-method-_check_image_not_at_line_start)
+  - [⚙️ Method `_check_image_not_at_line_start`](#️-method-_check_image_not_at_line
+    _start)
   - [⚙️ Method `_check_incorrect_words`](#️-method-_check_incorrect_words)
-  - [⚙️ Method `_check_lowercase_after_punctuation`](#️-method-_check_lowercase_after_punctuation)
+  - [⚙️ Method `_check_lowercase_after_punctuation`](#️-method-_check_lowercase_aft
+    er_punctuation)
   - [⚙️ Method `_check_non_code_line_rules`](#️-method-_check_non_code_line_rules)
   - [⚙️ Method `_check_numero_space`](#️-method-_check_numero_space)
-  - [⚙️ Method `_check_question_mark_period`](#️-method-_check_question_mark_period)
+  - [⚙️ Method `_check_question_mark_period`](#️-method-_check_question_mark_period
+    )
   - [⚙️ Method `_check_quotes`](#️-method-_check_quotes)
-  - [⚙️ Method `_check_russian_polite_pronouns`](#️-method-_check_russian_polite_pronouns)
-  - [⚙️ Method `_check_space_before_punctuation`](#️-method-_check_space_before_punctuation)
+  - [⚙️ Method `_check_russian_polite_pronouns`](#️-method-_check_russian_polite_pr
+    onouns)
+  - [⚙️ Method `_check_space_before_punctuation`](#️-method-_check_space_before_pun
+    ctuation)
   - [⚙️ Method `_check_x_instead_of_times`](#️-method-_check_x_instead_of_times)
   - [⚙️ Method `_check_yaml_rules`](#️-method-_check_yaml_rules)
   - [⚙️ Method `_determine_active_rules`](#️-method-_determine_active_rules)
@@ -47,14 +53,17 @@ lang: en
   - [⚙️ Method `_find_yaml_block_end_line`](#️-method-_find_yaml_block_end_line)
   - [⚙️ Method `_find_yaml_end_line`](#️-method-_find_yaml_end_line)
   - [⚙️ Method `_find_yaml_field_column`](#️-method-_find_yaml_field_column)
-  - [⚙️ Method `_find_yaml_field_line_in_original`](#️-method-_find_yaml_field_line_in_original)
+  - [⚙️ Method `_find_yaml_field_line_in_original`](#️-method-_find_yaml_field_line
+    _in_original)
   - [⚙️ Method `_format_error`](#️-method-_format_error)
   - [⚙️ Method `_get_link_url_ranges`](#️-method-_get_link_url_ranges)
   - [⚙️ Method `_get_relative_path`](#️-method-_get_relative_path)
-  - [⚙️ Method `_is_identifier_like_link_label`](#️-method-_is_identifier_like_link_label)
+  - [⚙️ Method `_is_identifier_like_link_label`](#️-method-_is_identifier_like_link
+    _label)
   - [⚙️ Method `_is_table_cell_only_dash`](#️-method-_is_table_cell_only_dash)
   - [⚙️ Method `_remove_inline_code`](#️-method-_remove_inline_code)
-  - [⚙️ Method `_should_check_paragraph_end`](#️-method-_should_check_paragraph_end)
+  - [⚙️ Method `_should_check_paragraph_end`](#️-method-_should_check_paragraph_end
+    )
 
 </details>
 
@@ -90,7 +99,8 @@ Rules:
 - **H020** - Image caption starts with lowercase letter.
 - **H021** - Lowercase letter after sentence-ending punctuation.
 - **H022** - Non-breaking space character found.
-- **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
+- **H023** - Capitalized Russian polite pronoun (use lowercase when addressing
+  reader; ru only).
 - **H024** - Latin "x" or Cyrillic "x" used instead of multiplication sign "x".
 - **H025** - Image markdown "![" found not at start of line.
 - **H026** - Horizontal bar "―" (dialogue dash) should not be used.
@@ -1620,7 +1630,8 @@ def _check_content_rules(
 def _check_dash_usage(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for incorrect dash/hyphen usage (H016). Applies only to markdown text, not YAML/code.
+Check for incorrect dash/hyphen usage (H016). Applies only to markdown text, not
+YAML/code.
 
 <details>
 <summary>Code:</summary>
@@ -1698,7 +1709,8 @@ def _check_double_spaces(self, filename: Path, line: str, _clean_line: str, line
 Check for double spaces (H009).
 
 Uses original line so that removal of inline code does not create
-false double space when segments are concatenated.
+false double
+space when segments are concatenated.
 
 <details>
 <summary>Code:</summary>
@@ -1785,7 +1797,8 @@ def _check_filename_rules(self, filename: Path, rules: set) -> Generator[str, No
 def _check_horizontal_bar(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for horizontal bar '―' (U+2015, dialogue dash) which should not be used (H026).
+Check for horizontal bar '―' (U+2015, dialogue dash) which should not be used
+(H026).
 
 <details>
 <summary>Code:</summary>
@@ -1808,7 +1821,8 @@ def _check_horizontal_bar(
 def _check_html_tags(self, filename: Path, line: str, _clean_line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for HTML tags in content (H019). Exception: <details> and <summary> are allowed.
+Check for HTML tags in content (H019). Exception: <details> and <summary> are
+allowed.
 
 Skips inline code segments (e.g. `` `<file>...</file>` `` in backticks).
 
@@ -1891,7 +1905,8 @@ def _check_image_not_at_line_start(self, filename: Path, line: str, line_num: in
 def _check_incorrect_words(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for incorrect word forms (H006). Uses pre-compiled patterns from \_INCORRECT_WORD_PATTERNS.
+Check for incorrect word forms (H006). Uses pre-compiled patterns from \
+_INCORRECT_WORD_PATTERNS.
 
 <details>
 <summary>Code:</summary>
@@ -2051,7 +2066,8 @@ def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Gener
 
 Check that '№' is followed by a space (H027).
 
-Uses a regex lookahead to match '№' only when the next character exists and is not a space,
+Uses a regex lookahead to match '№' only when the next character exists and is
+not a space,
 which naturally excludes '№' at the end of a line.
 
 <details>
@@ -2097,8 +2113,10 @@ def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: in
 
 Check for incorrect quote characters (H018).
 
-Only applies when line contains Russian letters; otherwise straight quotes "" are allowed.
-Exception: straight double quote after a digit is allowed (inch notation, e.g. 14", 15.6").
+Only applies when line contains Russian letters; otherwise straight quotes ""
+are allowed.
+Exception: straight double quote after a digit is allowed (inch
+notation, e.g. 14", 15.6").
 
 <details>
 <summary>Code:</summary>
@@ -2155,7 +2173,8 @@ def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: in
 def _check_russian_polite_pronouns(self, filename: Path, line: str, _clean_line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for capitalized Russian polite pronouns (H023). Use lowercase when addressing the reader.
+Check for capitalized Russian polite pronouns (H023). Use lowercase when
+addressing the reader.
 
 Exception: pronoun at sentence start is allowed:
 
@@ -2218,8 +2237,10 @@ def _check_space_before_punctuation(self, filename: Path, line: str, _clean_line
 Check for space before punctuation marks (H015).
 
 Uses original line so that removal of inline code (e.g. `word`:)
-does not create false " :" when segments are concatenated.
-Matches inside inline code (e.g. `cd ..`) are skipped.
+does not create
+false " :" when segments are concatenated.
+Matches inside inline code (e.g.
+`cd ..`) are skipped.
 
 <details>
 <summary>Code:</summary>
@@ -2273,11 +2294,14 @@ def _check_space_before_punctuation(
 def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '\*' (H024).
+Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '\*'
+(H024).
 
 Only checks text outside inline code and outside link URLs.
-Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C);
-'x' + digit(s) when not after digit (e.g. PCIe x4, x16).
+Exceptions: 'x86'
+and 'x64'; digit + 'x' + space (e.g. 2x Type-C);
+'x' + digit(s) when not after
+digit (e.g. PCIe x4, x16).
 
 <details>
 <summary>Code:</summary>
@@ -2521,7 +2545,8 @@ def _format_error(self, error_code: str, message: str, filename: Path, *, line_n
 def _get_link_url_ranges(self, line: str) -> set[int]
 ```
 
-Return set of 0-based character positions that are inside Markdown link URLs (](url)).
+Return set of 0-based character positions that are inside Markdown link URLs
+(](url)).
 
 <details>
 <summary>Code:</summary>
@@ -2585,7 +2610,8 @@ def _is_identifier_like_link_label(label: str) -> bool:
 def _is_table_cell_only_dash(self, line: str, pos: int) -> bool
 ```
 
-Return True if position pos in line is inside a table cell that contains only a hyphen.
+Return True if position pos in line is inside a table cell that contains only a
+hyphen.
 
 <details>
 <summary>Code:</summary>
@@ -2631,7 +2657,8 @@ def _remove_inline_code(self, line: str) -> str:
 def _should_check_paragraph_end(self, line: str) -> bool
 ```
 
-Return True if line is a regular paragraph that should end with colon before code/image.
+Return True if line is a regular paragraph that should end with colon before
+code/image.
 
 <details>
 <summary>Code:</summary>

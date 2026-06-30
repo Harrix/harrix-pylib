@@ -11,12 +11,15 @@ lang: en
 
 ## Contents
 
-- [🔧 Function `ensure_blank_line_after_tables`](#-function-ensure_blank_line_after_tables)
+- [🔧 Function `ensure_blank_line_after_tables`](#-function-ensure_blank_line_af
+  ter_tables)
 - [🔧 Function `is_table_line`](#-function-is_table_line)
-- [🔧 Function `looks_like_prose_table_row`](#-function-looks_like_prose_table_row)
+- [🔧 Function `looks_like_prose_table_row`](#-function-looks_like_prose_table_r
+  ow)
 - [🔧 Function `parse_table_cells`](#-function-parse_table_cells)
 - [🔧 Function `text_display_width`](#-function-text_display_width)
-- [🔧 Function `unwrap_spurious_table_rows`](#-function-unwrap_spurious_table_rows)
+- [🔧 Function `unwrap_spurious_table_rows`](#-function-unwrap_spurious_table_ro
+  ws)
 - [🔧 Function `_is_emoji_base`](#-function-_is_emoji_base)
 
 </details>

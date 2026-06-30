@@ -15,8 +15,18 @@ _ASCII_MAX_CODE_POINT = 127
 _ORDERED_LIST_LINE_START_RE = re.compile(r"^(\s*\d+)\.(.*)$")
 
 
+PLACEHOLDER_PREFIXES = (
+    "HSKMDFMTCODE",
+    "HSKMDFMTREF",
+    "HSKMDFMTIGN",
+    "HSKMDFMTTASK",
+)
+
+
 def escape_markdown_text(text: str) -> str:
     """Escape emphasis-like ``*`` and ``_`` characters in plain text."""
+    if any(text.startswith(prefix) for prefix in PLACEHOLDER_PREFIXES):
+        return text
     if text.startswith(PLACEHOLDER_PREFIX):
         return text
 

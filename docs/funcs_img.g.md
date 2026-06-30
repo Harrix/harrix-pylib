@@ -11,7 +11,8 @@ lang: en
 
 ## Contents
 
-- [🔧 Function `optimize_image_with_tools`](#-function-optimize_image_with_tools)
+- [🔧 Function `optimize_image_with_tools`](#-function-optimize_image_with_tools
+  )
 - [🔧 Function `optimize_svg`](#-function-optimize_svg)
 - [🔧 Function `optimize_svg_content`](#-function-optimize_svg_content)
 - [🔧 Function `optimize_svg_folder`](#-function-optimize_svg_folder)
@@ -32,7 +33,8 @@ Args:
 - `output_filename` (`Path | str`): Destination path.
 - `project_root` (`Path | str`): Folder containing external tool executables.
 - `quality` (`bool`): Use higher quality settings. Defaults to `False`.
-- `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
+- `max_size` (`int | None`): Maximum width or height in pixels. Defaults to
+  `None`.
 
 Returns:
 
@@ -84,7 +86,8 @@ Optimize an SVG file and write the result.
 Args:
 
 - `filename` (`Path | str`): Source SVG file path.
-- `output_filename` (`Path | str | None`): Destination path. If omitted, overwrites source.
+- `output_filename` (`Path | str | None`): Destination path. If omitted,
+  overwrites source.
 
 Returns:
 

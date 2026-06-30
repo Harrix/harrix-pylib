@@ -19,10 +19,12 @@ lang: en
   - [⚙️ Method `find_python_files`](#️-method-find_python_files)
   - [⚙️ Method `_check_all_rules`](#️-method-_check_all_rules)
   - [⚙️ Method `_check_content_rules`](#️-method-_check_content_rules)
-  - [⚙️ Method `_check_old_style_docstrings`](#️-method-_check_old_style_docstrings)
+  - [⚙️ Method `_check_old_style_docstrings`](#️-method-_check_old_style_docstrings
+    )
   - [⚙️ Method `_determine_active_rules`](#️-method-_determine_active_rules)
   - [⚙️ Method `_determine_project_root`](#️-method-_determine_project_root)
-  - [⚙️ Method `_find_russian_letters_position`](#️-method-_find_russian_letters_position)
+  - [⚙️ Method `_find_russian_letters_position`](#️-method-_find_russian_letters_po
+    sition)
   - [⚙️ Method `_format_error`](#️-method-_format_error)
   - [⚙️ Method `_get_file_ignored_rules`](#️-method-_get_file_ignored_rules)
   - [⚙️ Method `_get_relative_path`](#️-method-_get_relative_path)
@@ -517,8 +519,10 @@ Check Python file for compliance with specified rules.
 Args:
 
 - `filename` (`Path | str`): Path to the Python file to check.
-- `select` (`set[str] | None`): Set of rule codes to include in checking. Defaults to `None` (all rules).
-- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+- `select` (`set[str] | None`): Set of rule codes to include in checking.
+  Defaults to `None` (all rules).
+- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from
+  checking. Defaults to `None`.
 
 Returns:
 
@@ -547,8 +551,10 @@ Check Python file for compliance with specified rules.
 Args:
 
 - `filename` (`Path | str`): Path to the Python file to check.
-- `select` (`set[str] | None`): Set of rule codes to include in checking. Defaults to `None` (all rules).
-- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
+- `select` (`set[str] | None`): Set of rule codes to include in checking.
+  Defaults to `None` (all rules).
+- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from
+  checking. Defaults to `None`.
 
 Returns:
 
@@ -579,9 +585,12 @@ Check all Python files in directory for compliance with specified rules.
 Args:
 
 - `directory` (`Path | str`): Directory path to scan for Python files.
-- `select` (`set[str] | None`): Set of rule codes to include in checking. Defaults to `None` (all rules).
-- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
-- `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to ignore. Defaults to `None`.
+- `select` (`set[str] | None`): Set of rule codes to include in checking.
+  Defaults to `None` (all rules).
+- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from
+  checking. Defaults to `None`.
+- `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to
+  ignore. Defaults to `None`.
 
 Returns:
 
@@ -620,7 +629,8 @@ Find all Python files in directory, ignoring hidden folders.
 Args:
 
 - `directory` (`Path | str`): Directory path to scan.
-- `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to ignore. Defaults to `None`.
+- `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to
+  ignore. Defaults to `None`.
 
 Yields:
 
@@ -819,7 +829,8 @@ Determine which rules should be active.
 Args:
 
 - `select` (`set[str] | None`): Set of rule codes to include in checking.
-- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking.
+- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from
+  checking.
 
 Returns:
 

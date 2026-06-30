@@ -19,7 +19,8 @@ lang: en
 - [🔧 Function `_placeholder`](#-function-_placeholder)
 - [🔧 Function `_reindent_line`](#-function-_reindent_line)
 - [🔧 Function `_split_lines`](#-function-_split_lines)
-- [🔧 Function `_trim_trailing_blank_lines_before_closing_fence`](#-function-_trim_trailing_blank_lines_before_closing_fence)
+- [🔧 Function `_trim_trailing_blank_lines_before_closing_fence`](#-function-_tr
+  im_trailing_blank_lines_before_closing_fence)
 
 </details>
 

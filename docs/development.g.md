@@ -27,7 +27,9 @@ Install the following software:
 
 - Git
 - Cursor or VSCode (with Python extensions)
-- [uv](https://docs.astral.sh/uv/) ([Installing and Working with uv (Python) in VSCode](https://github.com/Harrix/harrix.dev-articles-2025-en/blob/main/uv-vscode-python/uv-vscode-python.md))
+- [uv](https://docs.astral.sh/uv/) (
+  [Installing and Working with uv (Python) in VSCode](https://github.com/Harrix/
+  harrix.dev-articles-2025-en/blob/main/uv-vscode-python/uv-vscode-python.md))
 
 ### 📥 Installation steps
 
@@ -59,12 +61,17 @@ CLI commands after installation:
 - `ruff check` — lint the project's Python files.
 - `ruff format` — format the project's Python files.
 - `ty check` — check Python types in the project's Python files.
-- `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
+- `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a
+  different Python version.
 - `uv python upgrade` — upgrade python to the latest patch release.
 - `uv self update` — update uv itself.
-- `uv sync --upgrade` — update all project libraries (sometimes you need to call twice).
-- `vermin src` — determines the minimum version of Python. However, if the version is below 3.10, we stick with 3.10 because Python 3.10 annotations are used.
-- `harrix-swiss-knife-cli python ruff-sort-docs` — ruff sort, ruff format, sort, make docs in PY files.
+- `uv sync --upgrade` — update all project libraries (sometimes you need to call
+  twice).
+- `vermin src` — determines the minimum version of Python. However, if the
+  version is below 3.10, we stick with 3.10 because Python 3.10 annotations are
+  used.
+- `harrix-swiss-knife-cli python ruff-sort-docs` — ruff sort, ruff format, sort,
+  make docs in PY files.
 
 ## ➕ Adding a new function
 
@@ -77,7 +84,11 @@ CLI commands after installation:
 - Run `ty check`.
 - Run `ruff check`.
 - Check error messages in Cursor.
-- From `harrix-swiss-knife`, call the command `Python` → `ruff sort, ruff format, sort, make docs in PY files` and select folder `harrix-pylib`.
-- From `harrix-swiss-knife`, call the command `Python` → `Check PY in ...` and select folder `harrix-pylib`.
+- From `harrix-swiss-knife`, call the command `Python` →
+  `ruff sort, ruff format, sort, make docs in PY files` and select folder
+  `harrix-pylib`.
+- From `harrix-swiss-knife`, call the command `Python` → `Check PY in ...` and
+  select folder `harrix-pylib`.
 - Create a commit `➕ Add function <function>()`.
-- From `harrix-swiss-knife`, call the command `Python` → `Publish Python library to PyPI` and select folder `harrix-pylib`.
+- From `harrix-swiss-knife`, call the command `Python` →
+  `Publish Python library to PyPI` and select folder `harrix-pylib`.

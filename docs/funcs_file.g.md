@@ -16,7 +16,8 @@ lang: en
 - [🔧 Function `check_featured_image`](#-function-check_featured_image)
 - [🔧 Function `check_func`](#-function-check_func)
 - [🔧 Function `clear_directory`](#-function-clear_directory)
-- [🔧 Function `collect_text_files_to_markdown`](#-function-collect_text_files_to_markdown)
+- [🔧 Function `collect_text_files_to_markdown`](#-function-collect_text_files_t
+  o_markdown)
 - [🔧 Function `convert_filename_date`](#-function-convert_filename_date)
 - [🔧 Function `extract_zip_archive`](#-function-extract_zip_archive)
 - [🔧 Function `find_max_folder_number`](#-function-find_max_folder_number)
@@ -25,16 +26,20 @@ lang: en
 - [🔧 Function `remove_empty_folders`](#-function-remove_empty_folders)
 - [🔧 Function `rename_epub_file`](#-function-rename_epub_file)
 - [🔧 Function `rename_fb2_file`](#-function-rename_fb2_file)
-- [🔧 Function `rename_file_spaces_to_hyphens`](#-function-rename_file_spaces_to_hyphens)
+- [🔧 Function `rename_file_spaces_to_hyphens`](#-function-rename_file_spaces_to
+  _hyphens)
 - [🔧 Function `rename_files_by_mapping`](#-function-rename_files_by_mapping)
-- [🔧 Function `rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd`](#-function-rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd)
-- [🔧 Function `rename_largest_images_to_featured`](#-function-rename_largest_images_to_featured)
+- [🔧 Function `rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd`](#-function-rename_f
+  iles_date_dd_mm_yyyy_to_yyyy_mm_dd)
+- [🔧 Function `rename_largest_images_to_featured`](#-function-rename_largest_im
+  ages_to_featured)
 - [🔧 Function `rename_pdf_file`](#-function-rename_pdf_file)
 - [🔧 Function `should_ignore_path`](#-function-should_ignore_path)
 - [🔧 Function `tree_view_folder`](#-function-tree_view_folder)
 - [🔧 Function `_clean_filename`](#-function-_clean_filename)
 - [🔧 Function `_format_author_name`](#-function-_format_author_name)
-- [🔧 Function `_resolve_unique_rename_path`](#-function-_resolve_unique_rename_path)
+- [🔧 Function `_resolve_unique_rename_path`](#-function-_resolve_unique_rename_
+  path)
 - [🔧 Function `_transliterate_filename`](#-function-_transliterate_filename)
 
 </details>
@@ -45,7 +50,8 @@ lang: en
 def all_to_parent_folder(path: Path | str) -> str
 ```
 
-Move all files from subfolders within the given path to the parent folder and then
+Move all files from subfolders within the given path to the parent folder and
+then
 removes empty folders.
 
 Args:
@@ -55,11 +61,13 @@ Args:
 
 Returns:
 
-- `str`: A string where each line represents an action taken on a subfolder (e.g., "Fix subfolder_name").
+- `str`: A string where each line represents an action taken on a subfolder
+  (e.g., "Fix subfolder_name").
 
 Notes:
 
-- This function will print exceptions to stdout if there are issues with moving files or deleting folders.
+- This function will print exceptions to stdout if there are issues with moving
+  files or deleting folders.
 - Folders will only be removed if they become empty after moving all files.
 
 Before:
@@ -156,7 +164,8 @@ def all_to_parent_folder(path: Path | str) -> str:
 def apply_func(path: Path | str, ext: str, func: Callable) -> str
 ```
 
-Recursively apply a function to all files with a specified extension in a directory.
+Recursively apply a function to all files with a specified extension in a
+directory.
 
 Args:
 
@@ -168,13 +177,15 @@ Args:
 
 Returns:
 
-- `str`: A newline-separated string of messages indicating the success or failure of applying `func` to each file.
+- `str`: A newline-separated string of messages indicating the success or
+  failure of applying `func` to each file.
 
 Note:
 
 - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
   are ignored during processing.
-- Hidden files and folders (those with names starting with a dot) are ignored during processing.
+- Hidden files and folders (those with names starting with a dot) are ignored
+  during processing.
 - Optional `skip_rel_prefixes` skips files whose path relative to the resolved root starts with one
   of the given tuples (for example `(("install", "dependencies"),)`).
 - The function handles different return types from the `func` parameter:
@@ -263,25 +274,32 @@ def apply_func(
 def check_featured_image(path: Path | str) -> tuple[bool, str]
 ```
 
-Check for the presence of `featured_image.*` files in every child folder, not recursively.
+Check for the presence of `featured_image.*` files in every child folder, not
+recursively.
 
-This function goes through each immediate subfolder of the given path and checks if there
-is at least one file with the name starting with "featured-image". If such a file is missing
+This function goes through each immediate subfolder of the given path and checks
+if there
+is at least one file with the name starting with "featured-image". If
+such a file is missing
 in any folder, it logs this occurrence.
 
 Args:
 
-- `path` (`Path | str`): Path to the folder being checked. Can be either a string or a Path object.
+- `path` (`Path | str`): Path to the folder being checked. Can be either a
+  string or a Path object.
 
 Returns:
 
 - `tuple[bool, str]`: A tuple where:
-  - The first element (`bool`) indicates if all folders have a `featured_image.*` file.
-  - The second element (`str`) contains a formatted string with status or error messages.
+  - The first element (`bool`) indicates if all folders have a `featured_image.*`
+    file.
+  - The second element (`str`) contains a formatted string with status or error
+    messages.
 
 Note:
 
-- This function does not search recursively; it only checks the immediate child folders.
+- This function does not search recursively; it only checks the immediate child
+  folders.
 - The output string uses ANSI color codes for visual distinction of errors.
 
 Example:
@@ -323,7 +341,8 @@ def check_featured_image(path: Path | str) -> tuple[bool, str]:
 def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -> list
 ```
 
-Recursively applies a checking function to all files with a specified extension in a directory.
+Recursively applies a checking function to all files with a specified extension
+in a directory.
 
 Args:
 
@@ -341,7 +360,8 @@ Note:
 
 - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
   are ignored during processing.
-- Hidden files and folders (those with names starting with a dot) are ignored during processing.
+- Hidden files and folders (those with names starting with a dot) are ignored
+  during processing.
 
 Example:
 
@@ -449,7 +469,8 @@ Create a Markdown document containing the contents of text files.
 
 Args:
 
-- `file_paths` (`Sequence[str | Path]`): File paths (absolute or relative) to text files.
+- `file_paths` (`Sequence[str | Path]`): File paths (absolute or relative) to
+  text files.
 - `base_folder` (`str | Path | None`, _optional_): A base directory to strip from file paths
   in the output. Defaults to `None`.
 
@@ -532,7 +553,8 @@ Args:
 
 Returns:
 
-- `str | None`: New filename if a valid DD.MM.YYYY fragment was converted, else `None`.
+- `str | None`: New filename if a valid DD.MM.YYYY fragment was converted, else
+  `None`.
 
 <details>
 <summary>Code:</summary>
@@ -567,11 +589,13 @@ def convert_filename_date(name: str) -> str | None:
 def extract_zip_archive(filename: Path | str) -> str
 ```
 
-Extract ZIP archive to the folder where the archive is located and remove the archive file.
+Extract ZIP archive to the folder where the archive is located and remove the
+archive file.
 
 This function extracts ZIP archives directly to the same directory where the
 archive file is located. After successful extraction, the original archive
-file is deleted.
+file
+is deleted.
 
 Args:
 
@@ -726,8 +750,10 @@ Note:
 - This function uses recursion to traverse folders. It handles `PermissionError`
   by excluding folders without permission.
 - Files are listed with their relative paths from the root directory.
-- When `is_ignore_hidden_folders` is `True`, ignored folders are completely skipped.
-- When `is_only_files` is `True`, only files from the current directory are processed.
+- When `is_ignore_hidden_folders` is `True`, ignored folders are completely
+  skipped.
+- When `is_only_files` is `True`, only files from the current directory are
+  processed.
 
 Example:
 
@@ -796,7 +822,8 @@ def open_file_or_folder(path: Path | str) -> None
 
 Open a file or folder using the operating system's default application.
 
-This function checks the operating system and uses the appropriate method to open
+This function checks the operating system and uses the appropriate method to
+open
 the given path:
 
 - On **Windows**, it uses `os.startfile`.
@@ -805,11 +832,13 @@ the given path:
 
 Args:
 
-- `path` (`Path | str`): The path to the file or folder to be opened. Can be either a `Path` object or a string.
+- `path` (`Path | str`): The path to the file or folder to be opened. Can be
+  either a `Path` object or a string.
 
 Returns:
 
-- `None`: This function does not return any value but opens the file or folder in the default application.
+- `None`: This function does not return any value but opens the file or folder
+  in the default application.
 
 Note:
 
@@ -861,20 +890,27 @@ def remove_empty_folders(folder_path: Path | str, additional_patterns: list[str]
 
 Remove all empty folders recursively while respecting ignore patterns.
 
-This function traverses the directory tree and removes empty folders, but does not
-enter or process folders that should be ignored based on common ignore patterns.
-The function works recursively from the deepest level up to avoid issues with
+This function traverses the directory tree and removes empty folders, but does
+not
+enter or process folders that should be ignored based on common ignore
+patterns.
+The function works recursively from the deepest level up to avoid
+issues with
 nested empty folders.
 
 Args:
 
-- `folder_path` (`Path | str`): The root path to start removing empty folders from.
-- `additional_patterns` (`list[str] | None`): Additional patterns to ignore. Defaults to `None`.
-- `is_ignore_hidden` (`bool`): Whether to ignore hidden files/folders (starting with dot). Defaults to `True`.
+- `folder_path` (`Path | str`): The root path to start removing empty folders
+  from.
+- `additional_patterns` (`list[str] | None`): Additional patterns to ignore.
+  Defaults to `None`.
+- `is_ignore_hidden` (`bool`): Whether to ignore hidden files/folders (starting
+  with dot). Defaults to `True`.
 
 Returns:
 
-- `str`: A status message indicating the result of the operation with count of removed folders.
+- `str`: A status message indicating the result of the operation with count of
+  removed folders.
 
 Note:
 
@@ -989,12 +1025,16 @@ def rename_epub_file(filename: Path | str) -> str
 
 Rename EPUB file based on metadata from file content.
 
-This function reads an EPUB file and extracts author, title, and year information
-from its metadata (OPF file). The file is then renamed according to the pattern:
+This function reads an EPUB file and extracts author, title, and year
+information
+from its metadata (OPF file). The file is then renamed according to
+the pattern:
 "LastName FirstName - Title - Year.epub" (year is optional).
 
-If metadata extraction fails, the function attempts to transliterate the filename
-from English to Russian, assuming it might be a transliterated Russian title.
+If metadata extraction fails, the function attempts to transliterate the
+filename
+from English to Russian, assuming it might be a transliterated Russian
+title.
 If transliteration doesn't improve the filename, it remains unchanged.
 
 Args:
@@ -1187,8 +1227,10 @@ This function reads an FB2 file and extracts author, title, and year information
 from its XML metadata. The file is then renamed according to the pattern:
 "LastName FirstName - Title - Year.fb2" (year is optional).
 
-If metadata extraction fails, the function attempts to transliterate the filename
-from English to Russian, assuming it might be a transliterated Russian title.
+If metadata extraction fails, the function attempts to transliterate the
+filename
+from English to Russian, assuming it might be a transliterated Russian
+title.
 If transliteration doesn't improve the filename, it remains unchanged.
 
 Args:
@@ -1360,7 +1402,8 @@ def rename_file_spaces_to_hyphens(filename: Path | str) -> str
 
 Rename file by replacing spaces with hyphens in the filename.
 
-This function takes any file and renames it by replacing all spaces in the filename
+This function takes any file and renames it by replacing all spaces in the
+filename
 with hyphens. The file extension remains unchanged.
 
 Args:
@@ -1435,20 +1478,26 @@ def rename_file_spaces_to_hyphens(filename: Path | str) -> str:
 def rename_files_by_mapping(folder_path: Path | str, rename_mapping: dict[str, str]) -> str
 ```
 
-Rename files recursively based on a mapping dictionary while respecting ignore patterns.
+Rename files recursively based on a mapping dictionary while respecting ignore
+patterns.
 
-This function traverses the directory tree and renames files according to the provided
-mapping dictionary. It processes all files recursively, including nested files, but
-does not enter or process folders that should be ignored based on common ignore patterns.
+This function traverses the directory tree and renames files according to the
+provided
+mapping dictionary. It processes all files recursively, including
+nested files, but
+does not enter or process folders that should be ignored based
+on common ignore patterns.
 
 Args:
 
 - `folder_path` (`Path | str`): The root path to start renaming files from.
-- `rename_mapping` (`dict[str, str]`): Dictionary mapping old filename to new filename.
+- `rename_mapping` (`dict[str, str]`): Dictionary mapping old filename to new
+  filename.
 
 Returns:
 
-- `str`: A status message indicating the result of the operation with count of renamed files.
+- `str`: A status message indicating the result of the operation with count of
+  renamed files.
 
 Note:
 
@@ -1576,7 +1625,8 @@ def rename_files_by_mapping(folder_path: Path | str, rename_mapping: dict[str, s
 def rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd(folder_path: Path | str) -> str
 ```
 
-Rename files recursively by converting DD.MM.YYYY dates in filenames to YYYY.MM.DD.
+Rename files recursively by converting DD.MM.YYYY dates in filenames to
+YYYY.MM.DD.
 
 Args:
 
@@ -1686,15 +1736,18 @@ def rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd(folder_path: Path | str) -> str:
 def rename_largest_images_to_featured(path: Path | str) -> str
 ```
 
-Find the largest image in each subdirectory of the given path and renames it to 'featured-image'.
+Find the largest image in each subdirectory of the given path and renames it to
+'featured-image'.
 
 Args:
 
-- `path` (`Path | str`): The directory path to search for subdirectories containing images.
+- `path` (`Path | str`): The directory path to search for subdirectories
+  containing images.
 
 Returns:
 
-- `str`: A string containing the log of operations performed, with each action on a new line.
+- `str`: A string containing the log of operations performed, with each action
+  on a new line.
 
 Note:
 
@@ -1783,16 +1836,20 @@ Rename PDF file based on metadata from file content.
 
 This function reads a PDF file and extracts author, title, and year information
 from its metadata. The file is then renamed according to the pattern:
-"LastName FirstName - Title - Year.pdf" (year is optional).
+"LastName
+FirstName - Title - Year.pdf" (year is optional).
 
-If metadata extraction fails, the function attempts to transliterate the filename
-from English to Russian, assuming it might be a transliterated Russian title.
+If metadata extraction fails, the function attempts to transliterate the
+filename
+from English to Russian, assuming it might be a transliterated Russian
+title.
 If transliteration doesn't improve the filename, it remains unchanged.
 
 Args:
 
 - `filename` (`Path | str`): The path to the PDF file to be processed.
-- `is_verbose` (`bool`): If True, print detailed debug information. Default is False.
+- `is_verbose` (`bool`): If True, print detailed debug information. Default is
+  False.
 
 Returns:
 
@@ -2157,10 +2214,13 @@ Args:
 - `additional_patterns` (`list[str] | None`): Additional patterns to ignore. Defaults to `None`.
   Patterns may be a single path segment (for example `node_modules`) or several segments joined with
 
-`/` (for example `install/dependencies`); multi-segment patterns match any consecutive subsequence
-of `path.parts` (including paths nested below that folder).
+`/` (for example `install/dependencies`); multi-segment patterns match any
+consecutive subsequence
+of `path.parts` (including paths nested below that
+folder).
 
-- `is_ignore_hidden` (`bool`): Whether to ignore hidden files/folders (starting with dot). Defaults to `True`.
+- `is_ignore_hidden` (`bool`): Whether to ignore hidden files/folders (starting
+  with dot). Defaults to `True`.
 
 Returns:
 
@@ -2275,14 +2335,16 @@ but their contents are not explored. Defaults to `False`.
 
 Returns:
 
-- `str`: A string representation of the folder structure with ASCII art tree elements.
+- `str`: A string representation of the folder structure with ASCII art tree
+  elements.
 
 Note:
 
 - This function uses recursion to traverse folders. It handles `PermissionError`
   by excluding folders without permission.
 - Uses ASCII characters to represent tree branches (`├──`, `└──`, `│`).
-- When `is_ignore_hidden_folders` is `True`, ignored folders are displayed but not traversed.
+- When `is_ignore_hidden_folders` is `True`, ignored folders are displayed but
+  not traversed.
 
 Example:
 
