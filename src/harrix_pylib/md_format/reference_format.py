@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from harrix_pylib.md_format.options import DEFAULT_PRINT_WIDTH, FormatOptions
 from harrix_pylib.md_format.prose_wrap import wrap_prose
 from harrix_pylib.md_format.table_format import text_display_width
 
@@ -66,8 +67,16 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
     return _join_lines(result, trailing_newline=trailing), blocks
 
 
-def restore_reference_blocks(text: str, blocks: list[ReferenceBlock], *, print_width: int = 80) -> str:
-    """Restore reference-definition blocks, applying prose wrap to footnotes."""
+def restore_reference_blocks(
+    text: str,
+    blocks: list[ReferenceBlock],
+    *,
+    options: FormatOptions | None = None,
+    print_width: int | None = None,
+) -> str:
+    """Restore reference-definition blocks, optionally applying prose wrap."""
+    fmt_options = options or FormatOptions()
+    width = print_width if print_width is not None else fmt_options.print_width
     if not blocks:
         return text
     blocks_by_index = {block.index: block for block in blocks}
@@ -85,7 +94,7 @@ def restore_reference_blocks(text: str, blocks: list[ReferenceBlock], *, print_w
             if block is None:
                 restored.append(line)
                 continue
-            restored.extend(_format_reference_block(block, print_width=print_width))
+            restored.extend(_format_reference_block(block, options=fmt_options, print_width=width))
             continue
         restored.append(line)
     return _join_lines(restored, trailing_newline=trailing)
@@ -128,7 +137,11 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
     return lines
 
 
-def _format_reference_block(block: ReferenceBlock, *, print_width: int) -> list[str]:
+def _format_reference_block(
+    block: ReferenceBlock, *, options: FormatOptions, print_width: int = DEFAULT_PRINT_WIDTH
+) -> list[str]:
+    if options.prose_wrap != "always":
+        return list(block.lines)
     if block.kind == "footnote":
         return _format_footnote_block(block.lines, print_width=print_width)
     formatted: list[str] = []

@@ -29,9 +29,19 @@ from harrix_pylib.md_format.task_list_format import extract_task_list_markers
 _EMPTY_FENCE_RE = re.compile(r"(?m)^(?P<indent>[ \t]*)(?P<fence>`{3,}|~{3,})[ \t]*\n(?P=indent)(?P=fence)[ \t]*$")
 
 
-def format_markdown_content(text: str, *, end_of_line: str = "crlf") -> str:
-    """Format Markdown text with Prettier-like defaults."""
-    options = FormatOptions(end_of_line=end_of_line, prose_wrap="always")
+def format_markdown_content(
+    text: str,
+    *,
+    end_of_line: str = "crlf",
+    prose_wrap: str = "preserve",
+    print_width: int = 80,
+) -> str:
+    """Format Markdown text.
+
+    ``prose_wrap`` matches Prettier: ``preserve`` (default), ``always``, or ``never``.
+    Line wrapping uses ``print_width`` only when ``prose_wrap`` is ``always``.
+    """
+    options = FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
     return _format_with_options(text, options)
 
 
@@ -79,7 +89,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     if not body.strip() and front_matter and not reference_blocks:
         result = front_matter.rstrip() + "\n"
     elif not body.strip() and not front_matter and reference_blocks:
-        rendered_body = restore_reference_blocks("", reference_blocks, print_width=options.print_width)
+        rendered_body = restore_reference_blocks("", reference_blocks, options=options)
         result = rendered_body
     else:
         parser = get_markdown_parser()
@@ -94,7 +104,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
         )
         rendered_body = restore_code_blocks(rendered_body, code_blocks)
         rendered_body = restore_angle_autolinks(rendered_body, angle_autolinks)
-        rendered_body = restore_reference_blocks(rendered_body, reference_blocks, print_width=options.print_width)
+        rendered_body = restore_reference_blocks(rendered_body, reference_blocks, options=options)
         rendered_body = restore_ignore_blocks(rendered_body, ignore_blocks)
         result = join_front_matter(front_matter, rendered_body) if front_matter else rendered_body
     result = trim_trailing_blank_lines(result)

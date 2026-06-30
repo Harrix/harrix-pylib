@@ -1165,13 +1165,15 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
     return yaml_md + "\n\n" + content_md
 
 
-def format_markdown(filename: Path | str, *, end_of_line: str = "crlf") -> str:
+def format_markdown(filename: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80) -> str:
     """Format a Markdown file in place when content changes.
 
     Args:
 
     - `filename` (`Path | str`): Path to the Markdown file.
     - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+    - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
+    - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
 
     Returns:
 
@@ -1180,43 +1182,61 @@ def format_markdown(filename: Path | str, *, end_of_line: str = "crlf") -> str:
     """
     path = Path(filename)
     document = read_markdown_text(path)
-    document_new = format_markdown_content(document, end_of_line=end_of_line)
+    document_new = format_markdown_content(
+        document, end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
+    )
     if document != document_new:
         path.write_text(document_new, encoding="utf-8", newline="")
         return f"✅ File {path} applied."
     return "File is not changed."
 
 
-def format_markdown_content(markdown_text: str, *, end_of_line: str = "crlf") -> str:
+def format_markdown_content(
+    markdown_text: str,
+    *,
+    end_of_line: str = "crlf",
+    prose_wrap: str = "preserve",
+    print_width: int = 80,
+) -> str:
     """Format Markdown content using the harrix-pylib Markdown formatter.
 
     Args:
 
     - `markdown_text` (`str`): Markdown source text.
     - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+    - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
+    - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
 
     Returns:
 
     - `str`: Formatted Markdown text.
 
     """
-    return _format_markdown_content(markdown_text, end_of_line=end_of_line)
+    return _format_markdown_content(
+        markdown_text, end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
+    )
 
 
-def format_markdown_folder(folder: Path | str, *, end_of_line: str = "crlf") -> str:
+def format_markdown_folder(
+    folder: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80
+) -> str:
     """Recursively format Markdown files in a folder.
 
     Args:
 
     - `folder` (`Path | str`): Directory containing Markdown files.
     - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+    - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
+    - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
 
     Returns:
 
     - `str`: Newline-separated status messages.
 
     """
-    formatter = functools.partial(format_markdown, end_of_line=end_of_line)
+    formatter = functools.partial(
+        format_markdown, end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
+    )
     return h.file.apply_func(folder, ".md", formatter)
 
 

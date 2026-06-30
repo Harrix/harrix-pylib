@@ -31,7 +31,7 @@ def main() -> None:
             continue
         before = before_path.read_text(encoding="utf-8")
         after = after_path.read_text(encoding="utf-8")
-        result = format_markdown_content(before, end_of_line="lf")
+        result = format_markdown_content(before, end_of_line="lf", prose_wrap="always", print_width=80)
         if result == after:
             passed.append(stem)
             continue

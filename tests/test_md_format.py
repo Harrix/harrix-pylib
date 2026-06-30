@@ -30,6 +30,9 @@ def _fixture_pairs() -> list[tuple[str, str]]:
 
 _FIXTURE_PAIRS = _fixture_pairs()
 
+# Upstream fixtures were extracted with Prettier proseWrap: always, printWidth: 80.
+_FIXTURE_FORMAT_KWARGS = {"end_of_line": "lf", "prose_wrap": "always", "print_width": 80}
+
 
 @pytest.mark.parametrize(
     ("before_name", "after_name"),
@@ -39,8 +42,17 @@ _FIXTURE_PAIRS = _fixture_pairs()
 def test_format_markdown_content_matches_fixture(before_name: str, after_name: str) -> None:
     before = _read_fixture(before_name)
     expected = _read_fixture(after_name)
-    result = format_markdown_content(before, end_of_line="lf")
+    result = format_markdown_content(before, **_FIXTURE_FORMAT_KWARGS)
     assert result == expected
+
+
+def test_format_markdown_content_does_not_wrap_long_list_links_by_default() -> None:
+    source = "- [Не сохраняем сессию с открытыми файлами](#не-сохраняем-сессию-с-открытыми-файлами)\n"
+    result = format_markdown_content(source, end_of_line="lf")
+    assert (
+        "[Не сохраняем сессию с открытыми файлами](#не-сохраняем-сессию-с-открытыми-файлами)" in result
+    )
+    assert "фай\n" not in result
 
 
 def test_format_markdown_content_uses_crlf_by_default() -> None:
