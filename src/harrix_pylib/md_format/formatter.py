@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from harrix_pylib.md_format.autolink_format import extract_angle_autolinks, restore_angle_autolinks
 from harrix_pylib.md_format.code_guard import extract_code_blocks, restore_code_blocks
 from harrix_pylib.md_format.front_matter import (
     collapse_extra_blank_lines,
@@ -16,6 +17,7 @@ from harrix_pylib.md_format.front_matter import (
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles, extract_backslash_hard_breaks
 from harrix_pylib.md_format.ignore_format import extract_ignore_blocks, restore_ignore_blocks
 from harrix_pylib.md_format.list_format import ensure_blank_line_after_lists
+from harrix_pylib.md_format.list_loose_format import extract_list_layouts
 from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.ordered_list_format import extract_ordered_list_marker_groups
 from harrix_pylib.md_format.parser import get_markdown_parser
@@ -65,9 +67,11 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     body = _ensure_blank_line_in_empty_fences(body)
     body, ignore_blocks = extract_ignore_blocks(body)
     body, hard_break_styles = extract_backslash_hard_breaks(body)
+    body, angle_autolinks = extract_angle_autolinks(body)
     body, code_blocks = extract_code_blocks(body)
     body, reference_blocks = extract_reference_blocks(body)
     body, ordered_list_marker_groups = extract_ordered_list_marker_groups(body)
+    body, list_layouts = extract_list_layouts(body)
     body, task_list_markers = extract_task_list_markers(body)
     body = collapse_extra_blank_lines(body)
     body = unwrap_spurious_table_rows(ensure_blank_line_after_tables(body))
@@ -86,8 +90,10 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
             task_list_markers=task_list_markers,
             ordered_list_marker_groups=ordered_list_marker_groups,
             hard_break_styles=hard_break_styles,
+            list_layouts=list_layouts,
         )
         rendered_body = restore_code_blocks(rendered_body, code_blocks)
+        rendered_body = restore_angle_autolinks(rendered_body, angle_autolinks)
         rendered_body = restore_reference_blocks(rendered_body, reference_blocks, print_width=options.print_width)
         rendered_body = restore_ignore_blocks(rendered_body, ignore_blocks)
         result = join_front_matter(front_matter, rendered_body) if front_matter else rendered_body
