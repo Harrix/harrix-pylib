@@ -95,7 +95,9 @@ def restore_reference_blocks(
         last = 0
         for match in _PLACEHOLDER_RE.finditer(line):
             if match.start() > last:
-                restored.append(line[last : match.start()])
+                gap = line[last : match.start()]
+                if gap.strip():
+                    restored.append(gap)
             block_index = int(match.group().removeprefix(PLACEHOLDER_PREFIX))
             block = blocks_by_index.get(block_index)
             if block is None:

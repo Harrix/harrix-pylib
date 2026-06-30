@@ -30,6 +30,64 @@ def wrap_prose(text: str, *, width: int, prefix: str = "", continuation: str | N
     return "\n".join(lines)
 
 
+def wrap_paragraph_prose(text: str, *, width: int) -> str:
+    """Wrap paragraph text, preserving hard breaks and backslash-only lead lines."""
+    if not text or width <= 0:
+        return text
+    if text.startswith("\\") and "\n" in text:
+        lead, _, rest = text.partition("\n")
+        if lead and set(lead) <= {"\\"}:
+            wrapped_rest = wrap_prose(rest.lstrip(), width=width) if rest.strip() else rest
+            return f"{lead}\n{wrapped_rest}" if wrapped_rest else lead
+    hard_break = "  \n"
+    if hard_break not in text:
+        return wrap_prose(text, width=width)
+    head, tail = text.split(hard_break, 1)
+    wrapped_tail = _wrap_prose_after_hard_break(tail.lstrip(), width=width)
+    return f"{head}{hard_break}{wrapped_tail}"
+
+
+def _wrap_prose_after_hard_break(text: str, *, width: int) -> str:
+    words = re.findall(r"\S+", text)
+    if not words:
+        return text
+    lines: list[str] = []
+    current: list[str] = []
+    current_width = 0
+    first_line = True
+
+    for word in words:
+        word_width = text_display_width(word)
+        gap = 1 if current else 0
+        if (
+            current
+            and current_width + gap + word_width > width
+            and first_line
+            and word_width <= width
+        ):
+            current.append(word)
+            lines.append(" ".join(current))
+            current = []
+            current_width = 0
+            first_line = False
+            continue
+        if current and current_width + gap + word_width > width and not first_line:
+            lines.append(" ".join(current))
+            current = [word]
+            current_width = word_width
+            continue
+        if current:
+            current.append(word)
+            current_width += gap + word_width
+        else:
+            current = [word]
+            current_width = word_width
+
+    if current:
+        lines.append(" ".join(current))
+    return "\n".join(lines)
+
+
 def _is_cjk(char: str) -> bool:
     if not char:
         return False

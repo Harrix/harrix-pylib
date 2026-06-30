@@ -94,6 +94,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
         rendered_body = restore_reference_blocks("", reference_blocks, options=options)
         result = rendered_body
     else:
+        source_lines = body.split("\n")
         parser = get_markdown_parser()
         tokens = parser.parse(body)
         rendered_body = render_tokens(
@@ -104,6 +105,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
             bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=hard_break_styles,
             list_layouts=list_layouts,
+            source_lines=source_lines,
         )
         rendered_body = restore_code_blocks(rendered_body, code_blocks)
         rendered_body = restore_angle_autolinks(rendered_body, angle_autolinks)

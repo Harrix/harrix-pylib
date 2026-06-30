@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 from urllib.parse import unquote, urlsplit, urlunsplit
 
@@ -11,7 +12,7 @@ from harrix_pylib.md_format.link_title_format import format_link_title
 from harrix_pylib.md_format.list_loose_format import ListLayout
 from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.ordered_list_format import ordered_list_item_number
-from harrix_pylib.md_format.prose_wrap import wrap_prose
+from harrix_pylib.md_format.prose_wrap import wrap_paragraph_prose, wrap_prose
 from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text_display_width
 from harrix_pylib.md_format.task_list_format import (
     TaskListMarker,
@@ -24,6 +25,7 @@ if TYPE_CHECKING:
     from markdown_it.token import Token
 
 _DEFAULT_OPTIONS = FormatOptions()
+_SINGLE_TICK_INLINE_CODE_RE = re.compile(r"^`(?:[^`]|`(?!`))*`$")
 
 
 def render_tokens(
@@ -35,12 +37,15 @@ def render_tokens(
     bullet_list_marker_groups: list[list[str]] | None = None,
     hard_break_styles: HardBreakStyles | None = None,
     list_layouts: list[ListLayout] | None = None,
+    source_lines: list[str] | None = None,
 ) -> str:
     """Render top-level block tokens to Markdown."""
     fmt_options = options or _DEFAULT_OPTIONS
     markers = task_list_markers or []
     ordered_groups = list(ordered_list_marker_groups or [])
     bullet_groups = list(bullet_list_marker_groups or [])
+    distinct_bullet_markers = {marker for group in bullet_groups for marker in group}
+    canonicalize_bullets = len(distinct_bullet_markers) <= 1
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list(list_layouts or [])
     parts: list[str] = []
@@ -65,6 +70,8 @@ def render_tokens(
             bullet_list_marker_groups=bullet_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
+            source_lines=source_lines,
+            canonicalize_bullets=canonicalize_bullets,
         )
         if chunk:
             parts.append(chunk)
@@ -108,21 +115,94 @@ def _find_close(tokens: list[Token], index: int, close_type: str) -> int:
     return len(tokens) - 1
 
 
-def _format_code_inline(content: str, *, in_table: bool = False) -> str:
+def _format_code_inline(
+    content: str,
+    *,
+    in_table: bool = False,
+) -> str:
     if in_table and "|" in content:
         content = content.replace("|", "\\|")
     max_run = _max_backtick_run(content)
     if max_run == 0:
+        if content.startswith(" ") or content.endswith(" "):
+            return f"` {content} `"
         return f"`{content}`"
     if max_run >= 3:
+        if content.startswith(" ") or content.endswith(" "):
+            fence = "`" * (max_run + 1)
+            return f"{fence}{content}{fence}"
         return f"` {content} `"
     if content.startswith("`") or content.endswith("`"):
         fence = "`" * (max_run + 1)
         return f"{fence} {content} {fence}"
-    if max_run >= 3:
-        return f"` {content} `"
     fence = "`" * (max_run + 1)
     return f"{fence}{content}{fence}"
+
+
+def _plain_paragraph_source_line(
+    tokens: list[Token],
+    index: int,
+    source_lines: list[str] | None,
+    *,
+    options: FormatOptions,
+) -> str | None:
+    if not source_lines:
+        return None
+    paragraph_map = tokens[index].map
+    if not paragraph_map or paragraph_map[1] - paragraph_map[0] != 1:
+        return None
+    inline = tokens[index + 1]
+    children = inline.children or []
+    if len(children) != 1 or children[0].type != "text":
+        return None
+    line_index = paragraph_map[0]
+    if line_index < 0 or line_index >= len(source_lines):
+        return None
+    source_line = source_lines[line_index]
+    if (
+        options.prose_wrap == "always"
+        and _should_wrap_prose(source_line.rstrip("\n"), prefix="", width=options.print_width)
+    ):
+        return None
+    return source_line
+
+
+def _plain_heading_source_line(
+    tokens: list[Token], index: int, source_lines: list[str] | None
+) -> str | None:
+    if not source_lines:
+        return None
+    heading_map = tokens[index].map
+    if not heading_map or heading_map[1] - heading_map[0] != 1:
+        return None
+    line_index = heading_map[0]
+    if line_index < 0 or line_index >= len(source_lines):
+        return None
+    source_line = source_lines[line_index]
+    if not source_line.lstrip().startswith("#"):
+        return None
+    return source_line
+
+
+def _plain_inline_code_source_line(
+    tokens: list[Token], index: int, source_lines: list[str] | None
+) -> str | None:
+    if not source_lines:
+        return None
+    paragraph_map = tokens[index].map
+    if not paragraph_map or paragraph_map[1] - paragraph_map[0] != 1:
+        return None
+    inline = tokens[index + 1]
+    children = inline.children or []
+    if len(children) != 1 or children[0].type != "code_inline":
+        return None
+    line_index = paragraph_map[0]
+    if line_index < 0 or line_index >= len(source_lines):
+        return None
+    source_line = source_lines[line_index].strip()
+    if not _SINGLE_TICK_INLINE_CODE_RE.fullmatch(source_line):
+        return None
+    return source_line
 
 
 def _format_self_referential_link(href: str, inner: str) -> str | None:
@@ -404,14 +484,30 @@ def _render_block(
     bullet_list_marker_groups: list[list[str]] | None = None,
     hard_break_styles: HardBreakStyles | None = None,
     list_layouts: list[ListLayout] | None = None,
+    source_lines: list[str] | None = None,
+    canonicalize_bullets: bool = False,
+    preserve_source_line: bool = True,
 ) -> tuple[str, int]:
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list_layouts or []
     token = tokens[index]
     if token.type == "heading_open":
-        return _render_heading(tokens, index, options=options, hard_break_styles=break_styles)
+        return _render_heading(
+            tokens,
+            index,
+            options=options,
+            hard_break_styles=break_styles,
+            source_lines=source_lines if preserve_source_line else None,
+        )
     if token.type == "paragraph_open":
-        return _render_paragraph(tokens, index, options=options, wrap=wrap_paragraph, hard_break_styles=break_styles)
+        return _render_paragraph(
+            tokens,
+            index,
+            options=options,
+            wrap=wrap_paragraph,
+            hard_break_styles=break_styles,
+            source_lines=source_lines if preserve_source_line else None,
+        )
     if token.type == "blockquote_open":
         return _render_blockquote(
             tokens,
@@ -422,6 +518,8 @@ def _render_block(
             bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
+            source_lines=source_lines,
+            canonicalize_bullets=canonicalize_bullets,
         )
     if token.type == "bullet_list_open":
         return _render_list(
@@ -434,6 +532,8 @@ def _render_block(
             bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
+            source_lines=source_lines,
+            canonicalize_bullets=canonicalize_bullets,
         )
     if token.type == "ordered_list_open":
         return _render_list(
@@ -446,6 +546,8 @@ def _render_block(
             bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
+            source_lines=source_lines,
+            canonicalize_bullets=canonicalize_bullets,
         )
     if token.type == "fence":
         return _render_fence(token), index + 1
@@ -472,6 +574,8 @@ def _render_block(
             bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
+            source_lines=source_lines,
+            canonicalize_bullets=canonicalize_bullets,
         ), index + 1
     return "", index + 1
 
@@ -486,6 +590,8 @@ def _render_blockquote(
     bullet_list_marker_groups: list[list[str]] | None = None,
     hard_break_styles: HardBreakStyles | None = None,
     list_layouts: list[ListLayout] | None = None,
+    source_lines: list[str] | None = None,
+    canonicalize_bullets: bool = False,
 ) -> tuple[str, int]:
     markers = task_list_markers or []
     break_styles = hard_break_styles or HardBreakStyles()
@@ -503,6 +609,9 @@ def _render_blockquote(
             bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
+            source_lines=source_lines,
+            canonicalize_bullets=canonicalize_bullets,
+            preserve_source_line=False,
         )
         if chunk:
             inner_parts.append(chunk)
@@ -533,8 +642,16 @@ def _render_fence(token: Token) -> str:
 
 
 def _render_heading(
-    tokens: list[Token], index: int, *, options: FormatOptions, hard_break_styles: HardBreakStyles | None = None
+    tokens: list[Token],
+    index: int,
+    *,
+    options: FormatOptions,
+    hard_break_styles: HardBreakStyles | None = None,
+    source_lines: list[str] | None = None,
 ) -> tuple[str, int]:
+    source_line = _plain_heading_source_line(tokens, index, source_lines)
+    if source_line is not None:
+        return f"{source_line}\n", index + 3
     level = int(tokens[index].tag[1])
     inline = tokens[index + 1]
     text = _render_inline(inline.children or [], options=options, hard_break_styles=hard_break_styles)
@@ -638,7 +755,11 @@ def _render_inline_token(
         inner_index = index + 1
         while inner_index < len(children) and children[inner_index].type != "link_close":
             chunk, inner_index = _render_inline_token(
-                children, inner_index, in_table=in_table, options=fmt_options, hard_break_styles=break_styles
+                children,
+                inner_index,
+                in_table=in_table,
+                options=fmt_options,
+                hard_break_styles=break_styles,
             )
             inner_parts.append(chunk)
         inner = "".join(inner_parts)
@@ -687,7 +808,12 @@ def _render_inline_token(
         return f"{delimiter}{inner}{delimiter}", next_index + 1
     if child.type == "s_open":
         inner, next_index = _render_inline_until(
-            children, index + 1, "s_close", in_table=in_table, options=fmt_options, hard_break_styles=break_styles
+            children,
+            index + 1,
+            "s_close",
+            in_table=in_table,
+            options=fmt_options,
+            hard_break_styles=break_styles,
         )
         return f"~~{inner}~~", next_index + 1
     if child.type in {"strong_close", "em_close", "s_close"}:
@@ -709,7 +835,11 @@ def _render_inline_until(
     parts: list[str] = []
     while index < len(children) and children[index].type != close_type:
         chunk, index = _render_inline_token(
-            children, index, in_table=in_table, options=fmt_options, hard_break_styles=break_styles
+            children,
+            index,
+            in_table=in_table,
+            options=fmt_options,
+            hard_break_styles=break_styles,
         )
         parts.append(chunk)
     return "".join(parts), index
@@ -739,6 +869,8 @@ def _render_list(
     bullet_list_marker_groups: list[list[str]] | None = None,
     hard_break_styles: HardBreakStyles | None = None,
     list_layouts: list[ListLayout] | None = None,
+    source_lines: list[str] | None = None,
+    canonicalize_bullets: bool = False,
 ) -> tuple[str, int]:
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list_layouts or []
@@ -764,7 +896,7 @@ def _render_list(
         if ordered:
             marker = f"{ordered_list_item_number(source_markers, rendered_item_count)}."
         elif rendered_item_count < len(bullet_markers):
-            marker = bullet_markers[rendered_item_count]
+            marker = "-" if canonicalize_bullets else bullet_markers[rendered_item_count]
         else:
             marker = "-"
         if checkbox:
@@ -783,6 +915,8 @@ def _render_list(
                     bullet_list_marker_groups=bullet_list_marker_groups,
                     hard_break_styles=break_styles,
                     list_layouts=layouts,
+                    source_lines=source_lines,
+                    canonicalize_bullets=canonicalize_bullets,
                 )
                 item_lines.append(nested.rstrip("\n"))
             else:
@@ -796,6 +930,9 @@ def _render_list(
                     bullet_list_marker_groups=bullet_list_marker_groups,
                     hard_break_styles=break_styles,
                     list_layouts=layouts,
+                    source_lines=source_lines,
+                    canonicalize_bullets=canonicalize_bullets,
+                    preserve_source_line=False,
                 )
                 if chunk:
                     item_lines.append(chunk.rstrip("\n"))
@@ -870,7 +1007,14 @@ def _render_paragraph(
     options: FormatOptions,
     wrap: bool = True,
     hard_break_styles: HardBreakStyles | None = None,
+    source_lines: list[str] | None = None,
 ) -> tuple[str, int]:
+    source_line = _plain_paragraph_source_line(tokens, index, source_lines, options=options)
+    if source_line is not None:
+        return f"{source_line}\n", index + 3
+    inline_code_line = _plain_inline_code_source_line(tokens, index, source_lines)
+    if inline_code_line is not None:
+        return f"{inline_code_line}\n", index + 3
     inline = tokens[index + 1]
     use_space_breaks = options.prose_wrap == "always"
     text = escape_ordered_list_like_line_starts(
@@ -887,7 +1031,7 @@ def _render_paragraph(
         and "\\_" not in text
         and _should_wrap_prose(text.rstrip("\n"), prefix="", width=options.print_width)
     ):
-        text = wrap_prose(text.rstrip("\n"), width=options.print_width)
+        text = wrap_paragraph_prose(text.rstrip("\n"), width=options.print_width)
     return f"{text}\n", index + 3
 
 
@@ -981,6 +1125,8 @@ def _render_until_close(
     bullet_list_marker_groups: list[list[str]] | None = None,
     hard_break_styles: HardBreakStyles | None = None,
     list_layouts: list[ListLayout] | None = None,
+    source_lines: list[str] | None = None,
+    canonicalize_bullets: bool = False,
 ) -> str:
     markers = task_list_markers or []
     break_styles = hard_break_styles or HardBreakStyles()
@@ -998,6 +1144,9 @@ def _render_until_close(
             bullet_list_marker_groups=bullet_list_marker_groups,
             hard_break_styles=break_styles,
             list_layouts=layouts,
+            source_lines=source_lines,
+            canonicalize_bullets=canonicalize_bullets,
+            preserve_source_line=False,
         )
         if chunk:
             parts.append(chunk)
