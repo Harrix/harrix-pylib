@@ -29,6 +29,7 @@ from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text
 from harrix_pylib.md_format.task_list_format import (
     TaskListMarker,
     strip_task_placeholder,
+    task_list_entry_for_text,
     task_list_marker_for_text,
 )
 from harrix_pylib.md_format.text_format import normalize_inline_spaces
@@ -1507,6 +1508,166 @@ def _is_list_block(block: str) -> bool:
 
 
 _ORDERED_LEADING_SPACES_RE = re.compile(r"^\s*\d+[.)]( {1,4})")
+_BULLET_LEADING_SPACES_RE = re.compile(r"^(\s*)[-*+]( +)")
+_CHECKBOX_BULLET_SPACES_RE = re.compile(r"^(\s*)[-*+]( +)\[[ xX]\]")
+_CHECKBOX_LEADING_SPACES_RE = re.compile(r"^(\s*)[-*+]\s+\[[ xX]\]( +)")
+
+
+def _list_item_source_line(tokens: list[Token], item_index: int, source_lines: list[str] | None) -> str | None:
+    if not source_lines:
+        return None
+    tok_map = tokens[item_index].map
+    if not tok_map:
+        return None
+    line_index = tok_map[0]
+    if line_index < 0 or line_index >= len(source_lines):
+        return None
+    return source_lines[line_index]
+
+
+def _bullet_item_leading_spaces(tokens: list[Token], item_index: int, source_lines: list[str] | None) -> int:
+    line = _list_item_source_line(tokens, item_index, source_lines)
+    if not line:
+        return 1
+    checkbox_bullet_match = _CHECKBOX_BULLET_SPACES_RE.match(line)
+    if checkbox_bullet_match:
+        return len(checkbox_bullet_match.group(2))
+    checkbox_match = _CHECKBOX_LEADING_SPACES_RE.match(line)
+    if checkbox_match:
+        return len(checkbox_match.group(2))
+    bullet_match = _BULLET_LEADING_SPACES_RE.match(line)
+    if bullet_match:
+        return len(bullet_match.group(2))
+    return 1
+
+
+def _list_item_has_extra_blocks(tokens: list[Token], item_index: int, item_close: int) -> bool:
+    paragraph_count = 0
+    child_index = item_index + 1
+    while child_index < item_close:
+        child = tokens[child_index]
+        if child.type == "paragraph_open":
+            paragraph_count += 1
+            child_index += 3
+            continue
+        if child.type in {"bullet_list_open", "ordered_list_open"}:
+            close_type = "ordered_list_close" if child.type == "ordered_list_open" else "bullet_list_close"
+            child_index = _find_close(tokens, child_index, close_type) + 1
+            continue
+        if child.type in {"code_block", "fence"}:
+            return True
+        if child.type == "blockquote_open":
+            child_index = _find_close(tokens, child_index, "blockquote_close") + 1
+            continue
+        child_index += 1
+    return paragraph_count > 1
+
+
+def _is_indented_source_codeblock(token: Token, source_lines: list[str] | None) -> bool:
+    if token.type != "code_block":
+        return False
+    if not source_lines:
+        return True
+    code_map = token.map
+    if not code_map:
+        return True
+    line = source_lines[code_map[0]]
+    return bool(line.startswith("    ") or line.startswith("\t") or line[:1] == " ")
+
+
+def _list_followed_by_indented_codeblock(
+    tokens: list[Token], list_close_index: int, source_lines: list[str] | None
+) -> bool:
+    next_index = list_close_index + 1
+    if next_index >= len(tokens):
+        return False
+    return _is_indented_source_codeblock(tokens[next_index], source_lines)
+
+
+def _list_item_followed_by_indented_codeblock(
+    tokens: list[Token], item_close: int, source_lines: list[str] | None
+) -> bool:
+    next_index = item_close + 1
+    if next_index >= len(tokens):
+        return False
+    next_token = tokens[next_index]
+    if next_token.type == "code_block":
+        return _is_indented_source_codeblock(next_token, source_lines)
+    if next_token.type in {"bullet_list_close", "ordered_list_close"}:
+        return _list_followed_by_indented_codeblock(tokens, next_index, source_lines)
+    return False
+
+
+def _should_preserve_list_marker_spacing(
+    tokens: list[Token],
+    item_index: int,
+    item_close: int,
+    *,
+    marker_spaces: int,
+    source_lines: list[str] | None,
+    list_close_index: int | None = None,
+) -> bool:
+    if marker_spaces <= 1:
+        return False
+    list_followed = list_close_index is not None and _list_followed_by_indented_codeblock(
+        tokens, list_close_index, source_lines
+    )
+    if _list_item_has_extra_blocks(tokens, item_index, item_close) and not list_followed:
+        return False
+    if _list_item_followed_by_indented_codeblock(tokens, item_close, source_lines):
+        return True
+    return list_followed
+
+
+def _top_level_list_single_item_is_simple(
+    tokens: list[Token], list_index: int, close_index: int
+) -> bool:
+    for item_index in range(list_index + 1, close_index):
+        if tokens[item_index].type != "list_item_open":
+            continue
+        item_close = _find_close(tokens, item_index, "list_item_close")
+        child_index = item_index + 1
+        while child_index < item_close:
+            child = tokens[child_index]
+            if child.type == "paragraph_open":
+                child_index += 3
+                continue
+            return False
+        return True
+    return False
+
+
+def _direct_list_item_count(tokens: list[Token], list_index: int, close_index: int) -> int:
+    count = 0
+    child_index = list_index + 1
+    while child_index < close_index:
+        if tokens[child_index].type == "list_item_open":
+            count += 1
+            child_index = _find_close(tokens, child_index, "list_item_close") + 1
+            continue
+        child_index += 1
+    return count
+
+
+def _top_level_list_base_indent(
+    tokens: list[Token], index: int, close_index: int, source_lines: list[str] | None
+) -> int:
+    if not source_lines:
+        return 0
+    src_indent = _list_source_indent(tokens, index, source_lines)
+    item_count = _direct_list_item_count(tokens, index, close_index)
+    list_followed = _list_followed_by_indented_codeblock(tokens, close_index, source_lines)
+    if src_indent > 0 and item_count > 1:
+        return src_indent
+    if (
+        src_indent >= 3
+        and item_count == 1
+        and _top_level_list_single_item_is_simple(tokens, index, close_index)
+    ):
+        return src_indent
+    if src_indent > 0 and item_count == 1 and list_followed and src_indent < 3:
+        return src_indent
+    return 0
 
 
 def _list_source_indent(tokens: list[Token], index: int, source_lines: list[str] | None) -> int:
@@ -1555,6 +1716,26 @@ def _ordered_item_leading_spaces(
     return len(m.group(1)) if m else 1
 
 
+def _ordered_markers_from_source(
+    tokens: list[Token], index: int, close_index: int, source_lines: list[str] | None
+) -> list[int]:
+    if not source_lines:
+        return []
+    markers: list[int] = []
+    item_index = index + 1
+    while item_index < close_index:
+        if tokens[item_index].type != "list_item_open":
+            item_index += 1
+            continue
+        tok_map = tokens[item_index].map
+        if tok_map and 0 <= tok_map[0] < len(source_lines):
+            m = re.match(r"^\s*(\d+)[.)]\s+", source_lines[tok_map[0]])
+            if m:
+                markers.append(int(m.group(1)))
+        item_index = _find_close(tokens, item_index, "list_item_close") + 1
+    return markers
+
+
 def _align_ordered_list_prefix(raw_prefix: str, tab_width: int = 2) -> str:
     """Apply Prettier's alignListPrefix to a raw ordered-list prefix."""
     rest_spaces = len(raw_prefix) % tab_width
@@ -1562,6 +1743,46 @@ def _align_ordered_list_prefix(raw_prefix: str, tab_width: int = 2) -> str:
     if additional >= 4:
         additional = 0
     return raw_prefix + " " * additional
+
+
+def _list_item_nested_list_index(tokens: list[Token], item_index: int, item_close: int) -> int | None:
+    child_index = item_index + 1
+    while child_index < item_close:
+        if tokens[child_index].type in {"bullet_list_open", "ordered_list_open"}:
+            return child_index
+        if tokens[child_index].type.endswith("_open"):
+            child_index = _find_close(
+                tokens, child_index, tokens[child_index].type.replace("_open", "_close")
+            ) + 1
+            continue
+        child_index += 1
+    return None
+
+
+def _ordered_list_marker_target_width(
+    tokens: list[Token],
+    index: int,
+    close_index: int,
+    *,
+    list_base_indent: int,
+    source_lines: list[str] | None,
+) -> int | None:
+    target_width: int | None = None
+    item_index = index + 1
+    while item_index < close_index:
+        if tokens[item_index].type != "list_item_open":
+            item_index += 1
+            continue
+        item_close = _find_close(tokens, item_index, "list_item_close")
+        nested_index = _list_item_nested_list_index(tokens, item_index, item_close)
+        if nested_index is not None and source_lines:
+            nested_indent = _list_source_indent(tokens, nested_index, source_lines)
+            nested_target = nested_indent + 1
+            target_width = nested_target if target_width is None else max(target_width, nested_target)
+        item_index = item_close + 1
+    if target_width is None:
+        return None
+    return max(target_width, list_base_indent + 2)
 
 
 def _render_list(
@@ -1582,6 +1803,7 @@ def _render_list(
     in_blockquote: bool = False,
     parent_is_ordered: bool = False,
     parent_is_aligned: bool = False,
+    forced_base_indent: int | None = None,
 ) -> tuple[str, int]:
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list_layouts or []
@@ -1593,7 +1815,11 @@ def _render_list(
         # The token stream can appear loose only because of blank lines auto-inserted
         # around code-block placeholders; trust the layout when it says the list is tight.
         loose = False
-    if list_depth > 0 and source_lines:
+    if forced_base_indent is not None:
+        list_base_indent = forced_base_indent
+    elif list_depth == 0 and source_lines:
+        list_base_indent = _top_level_list_base_indent(tokens, index, close_index, source_lines)
+    elif list_depth > 0 and source_lines:
         src_indent = _list_source_indent(tokens, index, source_lines)
         if ordered and src_indent > 0:
             list_base_indent = src_indent
@@ -1609,29 +1835,11 @@ def _render_list(
     lines: list[str] = []
     source_markers: list[int] = []
     bullet_markers: list[str] = []
-    if ordered and ordered_list_marker_groups:
-        source_markers = list(ordered_list_marker_groups.pop(0))
-        # If the source has fewer markers than items (loose list spans multiple source groups),
-        # supplement from subsequent groups that belong to the same token list.
+    if ordered:
         if source_lines:
-            item_count = sum(1 for t in tokens[index + 1 : close_index] if t.type == "list_item_open")
-            while len(source_markers) < item_count and ordered_list_marker_groups:
-                next_group = ordered_list_marker_groups[0]
-                # Check the next group is at the same indent level as our list.
-                list_map = tokens[index].map
-                if list_map and list_map[0] < len(source_lines):
-                    expected_indent = _list_source_indent(tokens, index, source_lines)
-                    next_group_indent = len(source_lines[0]) - len(source_lines[0].lstrip()) if source_lines else 0
-                    # Find next group's source line
-                    # Use a proxy: if the list depth is 0 and next group's first number continues
-                    next_num = next_group[0]
-                    last_num = source_markers[-1]
-                    if next_num == 1 or next_num == last_num + 1:
-                        source_markers.extend(ordered_list_marker_groups.pop(0))
-                    else:
-                        break
-                else:
-                    break
+            source_markers = _ordered_markers_from_source(tokens, index, close_index, source_lines)
+        if not source_markers and ordered_list_marker_groups:
+            source_markers = list(ordered_list_marker_groups.pop(0))
     elif not ordered and bullet_list_marker_groups:
         bullet_markers = bullet_list_marker_groups.pop(0)
     has_nested_bullets = _list_has_nested_bullets(tokens, index + 1, close_index)
@@ -1640,6 +1848,11 @@ def _render_list(
         bullet_list_marker_groups,
         has_nested_bullets=has_nested_bullets,
     )
+    ordered_marker_target_width = None
+    if ordered and source_lines and _list_followed_by_indented_codeblock(tokens, close_index, source_lines):
+        ordered_marker_target_width = _ordered_list_marker_target_width(
+            tokens, index, close_index, list_base_indent=list_base_indent, source_lines=source_lines
+        )
     item_index = index + 1
     rendered_item_count = 0
     while item_index < close_index:
@@ -1664,20 +1877,58 @@ def _render_list(
                 )
         else:
             marker = "-"
+        item_leading_spaces = (
+            _ordered_item_leading_spaces(tokens, item_index, source_lines)
+            if ordered
+            else _bullet_item_leading_spaces(tokens, item_index, source_lines)
+        )
+        preserve_marker_spacing = _should_preserve_list_marker_spacing(
+            tokens,
+            item_index,
+            item_close,
+            marker_spaces=item_leading_spaces,
+            source_lines=source_lines,
+            list_close_index=close_index,
+        )
         if checkbox:
             marker = f"- {checkbox}".rstrip()
-        item_leading_spaces = _ordered_item_leading_spaces(tokens, item_index, source_lines) if ordered else 1
-        if ordered and item_leading_spaces > 1:
+        if ordered and item_leading_spaces > 1 and not preserve_marker_spacing:
             if list_depth == 0 or not parent_is_ordered:
                 item_is_aligned = True
             else:
                 item_is_aligned = parent_is_aligned
         else:
             item_is_aligned = False
+        marker_content_spaces = item_leading_spaces if preserve_marker_spacing else None
+        if checkbox and preserve_marker_spacing and item_leading_spaces > 1:
+            marker_content_spaces = None
+            box = checkbox.strip()
+            marker = f"-{' ' * item_leading_spaces}{box}"
+        if (
+            ordered
+            and not preserve_marker_spacing
+            and ordered_marker_target_width is not None
+            and not checkbox
+        ):
+            marker_content_spaces = max(1, ordered_marker_target_width - list_base_indent - len(marker))
+            item_is_aligned = False
+        marker_prefix_only = _list_marker_prefix(
+            marker,
+            align=item_is_aligned,
+            content_spaces=marker_content_spaces,
+        )
+        nested_base_indent = list_base_indent + len(marker_prefix_only)
         item_lines: list[str] = []
         child_index = item_index + 1
         while child_index < item_close:
             if tokens[child_index].type in {"bullet_list_open", "ordered_list_open"}:
+                nested_inline = False
+                if source_lines:
+                    nested_map = tokens[child_index].map
+                    parent_map = tokens[item_index].map
+                    if nested_map and parent_map and nested_map[0] == parent_map[0]:
+                        nested_inline = True
+                nested_forced_indent = list_base_indent if nested_inline else nested_base_indent
                 nested, child_index = _render_list(
                     tokens,
                     child_index,
@@ -1695,6 +1946,7 @@ def _render_list(
                     in_blockquote=in_blockquote,
                     parent_is_ordered=ordered or parent_is_ordered,
                     parent_is_aligned=item_is_aligned if ordered else parent_is_aligned,
+                    forced_base_indent=nested_forced_indent,
                 )
                 item_lines.append(nested.rstrip("\n"))
             else:
@@ -1717,11 +1969,27 @@ def _render_list(
                 )
                 if chunk:
                     item_lines.append(chunk.rstrip("\n"))
-        task_marker = task_list_marker_for_text(item_lines[0], task_list_markers) if item_lines else None
-        if task_marker:
-            marker = f"- {task_marker}".rstrip()
-            item_lines[0] = strip_task_placeholder(item_lines[0])
-        if layout and rendered_item_count < len(layout.gaps_before_item) and layout.gaps_before_item[rendered_item_count]:
+        task_entry = task_list_entry_for_text(item_lines[0], task_list_markers) if item_lines else None
+        if task_entry:
+            task_marker, task_meta = task_entry
+            if task_meta.marker_spaces > item_leading_spaces:
+                item_leading_spaces = task_meta.marker_spaces
+                preserve_marker_spacing = _should_preserve_list_marker_spacing(
+                    tokens,
+                    item_index,
+                    item_close,
+                    marker_spaces=item_leading_spaces,
+                    source_lines=source_lines,
+                    list_close_index=close_index,
+                )
+                marker_content_spaces = item_leading_spaces if preserve_marker_spacing else None
+            item_lines[0] = f"{task_marker}{strip_task_placeholder(item_lines[0])}".rstrip()
+        if (
+            layout
+            and rendered_item_count > 0
+            and rendered_item_count < len(layout.gaps_before_item)
+            and layout.gaps_before_item[rendered_item_count]
+        ):
             lines.append("")
         elif loose and rendered_item_count > 0 and not in_blockquote:
             lines.append("")
@@ -1738,6 +2006,7 @@ def _render_list(
                 base_indent=list_base_indent,
                 in_blockquote=in_blockquote,
                 align_prefix=item_is_aligned,
+                marker_content_spaces=marker_content_spaces,
             )
         )
         rendered_item_count += 1
@@ -1785,6 +2054,7 @@ def _render_list_item_lines(
     base_indent: int = 0,
     in_blockquote: bool = False,
     align_prefix: bool = False,
+    marker_content_spaces: int | None = None,
 ) -> list[str]:
     if not item_lines:
         return [(" " * base_indent) + marker]
@@ -1792,8 +2062,14 @@ def _render_list_item_lines(
     align_ordered_marker = align_prefix or (
         marker.endswith((".", ")")) and any(block.lstrip().startswith("<") for block in item_lines)
     )
-    prefix = (" " * base_indent) + _list_marker_prefix(marker, align=align_ordered_marker)
+    prefix = (" " * base_indent) + _list_marker_prefix(
+        marker,
+        align=align_ordered_marker,
+        content_spaces=marker_content_spaces,
+    )
+    task_item = bool(item_lines and item_lines[0].startswith(("[ ] ", "[x] ")))
     indent = " " * len(prefix)
+    first_continuation = " " * (len(prefix) + 4) if task_item else indent
     if marker.startswith("- ["):
         continuation_indent = " " * (base_indent + 2)
     elif base_indent == 0 or marker.endswith("."):
@@ -1816,7 +2092,7 @@ def _render_list_item_lines(
                 _wrap_list_item_prose(
                     block,
                     prefix=prefix,
-                    continuation=indent,
+                    continuation=first_continuation,
                     width=options.print_width,
                 )
             )
@@ -1834,13 +2110,16 @@ def _render_list_item_lines(
                 ):
                     rendered.append(continuation_line)
                 else:
-                    rendered.append(f"{indent}{continuation_line}")
+                    rendered.append(f"{first_continuation}{continuation_line}")
             continue
-        if loose and not in_blockquote:
-            previous_block = item_lines[block_index - 1] if block_index > 0 else ""
-            if _is_list_block(block) and previous_block.lstrip().startswith(">"):
-                pass
-            else:
+        if block_index > 0 and not in_blockquote:
+            previous_block = item_lines[block_index - 1]
+            needs_gap = False
+            if loose:
+                needs_gap = not (_is_list_block(block) and previous_block.lstrip().startswith(">"))
+            elif _is_list_block(previous_block) and not _is_list_block(block):
+                needs_gap = not previous_block.lstrip().startswith(">")
+            if needs_gap:
                 rendered.append("")
         if _is_list_block(block):
             rendered.extend(block.splitlines())
@@ -1863,7 +2142,9 @@ def _render_list_item_lines(
     return rendered
 
 
-def _list_marker_prefix(marker: str, *, align: bool = False) -> str:
+def _list_marker_prefix(marker: str, *, align: bool = False, content_spaces: int | None = None) -> str:
+    if content_spaces is not None:
+        return f"{marker}{' ' * content_spaces}"
     if align and marker.endswith((".", ")")):
         return f"{marker}{' ' * max(1, 4 - len(marker))}"
     return f"{marker} "

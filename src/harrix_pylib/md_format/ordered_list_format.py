@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-_ORDERED_ITEM_RE = re.compile(r"^(\s*)(?:>\s*)?(\d+)\.\s+")
+_ORDERED_ITEM_RE = re.compile(r"^(\s*)(?:>\s*)?(\d+)[.)]\s+")
 
 
 def extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]:
