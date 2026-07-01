@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from harrix_pylib.md_format.options import FormatOptions
+
 PLACEHOLDER_PREFIX = "HSKMDFMTCODE"
 _MIN_FENCED_BLOCK_LINES = 2
 
@@ -59,7 +61,9 @@ def extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
     return _join_lines(result, trailing_newline=has_trailing_newline), blocks
 
 
-def restore_code_blocks(text: str, blocks: list[CodeBlock]) -> str:
+def restore_code_blocks(
+    text: str, blocks: list[CodeBlock], *, options: FormatOptions | None = None
+) -> str:
     """Restore fenced code blocks from placeholders."""
     if not blocks:
         return text
@@ -79,11 +83,30 @@ def restore_code_blocks(text: str, blocks: list[CodeBlock]) -> str:
             if block is None:
                 restored.append(line)
                 continue
+            block_lines = _format_markdown_fence_block(block.lines, options=options)
             current_indent = _leading_whitespace(line)
-            restored.extend(_reindent_line(block_line, block.base_indent, current_indent) for block_line in block.lines)
+            restored.extend(_reindent_line(block_line, block.base_indent, current_indent) for block_line in block_lines)
             continue
         restored.append(line)
     return _join_lines(restored, trailing_newline=has_trailing_newline)
+
+
+def _format_markdown_fence_block(block_lines: list[str], *, options: FormatOptions | None) -> list[str]:
+    if len(block_lines) < _MIN_FENCED_BLOCK_LINES:
+        return block_lines
+    opening = block_lines[0].strip()
+    if not opening.startswith("```"):
+        return block_lines
+    language = opening[3:].strip().lower()
+    if language != "markdown" or options is None:
+        return block_lines
+    inner = "\n".join(block_lines[1:-1])
+    if not inner.strip():
+        return block_lines
+    from harrix_pylib.md_format.formatter import _format_with_options  # noqa: PLC0415
+
+    formatted_inner = _format_with_options(inner, options).rstrip("\n")
+    return [block_lines[0], *formatted_inner.split("\n"), block_lines[-1]]
 
 
 def _join_lines(lines: list[str], *, trailing_newline: bool) -> str:

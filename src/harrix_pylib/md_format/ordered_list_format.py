@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-_ORDERED_ITEM_RE = re.compile(r"^(\s*)(\d+)\.\s+")
+_ORDERED_ITEM_RE = re.compile(r"^(\s*)(?:>\s*)?(\d+)\.\s+")
 
 
 def extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]:
@@ -15,6 +15,8 @@ def extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]
     current_indent: int | None = None
     pending_break = False  # encountered a non-list line since last item
     for line in lines:
+        if line.startswith("    ") or line.startswith("\t"):
+            continue
         match = _ORDERED_ITEM_RE.match(line)
         if match:
             indent = len(match.group(1))

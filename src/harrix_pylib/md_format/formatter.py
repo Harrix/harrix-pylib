@@ -119,7 +119,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
             source_lines=source_lines,
             link_destinations=link_destinations,
         )
-        rendered_body = restore_code_blocks(rendered_body, code_blocks)
+        rendered_body = restore_code_blocks(rendered_body, code_blocks, options=options)
         rendered_body = restore_angle_autolinks(rendered_body, angle_autolinks)
         rendered_body = restore_reference_blocks(rendered_body, reference_blocks, options=options)
         rendered_body = restore_toml_blocks(rendered_body, toml_blocks)

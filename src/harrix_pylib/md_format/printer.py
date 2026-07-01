@@ -94,6 +94,7 @@ def _render_tokens_impl(
     bullet_groups = list(bullet_list_marker_groups or [])
     distinct_bullet_markers = {marker for group in bullet_groups for marker in group}
     canonicalize_bullets = len(distinct_bullet_markers) <= 1
+    normalize_star_to_dash = "+" in distinct_bullet_markers
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list(list_layouts or [])
     parts: list[str] = []
@@ -134,6 +135,7 @@ def _render_tokens_impl(
             list_layouts=layouts,
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
+            normalize_star_to_dash=normalize_star_to_dash,
         )
         if chunk:
             parts.append(chunk)
@@ -155,9 +157,11 @@ def _format_hr_markup(markup: str, *, preserve: bool = False) -> str:
     return stripped if stripped else "---"
 
 
-def _normalize_bullet_marker(marker: str) -> str:
+def _normalize_bullet_marker(marker: str, *, normalize_star_to_dash: bool = False) -> str:
     if marker == "+":
         return "*"
+    if normalize_star_to_dash and marker == "*":
+        return "-"
     return marker
 
 
@@ -363,7 +367,27 @@ def _plain_heading_source_line(
     source_line = source_lines[line_index]
     if not source_line.lstrip().startswith("#"):
         return None
+    stripped = source_line.strip()
+    if re.fullmatch(r"#+ .+ #+\s*", stripped):
+        return None
     return source_line
+
+
+def _setext_heading_source_line(
+    tokens: list[Token], index: int, source_lines: list[str] | None
+) -> str | None:
+    if not source_lines:
+        return None
+    heading_map = tokens[index].map
+    if not heading_map or heading_map[1] - heading_map[0] != 2:
+        return None
+    markup = tokens[index].markup or ""
+    if markup not in {"=", "-"}:
+        return None
+    lines = source_lines[heading_map[0] : heading_map[1]]
+    if len(lines) != 2:
+        return None
+    return "\n".join(lines)
 
 
 def _plain_inline_code_source_line(
@@ -885,6 +909,7 @@ def _render_block(
     list_layouts: list[ListLayout] | None = None,
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
+    normalize_star_to_dash: bool = False,
     preserve_source_line: bool = True,
     in_list_item: bool = False,
     in_blockquote: bool = False,
@@ -922,6 +947,7 @@ def _render_block(
             list_layouts=layouts,
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
+            normalize_star_to_dash=normalize_star_to_dash,
         )
     if token.type == "alert_open":
         return _render_alert(
@@ -935,6 +961,7 @@ def _render_block(
             list_layouts=layouts,
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
+            normalize_star_to_dash=normalize_star_to_dash,
         )
     if token.type == "bullet_list_open":
         return _render_list(
@@ -949,6 +976,7 @@ def _render_block(
             list_layouts=layouts,
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
+            normalize_star_to_dash=normalize_star_to_dash,
             in_blockquote=in_blockquote,
         )
     if token.type == "ordered_list_open":
@@ -964,12 +992,13 @@ def _render_block(
             list_layouts=layouts,
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
+            normalize_star_to_dash=normalize_star_to_dash,
             in_blockquote=in_blockquote,
         )
     if token.type == "fence":
         return _render_fence(token), index + 1
     if token.type == "code_block":
-        return f"    {token.content.rstrip()}\n", index + 1
+        return _render_indented_code_block(token.content), index + 1
     if token.type == "hr":
         return f"{_format_hr_markup(token.markup or '---', preserve=in_list_item)}\n", index + 1
     if token.type == "math_block":
@@ -999,6 +1028,7 @@ def _render_block(
             list_layouts=layouts,
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
+            normalize_star_to_dash=normalize_star_to_dash,
         ), index + 1
     return "", index + 1
 
@@ -1072,6 +1102,7 @@ def _render_blockquote(
     list_layouts: list[ListLayout] | None = None,
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
+    normalize_star_to_dash: bool = False,
 ) -> tuple[str, int]:
     markers = task_list_markers or []
     break_styles = hard_break_styles or HardBreakStyles()
@@ -1091,6 +1122,7 @@ def _render_blockquote(
             list_layouts=layouts,
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
+            normalize_star_to_dash=normalize_star_to_dash,
             preserve_source_line=False,
             in_blockquote=True,
         )
@@ -1127,6 +1159,7 @@ def _render_alert(
     list_layouts: list[ListLayout] | None = None,
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
+    normalize_star_to_dash: bool = False,
 ) -> tuple[str, int]:
     markers = task_list_markers or []
     break_styles = hard_break_styles or HardBreakStyles()
@@ -1157,6 +1190,7 @@ def _render_alert(
             list_layouts=layouts,
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
+            normalize_star_to_dash=normalize_star_to_dash,
             preserve_source_line=False,
         )
         if chunk:
@@ -1168,6 +1202,13 @@ def _render_alert(
     else:
         quoted = f"> {alert_line}\n"
     return quoted, close_index + 1
+
+
+def _render_indented_code_block(content: str) -> str:
+    lines = content.rstrip("\n").splitlines()
+    if not lines:
+        return "    \n"
+    return "\n".join(f"    {line}" if line.strip() else "" for line in lines) + "\n"
 
 
 def _render_fence(token: Token) -> str:
@@ -1188,6 +1229,9 @@ def _render_heading(
     source_line = _plain_heading_source_line(tokens, index, source_lines)
     if source_line is not None:
         return f"{source_line}\n", index + 3
+    setext_source = _setext_heading_source_line(tokens, index, source_lines)
+    if setext_source is not None:
+        return f"{setext_source}\n", index + 3
     level = int(tokens[index].tag[1])
     inline = tokens[index + 1]
     text = _render_inline(inline.children or [], options=options, hard_break_styles=hard_break_styles)
@@ -1533,6 +1577,7 @@ def _render_list(
     list_layouts: list[ListLayout] | None = None,
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
+    normalize_star_to_dash: bool = False,
     list_depth: int = 0,
     in_blockquote: bool = False,
     parent_is_ordered: bool = False,
@@ -1614,7 +1659,9 @@ def _render_list(
             elif has_following_nested_dashes and source_marker == "*":
                 marker = "-"
             else:
-                marker = _normalize_bullet_marker(source_marker)
+                marker = _normalize_bullet_marker(
+                    source_marker, normalize_star_to_dash=normalize_star_to_dash
+                )
         else:
             marker = "-"
         if checkbox:
@@ -1643,6 +1690,7 @@ def _render_list(
                     list_layouts=layouts,
                     source_lines=source_lines,
                     canonicalize_bullets=canonicalize_bullets,
+                    normalize_star_to_dash=normalize_star_to_dash,
                     list_depth=list_depth + 1,
                     in_blockquote=in_blockquote,
                     parent_is_ordered=ordered or parent_is_ordered,
@@ -1662,6 +1710,7 @@ def _render_list(
                     list_layouts=layouts,
                     source_lines=source_lines,
                     canonicalize_bullets=canonicalize_bullets,
+                    normalize_star_to_dash=normalize_star_to_dash,
                     preserve_source_line=False,
                     in_list_item=True,
                     in_blockquote=in_blockquote,
@@ -2092,6 +2141,7 @@ def _render_until_close(
     list_layouts: list[ListLayout] | None = None,
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
+    normalize_star_to_dash: bool = False,
 ) -> str:
     markers = task_list_markers or []
     break_styles = hard_break_styles or HardBreakStyles()
@@ -2111,6 +2161,7 @@ def _render_until_close(
             list_layouts=layouts,
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
+            normalize_star_to_dash=normalize_star_to_dash,
             preserve_source_line=False,
         )
         if chunk:

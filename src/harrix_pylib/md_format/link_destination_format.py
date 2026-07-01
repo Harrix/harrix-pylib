@@ -30,6 +30,9 @@ def extract_link_destinations(body: str) -> tuple[str, list[LinkDestination]]:
         if line.lstrip().startswith("|"):
             result_lines.append(line)
             continue
+        if line.startswith("    ") or line.startswith("\t"):
+            result_lines.append(line)
+            continue
         processed, line_entries = _extract_link_destinations_from_text(line, start_index=index)
         result_lines.append(processed)
         entries.extend(line_entries)
