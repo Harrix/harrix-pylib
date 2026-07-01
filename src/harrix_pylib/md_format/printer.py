@@ -1445,6 +1445,7 @@ def _render_list(
     canonicalize_bullets: bool = False,
     list_depth: int = 0,
     in_blockquote: bool = False,
+    parent_is_ordered: bool = False,
 ) -> tuple[str, int]:
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list_layouts or []
@@ -1456,9 +1457,14 @@ def _render_list(
         # The token stream can appear loose only because of blank lines auto-inserted
         # around code-block placeholders; trust the layout when it says the list is tight.
         loose = False
-    if list_depth > 0 and ordered and source_lines:
+    if list_depth > 0 and source_lines:
         src_indent = _list_source_indent(tokens, index, source_lines)
-        if src_indent > 0:
+        if ordered and src_indent > 0:
+            list_base_indent = src_indent
+        elif not ordered and src_indent == 0 and not in_blockquote:
+            # Inline nested bullet immediately after parent marker (e.g. "1. - item").
+            list_base_indent = 0
+        elif not ordered and parent_is_ordered and src_indent > 0:
             list_base_indent = src_indent
         else:
             list_base_indent = list_depth * 2
@@ -1542,6 +1548,7 @@ def _render_list(
                     canonicalize_bullets=canonicalize_bullets,
                     list_depth=list_depth + 1,
                     in_blockquote=in_blockquote,
+                    parent_is_ordered=ordered or parent_is_ordered,
                 )
                 item_lines.append(nested.rstrip("\n"))
             else:
@@ -1670,7 +1677,17 @@ def _render_list_item_lines(
         block_lines = block.splitlines()
         if block_index == 0:
             rendered.append(prefix + block_lines[0])
-            rendered.extend(f"{indent}{continuation_line}" for continuation_line in block_lines[1:])
+            for continuation_line in block_lines[1:]:
+                stripped = continuation_line.lstrip()
+                line_indent = len(continuation_line) - len(stripped)
+                if (
+                    not in_blockquote
+                    and _LIST_MARKER_LINE_RE.match(stripped)
+                    and line_indent >= len(prefix)
+                ):
+                    rendered.append(continuation_line)
+                else:
+                    rendered.append(f"{indent}{continuation_line}")
             continue
         if loose and not in_blockquote:
             previous_block = item_lines[block_index - 1] if block_index > 0 else ""

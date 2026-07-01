@@ -237,10 +237,11 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
         if segment_width == 0:
             continue
 
-        if current_width + segment_width <= width or current in {first_prefix, next_prefix} and not current.strip():
+        width_with_segment = _prose_display_width(current + segment)
+        if width_with_segment <= width or current in {first_prefix, next_prefix} and not current.strip():
             if (
                 segment.isspace()
-                and current_width + segment_width > width
+                and width_with_segment > width
                 and current not in {first_prefix, next_prefix}
             ):
                 lines.append(current.rstrip())
@@ -249,7 +250,7 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
                 if segment.isspace():
                     continue
             current += segment
-            current_width += segment_width
+            current_width = _prose_display_width(current)
             continue
 
         if segment.isspace():
@@ -257,12 +258,12 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
 
         if segment.startswith("[[") and "](" in segment:
             current += segment
-            current_width += segment_width
+            current_width = _prose_display_width(current)
             continue
 
         if current.startswith("[[") and re.fullmatch(r"[.,;:!?]+", segment):
             current += segment
-            current_width += segment_width
+            current_width = _prose_display_width(current)
             continue
 
         if current not in {first_prefix, next_prefix} and current.strip():
@@ -272,7 +273,7 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
 
         if segment.startswith("[["):
             current += segment
-            current_width += segment_width
+            current_width = _prose_display_width(current)
             continue
 
         if segment_width > width - _prose_display_width(next_prefix):
@@ -282,7 +283,7 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
                     current = next_prefix
                     current_width = _prose_display_width(next_prefix)
                 current += segment
-                current_width += segment_width
+                current_width = _prose_display_width(current)
                 continue
             for char in segment:
                 char_width = text_display_width(char)
@@ -310,7 +311,7 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
             continue
 
         current += segment
-        current_width += segment_width
+        current_width = _prose_display_width(current)
 
     if current.strip() or current in {first_prefix, next_prefix}:
         lines.append(current.rstrip())
