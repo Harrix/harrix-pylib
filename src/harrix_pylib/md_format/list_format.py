@@ -7,7 +7,7 @@ import re
 from harrix_pylib.md_format.table_format import is_table_line
 
 _LIST_ITEM_PATTERN = re.compile(r"^[-*+]\s")
-_ORDERED_LIST_ITEM_PATTERN = re.compile(r"^\d+\.\s")
+_ORDERED_LIST_ITEM_PATTERN = re.compile(r"^\d+[.)]\s")
 
 
 def ensure_blank_line_after_lists(body: str) -> str:

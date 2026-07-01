@@ -130,7 +130,6 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
         rendered_body = restore_ignore_blocks(rendered_body, ignore_blocks)
         result = join_front_matter(front_matter, rendered_body) if front_matter else rendered_body
     result = _normalize_known_link_title_edge_cases(result)
-    result = _normalize_known_list_indent_edge_cases(result)
     result = trim_trailing_blank_lines(result)
     return _normalize_end_of_line(result, options.end_of_line)
 
@@ -140,15 +139,6 @@ def _normalize_known_link_title_edge_cases(text: str) -> str:
     return text.replace(_MAGICAL_LINK_WRONG_A, _MAGICAL_LINK_CANONICAL).replace(
         _MAGICAL_LINK_WRONG_B, _MAGICAL_LINK_CANONICAL
     )
-
-
-def _normalize_known_list_indent_edge_cases(text: str) -> str:
-    """Normalize known fixture-compatible ordered-list edge cases."""
-    if "12345678" not in text:
-        return text
-    text = re.sub(r"(\n\s+b(?: b)+\n)\n(?=\s+\d+[.)]\s)", r"\1", text)
-    text = re.sub(r"(?m)^(\s*12345678)\.(?! \[ \])", r"\1)", text)
-    return text
 
 
 def _normalize_end_of_line(text: str, end_of_line: str) -> str:

@@ -1716,12 +1716,12 @@ def _ordered_item_leading_spaces(
     return len(m.group(1)) if m else 1
 
 
-def _ordered_markers_from_source(
+def _ordered_marker_specs_from_source(
     tokens: list[Token], index: int, close_index: int, source_lines: list[str] | None
-) -> list[int]:
+) -> list[tuple[int, str]]:
     if not source_lines:
         return []
-    markers: list[int] = []
+    markers: list[tuple[int, str]] = []
     item_index = index + 1
     while item_index < close_index:
         if tokens[item_index].type != "list_item_open":
@@ -1729,11 +1729,39 @@ def _ordered_markers_from_source(
             continue
         tok_map = tokens[item_index].map
         if tok_map and 0 <= tok_map[0] < len(source_lines):
-            m = re.match(r"^\s*(\d+)[.)]\s+", source_lines[tok_map[0]])
+            m = re.match(r"^\s*(\d+)([.)])\s+", source_lines[tok_map[0]])
             if m:
-                markers.append(int(m.group(1)))
+                markers.append((int(m.group(1)), m.group(2)))
         item_index = _find_close(tokens, item_index, "list_item_close") + 1
     return markers
+
+
+def _line_has_task_checkbox(line: str) -> bool:
+    return bool(re.search(r"\[[ xX]\]", line)) or "HSKMDFMTTASK" in line
+
+
+def _ordered_marker_delimiter(line: str) -> str | None:
+    match = re.match(r"^\s*\d+([.)])\s+", line)
+    return match.group(1) if match else None
+
+
+def _ordered_sibling_gap_before_item(
+    tokens: list[Token],
+    item_index: int,
+    prev_item_index: int,
+    source_lines: list[str] | None,
+) -> bool:
+    if not source_lines:
+        return False
+    prev_line = _list_item_source_line(tokens, prev_item_index, source_lines)
+    curr_line = _list_item_source_line(tokens, item_index, source_lines)
+    if not prev_line or not curr_line:
+        return False
+    if _ordered_marker_delimiter(curr_line) != ".":
+        return False
+    if _ordered_marker_delimiter(prev_line) != ".":
+        return False
+    return not _line_has_task_checkbox(prev_line) and _line_has_task_checkbox(curr_line)
 
 
 def _align_ordered_list_prefix(raw_prefix: str, tab_width: int = 2) -> str:
@@ -1834,12 +1862,16 @@ def _render_list(
         list_base_indent = list_depth * 2
     lines: list[str] = []
     source_markers: list[int] = []
+    source_marker_delimiters: list[str] = []
     bullet_markers: list[str] = []
     if ordered:
         if source_lines:
-            source_markers = _ordered_markers_from_source(tokens, index, close_index, source_lines)
+            marker_specs = _ordered_marker_specs_from_source(tokens, index, close_index, source_lines)
+            source_markers = [number for number, _ in marker_specs]
+            source_marker_delimiters = [delimiter for _, delimiter in marker_specs]
         if not source_markers and ordered_list_marker_groups:
             source_markers = list(ordered_list_marker_groups.pop(0))
+            source_marker_delimiters = ["."] * len(source_markers)
     elif not ordered and bullet_list_marker_groups:
         bullet_markers = bullet_list_marker_groups.pop(0)
     has_nested_bullets = _list_has_nested_bullets(tokens, index + 1, close_index)
@@ -1855,6 +1887,7 @@ def _render_list(
         )
     item_index = index + 1
     rendered_item_count = 0
+    prev_item_index: int | None = None
     while item_index < close_index:
         if tokens[item_index].type != "list_item_open":
             item_index += 1
@@ -1862,7 +1895,12 @@ def _render_list(
         item_close = _find_close(tokens, item_index, "list_item_close")
         checkbox = _list_item_checkbox(tokens, item_index)
         if ordered:
-            marker = f"{ordered_list_item_number(source_markers, rendered_item_count)}."
+            delimiter = (
+                source_marker_delimiters[rendered_item_count]
+                if rendered_item_count < len(source_marker_delimiters)
+                else "."
+            )
+            marker = f"{ordered_list_item_number(source_markers, rendered_item_count)}{delimiter}"
         elif list_depth > 0:
             marker = "-"
         elif rendered_item_count < len(bullet_markers):
@@ -1984,15 +2022,47 @@ def _render_list(
                 )
                 marker_content_spaces = item_leading_spaces if preserve_marker_spacing else None
             item_lines[0] = f"{task_marker}{strip_task_placeholder(item_lines[0])}".rstrip()
-        if (
-            layout
-            and rendered_item_count > 0
-            and rendered_item_count < len(layout.gaps_before_item)
-            and layout.gaps_before_item[rendered_item_count]
-        ):
-            lines.append("")
-        elif loose and rendered_item_count > 0 and not in_blockquote:
-            lines.append("")
+        if rendered_item_count > 0:
+            gap = False
+            if ordered and source_lines and prev_item_index is not None:
+                gap = _ordered_sibling_gap_before_item(
+                    tokens, item_index, prev_item_index, source_lines
+                )
+                if (
+                    not gap
+                    and layout
+                    and rendered_item_count < len(layout.gaps_before_item)
+                    and layout.gaps_before_item[rendered_item_count]
+                ):
+                    prev_line = _list_item_source_line(tokens, prev_item_index, source_lines)
+                    curr_line = _list_item_source_line(tokens, item_index, source_lines)
+                    if (
+                        prev_line
+                        and curr_line
+                        and _ordered_marker_delimiter(prev_line) == "."
+                        and _ordered_marker_delimiter(curr_line) == "."
+                    ):
+                        gap = True
+            elif not ordered and (
+                (
+                    layout
+                    and rendered_item_count < len(layout.gaps_before_item)
+                    and layout.gaps_before_item[rendered_item_count]
+                )
+                or (loose and not in_blockquote)
+            ):
+                gap = True
+            elif ordered and (
+                (
+                    layout
+                    and rendered_item_count < len(layout.gaps_before_item)
+                    and layout.gaps_before_item[rendered_item_count]
+                )
+                or (loose and not in_blockquote)
+            ):
+                gap = True
+            if gap:
+                lines.append("")
         if layout and rendered_item_count < len(layout.loose_items):
             item_loose = layout.loose_items[rendered_item_count]
         else:
@@ -2010,6 +2080,7 @@ def _render_list(
             )
         )
         rendered_item_count += 1
+        prev_item_index = item_index
         item_index = item_close + 1
     return "\n".join(lines) + "\n", close_index + 1
 
@@ -2072,7 +2143,7 @@ def _render_list_item_lines(
     first_continuation = " " * (len(prefix) + 4) if task_item else indent
     if marker.startswith("- ["):
         continuation_indent = " " * (base_indent + 2)
-    elif base_indent == 0 or marker.endswith("."):
+    elif base_indent == 0 or marker.endswith(".") or marker.endswith(")"):
         continuation_indent = " " * len(prefix)
     else:
         continuation_indent = " " * (base_indent + 2)
@@ -2116,7 +2187,10 @@ def _render_list_item_lines(
             previous_block = item_lines[block_index - 1]
             needs_gap = False
             if loose:
-                needs_gap = not (_is_list_block(block) and previous_block.lstrip().startswith(">"))
+                if _is_list_block(block) and _is_list_block(previous_block):
+                    needs_gap = False
+                else:
+                    needs_gap = not (_is_list_block(block) and previous_block.lstrip().startswith(">"))
             elif _is_list_block(previous_block) and not _is_list_block(block):
                 needs_gap = not previous_block.lstrip().startswith(">")
             if needs_gap:
