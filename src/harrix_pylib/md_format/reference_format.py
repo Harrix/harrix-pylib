@@ -76,12 +76,16 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
         previous_line = result[-1] if result else ""
         if (
             result
+            and previous_line.strip()
             and PLACEHOLDER_PREFIX not in previous_line
             and not _LINK_DEF_RE.match(previous_line)
             and not _FOOTNOTE_DEF_RE.match(previous_line)
+            and not _line_is_short_link_reference(previous_line)
         ):
             result[-1] = f"{result[-1]} {placeholder}"
         else:
+            if result and _line_is_short_link_reference(result[-1]):
+                result.append("")
             result.append(placeholder)
         index += 1
         if line_index < len(lines) and not lines[line_index].strip():
@@ -92,6 +96,11 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
                     line_index += 1
 
     return _join_lines(result, trailing_newline=trailing), blocks
+
+
+def _line_is_short_link_reference(line: str) -> bool:
+    stripped = line.strip()
+    return stripped.startswith("[") and stripped.endswith("][]")
 
 
 def restore_reference_blocks(
@@ -274,7 +283,8 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
     indent, label, rest = match.group(1), match.group(2), match.group(3).rstrip()
     url, title = _split_link_definition_rest(rest)
     url = format_reference_link_url(url)
-    label_prefix = f"{indent}{_reference_label_markup(label)}: "
+    label_markup = _reference_label_markup(label)
+    label_prefix = f"{indent}{label_markup}: "
     continuation = indent + "  "
     if title is None:
         body = url
@@ -284,7 +294,7 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
         if title is None:
             return [f"{label_prefix}{url}"]
         return [f"{label_prefix}{url} {_format_reference_title(title)}"]
-    lines = [f"{indent}{_reference_label_markup(label)}:"]
+    lines = [f"{indent}{label_markup}:"]
     lines.extend(wrap_prose(url, width=print_width, prefix=continuation, continuation=continuation).split("\n"))
     if title is not None:
         lines.extend(

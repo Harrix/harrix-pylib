@@ -57,6 +57,14 @@ def _canonicalize_link_title_content(content: str) -> str:
     """Normalize lightly escaped one-character titles from CommonMark parsing."""
     if content == "\\)":
         return ")"
+    if content == '"':
+        return "'\""
+    if content == "'":
+        return "\"'"
+    if content == '\\"':
+        return "'\""
+    if content == "\\'":
+        return "\"'"
     if len(content) == 2 and content[0] == "\\" and content[1] in "\"'":
         return content[1]
     if len(content) == 2 and content[0] == "\\" and content[1] == ")":

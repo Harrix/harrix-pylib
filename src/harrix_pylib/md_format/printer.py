@@ -257,6 +257,9 @@ def _unparsed_image_reference_source_line(
     if not children or not all(child.type in {"text", "code_inline"} for child in children):
         return None
     stripped = source_line.lstrip()
+    stripped = source_line.lstrip()
+    if stripped.endswith("][]") and stripped.startswith("[") and "![" not in stripped:
+        return _strip_list_item_content(source_line)
     if "![" not in stripped or "][" not in stripped:
         return None
     if stripped.endswith("][]"):
@@ -293,6 +296,8 @@ def _plain_paragraph_source_line(
         return source_line.rstrip("\n")
     if "\u3000" in source_line:
         return source_line.rstrip("\n")
+    if _paragraph_is_cjk_dominant(source_line.rstrip("\n")):
+        return source_line.rstrip("\n")
     if (
         options.prose_wrap == "always"
         and _should_wrap_prose(source_line.rstrip("\n"), prefix="", width=options.print_width)
@@ -303,6 +308,14 @@ def _plain_paragraph_source_line(
     if _source_line_is_more_literal(source_line, rendered_line):
         return source_line
     return None
+
+
+def _paragraph_is_cjk_dominant(text: str) -> bool:
+    non_space = [char for char in text if not char.isspace()]
+    if not non_space:
+        return False
+    cjk_count = sum(1 for char in non_space if _is_cjk(char))
+    return cjk_count / len(non_space) >= 0.15
 
 
 def _plain_heading_source_line(
@@ -689,24 +702,7 @@ def _try_render_merged_paragraphs(
         return None, index
     if _merged_run_is_whitespace_inline_code(tokens, index, run_end):
         return f"{_render_merged_whitespace_inline_code(tokens, index, run_end)}\n", run_end
-    break_styles = hard_break_styles or HardBreakStyles()
-    parts: list[str] = []
-    paragraph_index = index
-    while paragraph_index < run_end:
-        inline = tokens[paragraph_index + 1]
-        parts.append(
-            _render_inline(
-                inline.children or [],
-                options=options,
-                hard_break_styles=break_styles,
-                softbreak_as_space=True,
-            ).strip()
-        )
-        paragraph_index += 3
-    merged = normalize_inline_spaces(escape_ordered_list_like_line_starts(" ".join(part for part in parts if part)))
-    if "\\_" not in merged and _should_wrap_prose(merged, prefix="", width=options.print_width):
-        merged = wrap_prose(merged, width=options.print_width)
-    return f"{merged}\n", run_end
+    return None, index
 
 
 def _render_block(
@@ -1376,6 +1372,20 @@ def _render_list_item_lines(
             rendered.append("")
         if _is_list_block(block):
             rendered.extend(block.splitlines())
+        elif (
+            options.prose_wrap == "always"
+            and "\n" not in block
+            and not _is_block_marker_line(block)
+            and _should_wrap_prose(block, prefix=continuation_indent, width=options.print_width)
+        ):
+            rendered.extend(
+                wrap_prose(
+                    block,
+                    width=options.print_width,
+                    prefix=continuation_indent,
+                    continuation=continuation_indent,
+                ).split("\n")
+            )
         else:
             rendered.extend(f"{continuation_indent}{continuation_line}" for continuation_line in block_lines)
     return rendered

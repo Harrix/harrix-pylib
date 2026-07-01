@@ -34,7 +34,15 @@ def extract_bullet_list_marker_groups(body: str) -> tuple[str, list[list[str]]]:
         while stack and stack[-1][0] > indent:
             stack.pop()
         if stack and stack[-1][0] == indent:
-            groups[stack[-1][1]].append(marker)
+            group_idx = stack[-1][1]
+            current_group = groups[group_idx]
+            if current_group and marker != current_group[-1] and len(set(current_group)) == 1:
+                while stack:
+                    stack.pop()
+                groups.append([marker])
+                stack.append((indent, len(groups) - 1))
+            else:
+                current_group.append(marker)
         else:
             groups.append([marker])
             stack.append((indent, len(groups) - 1))
