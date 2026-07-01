@@ -114,14 +114,26 @@ def _line_indent(line: str) -> int:
     return len(line) - len(line.lstrip())
 
 
+def _is_ordered_list_line(line: str) -> bool:
+    """Return True when the line starts an ordered list item (not bullet)."""
+    import re  # noqa: PLC0415
+    return bool(re.match(r"^\s*\d+[.)]\s", line))
+
+
 def _scan_list(lines: list[str], start: int, layouts: list[ListLayout]) -> int:
     base_indent = _line_indent(lines[start])
+    start_is_ordered = _is_ordered_list_line(lines[start])
     gaps_before_item = [False]
     loose_items: list[bool] = []
     nested_layouts: list[ListLayout] = []
     index = start
     while index < len(lines):
-        if not (is_list_line(lines[index]) and _line_indent(lines[index]) == base_indent):
+        current_line = lines[index]
+        if not (
+            is_list_line(current_line)
+            and _line_indent(current_line) == base_indent
+            and _is_ordered_list_line(current_line) == start_is_ordered
+        ):
             break
         if index != start:
             gaps_before_item.append(_blank_separates_sibling_items(lines, index, base_indent))

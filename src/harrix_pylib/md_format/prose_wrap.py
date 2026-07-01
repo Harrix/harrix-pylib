@@ -7,6 +7,12 @@ import unicodedata
 
 from harrix_pylib.md_format.table_format import text_display_width
 
+
+def _prose_display_width(text: str) -> int:
+    """Return display width treating each backslash escape (\\X) as 1 column (like Prettier)."""
+    collapsed = re.sub(r"\\.", lambda m: m.group(0)[1], text)
+    return text_display_width(collapsed)
+
 _INLINE_SEGMENT_RE = re.compile(
     r"(`+[^`]*`+)"
     r"|(\[\[\[?[^\n]*?\]\]\]?)"
@@ -210,7 +216,7 @@ def _wrap_plain_words(text: str, *, width: int, first_prefix: str, next_prefix: 
 
 
 def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: str) -> list[str]:
-    if text_display_width(first_prefix + text) <= width:
+    if _prose_display_width(first_prefix + text) <= width:
         return [first_prefix + text]
 
     if not re.search(r"[*_`\[\]!<>~\\]", text):
@@ -218,16 +224,16 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
 
     lines: list[str] = []
     current = first_prefix
-    current_width = text_display_width(first_prefix)
+    current_width = _prose_display_width(first_prefix)
 
     for segment in _segments(text):
         if segment == "\\\n":
             lines.append(current.rstrip())
             current = next_prefix
-            current_width = text_display_width(next_prefix)
+            current_width = _prose_display_width(next_prefix)
             continue
 
-        segment_width = text_display_width(segment)
+        segment_width = _prose_display_width(segment)
         if segment_width == 0:
             continue
 
@@ -239,7 +245,7 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
             ):
                 lines.append(current.rstrip())
                 current = next_prefix
-                current_width = text_display_width(next_prefix)
+                current_width = _prose_display_width(next_prefix)
                 if segment.isspace():
                     continue
             current += segment
@@ -262,19 +268,19 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
         if current not in {first_prefix, next_prefix} and current.strip():
             lines.append(current.rstrip())
             current = next_prefix
-            current_width = text_display_width(next_prefix)
+            current_width = _prose_display_width(next_prefix)
 
         if segment.startswith("[["):
             current += segment
             current_width += segment_width
             continue
 
-        if segment_width > width - text_display_width(next_prefix):
+        if segment_width > width - _prose_display_width(next_prefix):
             if _LINK_SEGMENT_RE.fullmatch(segment):
                 if current.strip() and current not in {first_prefix, next_prefix}:
                     lines.append(current.rstrip())
                     current = next_prefix
-                    current_width = text_display_width(next_prefix)
+                    current_width = _prose_display_width(next_prefix)
                 current += segment
                 current_width += segment_width
                 continue

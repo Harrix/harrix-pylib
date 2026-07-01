@@ -364,16 +364,47 @@ def _broken_wiki_link_source_paragraph(
     if not source_lines:
         return None
     paragraph_map = tokens[index].map
-    if not paragraph_map or paragraph_map[1] - paragraph_map[0] != 2:
+    if not paragraph_map:
         return None
+    span = paragraph_map[1] - paragraph_map[0]
     source = "\n".join(source_lines[paragraph_map[0] : paragraph_map[1]])
-    stripped = source.lstrip()
-    if stripped.startswith(("[[", "\\", "[")):
+    if "[[" not in source:
         return None
-    if "[[" not in source or "]]" not in source:
+    if "]]" not in source:
+        # Paragraph with an unclosed [[  — no matching ]].
+        # Collapse multi-line to one line (joining with space), preserving literal content.
+        stripped_first = source.split("\n")[0].strip() if "\n" in source else source.strip()
+        if stripped_first.startswith("[["):
+            return " ".join(line.strip() for line in source.split("\n") if line.strip())
         return None
-    first_line, _, second_line = source.partition("\n")
-    if "[[" not in first_line or "]]" in first_line or "]]" not in second_line:
+    # Check that the inline token has a softbreak (meaning the [[...]] is split across lines)
+    # rather than being a proper wiki_link token (already handled by wiki_link rendering).
+    inline = tokens[index + 1]
+    children = inline.children or []
+    has_softbreak = any(c.type == "softbreak" for c in children)
+    has_wiki_link = any(c.type == "wiki_link" for c in children)
+    if not has_softbreak and not has_wiki_link:
+        return None
+    if has_wiki_link and not has_softbreak:
+        # Proper wiki_link token — will be rendered correctly without source override
+        return None
+    # For paragraphs with softbreaks where [[...]] spans lines, preserve source.
+    lines = source.split("\n")
+    # Find a line that has an unclosed [[  (i.e. has [[ but no ]] after it)
+    def _has_unclosed_wiki_open(line: str) -> bool:
+        pos = line.find("[[")
+        if pos < 0:
+            return False
+        rest = line[pos + 2 :]
+        return "]]" not in rest
+
+    opening_idx = next((i for i, line in enumerate(lines) if _has_unclosed_wiki_open(line)), None)
+    if opening_idx is None:
+        return None
+    closing_idx = next(
+        (i for i in range(len(lines) - 1, opening_idx, -1) if "]]" in lines[i]), None
+    )
+    if closing_idx is None:
         return None
     return source
 
@@ -1013,7 +1044,7 @@ def _render_blockquote(
             inner_parts.append(chunk)
     if options.prose_wrap == "always" and len(inner_parts) == 1 and inner_parts and all(
         not part.lstrip().startswith(("-", "|", "#", "```")) for part in inner_parts
-    ):
+    ) and not any("[[" in part and "\n" in part for part in inner_parts):
         merged = normalize_inline_spaces(
             " ".join(part.strip().replace("\n", " ") for part in inner_parts if part.strip())
         )
@@ -1134,6 +1165,14 @@ def _render_inline(
     return "".join(parts)
 
 
+_WIKI_TRIPLE_EMPHASIS_RE = re.compile(r"\*\*\*(.+?)\*\*\*")
+
+
+def _render_wiki_content(content: str) -> str:
+    """Normalize inline emphasis inside wiki-link content without re-escaping."""
+    return _WIKI_TRIPLE_EMPHASIS_RE.sub(lambda m: f"_**{m.group(1)}**_", content)
+
+
 def _render_inline_token(
     children: list[Token],
     index: int,
@@ -1178,7 +1217,7 @@ def _render_inline_token(
             return "\\\n", index + 1
         return "  \n", index + 1
     if child.type == "wiki_link":
-        return f"[[{child.content}]]", index + 1
+        return f"[[{_render_wiki_content(child.content)}]]", index + 1
     if child.type in {"math_inline", "math_inline_double"}:
         markup = child.markup or "$"
         return f"{markup}{child.content}{markup}", index + 1
@@ -1349,6 +1388,48 @@ def _is_list_block(block: str) -> bool:
     return False
 
 
+_ORDERED_LEADING_SPACES_RE = re.compile(r"^\s*\d+[.)]( {1,4})")
+
+
+def _list_source_indent(tokens: list[Token], index: int, source_lines: list[str] | None) -> int:
+    """Return the leading-space indent of the list as it appears in source."""
+    if not source_lines:
+        return 0
+    tok_map = tokens[index].map
+    if not tok_map:
+        return 0
+    line_index = tok_map[0]
+    if line_index < 0 or line_index >= len(source_lines):
+        return 0
+    line = source_lines[line_index]
+    return len(line) - len(line.lstrip())
+
+
+def _ordered_list_leading_spaces(
+    tokens: list[Token], index: int, source_lines: list[str] | None
+) -> int:
+    """Return the number of spaces between the ordered marker and its content in source."""
+    if not source_lines:
+        return 1
+    tok_map = tokens[index].map
+    if not tok_map:
+        return 1
+    line_index = tok_map[0]
+    if line_index < 0 or line_index >= len(source_lines):
+        return 1
+    m = _ORDERED_LEADING_SPACES_RE.match(source_lines[line_index])
+    return len(m.group(1)) if m else 1
+
+
+def _align_ordered_list_prefix(raw_prefix: str, tab_width: int = 2) -> str:
+    """Apply Prettier's alignListPrefix to a raw ordered-list prefix."""
+    rest_spaces = len(raw_prefix) % tab_width
+    additional = 0 if rest_spaces == 0 else tab_width - rest_spaces
+    if additional >= 4:
+        additional = 0
+    return raw_prefix + " " * additional
+
+
 def _render_list(
     tokens: list[Token],
     index: int,
@@ -1375,11 +1456,42 @@ def _render_list(
         # The token stream can appear loose only because of blank lines auto-inserted
         # around code-block placeholders; trust the layout when it says the list is tight.
         loose = False
+    if list_depth > 0 and ordered and source_lines:
+        src_indent = _list_source_indent(tokens, index, source_lines)
+        if src_indent > 0:
+            list_base_indent = src_indent
+        else:
+            list_base_indent = list_depth * 2
+    else:
+        list_base_indent = list_depth * 2
+    ordered_leading_spaces = _ordered_list_leading_spaces(tokens, index, source_lines) if ordered else 1
+    ordered_is_aligned = ordered and ordered_leading_spaces > 1
     lines: list[str] = []
     source_markers: list[int] = []
     bullet_markers: list[str] = []
     if ordered and ordered_list_marker_groups:
-        source_markers = ordered_list_marker_groups.pop(0)
+        source_markers = list(ordered_list_marker_groups.pop(0))
+        # If the source has fewer markers than items (loose list spans multiple source groups),
+        # supplement from subsequent groups that belong to the same token list.
+        if source_lines:
+            item_count = sum(1 for t in tokens[index + 1 : close_index] if t.type == "list_item_open")
+            while len(source_markers) < item_count and ordered_list_marker_groups:
+                next_group = ordered_list_marker_groups[0]
+                # Check the next group is at the same indent level as our list.
+                list_map = tokens[index].map
+                if list_map and list_map[0] < len(source_lines):
+                    expected_indent = _list_source_indent(tokens, index, source_lines)
+                    next_group_indent = len(source_lines[0]) - len(source_lines[0].lstrip()) if source_lines else 0
+                    # Find next group's source line
+                    # Use a proxy: if the list depth is 0 and next group's first number continues
+                    next_num = next_group[0]
+                    last_num = source_markers[-1]
+                    if next_num == 1 or next_num == last_num + 1:
+                        source_markers.extend(ordered_list_marker_groups.pop(0))
+                    else:
+                        break
+                else:
+                    break
     elif not ordered and bullet_list_marker_groups:
         bullet_markers = bullet_list_marker_groups.pop(0)
     has_nested_bullets = _list_has_nested_bullets(tokens, index + 1, close_index)
@@ -1469,8 +1581,9 @@ def _render_list(
                 marker=marker,
                 loose=item_loose,
                 options=options,
-                base_indent=list_depth * 2,
+                base_indent=list_base_indent,
                 in_blockquote=in_blockquote,
+                align_prefix=ordered_is_aligned,
             )
         )
         rendered_item_count += 1
@@ -1517,12 +1630,13 @@ def _render_list_item_lines(
     options: FormatOptions,
     base_indent: int = 0,
     in_blockquote: bool = False,
+    align_prefix: bool = False,
 ) -> list[str]:
     if not item_lines:
         return [(" " * base_indent) + marker]
 
-    align_ordered_marker = marker.endswith((".", ")")) and any(
-        block.lstrip().startswith("<") for block in item_lines
+    align_ordered_marker = align_prefix or (
+        marker.endswith((".", ")")) and any(block.lstrip().startswith("<") for block in item_lines)
     )
     prefix = (" " * base_indent) + _list_marker_prefix(marker, align=align_ordered_marker)
     indent = " " * len(prefix)
@@ -1623,9 +1737,9 @@ def _render_paragraph(
         inline_code_line = _plain_inline_code_source_line(tokens, index, source_lines)
         if inline_code_line is not None:
             return f"{inline_code_line}\n", index + 3
-        broken_wiki_line = _broken_wiki_link_source_paragraph(tokens, index, source_lines)
-        if broken_wiki_line is not None:
-            return f"{broken_wiki_line.rstrip()}\n", index + 3
+    broken_wiki_line = _broken_wiki_link_source_paragraph(tokens, index, source_lines)
+    if broken_wiki_line is not None:
+        return f"{broken_wiki_line.rstrip()}\n", index + 3
     image_reference_line = _unparsed_image_reference_source_line(tokens, index, source_lines)
     if image_reference_line is not None:
         return f"{image_reference_line.rstrip()}\n", index + 3
@@ -1846,6 +1960,10 @@ def _source_blocks_are_adjacent(
         return False
     if previous_map[1] != current_map[0]:
         return False
+    # Check there's no blank line at the end of the previous block.
+    last_line_index = previous_map[1] - 1
+    if last_line_index >= 0 and last_line_index < len(source_lines) and not source_lines[last_line_index].strip():
+        return False
     previous_type = tokens[previous_index].type
     current_type = tokens[current_index].type
     if previous_type in {"bullet_list_open", "ordered_list_open"} and current_type in {
@@ -1876,8 +1994,14 @@ def _source_bullet_marker(line: str) -> str | None:
     return match.group(1)
 
 
+def _prose_display_width(text: str) -> int:
+    """Return display width treating each backslash escape (\\X) as 1 column (like Prettier)."""
+    collapsed = re.sub(r"\\.", lambda m: m.group(0)[1], text)
+    return text_display_width(collapsed)
+
+
 def _should_wrap_prose(text: str, *, prefix: str, width: int) -> bool:
-    return text_display_width(prefix + text) > width
+    return _prose_display_width(prefix + text) > width
 
 
 def _table_column_widths(rows: list[list[str]], width: int) -> list[int]:

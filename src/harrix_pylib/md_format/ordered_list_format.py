@@ -12,14 +12,42 @@ def extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]
     lines, trailing = _split_lines(body)
     groups: list[list[int]] = []
     current: list[int] = []
+    current_indent: int | None = None
+    pending_break = False  # encountered a non-list line since last item
     for line in lines:
         match = _ORDERED_ITEM_RE.match(line)
         if match:
-            current.append(int(match.group(2)))
+            indent = len(match.group(1))
+            if current and current_indent is not None and indent == current_indent:
+                # Continue same list (possibly after blank lines / continuation lines).
+                current.append(int(match.group(2)))
+                pending_break = False
+            else:
+                if current:
+                    groups.append(current)
+                current = [int(match.group(2))]
+                current_indent = indent
+                pending_break = False
             continue
+        stripped = line.strip()
+        if not stripped:
+            # Blank line — may separate loose list items; keep current open.
+            pending_break = True
+            continue
+        # A non-empty, non-list line: if it's indented deeper than current_indent,
+        # it's a continuation of the current item; otherwise close the group.
+        if current and current_indent is not None:
+            line_indent = len(line) - len(line.lstrip())
+            if line_indent > current_indent:
+                # Continuation content — don't close the group.
+                pending_break = False
+                continue
+        # Different content at same or lower indent — close the group.
         if current:
             groups.append(current)
             current = []
+            current_indent = None
+        pending_break = False
     if current:
         groups.append(current)
     return _join_lines(lines, trailing_newline=trailing), groups
