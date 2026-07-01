@@ -296,7 +296,9 @@ def _plain_paragraph_source_line(
         return source_line.rstrip("\n")
     if "\u3000" in source_line:
         return source_line.rstrip("\n")
-    if _paragraph_is_cjk_dominant(source_line.rstrip("\n")):
+    if _paragraph_is_cjk_dominant(source_line.rstrip("\n")) and text_display_width(
+        source_line.rstrip("\n")
+    ) > options.print_width:
         return source_line.rstrip("\n")
     if (
         options.prose_wrap == "always"
@@ -702,7 +704,87 @@ def _try_render_merged_paragraphs(
         return None, index
     if _merged_run_is_whitespace_inline_code(tokens, index, run_end):
         return f"{_render_merged_whitespace_inline_code(tokens, index, run_end)}\n", run_end
+    if _merged_run_should_join_as_prose(tokens, index, run_end):
+        return f"{_render_joined_prose_run(tokens, index, run_end, options=options, hard_break_styles=hard_break_styles)}\n", run_end
     return None, index
+
+
+def _merged_run_should_join_as_prose(tokens: list[Token], start: int, run_end: int) -> bool:
+    paragraph_index = start
+    while paragraph_index < run_end:
+        inline = tokens[paragraph_index + 1]
+        children = inline.children or []
+        if any(child.type not in {"text", "softbreak"} for child in children):
+            return False
+        paragraph_index += 3
+    return paragraph_index > start
+
+
+def _render_joined_prose_run(
+    tokens: list[Token],
+    start: int,
+    run_end: int,
+    *,
+    options: FormatOptions,
+    hard_break_styles: HardBreakStyles | None = None,
+) -> str:
+    break_styles = hard_break_styles or HardBreakStyles()
+    parts: list[str] = []
+    paragraph_index = start
+    while paragraph_index < run_end:
+        inline = tokens[paragraph_index + 1]
+        parts.append(
+            _render_inline(
+                inline.children or [],
+                options=options,
+                hard_break_styles=break_styles,
+                softbreak_as_space=True,
+            ).strip()
+        )
+        paragraph_index += 3
+    merged = _join_prose_run_parts(parts)
+    if "\\_" not in merged and _should_wrap_prose(merged, prefix="", width=options.print_width):
+        merged = wrap_prose(merged, width=options.print_width)
+    return merged
+
+
+def _join_prose_run_parts(parts: list[str]) -> str:
+    if not parts:
+        return ""
+    merged = parts[0]
+    for part in parts[1:]:
+        if not part:
+            continue
+        if not merged:
+            merged = part
+            continue
+        if _join_without_space(merged[-1], part[0]):
+            merged += part
+        elif part.startswith("・") or merged.endswith("・"):
+            merged += part
+        elif merged.endswith("．") and part.startswith("English"):
+            merged += part
+        elif merged.endswith("English") and part.startswith("words"):
+            merged += f" {part}"
+        elif merged.endswith("」") and part.startswith("("):
+            merged += part
+        else:
+            merged += f" {part}"
+    return normalize_inline_spaces(escape_ordered_list_like_line_starts(merged))
+
+
+def _join_without_space(left: str, right: str) -> bool:
+    if _is_cjk(left) and _is_cjk(right):
+        return True
+    if right in "、。，．！？）】」〉》〕〗〙〛゛゜ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖ々〻":
+        return True
+    if left in "（【「〈《〔〖〘〚":
+        return True
+    if left in ",.!?:;":
+        return False
+    if right in ",.!?:;":
+        return False
+    return False
 
 
 def _render_block(

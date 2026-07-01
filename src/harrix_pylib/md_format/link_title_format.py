@@ -57,19 +57,34 @@ def _canonicalize_link_title_content(content: str) -> str:
     """Normalize lightly escaped one-character titles from CommonMark parsing."""
     if content == "\\)":
         return ")"
-    if content == '"':
-        return "'\""
-    if content == "'":
-        return "\"'"
-    if content == '\\"':
-        return "'\""
-    if content == "\\'":
-        return "\"'"
     if len(content) == 2 and content[0] == "\\" and content[1] in "\"'":
         return content[1]
     if len(content) == 2 and content[0] == "\\" and content[1] == ")":
         return ")"
     return content
+
+
+def _decode_simple_escaped_title(inner: str) -> str | None:
+    match = re.fullmatch(r"(\\+)([\"'])", inner)
+    if not match:
+        return None
+    slashes, final = match.groups()
+    slash_count = len(slashes)
+    if final == '"':
+        kept = (slash_count - 2) // 2 if slash_count >= 2 else 0
+    else:
+        kept = slash_count // 2 if slash_count > 2 else 0
+    return "\\" * kept + final
+
+
+def _decode_paren_escaped_title(inner: str) -> str | None:
+    match = re.fullmatch(r"(\\+)(\))", inner)
+    if not match:
+        return None
+    slashes, final = match.groups()
+    slash_count = len(slashes)
+    kept = slash_count // 2 if slash_count > 2 else 0
+    return "\\" * kept + final
 
 
 def _escape_title_content(content: str, delimiter: str) -> str:
@@ -94,11 +109,13 @@ def _find_link_close_paren(text: str, open_paren: int) -> int | None:
             index += 2
             continue
         if char == "'" and not in_double:
-            in_single = not in_single
+            if not _is_escaped_at(text, index):
+                in_single = not in_single
             index += 1
             continue
         if char == '"' and not in_single:
-            in_double = not in_double
+            if not _is_escaped_at(text, index):
+                in_double = not in_double
             index += 1
             continue
         if not in_single and not in_double:
@@ -109,6 +126,10 @@ def _find_link_close_paren(text: str, open_paren: int) -> int | None:
                 if depth == 0:
                     return index
         index += 1
+    if depth > 0:
+        end = text.rfind(")", open_paren + 1)
+        if end > open_paren:
+            return end
     return None
 
 
@@ -177,10 +198,17 @@ def _title_quote_priority(content: str, quoted: str) -> tuple[int, int]:
 def _unescape_title(quoted: str) -> str:
     if not quoted:
         return quoted
+    inner: str
     if quoted[0] == "(" and quoted.endswith(")"):
         inner = quoted[1:-1]
+        decoded = _decode_paren_escaped_title(inner)
+        if decoded is not None:
+            return _canonicalize_link_title_content(decoded)
     elif len(quoted) >= 2 and quoted[0] == quoted[-1] and quoted[0] in {'"', "'"}:
         inner = quoted[1:-1]
+        decoded = _decode_simple_escaped_title(inner)
+        if decoded is not None:
+            return _canonicalize_link_title_content(decoded)
     else:
         return quoted
     result: list[str] = []
