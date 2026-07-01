@@ -802,6 +802,7 @@ def _render_block(
     canonicalize_bullets: bool = False,
     preserve_source_line: bool = True,
     in_list_item: bool = False,
+    in_blockquote: bool = False,
 ) -> tuple[str, int]:
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list_layouts or []
@@ -837,6 +838,19 @@ def _render_block(
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
         )
+    if token.type == "alert_open":
+        return _render_alert(
+            tokens,
+            index,
+            options=options,
+            task_list_markers=task_list_markers,
+            ordered_list_marker_groups=ordered_list_marker_groups,
+            bullet_list_marker_groups=bullet_list_marker_groups,
+            hard_break_styles=break_styles,
+            list_layouts=layouts,
+            source_lines=source_lines,
+            canonicalize_bullets=canonicalize_bullets,
+        )
     if token.type == "bullet_list_open":
         return _render_list(
             tokens,
@@ -850,6 +864,7 @@ def _render_block(
             list_layouts=layouts,
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
+            in_blockquote=in_blockquote,
         )
     if token.type == "ordered_list_open":
         return _render_list(
@@ -864,6 +879,7 @@ def _render_block(
             list_layouts=layouts,
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
+            in_blockquote=in_blockquote,
         )
     if token.type == "fence":
         return _render_fence(token), index + 1
@@ -902,20 +918,48 @@ def _render_block(
     return "", index + 1
 
 
+def _blockquote_line_depth(line: str) -> int:
+    stripped = line.lstrip()
+    depth = 0
+    while stripped.startswith(">"):
+        depth += 1
+        stripped = stripped[1:]
+        if stripped.startswith(" "):
+            stripped = stripped[1:]
+    return depth
+
+
+def _blockquote_line_content(line: str) -> str:
+    content = line.lstrip()
+    while content.startswith(">"):
+        content = content[1:]
+        if content.startswith(" "):
+            content = content[1:]
+    return content.strip()
+
+
 def _blockquote_needs_blank_line(previous: str, current: str) -> bool:
     previous_lines = [line for line in previous.rstrip().splitlines() if line.strip()]
     current_lines = [line for line in current.lstrip().splitlines() if line.strip()]
     if not previous_lines or not current_lines:
         return False
-    previous_last = previous_lines[-1].lstrip("> ").strip()
-    current_first = current_lines[0].lstrip("> ").strip()
+    if _blockquote_line_depth(current_lines[0]) > _blockquote_line_depth(previous_lines[-1]):
+        return True
+    previous_last = _blockquote_line_content(previous_lines[-1])
+    current_first = _blockquote_line_content(current_lines[0])
     if current_first.startswith("|"):
         return True
     if previous_last.startswith("|"):
         return True
     if previous_last.startswith("<!--") and current_first.startswith("<!--"):
         return False
-    if current_first.startswith(("-", "|", "#", "```")):
+    if current_first.startswith("-"):
+        if previous_last.startswith(("-", "*", "+")):
+            return False
+        if previous_last and previous_last[0].isdigit() and ". " in previous_last[:4]:
+            return False
+        return True
+    if current_first.startswith(("#", "|", "```")):
         return False
     return True
 
@@ -963,6 +1007,7 @@ def _render_blockquote(
             source_lines=source_lines,
             canonicalize_bullets=canonicalize_bullets,
             preserve_source_line=False,
+            in_blockquote=True,
         )
         if chunk:
             inner_parts.append(chunk)
@@ -982,6 +1027,61 @@ def _render_blockquote(
             quoted_lines = [f"> {line}" if line else ">" for line in block.rstrip().splitlines()]
             quoted_blocks.append("\n".join(quoted_lines))
     quoted = _join_blockquote_blocks(quoted_blocks)
+    return quoted, close_index + 1
+
+
+def _render_alert(
+    tokens: list[Token],
+    index: int,
+    *,
+    options: FormatOptions,
+    task_list_markers: list[TaskListMarker] | None = None,
+    ordered_list_marker_groups: list[list[int]] | None = None,
+    bullet_list_marker_groups: list[list[str]] | None = None,
+    hard_break_styles: HardBreakStyles | None = None,
+    list_layouts: list[ListLayout] | None = None,
+    source_lines: list[str] | None = None,
+    canonicalize_bullets: bool = False,
+) -> tuple[str, int]:
+    markers = task_list_markers or []
+    break_styles = hard_break_styles or HardBreakStyles()
+    layouts = list_layouts or []
+    close_index = _find_close(tokens, index, "alert_close")
+    alert_token = tokens[index]
+    kind = "NOTE"
+    if alert_token.meta and isinstance(alert_token.meta, dict):
+        kind = str(alert_token.meta.get("kind", kind))
+    body_parts: list[str] = []
+    inner_index = index + 1
+    while inner_index < close_index:
+        token = tokens[inner_index]
+        if token.type in {"alert_title_open", "alert_title_close"}:
+            inner_index += 1
+            continue
+        if token.type == "inline" and inner_index > index + 1 and tokens[inner_index - 1].type == "alert_title_open":
+            inner_index += 1
+            continue
+        chunk, inner_index = _render_block(
+            tokens,
+            inner_index,
+            options=options,
+            task_list_markers=markers,
+            ordered_list_marker_groups=ordered_list_marker_groups,
+            bullet_list_marker_groups=bullet_list_marker_groups,
+            hard_break_styles=break_styles,
+            list_layouts=layouts,
+            source_lines=source_lines,
+            canonicalize_bullets=canonicalize_bullets,
+            preserve_source_line=False,
+        )
+        if chunk:
+            body_parts.append(chunk.strip())
+    body = normalize_inline_spaces(" ".join(body_parts))
+    alert_line = f"[!{kind}] {body}".rstrip() if body else f"[!{kind}]"
+    if options.prose_wrap == "always":
+        quoted = _wrap_blockquote_block(alert_line, options=options) + "\n"
+    else:
+        quoted = f"> {alert_line}\n"
     return quoted, close_index + 1
 
 
@@ -1263,6 +1363,7 @@ def _render_list(
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
     list_depth: int = 0,
+    in_blockquote: bool = False,
 ) -> tuple[str, int]:
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list_layouts or []
@@ -1324,6 +1425,7 @@ def _render_list(
                     source_lines=source_lines,
                     canonicalize_bullets=canonicalize_bullets,
                     list_depth=list_depth + 1,
+                    in_blockquote=in_blockquote,
                 )
                 item_lines.append(nested.rstrip("\n"))
             else:
@@ -1341,6 +1443,7 @@ def _render_list(
                     canonicalize_bullets=canonicalize_bullets,
                     preserve_source_line=False,
                     in_list_item=True,
+                    in_blockquote=in_blockquote,
                 )
                 if chunk:
                     item_lines.append(chunk.rstrip("\n"))
@@ -1350,7 +1453,7 @@ def _render_list(
             item_lines[0] = strip_task_placeholder(item_lines[0])
         if layout and rendered_item_count < len(layout.gaps_before_item) and layout.gaps_before_item[rendered_item_count]:
             lines.append("")
-        elif loose and rendered_item_count > 0:
+        elif loose and rendered_item_count > 0 and not in_blockquote:
             lines.append("")
         if layout and rendered_item_count < len(layout.loose_items):
             item_loose = layout.loose_items[rendered_item_count]
@@ -1363,6 +1466,7 @@ def _render_list(
                 loose=item_loose,
                 options=options,
                 base_indent=list_depth * 2,
+                in_blockquote=in_blockquote,
             )
         )
         rendered_item_count += 1
@@ -1408,6 +1512,7 @@ def _render_list_item_lines(
     loose: bool,
     options: FormatOptions,
     base_indent: int = 0,
+    in_blockquote: bool = False,
 ) -> list[str]:
     if not item_lines:
         if marker.endswith("."):
@@ -1450,8 +1555,12 @@ def _render_list_item_lines(
             rendered.append(prefix + block_lines[0])
             rendered.extend(f"{indent}{continuation_line}" for continuation_line in block_lines[1:])
             continue
-        if loose:
-            rendered.append("")
+        if loose and not in_blockquote:
+            previous_block = item_lines[block_index - 1] if block_index > 0 else ""
+            if _is_list_block(block) and previous_block.lstrip().startswith(">"):
+                pass
+            else:
+                rendered.append("")
         if _is_list_block(block):
             rendered.extend(block.splitlines())
         elif (

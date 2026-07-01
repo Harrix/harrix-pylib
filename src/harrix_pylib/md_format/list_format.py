@@ -39,7 +39,7 @@ def ensure_blank_line_after_lists(body: str) -> str:
 
 def is_list_continuation(line: str) -> bool:
     """Return whether the line continues the previous list item paragraph."""
-    return bool(line.startswith(" ") and line.strip() and not is_list_line(line))
+    return bool(line.strip() and not is_list_line(line) and line[:1] in {" ", "\t"})
 
 
 def is_list_item_continuation_line(previous_line: str, line: str) -> bool:
@@ -49,7 +49,11 @@ def is_list_item_continuation_line(previous_line: str, line: str) -> bool:
     if is_list_line(line) or is_table_line(line):
         return False
     stripped = line.lstrip()
-    if stripped.startswith(("#", "```", "$$", "<details", "</details>", "<summary", "</summary>", "`", "![", "|", ">")):
+    if stripped.startswith(">") and line[:1] in {" ", "\t"}:
+        return is_list_line(previous_line) or is_list_continuation(previous_line)
+    if stripped.startswith(("#", "```", "$$", "<details", "</details>", "<summary", "</summary>", "`", "![", "|")):
+        return False
+    if stripped.startswith(">") and not line[:1] in {" ", "\t"}:
         return False
     if is_list_line(previous_line):
         return True

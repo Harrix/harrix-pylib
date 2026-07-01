@@ -90,6 +90,7 @@ def _wrap_prose_after_hard_break(text: str, *, width: int) -> str:
 
 
 _ORDERED_LIST_LINE_START_RE = re.compile(r"^(\d+)\.(.*)$")
+_LINK_SEGMENT_RE = re.compile(r"!?\[[^\]]*\]\([^)]*\)")
 
 
 def _avoid_list_marker_line_starts(lines: list[str]) -> list[str]:
@@ -103,6 +104,19 @@ def _avoid_list_marker_line_starts(lines: list[str]) -> list[str]:
         previous = fixed[index - 1].rstrip()
         if not previous:
             continue
+        while stripped.startswith(">") and (len(stripped) == 1 or stripped[1].isspace()):
+            if previous.lstrip().startswith(">"):
+                break
+            last_space = previous.rfind(" ")
+            if last_space <= 0:
+                break
+            word = previous[last_space + 1 :]
+            if not word:
+                break
+            fixed[index - 1] = previous[:last_space]
+            fixed[index] = f"{leading}{word} {stripped}"
+            stripped = fixed[index].lstrip()
+            previous = fixed[index - 1].rstrip()
         if stripped.startswith("- "):
             last_space = previous.rfind(" ")
             if last_space <= 0:
@@ -251,6 +265,14 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
             continue
 
         if segment_width > width - text_display_width(next_prefix):
+            if _LINK_SEGMENT_RE.fullmatch(segment):
+                if current.strip() and current not in {first_prefix, next_prefix}:
+                    lines.append(current.rstrip())
+                    current = next_prefix
+                    current_width = text_display_width(next_prefix)
+                current += segment
+                current_width += segment_width
+                continue
             for char in segment:
                 char_width = text_display_width(char)
                 if (
