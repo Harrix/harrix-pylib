@@ -17,7 +17,7 @@ from harrix_pylib.md_format.link_title_format import format_link_title
 from harrix_pylib.md_format.list_loose_format import ListLayout
 from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.ordered_list_format import ordered_list_item_number
-from harrix_pylib.md_format.prose_wrap import _is_cjk, wrap_paragraph_prose, wrap_prose
+from harrix_pylib.md_format.prose_wrap import _is_cjk, _is_hangul, wrap_paragraph_prose, wrap_prose
 from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text_display_width
 from harrix_pylib.md_format.task_list_format import (
     TaskListMarker,
@@ -308,9 +308,11 @@ def _plain_paragraph_source_line(
         return source_line.rstrip("\n")
     if "\u3000" in source_line:
         return source_line.rstrip("\n")
-    if _paragraph_is_cjk_dominant(source_line.rstrip("\n")) and text_display_width(
-        source_line.rstrip("\n")
-    ) > options.print_width:
+    if (
+        _paragraph_is_cjk_dominant(source_line.rstrip("\n"))
+        and text_display_width(source_line.rstrip("\n")) > options.print_width
+        and not (options.prose_wrap == "always" and _paragraph_contains_hangul(source_line.rstrip("\n")))
+    ):
         return source_line.rstrip("\n")
     if (
         options.prose_wrap == "always"
@@ -330,6 +332,14 @@ def _paragraph_is_cjk_dominant(text: str) -> bool:
         return False
     cjk_count = sum(1 for char in non_space if _is_cjk(char))
     return cjk_count / len(non_space) >= 0.15
+
+
+def _paragraph_contains_hangul(text: str) -> bool:
+    non_space = [char for char in text if not char.isspace()]
+    if not non_space:
+        return False
+    hangul_count = sum(1 for char in non_space if _is_hangul(char))
+    return hangul_count > 0
 
 
 def _plain_heading_source_line(
@@ -860,6 +870,8 @@ def _join_prose_run_parts(parts: list[str]) -> str:
 
 
 def _join_without_space(left: str, right: str) -> bool:
+    if _is_hangul(left) or _is_hangul(right):
+        return False
     if _is_cjk(left) and _is_cjk(right):
         return True
     if right in "、。，．！？）】」〉》〕〗〙〛゛゜ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖ々〻":
@@ -1416,7 +1428,12 @@ def _softbreak_follows_trailing_backslash(children: list[Token], index: int) -> 
 def _softbreak_between_cjk_text(children: list[Token], index: int) -> bool:
     before = _inline_text_before(children, index)
     after = _inline_text_after(children, index)
-    return bool(before and after and _is_cjk(before[-1]) and _is_cjk(after[0]))
+    if not before or not after:
+        return False
+    left, right = before[-1], after[0]
+    if _is_hangul(left) or _is_hangul(right):
+        return False
+    return _is_cjk(left) and _is_cjk(right)
 
 
 def _inline_text_before(children: list[Token], index: int) -> str:

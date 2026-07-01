@@ -149,6 +149,13 @@ def _avoid_list_marker_line_starts(lines: list[str]) -> list[str]:
     return fixed
 
 
+def _is_hangul(char: str) -> bool:
+    if not char:
+        return False
+    code = ord(char)
+    return 0x1100 <= code <= 0x11FF or 0xAC00 <= code <= 0xD7AF
+
+
 def _is_cjk(char: str) -> bool:
     if not char:
         return False
