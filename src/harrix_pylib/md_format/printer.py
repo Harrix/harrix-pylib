@@ -17,7 +17,14 @@ from harrix_pylib.md_format.link_title_format import format_link_title
 from harrix_pylib.md_format.list_loose_format import ListLayout
 from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.ordered_list_format import ordered_list_item_number
-from harrix_pylib.md_format.prose_wrap import _is_cjk, _is_hangul, wrap_paragraph_prose, wrap_prose
+from harrix_pylib.md_format.prose_wrap import (
+    _is_cjk,
+    _is_hangul,
+    _softbreak_prefers_newline,
+    should_omit_space_between,
+    wrap_paragraph_prose,
+    wrap_prose,
+)
 from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text_display_width
 from harrix_pylib.md_format.task_list_format import (
     TaskListMarker,
@@ -854,15 +861,7 @@ def _join_prose_run_parts(parts: list[str]) -> str:
         if not merged:
             merged = part
             continue
-        if _join_without_space(merged[-1], part[0]):
-            merged += part
-        elif part.startswith("・") or merged.endswith("・"):
-            merged += part
-        elif merged.endswith("．") and part.startswith("English"):
-            merged += part
-        elif merged.endswith("English") and part.startswith("words"):
-            merged += f" {part}"
-        elif merged.endswith("」") and part.startswith("("):
+        if should_omit_space_between(merged, part):
             merged += part
         else:
             merged += f" {part}"
@@ -870,19 +869,7 @@ def _join_prose_run_parts(parts: list[str]) -> str:
 
 
 def _join_without_space(left: str, right: str) -> bool:
-    if _is_hangul(left) or _is_hangul(right):
-        return False
-    if _is_cjk(left) and _is_cjk(right):
-        return True
-    if right in "、。，．！？）】」〉》〕〗〙〛゛゜ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖ々〻":
-        return True
-    if left in "（【「〈《〔〖〘〚":
-        return True
-    if left in ",.!?:;":
-        return False
-    if right in ",.!?:;":
-        return False
-    return False
+    return should_omit_space_between(left, right)
 
 
 def _render_block(
@@ -1275,8 +1262,18 @@ def _render_inline_token(
         return _format_code_inline(child.content, in_table=in_table), index + 1
     if child.type == "softbreak":
         if softbreak_as_space and not _softbreak_follows_trailing_backslash(children, index):
-            if _softbreak_between_cjk_text(children, index):
+            if _softbreak_should_omit_space(children, index):
                 return "", index + 1
+            prev_child = children[index - 1] if index > 0 else None
+            next_child = children[index + 1] if index + 1 < len(children) else None
+            if (
+                prev_child is not None
+                and next_child is not None
+                and prev_child.type == "text"
+                and next_child.type == "text"
+                and _softbreak_prefers_newline(prev_child.content, next_child.content)
+            ):
+                return "\n", index + 1
             return " ", index + 1
         return "\n", index + 1
     if child.type == "hardbreak":
@@ -1425,15 +1422,12 @@ def _softbreak_follows_trailing_backslash(children: list[Token], index: int) -> 
     return False
 
 
-def _softbreak_between_cjk_text(children: list[Token], index: int) -> bool:
+def _softbreak_should_omit_space(children: list[Token], index: int) -> bool:
     before = _inline_text_before(children, index)
     after = _inline_text_after(children, index)
     if not before or not after:
         return False
-    left, right = before[-1], after[0]
-    if _is_hangul(left) or _is_hangul(right):
-        return False
-    return _is_cjk(left) and _is_cjk(right)
+    return should_omit_space_between(before, after)
 
 
 def _inline_text_before(children: list[Token], index: int) -> str:
@@ -1942,7 +1936,14 @@ def _render_paragraph(
         and "\u00a0" not in text
         and _should_wrap_prose(text.rstrip("\n"), prefix="", width=options.print_width)
     ):
-        text = wrap_paragraph_prose(text.rstrip("\n"), width=options.print_width)
+        body = text.rstrip("\n")
+        if "\n" in body and "  \n" not in body:
+            body = "\n".join(
+                wrap_prose(part, width=options.print_width) if part else part for part in body.split("\n")
+            )
+        else:
+            body = wrap_paragraph_prose(body, width=options.print_width)
+        text = body
     source_line = (
         _plain_paragraph_source_line(
             tokens, index, source_lines, options=options, rendered_line=text.rstrip("\n")

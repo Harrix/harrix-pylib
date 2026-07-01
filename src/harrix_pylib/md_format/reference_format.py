@@ -40,17 +40,16 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
     index = 0
     line_index = 0
     while line_index < len(lines):
-        line = lines[line_index]
+        line, consumed = _merge_multiline_link_definition(lines, line_index)
+        line_index += consumed
         link_match = _LINK_DEF_RE.match(line)
         footnote_match = _FOOTNOTE_DEF_RE.match(line)
         if not link_match and not footnote_match:
             result.append(line)
-            line_index += 1
             continue
 
         kind = "footnote" if footnote_match else "link"
         block_lines = [line]
-        line_index += 1
         while line_index < len(lines):
             next_line = lines[line_index]
             if _LINK_DEF_RE.match(next_line) or _FOOTNOTE_DEF_RE.match(next_line):
@@ -101,6 +100,32 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
 def _line_is_short_link_reference(line: str) -> bool:
     stripped = line.strip()
     return stripped.startswith("[") and stripped.endswith("][]")
+
+
+def _merge_multiline_link_definition(lines: list[str], line_index: int) -> tuple[str, int]:
+    """Join a link/footnote definition split across consecutive source lines."""
+    line = lines[line_index]
+    if _LINK_DEF_RE.match(line) or _FOOTNOTE_DEF_RE.match(line):
+        return line, 1
+    stripped = line.strip()
+    if not stripped.startswith("[") or "]:" in line:
+        return line, 1
+
+    merged = line
+    consumed = 1
+    while line_index + consumed < len(lines):
+        next_line = lines[line_index + consumed]
+        if not next_line.strip():
+            break
+        merged = f"{merged}\n{next_line}"
+        if "]:" in next_line:
+            if _LINK_DEF_RE.match(merged) or _FOOTNOTE_DEF_RE.match(merged):
+                return merged, consumed + 1
+            break
+        if _LINK_DEF_RE.match(next_line) or _FOOTNOTE_DEF_RE.match(next_line):
+            break
+        consumed += 1
+    return line, 1
 
 
 def restore_reference_blocks(
@@ -271,8 +296,9 @@ def format_reference_link_url(url: str) -> str:
 
 def _reference_label_markup(label: str) -> str:
     normalized = _normalize_reference_label(label)
-    if " " in normalized:
-        return f"[ {normalized} ]"
+    if label != label.strip():
+        inner = normalized.strip()
+        return f"[ {inner} ]" if " " in inner else f"[{inner}]"
     return f"[{normalized}]"
 
 

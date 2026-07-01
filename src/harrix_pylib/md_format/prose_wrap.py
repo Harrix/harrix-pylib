@@ -172,6 +172,78 @@ def _is_cjk(char: str) -> bool:
     )
 
 
+def _is_katakana(char: str) -> bool:
+    if not char:
+        return False
+    code = ord(char)
+    return 0x30A0 <= code <= 0x30FF
+
+
+def _is_hiragana(char: str) -> bool:
+    if not char:
+        return False
+    code = ord(char)
+    return 0x3040 <= code <= 0x309F
+
+
+_SMALL_KANA = frozenset("ァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖ")
+
+
+def _is_small_kana(char: str) -> bool:
+    return char in _SMALL_KANA
+
+
+def _kana_continuation_join(left: str, right: str) -> bool:
+    if not left or not right or not _is_small_kana(right[0]):
+        return False
+    trailing_kana = 0
+    for char in reversed(left):
+        if _is_katakana(char) or _is_hiragana(char):
+            trailing_kana += 1
+            continue
+        break
+    return trailing_kana >= 2
+
+
+def should_omit_space_between(left: str, right: str) -> bool:
+    """Return whether phrasing text on both sides of a break should be joined without a space."""
+    if not left or not right:
+        return False
+    if _is_hangul(left[-1]) or _is_hangul(right[0]):
+        return False
+    last, first = left[-1], right[0]
+    if last == "・" or first == "・":
+        return True
+    if _kana_continuation_join(left, right):
+        return True
+    if _is_katakana(last) or _is_katakana(first):
+        return False
+    if last in "」』）】" and first == "(":
+        return True
+    if _is_cjk(last) and _is_cjk(first):
+        return True
+    if _is_cjk(last) and first.isascii() and first.isalnum():
+        return True
+    if first in "、。，．！？）】」〉》〕〗〙〛":
+        return True
+    if last in "（【「〈《〔〖〘〚":
+        return True
+    if last in ",.!?:;":
+        return False
+    if first in ",.!?:;":
+        return False
+    return False
+
+
+def _softbreak_prefers_newline(before: str, after: str) -> bool:
+    if not before or not after or not after[0].isalpha():
+        return False
+    match = re.search(r"[A-Za-z]+$", before)
+    if match is None:
+        return False
+    return len(match.group()) >= 4 and match.group()[-1].isascii()
+
+
 def _segments(text: str) -> list[str]:
     segments: list[str] = []
     position = 0
