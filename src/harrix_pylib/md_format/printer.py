@@ -11,6 +11,7 @@ from harrix_pylib.md_format.hard_break_format import HardBreakStyles
 from harrix_pylib.md_format.link_destination_format import (
     LinkDestination,
     formatted_href_from_placeholder,
+    formatted_title_from_placeholder,
 )
 from harrix_pylib.md_format.link_title_format import format_link_title
 from harrix_pylib.md_format.list_loose_format import ListLayout
@@ -93,6 +94,17 @@ def _render_tokens_impl(
     index = 0
     while index < len(tokens):
         merged, next_index = _try_render_merged_paragraphs(
+            tokens,
+            index,
+            options=fmt_options,
+            hard_break_styles=break_styles,
+        )
+        if merged is not None:
+            parts.append(merged)
+            part_indices.append(index)
+            index = next_index
+            continue
+        merged, next_index = _try_render_merged_link_paragraphs(
             tokens,
             index,
             options=fmt_options,
@@ -740,6 +752,49 @@ def _try_render_merged_paragraphs(
     return None, index
 
 
+def _try_render_merged_link_paragraphs(
+    tokens: list[Token],
+    index: int,
+    *,
+    options: FormatOptions,
+    hard_break_styles: HardBreakStyles | None = None,
+) -> tuple[str | None, int]:
+    run_end = _paragraph_run_end(tokens, index)
+    if run_end is None:
+        return None, index
+    if not _merged_run_is_link_only_paragraphs(tokens, index, run_end):
+        return None, index
+    break_styles = hard_break_styles or HardBreakStyles()
+    parts: list[str] = []
+    paragraph_index = index
+    while paragraph_index < run_end:
+        inline = tokens[paragraph_index + 1]
+        parts.append(
+            _render_inline(
+                inline.children or [],
+                options=options,
+                hard_break_styles=break_styles,
+            ).strip()
+        )
+        paragraph_index += 3
+    return " ".join(part for part in parts if part) + "\n", run_end
+
+
+def _merged_run_is_link_only_paragraphs(tokens: list[Token], start: int, run_end: int) -> bool:
+    paragraph_index = start
+    while paragraph_index < run_end:
+        children = tokens[paragraph_index + 1].children or []
+        if not any(child.type == "link_open" for child in children):
+            return False
+        if any(
+            child.type not in {"link_open", "link_close", "text", "softbreak", "code_inline"}
+            for child in children
+        ):
+            return False
+        paragraph_index += 3
+    return paragraph_index > start
+
+
 def _merged_run_should_join_as_prose(tokens: list[Token], start: int, run_end: int) -> bool:
     paragraph_index = start
     while paragraph_index < run_end:
@@ -1231,7 +1286,8 @@ def _render_inline_token(
             return f"![{alt}]({src} {format_link_title(title)})", index + 1
         return f"![{alt}]({src})", index + 1
     if child.type == "link_open":
-        href = _readable_link_href(str(child.attrGet("href") or ""))
+        raw_href = str(child.attrGet("href") or "")
+        href = _readable_link_href(raw_href)
         title = child.attrGet("title")
         inner_index = index + 1
         while inner_index < len(children) and children[inner_index].type != "link_close":
@@ -1255,6 +1311,13 @@ def _render_inline_token(
             )
             inner_parts.append(chunk)
         inner = "".join(inner_parts)
+        stored_title = (
+            formatted_title_from_placeholder(raw_href, _ACTIVE_LINK_DESTINATIONS)
+            if _ACTIVE_LINK_DESTINATIONS is not None
+            else None
+        )
+        if stored_title:
+            return f"[{inner}]({href} {stored_title})", next_index
         if title:
             return f"[{inner}]({href} {format_link_title(title)})", next_index
         return f"[{inner}]({href})", next_index
@@ -1421,6 +1484,22 @@ def _ordered_list_leading_spaces(
     return len(m.group(1)) if m else 1
 
 
+def _ordered_item_leading_spaces(
+    tokens: list[Token], item_index: int, source_lines: list[str] | None
+) -> int:
+    """Return spaces between ordered marker and content for a single list item."""
+    if not source_lines:
+        return 1
+    tok_map = tokens[item_index].map
+    if not tok_map:
+        return 1
+    line_index = tok_map[0]
+    if line_index < 0 or line_index >= len(source_lines):
+        return 1
+    m = _ORDERED_LEADING_SPACES_RE.match(source_lines[line_index])
+    return len(m.group(1)) if m else 1
+
+
 def _align_ordered_list_prefix(raw_prefix: str, tab_width: int = 2) -> str:
     """Apply Prettier's alignListPrefix to a raw ordered-list prefix."""
     rest_spaces = len(raw_prefix) % tab_width
@@ -1446,6 +1525,7 @@ def _render_list(
     list_depth: int = 0,
     in_blockquote: bool = False,
     parent_is_ordered: bool = False,
+    parent_is_aligned: bool = False,
 ) -> tuple[str, int]:
     break_styles = hard_break_styles or HardBreakStyles()
     layouts = list_layouts or []
@@ -1470,8 +1550,6 @@ def _render_list(
             list_base_indent = list_depth * 2
     else:
         list_base_indent = list_depth * 2
-    ordered_leading_spaces = _ordered_list_leading_spaces(tokens, index, source_lines) if ordered else 1
-    ordered_is_aligned = ordered and ordered_leading_spaces > 1
     lines: list[str] = []
     source_markers: list[int] = []
     bullet_markers: list[str] = []
@@ -1530,6 +1608,14 @@ def _render_list(
             marker = "-"
         if checkbox:
             marker = f"- {checkbox}".rstrip()
+        item_leading_spaces = _ordered_item_leading_spaces(tokens, item_index, source_lines) if ordered else 1
+        if ordered and item_leading_spaces > 1:
+            if list_depth == 0 or not parent_is_ordered:
+                item_is_aligned = True
+            else:
+                item_is_aligned = parent_is_aligned
+        else:
+            item_is_aligned = False
         item_lines: list[str] = []
         child_index = item_index + 1
         while child_index < item_close:
@@ -1549,6 +1635,7 @@ def _render_list(
                     list_depth=list_depth + 1,
                     in_blockquote=in_blockquote,
                     parent_is_ordered=ordered or parent_is_ordered,
+                    parent_is_aligned=item_is_aligned if ordered else parent_is_aligned,
                 )
                 item_lines.append(nested.rstrip("\n"))
             else:
@@ -1590,7 +1677,7 @@ def _render_list(
                 options=options,
                 base_indent=list_base_indent,
                 in_blockquote=in_blockquote,
-                align_prefix=ordered_is_aligned,
+                align_prefix=item_is_aligned,
             )
         )
         rendered_item_count += 1
@@ -1740,6 +1827,60 @@ def _render_math_block(token: Token, *, label: str | None = None) -> str:
     return f"$$\n{content}\n$$\n"
 
 
+def _inline_children_are_link_run(children: list[Token]) -> bool:
+    if not any(child.type == "link_open" for child in children):
+        return False
+    for child in children:
+        if child.type == "text" and child.content.strip():
+            return False
+        if child.type not in {"link_open", "link_close", "text", "softbreak"}:
+            return False
+    return True
+
+
+def _render_packed_link_run(
+    children: list[Token],
+    *,
+    options: FormatOptions,
+    hard_break_styles: HardBreakStyles | None = None,
+) -> str:
+    parts: list[str] = []
+    index = 0
+    while index < len(children):
+        if children[index].type == "link_open":
+            chunk, index = _render_inline_token(
+                children,
+                index,
+                options=options,
+                hard_break_styles=hard_break_styles,
+            )
+            parts.append(chunk)
+            continue
+        index += 1
+    return "\n".join(_pack_link_parts(parts, width=options.print_width))
+
+
+def _pack_link_parts(parts: list[str], *, width: int) -> list[str]:
+    lines: list[str] = []
+    current: list[str] = []
+    current_width = 0
+    for part in parts:
+        part_width = text_display_width(part)
+        sep_width = 1 if current else 0
+        if current and current_width + sep_width + part_width > width:
+            lines.append(" ".join(current))
+            current = [part]
+            current_width = part_width
+        else:
+            if current:
+                current_width += sep_width
+            current.append(part)
+            current_width += part_width
+    if current:
+        lines.append(" ".join(current))
+    return lines
+
+
 def _render_paragraph(
     tokens: list[Token],
     index: int,
@@ -1761,6 +1902,14 @@ def _render_paragraph(
     if image_reference_line is not None:
         return f"{image_reference_line.rstrip()}\n", index + 3
     inline = tokens[index + 1]
+    children = inline.children or []
+    if _inline_children_are_link_run(children):
+        text = _render_packed_link_run(
+            children,
+            options=options,
+            hard_break_styles=hard_break_styles,
+        )
+        return f"{text}\n", index + 3
     use_space_breaks = options.prose_wrap == "always"
     text = escape_ordered_list_like_line_starts(
         _render_inline(

@@ -17,6 +17,7 @@ class LinkDestination:
 
     index: int
     destination: str
+    title: str | None = None
 
 
 def extract_link_destinations(body: str) -> tuple[str, list[LinkDestination]]:
@@ -65,6 +66,20 @@ def formatted_href_from_placeholder(href: str, entries_by_index: dict[int, LinkD
     return url
 
 
+def formatted_title_from_placeholder(href: str, entries_by_index: dict[int, LinkDestination]) -> str | None:
+    """Return pre-normalized title suffix for a placeholder href."""
+    if not href.startswith(PLACEHOLDER_PREFIX):
+        return None
+    try:
+        index = int(href.removeprefix(PLACEHOLDER_PREFIX))
+    except ValueError:
+        return None
+    entry = entries_by_index.get(index)
+    if entry is None:
+        return None
+    return entry.title
+
+
 def _extract_link_destinations_from_text(
     body: str, *, start_index: int
 ) -> tuple[str, list[LinkDestination]]:
@@ -88,7 +103,8 @@ def _extract_link_destinations_from_text(
         destination = body[match.end() : close_index]
         url, title = split_inline_destination(destination)
         suffix = body[close_index]
-        entries.append(LinkDestination(index=index, destination=url))
+        formatted_title = title
+        entries.append(LinkDestination(index=index, destination=url, title=formatted_title))
         title_suffix = f" {title}" if title is not None else ""
         parts.append(f"{prefix}{_placeholder(index)}{title_suffix}{suffix}")
         index += 1

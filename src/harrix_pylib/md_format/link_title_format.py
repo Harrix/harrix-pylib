@@ -19,6 +19,23 @@ def format_link_title(title: str) -> str:
 
 def normalize_inline_link_titles(body: str) -> str:
     """Normalize quoted titles in inline links before parsing."""
+    has_trailing_newline = body.endswith("\n")
+    lines = body.split("\n")
+    if has_trailing_newline and lines:
+        lines.pop()
+    result_lines: list[str] = []
+    for line in lines:
+        if line.lstrip().startswith("|"):
+            result_lines.append(line)
+        else:
+            result_lines.append(_normalize_inline_link_titles_in_text(line))
+    text = "\n".join(result_lines)
+    if has_trailing_newline:
+        text += "\n"
+    return text
+
+
+def _normalize_inline_link_titles_in_text(body: str) -> str:
     parts: list[str] = []
     last = 0
     while last < len(body):
@@ -73,7 +90,7 @@ def _decode_simple_escaped_title(inner: str) -> str | None:
     if final == '"':
         kept = (slash_count - 2) // 2 if slash_count >= 2 else 0
     else:
-        kept = slash_count // 2 if slash_count > 2 else 0
+        kept = _kept_backslashes_before_delimiter(slash_count)
     return "\\" * kept + final
 
 
@@ -82,9 +99,16 @@ def _decode_paren_escaped_title(inner: str) -> str | None:
     if not match:
         return None
     slashes, final = match.groups()
-    slash_count = len(slashes)
-    kept = slash_count // 2 if slash_count > 2 else 0
+    kept = _kept_backslashes_before_delimiter(len(slashes))
     return "\\" * kept + final
+
+
+def _kept_backslashes_before_delimiter(slash_count: int) -> int:
+    if slash_count <= 2:
+        return 0
+    if slash_count > 4:
+        return (slash_count - 2) // 2
+    return slash_count // 2
 
 
 def _escape_title_content(content: str, delimiter: str) -> str:
@@ -120,6 +144,11 @@ def _find_link_close_paren(text: str, open_paren: int) -> int | None:
             continue
         if not in_single and not in_double:
             if char == "(":
+                if depth == 1 and index > open_paren + 1 and text[index - 1].isspace():
+                    title_close = _balanced_paren_title_close(text, index)
+                    if title_close is not None:
+                        index = title_close + 1
+                        continue
                 depth += 1
             elif char == ")":
                 depth -= 1
@@ -208,7 +237,9 @@ def _unescape_title(quoted: str) -> str:
         inner = quoted[1:-1]
         decoded = _decode_simple_escaped_title(inner)
         if decoded is not None:
-            return _canonicalize_link_title_content(decoded)
+            match = re.fullmatch(r"(\\+)([\"'])", inner)
+            if match is None or match.group(2) == quoted[0]:
+                return _canonicalize_link_title_content(decoded)
     else:
         return quoted
     result: list[str] = []

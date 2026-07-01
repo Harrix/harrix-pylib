@@ -97,8 +97,8 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     body = collapse_extra_blank_lines(body)
     body = unwrap_spurious_table_rows(ensure_blank_line_after_tables(body))
     body = ensure_blank_line_after_lists(body)
-    body, link_destinations = extract_link_destinations(body)
     body = normalize_inline_link_titles(body)
+    body, link_destinations = extract_link_destinations(body)
     if not body.strip() and front_matter and not reference_blocks:
         result = front_matter.rstrip() + "\n"
     elif not body.strip() and not front_matter and reference_blocks:
