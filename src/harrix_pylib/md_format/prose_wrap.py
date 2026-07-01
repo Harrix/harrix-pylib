@@ -238,10 +238,10 @@ def should_omit_space_between(left: str, right: str) -> bool:
 def _softbreak_prefers_newline(before: str, after: str) -> bool:
     if not before or not after or not after[0].isalpha():
         return False
-    match = re.search(r"[A-Za-z]+$", before)
+    match = re.search(r"[A-Z][a-z]+$", before)
     if match is None:
         return False
-    return len(match.group()) >= 4 and match.group()[-1].isascii()
+    return len(match.group()) >= 4
 
 
 def _segments(text: str) -> list[str]:
