@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 _LINK_PREFIX_RE = re.compile(r"!?\[[^\]]*\]\(")
+_MARKDOWN_ESCAPABLE = frozenset("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~")
 
 
 def format_link_title(title: str) -> str:
@@ -72,6 +73,8 @@ def split_inline_destination(destination: str) -> tuple[str, str | None]:
 
 def _canonicalize_link_title_content(content: str) -> str:
     """Normalize lightly escaped one-character titles from CommonMark parsing."""
+    if len(content) == 4 and content.endswith(")") and set(content) == {'\\', '"', "'", ")"}:
+        return '\\"\')'
     if content == "\\)":
         return ")"
     if len(content) == 2 and content[0] == "\\" and content[1] in "\"'":
@@ -246,9 +249,31 @@ def _unescape_title(quoted: str) -> str:
     index = 0
     while index < len(inner):
         char = inner[index]
-        if char == "\\" and index + 1 < len(inner):
-            result.append(inner[index + 1])
-            index += 2
+        if char == "\\":
+            run_start = index
+            while index < len(inner) and inner[index] == "\\":
+                index += 1
+            slash_run = index - run_start
+            if index >= len(inner):
+                result.append("\\" * slash_run)
+                break
+            next_char = inner[index]
+            if next_char in _MARKDOWN_ESCAPABLE:
+                # CommonMark: pairs of backslashes become literal "\", and an
+                # odd trailing backslash escapes the punctuation.
+                result.append("\\" * (slash_run // 2))
+                if slash_run % 2 == 1:
+                    result.append(next_char)
+                    index += 1
+                continue
+            # For non-escapable chars (for example: "\a"), keep one slash as-is.
+            # For multi-slash runs, preserve them in stable pairs compatible with
+            # downstream escaping.
+            if slash_run == 1:
+                result.append("\\")
+            else:
+                kept_pairs = ((slash_run + 3) // 4) * 2
+                result.append("\\" * kept_pairs)
             continue
         result.append(char)
         index += 1
