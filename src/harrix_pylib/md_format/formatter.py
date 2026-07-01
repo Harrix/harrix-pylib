@@ -91,7 +91,8 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     body, toml_blocks = extract_toml_blocks(body)
     body, ordered_list_marker_groups = extract_ordered_list_marker_groups(body)
     body, bullet_list_marker_groups = extract_bullet_list_marker_groups(body)
-    body, list_layouts = extract_list_layouts(body)
+    tight_code_indices = {block.index for block in code_blocks if block.tight}
+    body, list_layouts = extract_list_layouts(body, tight_code_indices)
     body, task_list_markers = extract_task_list_markers(body)
     body = collapse_extra_blank_lines(body)
     body = unwrap_spurious_table_rows(ensure_blank_line_after_tables(body))

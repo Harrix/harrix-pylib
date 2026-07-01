@@ -1371,6 +1371,10 @@ def _render_list(
     close_index = _find_close(tokens, index, close_type)
     layout = layouts.pop(0) if layouts else None
     loose = _list_is_loose(tokens, index, close_index)
+    if layout is not None and not any(layout.gaps_before_item) and not any(layout.loose_items):
+        # The token stream can appear loose only because of blank lines auto-inserted
+        # around code-block placeholders; trust the layout when it says the list is tight.
+        loose = False
     lines: list[str] = []
     source_markers: list[int] = []
     bullet_markers: list[str] = []
@@ -1515,20 +1519,19 @@ def _render_list_item_lines(
     in_blockquote: bool = False,
 ) -> list[str]:
     if not item_lines:
-        if marker.endswith("."):
-            return [(" " * base_indent) + marker]
-        return [(" " * base_indent) + f"{marker} "]
+        return [(" " * base_indent) + marker]
 
     align_ordered_marker = marker.endswith((".", ")")) and any(
         block.lstrip().startswith("<") for block in item_lines
     )
     prefix = (" " * base_indent) + _list_marker_prefix(marker, align=align_ordered_marker)
     indent = " " * len(prefix)
-    continuation_indent = (
-        (" " * len(prefix))
-        if base_indent == 0 or marker.endswith(".")
-        else (" " * (base_indent + 2))
-    )
+    if marker.startswith("- ["):
+        continuation_indent = " " * (base_indent + 2)
+    elif base_indent == 0 or marker.endswith("."):
+        continuation_indent = " " * len(prefix)
+    else:
+        continuation_indent = " " * (base_indent + 2)
     rendered: list[str] = []
     for block_index, block in enumerate(item_lines):
         if (
@@ -1639,7 +1642,6 @@ def _render_paragraph(
     if (
         wrap
         and options.prose_wrap == "always"
-        and "\\_" not in text
         and "\u00a0" not in text
         and _should_wrap_prose(text.rstrip("\n"), prefix="", width=options.print_width)
     ):

@@ -15,17 +15,46 @@ class ListLayout:
     loose_items: list[bool]
 
 
-def extract_list_layouts(body: str) -> tuple[str, list[ListLayout]]:
+def extract_list_layouts(
+    body: str, tight_code_indices: set[int] | None = None
+) -> tuple[str, list[ListLayout]]:
     """Collect loose-list layout metadata for each list in the document."""
     lines, trailing = _split_lines(body)
+    scan_lines = _drop_code_placeholder_blanks(lines, tight_code_indices or set())
     layouts: list[ListLayout] = []
     index = 0
-    while index < len(lines):
-        if not is_list_line(lines[index]):
+    while index < len(scan_lines):
+        if not is_list_line(scan_lines[index]):
             index += 1
             continue
-        index = _scan_list(lines, index, layouts)
+        index = _scan_list(scan_lines, index, layouts)
     return _join_lines(lines, trailing_newline=trailing), layouts
+
+
+def _drop_code_placeholder_blanks(lines: list[str], tight_code_indices: set[int]) -> list[str]:
+    """Ignore blank lines that were auto-inserted around tightly attached code placeholders."""
+    if not tight_code_indices:
+        return lines
+
+    def _tight_placeholder(line: str) -> bool:
+        stripped = line.strip()
+        if not stripped.startswith("HSKMDFMTCODE"):
+            return False
+        try:
+            return int(stripped.removeprefix("HSKMDFMTCODE")) in tight_code_indices
+        except ValueError:
+            return False
+
+    is_tight = [_tight_placeholder(line) for line in lines]
+    result: list[str] = []
+    for index, line in enumerate(lines):
+        if not line.strip():
+            prev_is_tight = index > 0 and is_tight[index - 1]
+            next_is_tight = index + 1 < len(lines) and is_tight[index + 1]
+            if prev_is_tight or next_is_tight:
+                continue
+        result.append(line)
+    return result
 
 
 def _blank_separates_sibling_items(lines: list[str], item_index: int, base_indent: int) -> bool:

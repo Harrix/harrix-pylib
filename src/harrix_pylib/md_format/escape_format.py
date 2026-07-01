@@ -8,6 +8,7 @@ import unicodedata
 from harrix_pylib.md_format.code_guard import PLACEHOLDER_PREFIX
 
 _PUNCTUATION = frozenset("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\u3000\uff5e")
+_ASCII_PUNCTUATION = frozenset("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~")
 _IDENTIFIER_UNDERSCORE_BEFORE = frozenset(" \t\r\n(;,.")
 _IDENTIFIER_UNDERSCORE_AFTER = frozenset("<")
 _ARROW_PREFIX = "->"
@@ -36,8 +37,12 @@ def escape_markdown_text(text: str) -> str:
     while index < len(text):
         char = text[index]
         if char == "\\" and index + 1 < len(text):
-            parts.append(char)
-            parts.append(text[index + 1])
+            next_char = text[index + 1]
+            if next_char in _ASCII_PUNCTUATION:
+                parts.append(char + char)
+            else:
+                parts.append(char)
+            parts.append(next_char)
             index += 2
             continue
         if char == "*" and _should_escape_asterisk(text, index):

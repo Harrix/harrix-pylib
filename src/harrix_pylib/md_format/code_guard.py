@@ -15,6 +15,7 @@ class CodeBlock:
     index: int
     lines: list[str]
     base_indent: str
+    tight: bool = False
 
 
 def extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
@@ -41,15 +42,18 @@ def extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
 
         block_lines = _trim_trailing_blank_lines_before_closing_fence(block_lines)
         base_indent = _leading_whitespace(block_lines[0])
-        blocks.append(CodeBlock(index=index, lines=block_lines, base_indent=base_indent))
         placeholder_line = f"{base_indent}{_placeholder(index)}"
 
+        inserted_blank = False
         if result and result[-1].strip():
             result.append("")
+            inserted_blank = True
         result.append(placeholder_line)
         if line_index < len(lines) and lines[line_index].strip():
             result.append("")
+            inserted_blank = True
 
+        blocks.append(CodeBlock(index=index, lines=block_lines, base_indent=base_indent, tight=inserted_blank))
         index += 1
 
     return _join_lines(result, trailing_newline=has_trailing_newline), blocks

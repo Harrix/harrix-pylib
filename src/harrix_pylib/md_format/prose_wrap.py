@@ -168,7 +168,12 @@ def _segments(text: str) -> list[str]:
             segments.append(text[position])
             position += 1
             continue
-        segments.append(match.group(0))
+        segment = match.group(0)
+        if segment[:1] in {"_", "*", "~"} and position > 0 and text[position - 1] == "\\":
+            segments.append(text[position])
+            position += 1
+            continue
+        segments.append(segment)
         position = match.end()
     return segments
 
