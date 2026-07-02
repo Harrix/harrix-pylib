@@ -288,6 +288,22 @@ def test_format_markdown_content_keeps_table_row_with_empty_cell() -> None:
     assert len(set(col1_widths)) == 1
 
 
+def test_format_markdown_content_keeps_multiple_trailing_empty_table_cells() -> None:
+    source = (
+        "| Manufacturer | Boot Menu | BIOS Key | Type | Models |\n"
+        "| --- | --- | --- | --- | --- |\n"
+        "| ACER | Esc, F12, F9 | Del, F2 | | |\n"
+        "| ASUS | F8 | F9 | desktop | |\n"
+    )
+    result = format_markdown_content(source, end_of_line="lf")
+    table_lines = [line for line in result.splitlines() if line.strip().startswith("|")]
+    assert table_lines
+    expected_pipes = table_lines[0].count("|")
+    assert all(line.count("|") == expected_pipes for line in table_lines)
+    assert "ACER" in result and "Del, F2" in result
+    assert "ASUS" in result and "desktop" in result
+
+
 def test_format_markdown_content_formats_math() -> None:
     result = format_markdown_content("$E=mc^2$\n")
     assert "$E=mc^2$" in result

@@ -189,7 +189,7 @@ def _render_table(
     lines = [
         _format_table_row(header, column_widths, align_row),
         _format_table_separator(column_widths, align_row),
-        *(_format_table_row(row, column_widths, align_row, strip_trailing_empty=True) for row in filtered_body_rows),
+        *(_format_table_row(row, column_widths, align_row) for row in filtered_body_rows),
     ]
     result = "\n".join(lines) + "\n"
     if trailing_paragraphs:
