@@ -5,7 +5,12 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from harrix_pylib.md_format.link_title_format import _find_link_close_paren, split_inline_destination
+from harrix_pylib.md_format.link_title_format import (
+    _find_link_close_paren,
+    _unescape_title,
+    format_link_title,
+    split_inline_destination,
+)
 
 PLACEHOLDER_PREFIX = "HSKMDFMTLD"
 _LINK_PREFIX_RE = re.compile(r"!?\[[^\]]*\]\(")
@@ -106,8 +111,8 @@ def _extract_link_destinations_from_text(
         destination = body[match.end() : close_index]
         url, title = split_inline_destination(destination)
         suffix = body[close_index]
-        formatted_title = title
-        entries.append(LinkDestination(index=index, destination=url, title=formatted_title))
+        display_title = format_link_title(_unescape_title(title)) if title is not None else None
+        entries.append(LinkDestination(index=index, destination=url, title=display_title))
         title_suffix = f" {title}" if title is not None else ""
         parts.append(f"{prefix}{_placeholder(index)}{title_suffix}{suffix}")
         index += 1

@@ -34,9 +34,6 @@ from harrix_pylib.md_format.table_format import ensure_blank_line_after_tables, 
 from harrix_pylib.md_format.task_list_format import extract_task_list_markers
 
 _EMPTY_FENCE_RE = re.compile(r"(?m)^(?P<indent>[ \t]*)(?P<fence>`{3,}|~{3,})[ \t]*\n(?P=indent)(?P=fence)[ \t]*$")
-_MAGICAL_LINK_WRONG_A = '[a](https://example.com "\\\\\\"\')")'
-_MAGICAL_LINK_WRONG_B = '[a](https://example.com \'"\\\\\\\\\')\')'
-_MAGICAL_LINK_CANONICAL = '[a](https://example.com "\\\\"\')")'
 
 
 def format_markdown_content(
@@ -129,16 +126,8 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
         rendered_body = restore_yaml_blocks(rendered_body, yaml_blocks)
         rendered_body = restore_ignore_blocks(rendered_body, ignore_blocks)
         result = join_front_matter(front_matter, rendered_body) if front_matter else rendered_body
-    result = _normalize_known_link_title_edge_cases(result)
     result = trim_trailing_blank_lines(result)
     return _normalize_end_of_line(result, options.end_of_line)
-
-
-def _normalize_known_link_title_edge_cases(text: str) -> str:
-    """Normalize known upstream-compatible inline-title edge cases."""
-    return text.replace(_MAGICAL_LINK_WRONG_A, _MAGICAL_LINK_CANONICAL).replace(
-        _MAGICAL_LINK_WRONG_B, _MAGICAL_LINK_CANONICAL
-    )
 
 
 def _normalize_end_of_line(text: str, end_of_line: str) -> str:
