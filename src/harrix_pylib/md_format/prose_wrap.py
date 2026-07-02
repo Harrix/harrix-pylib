@@ -8,33 +8,34 @@ import unicodedata
 from harrix_pylib.md_format.table_format import text_display_width
 
 
-def _prose_display_width(text: str) -> int:
-    """Return display width treating each backslash escape (\\X) as 1 column (like Prettier)."""
-    collapsed = re.sub(r"\\.", lambda m: m.group(0)[1], text)
-    return text_display_width(collapsed)
-
-_INLINE_SEGMENT_RE = re.compile(
-    r"(`+[^`]*`+)"
-    r"|(\[\[\[?[^\n]*?\]\]\]?)"
-    r"|(!?\[[^\]]*\]\(<[^>]+>\))"
-    r"|(!?\[[^\]]*\]\([^)]*\))"
-    r"|(<[^>\n]+>)"
-    r"|(\*\*[^*]+\*\*)"
-    r"|(_[^_]+_)"
-    r"|(~~[^~]+~~)"
-    r"|(\\\n)"
-    r"|([ \t]+)"
-    r"|([^\s`\[!<>_*\\~]+)"
-)
-
-
-def wrap_prose(text: str, *, width: int, prefix: str = "", continuation: str | None = None) -> str:
-    """Wrap phrasing Markdown text to the given display width."""
-    if not text or width <= 0:
-        return text
-    continuation = continuation if continuation is not None else prefix
-    lines = _wrap_text_lines(text, width=width, first_prefix=prefix, next_prefix=continuation)
-    return "\n".join(_avoid_list_marker_line_starts(lines))
+def should_omit_space_between(left: str, right: str) -> bool:
+    """Return whether phrasing text on both sides of a break should be joined without a space."""
+    if not left or not right:
+        return False
+    if _is_hangul(left[-1]) or _is_hangul(right[0]):
+        return False
+    last, first = left[-1], right[0]
+    if last == "・" or first == "・":
+        return True
+    if _kana_continuation_join(left, right):
+        return True
+    if _is_katakana(last) or _is_katakana(first):
+        return False
+    if last in "」』）】" and first == "(":
+        return True
+    if _is_cjk(last) and _is_cjk(first):
+        return True
+    if _is_cjk(last) and first.isascii() and first.isalnum():
+        return True
+    if first in "、。，．！？）】」〉》〕〗〙〛":
+        return True
+    if last in "（【「〈《〔〖〘〚":
+        return True
+    if last in ",.!?:;":
+        return False
+    if first in ",.!?:;":
+        return False
+    return False
 
 
 def wrap_paragraph_prose(text: str, *, width: int) -> str:
@@ -54,49 +55,13 @@ def wrap_paragraph_prose(text: str, *, width: int) -> str:
     return f"{head}{hard_break}{wrapped_tail}"
 
 
-def _wrap_prose_after_hard_break(text: str, *, width: int) -> str:
-    words = re.findall(r"\S+", text)
-    if not words:
+def wrap_prose(text: str, *, width: int, prefix: str = "", continuation: str | None = None) -> str:
+    """Wrap phrasing Markdown text to the given display width."""
+    if not text or width <= 0:
         return text
-    lines: list[str] = []
-    current: list[str] = []
-    current_width = 0
-    first_line = True
-
-    for word in words:
-        word_width = text_display_width(word)
-        gap = 1 if current else 0
-        if (
-            current
-            and current_width + gap + word_width > width
-            and first_line
-            and word_width <= width
-        ):
-            current.append(word)
-            lines.append(" ".join(current))
-            current = []
-            current_width = 0
-            first_line = False
-            continue
-        if current and current_width + gap + word_width > width and not first_line:
-            lines.append(" ".join(current))
-            current = [word]
-            current_width = word_width
-            continue
-        if current:
-            current.append(word)
-            current_width += gap + word_width
-        else:
-            current = [word]
-            current_width = word_width
-
-    if current:
-        lines.append(" ".join(current))
-    return "\n".join(lines)
-
-
-_ORDERED_LIST_LINE_START_RE = re.compile(r"^(\d+)\.(.*)$")
-_LINK_SEGMENT_RE = re.compile(r"!?\[[^\]]*\]\([^)]*\)")
+    continuation = continuation if continuation is not None else prefix
+    lines = _wrap_text_lines(text, width=width, first_prefix=prefix, next_prefix=continuation)
+    return "\n".join(_avoid_list_marker_line_starts(lines))
 
 
 def _avoid_list_marker_line_starts(lines: list[str]) -> list[str]:
@@ -149,13 +114,6 @@ def _avoid_list_marker_line_starts(lines: list[str]) -> list[str]:
     return fixed
 
 
-def _is_hangul(char: str) -> bool:
-    if not char:
-        return False
-    code = ord(char)
-    return 0x1100 <= code <= 0x11FF or 0xAC00 <= code <= 0xD7AF
-
-
 def _is_cjk(char: str) -> bool:
     if not char:
         return False
@@ -172,11 +130,11 @@ def _is_cjk(char: str) -> bool:
     )
 
 
-def _is_katakana(char: str) -> bool:
+def _is_hangul(char: str) -> bool:
     if not char:
         return False
     code = ord(char)
-    return 0x30A0 <= code <= 0x30FF
+    return 0x1100 <= code <= 0x11FF or 0xAC00 <= code <= 0xD7AF
 
 
 def _is_hiragana(char: str) -> bool:
@@ -186,7 +144,11 @@ def _is_hiragana(char: str) -> bool:
     return 0x3040 <= code <= 0x309F
 
 
-_SMALL_KANA = frozenset("ァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖ")
+def _is_katakana(char: str) -> bool:
+    if not char:
+        return False
+    code = ord(char)
+    return 0x30A0 <= code <= 0x30FF
 
 
 def _is_small_kana(char: str) -> bool:
@@ -205,43 +167,10 @@ def _kana_continuation_join(left: str, right: str) -> bool:
     return trailing_kana >= 2
 
 
-def should_omit_space_between(left: str, right: str) -> bool:
-    """Return whether phrasing text on both sides of a break should be joined without a space."""
-    if not left or not right:
-        return False
-    if _is_hangul(left[-1]) or _is_hangul(right[0]):
-        return False
-    last, first = left[-1], right[0]
-    if last == "・" or first == "・":
-        return True
-    if _kana_continuation_join(left, right):
-        return True
-    if _is_katakana(last) or _is_katakana(first):
-        return False
-    if last in "」』）】" and first == "(":
-        return True
-    if _is_cjk(last) and _is_cjk(first):
-        return True
-    if _is_cjk(last) and first.isascii() and first.isalnum():
-        return True
-    if first in "、。，．！？）】」〉》〕〗〙〛":
-        return True
-    if last in "（【「〈《〔〖〘〚":
-        return True
-    if last in ",.!?:;":
-        return False
-    if first in ",.!?:;":
-        return False
-    return False
-
-
-def _softbreak_prefers_newline(before: str, after: str) -> bool:
-    if not before or not after or not after[0].isalpha():
-        return False
-    match = re.search(r"[A-Z][a-z]+$", before)
-    if match is None:
-        return False
-    return len(match.group()) >= 4
+def _prose_display_width(text: str) -> int:
+    """Return display width treating each backslash escape (\\X) as 1 column (like Prettier)."""
+    collapsed = re.sub(r"\\.", lambda m: m.group(0)[1], text)
+    return text_display_width(collapsed)
 
 
 def _segments(text: str) -> list[str]:
@@ -261,6 +190,15 @@ def _segments(text: str) -> list[str]:
         segments.append(segment)
         position = match.end()
     return segments
+
+
+def _softbreak_prefers_newline(before: str, after: str) -> bool:
+    if not before or not after or not after[0].isalpha():
+        return False
+    match = re.search(r"[A-Z][a-z]+$", before)
+    if match is None:
+        return False
+    return len(match.group()) >= 4
 
 
 def _wrap_plain_words(text: str, *, width: int, first_prefix: str, next_prefix: str) -> list[str]:
@@ -294,6 +232,42 @@ def _wrap_plain_words(text: str, *, width: int, first_prefix: str, next_prefix: 
     return lines or [first_prefix.rstrip()]
 
 
+def _wrap_prose_after_hard_break(text: str, *, width: int) -> str:
+    words = re.findall(r"\S+", text)
+    if not words:
+        return text
+    lines: list[str] = []
+    current: list[str] = []
+    current_width = 0
+    first_line = True
+
+    for word in words:
+        word_width = text_display_width(word)
+        gap = 1 if current else 0
+        if current and current_width + gap + word_width > width and first_line and word_width <= width:
+            current.append(word)
+            lines.append(" ".join(current))
+            current = []
+            current_width = 0
+            first_line = False
+            continue
+        if current and current_width + gap + word_width > width and not first_line:
+            lines.append(" ".join(current))
+            current = [word]
+            current_width = word_width
+            continue
+        if current:
+            current.append(word)
+            current_width += gap + word_width
+        else:
+            current = [word]
+            current_width = word_width
+
+    if current:
+        lines.append(" ".join(current))
+    return "\n".join(lines)
+
+
 def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: str) -> list[str]:
     if _prose_display_width(first_prefix + text) <= width:
         return [first_prefix + text]
@@ -317,12 +291,8 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
             continue
 
         width_with_segment = _prose_display_width(current + segment)
-        if width_with_segment <= width or current in {first_prefix, next_prefix} and not current.strip():
-            if (
-                segment.isspace()
-                and width_with_segment > width
-                and current not in {first_prefix, next_prefix}
-            ):
+        if width_with_segment <= width or (current in {first_prefix, next_prefix} and not current.strip()):
+            if segment.isspace() and width_with_segment > width and current not in {first_prefix, next_prefix}:
                 lines.append(current.rstrip())
                 current = next_prefix
                 current_width = _prose_display_width(next_prefix)
@@ -395,3 +365,25 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
     if current.strip() or current in {first_prefix, next_prefix}:
         lines.append(current.rstrip())
     return lines or [first_prefix.rstrip()]
+
+
+_INLINE_SEGMENT_RE = re.compile(
+    r"(`+[^`]*`+)"
+    r"|(\[\[\[?[^\n]*?\]\]\]?)"
+    r"|(!?\[[^\]]*\]\(<[^>]+>\))"
+    r"|(!?\[[^\]]*\]\([^)]*\))"
+    r"|(<[^>\n]+>)"
+    r"|(\*\*[^*]+\*\*)"
+    r"|(_[^_]+_)"
+    r"|(~~[^~]+~~)"
+    r"|(\\\n)"
+    r"|([ \t]+)"
+    r"|([^\s`\[!<>_*\\~]+)"
+)
+
+
+_ORDERED_LIST_LINE_START_RE = re.compile(r"^(\d+)\.(.*)$")
+_LINK_SEGMENT_RE = re.compile(r"!?\[[^\]]*\]\([^)]*\)")
+
+
+_SMALL_KANA = frozenset("ァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖ")

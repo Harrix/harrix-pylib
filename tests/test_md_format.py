@@ -49,9 +49,7 @@ def test_format_markdown_content_matches_fixture(before_name: str, after_name: s
 def test_format_markdown_content_does_not_wrap_long_list_links_by_default() -> None:
     source = "- [Не сохраняем сессию с открытыми файлами](#не-сохраняем-сессию-с-открытыми-файлами)\n"
     result = format_markdown_content(source, end_of_line="lf")
-    assert (
-        "[Не сохраняем сессию с открытыми файлами](#не-сохраняем-сессию-с-открытыми-файлами)" in result
-    )
+    assert "[Не сохраняем сессию с открытыми файлами](#не-сохраняем-сессию-с-открытыми-файлами)" in result
     assert "фай\n" not in result
 
 
@@ -66,18 +64,46 @@ def test_format_markdown_content_preserves_wiki_link() -> None:
     assert "[[A simple wiki link]]" in result
 
 
-def test_format_markdown_content_preserves_angle_autolink() -> None:
-    source = "GitHub: <https://github.com/Harrix/harrix-pylib>\n"
+@pytest.mark.parametrize(
+    ("source", "expected", "forbidden"),
+    [
+        (
+            "GitHub: <https://github.com/Harrix/harrix-pylib>\n",
+            "GitHub: <https://github.com/Harrix/harrix-pylib>",
+            "[https://github.com/Harrix/harrix-pylib]",
+        ),
+        (
+            "<https://en.wikipedia.org/wiki/Rod_(optical_phenomenon)>\n",
+            "<https://en.wikipedia.org/wiki/Rod_(optical_phenomenon)>",
+            "\\_",
+        ),
+        (
+            "[Rod](https://en.wikipedia.org/wiki/Rod_(optical_phenomenon))\n",
+            "[Rod](https://en.wikipedia.org/wiki/Rod_(optical_phenomenon))",
+            "\\_",
+        ),
+        (
+            "GitHub: [harrix-pylib](https://github.com/Harrix/harrix-pylib)\n",
+            "[harrix-pylib](https://github.com/Harrix/harrix-pylib)",
+            "",
+        ),
+        (
+            "Email: <user@example.com>\n",
+            "Email: <user@example.com>",
+            "[user@example.com](mailto:user@example.com)",
+        ),
+        (
+            "Site: [MSI website](http://www.msi.com)\n",
+            "[MSI website](http://www.msi.com)",
+            "<www.msi.com>",
+        ),
+    ],
+)
+def test_format_markdown_content_preserves_links(source: str, expected: str, forbidden: str) -> None:
     result = format_markdown_content(source)
-    assert "GitHub: <https://github.com/Harrix/harrix-pylib>" in result
-    assert "[https://github.com/Harrix/harrix-pylib]" not in result
-
-
-def test_format_markdown_content_preserves_angle_autolink_with_underscore_in_url() -> None:
-    source = "<https://en.wikipedia.org/wiki/Rod_(optical_phenomenon)>\n"
-    result = format_markdown_content(source)
-    assert "<https://en.wikipedia.org/wiki/Rod_(optical_phenomenon)>" in result
-    assert "\\_" not in result
+    assert expected in result
+    if forbidden:
+        assert forbidden not in result
 
 
 def test_format_markdown_content_preserves_many_angle_autolinks_without_placeholder_collision() -> None:
@@ -90,38 +116,11 @@ def test_format_markdown_content_preserves_many_angle_autolinks_without_placehol
     assert result.count("<https://example.com/1>") == 1
 
 
-def test_format_markdown_content_preserves_named_link_url_with_underscore() -> None:
-    source = "[Rod](https://en.wikipedia.org/wiki/Rod_(optical_phenomenon))\n"
-    result = format_markdown_content(source)
-    assert "[Rod](https://en.wikipedia.org/wiki/Rod_(optical_phenomenon))" in result
-    assert "\\_" not in result
-
-
-def test_format_markdown_content_preserves_named_link() -> None:
-    source = "GitHub: [harrix-pylib](https://github.com/Harrix/harrix-pylib)\n"
-    result = format_markdown_content(source)
-    assert "[harrix-pylib](https://github.com/Harrix/harrix-pylib)" in result
-
-
-def test_format_markdown_content_preserves_email_autolink() -> None:
-    source = "Email: <user@example.com>\n"
-    result = format_markdown_content(source)
-    assert "Email: <user@example.com>" in result
-    assert "[user@example.com](mailto:user@example.com)" not in result
-
-
 def test_format_markdown_content_formats_bare_domain_as_angle_autolink() -> None:
     source = "| Site | www.msi.com |\n| --- | --- |\n"
     result = format_markdown_content(source)
     assert "<www.msi.com>" in result
     assert "[www.msi.com](http://www.msi.com)" not in result
-
-
-def test_format_markdown_content_preserves_named_link_with_different_text() -> None:
-    source = "Site: [MSI website](http://www.msi.com)\n"
-    result = format_markdown_content(source)
-    assert "[MSI website](http://www.msi.com)" in result
-    assert "<www.msi.com>" not in result
 
 
 def test_format_markdown_content_preserves_front_matter() -> None:
@@ -152,24 +151,20 @@ def test_format_markdown_content_formats_italic_with_underscores() -> None:
         assert "*No docstring provided.*" not in result
 
 
-def test_format_markdown_content_preserves_cyrillic_link_fragments() -> None:
-    source = (
-        "- [Жареная картошка](#жареная-картошка)\n"
-        "- [Заклинание «Соль-вода!» против ос и пчёл](#заклинание-соль-вода-против-ос-и-пчёл)\n"  # noqa: RUF001
-    )
+@pytest.mark.parametrize(
+    "source",
+    [
+        (
+            "- [Жареная картошка](#жареная-картошка)\n"
+            "- [Заклинание «Соль-вода!» против ос и пчёл](#заклинание-соль-вода-против-ос-и-пчёл)\n"  # noqa: RUF001
+        ),
+        "![Настройки клавиатуры](Ноутбук__Gigabyte-Aero-15-OLED-XD/img/keyboard.png)\n",
+    ],
+)
+def test_format_markdown_content_preserves_cyrillic_urls_without_encoding(source: str) -> None:
     result = format_markdown_content(source)
-    assert "[Жареная картошка](#жареная-картошка)" in result
-    assert (
-        "[Заклинание «Соль-вода!» против ос и пчёл](#заклинание-соль-вода-против-ос-и-пчёл)"  # noqa: RUF001
-        in result
-    )
-    assert "%D0" not in result
-
-
-def test_format_markdown_content_preserves_cyrillic_image_paths() -> None:
-    source = "![Настройки клавиатуры](Ноутбук__Gigabyte-Aero-15-OLED-XD/img/keyboard.png)\n"
-    result = format_markdown_content(source)
-    assert "![Настройки клавиатуры](Ноутбук__Gigabyte-Aero-15-OLED-XD/img/keyboard.png)" in result
+    for line in source.strip().splitlines():
+        assert line in result
     assert "%D0" not in result
 
 

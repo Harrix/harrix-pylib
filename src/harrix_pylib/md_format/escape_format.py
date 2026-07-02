@@ -9,6 +9,7 @@ from harrix_pylib.md_format.code_guard import PLACEHOLDER_PREFIX
 
 _PUNCTUATION = frozenset("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\u3000\uff5e")
 _ASCII_PUNCTUATION = frozenset("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~")
+ASCII_PUNCTUATION = _ASCII_PUNCTUATION
 _IDENTIFIER_UNDERSCORE_BEFORE = frozenset(" \t\r\n(;,.")
 _IDENTIFIER_UNDERSCORE_AFTER = frozenset("<")
 _ARROW_PREFIX = "->"

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import unicodedata
 
+from harrix_pylib.md_format.text_lines import ensure_blank_line_after_active_block
+
 _EMOJI_CODE_POINT_RANGES = (
     (0x2300, 0x23FF),
     (0x2600, 0x27BF),
@@ -13,21 +15,7 @@ _EMOJI_CODE_POINT_RANGES = (
 
 def ensure_blank_line_after_tables(body: str) -> str:
     """Insert a blank line after a GFM table when the next line is not a table row."""
-    lines = body.split("\n")
-    result: list[str] = []
-    in_table = False
-    for line in lines:
-        stripped = line.strip()
-        is_table = is_table_line(line)
-        if in_table and stripped and not is_table:
-            result.append("")
-            in_table = False
-        if is_table:
-            in_table = True
-        elif stripped:
-            in_table = False
-        result.append(line)
-    return "\n".join(result)
+    return ensure_blank_line_after_active_block(body, is_block_line=is_table_line)
 
 
 def is_table_line(line: str) -> bool:

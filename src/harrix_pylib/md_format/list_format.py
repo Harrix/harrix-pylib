@@ -6,8 +6,11 @@ import re
 
 from harrix_pylib.md_format.table_format import is_table_line
 
-_LIST_ITEM_PATTERN = re.compile(r"^[-*+]\s")
-_ORDERED_LIST_ITEM_PATTERN = re.compile(r"^\d+[.)]\s")
+BULLET_LIST_ITEM_RE = re.compile(r"^[-*+]\s")
+ORDERED_LIST_ITEM_RE = re.compile(r"^\d+[.)]\s")
+LIST_MARKER_LINE_RE = re.compile(r"^[-*+]\s|^\d+[.)]\s")
+_LIST_ITEM_PATTERN = BULLET_LIST_ITEM_RE
+_ORDERED_LIST_ITEM_PATTERN = ORDERED_LIST_ITEM_RE
 
 
 def ensure_blank_line_after_lists(body: str) -> str:
@@ -53,7 +56,7 @@ def is_list_item_continuation_line(previous_line: str, line: str) -> bool:
         return is_list_line(previous_line) or is_list_continuation(previous_line)
     if stripped.startswith(("#", "```", "$$", "<details", "</details>", "<summary", "</summary>", "`", "![", "|")):
         return False
-    if stripped.startswith(">") and not line[:1] in {" ", "\t"}:
+    if stripped.startswith(">") and line[:1] not in {" ", "\t"}:
         return False
     if is_list_line(previous_line):
         return True

@@ -11,14 +11,63 @@ lang: en
 
 ## Contents
 
-- [🔧 Function `collapse_extra_blank_lines`](#-function-collapse_extra_blank_lin
-  es)
+- [🏛️ Class `TomlBlock`](#%EF%B8%8F-class-tomlblock)
+- [🏛️ Class `YamlBlock`](#%EF%B8%8F-class-yamlblock)
+- [🔧 Function `collapse_extra_blank_lines`](#-function-collapse_extra_blank_lines)
 - [🔧 Function `compact_front_matter`](#-function-compact_front_matter)
+- [🔧 Function `extract_toml_blocks`](#-function-extract_toml_blocks)
+- [🔧 Function `extract_yaml_blocks`](#-function-extract_yaml_blocks)
 - [🔧 Function `join_front_matter`](#-function-join_front_matter)
 - [🔧 Function `prepend_markdown_header`](#-function-prepend_markdown_header)
+- [🔧 Function `restore_toml_blocks`](#-function-restore_toml_blocks)
+- [🔧 Function `restore_yaml_blocks`](#-function-restore_yaml_blocks)
 - [🔧 Function `split_front_matter`](#-function-split_front_matter)
-- [🔧 Function `trim_trailing_blank_lines`](#-function-trim_trailing_blank_lines
-  )
+- [🔧 Function `trim_trailing_blank_lines`](#-function-trim_trailing_blank_lines)
+- [🔧 Function `_extract_delimited_blocks`](#-function-_extract_delimited_blocks)
+- [🔧 Function `_find_delimited_block_close`](#-function-_find_delimited_block_close)
+- [🔧 Function `_format_yaml_block`](#-function-_format_yaml_block)
+- [🔧 Function `_format_yaml_line`](#-function-_format_yaml_line)
+- [🔧 Function `_restore_delimited_blocks`](#-function-_restore_delimited_blocks)
+
+</details>
+
+## 🏛️ Class `TomlBlock`
+
+```python
+class TomlBlock
+```
+
+Stored TOML front matter style block from the markdown body.
+
+<details>
+<summary>Code:</summary>
+
+```python
+class TomlBlock:
+
+    index: int
+    lines: list[str]
+```
+
+</details>
+
+## 🏛️ Class `YamlBlock`
+
+```python
+class YamlBlock
+```
+
+Stored YAML block from the markdown body.
+
+<details>
+<summary>Code:</summary>
+
+```python
+class YamlBlock:
+
+    index: int
+    lines: list[str]
+```
 
 </details>
 
@@ -73,6 +122,42 @@ def compact_front_matter(front_matter: str) -> str:
 
 </details>
 
+## 🔧 Function `extract_toml_blocks`
+
+```python
+def extract_toml_blocks(body: str) -> tuple[str, list[TomlBlock]]
+```
+
+Replace standalone TOML blocks in the markdown body with placeholders.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def extract_toml_blocks(body: str) -> tuple[str, list[TomlBlock]]:
+    return _extract_delimited_blocks(body, delimiter="+++", prefix=_TOML_BLOCK_PREFIX, block_class=TomlBlock)
+```
+
+</details>
+
+## 🔧 Function `extract_yaml_blocks`
+
+```python
+def extract_yaml_blocks(body: str) -> tuple[str, list[YamlBlock]]
+```
+
+Replace standalone YAML blocks in the markdown body with placeholders.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def extract_yaml_blocks(body: str) -> tuple[str, list[YamlBlock]]:
+    return _extract_delimited_blocks(body, delimiter="---", prefix=_YAML_BLOCK_PREFIX, block_class=YamlBlock)
+```
+
+</details>
+
 ## 🔧 Function `join_front_matter`
 
 ```python
@@ -116,6 +201,50 @@ def prepend_markdown_header(header: str, markdown_text: str) -> str:
     if not body:
         return f"{header}\n"
     return f"{header}\n\n{body}"
+```
+
+</details>
+
+## 🔧 Function `restore_toml_blocks`
+
+```python
+def restore_toml_blocks(text: str, blocks: list[TomlBlock]) -> str
+```
+
+Restore TOML body blocks.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def restore_toml_blocks(text: str, blocks: list[TomlBlock]) -> str:
+    return _restore_delimited_blocks(
+        text,
+        blocks,
+        prefix=_TOML_BLOCK_PREFIX,
+        pattern=_TOML_BLOCK_RE,
+        formatter=lambda block: "\n".join(line.rstrip() for line in block.lines),
+    )
+```
+
+</details>
+
+## 🔧 Function `restore_yaml_blocks`
+
+```python
+def restore_yaml_blocks(text: str, blocks: list[YamlBlock]) -> str
+```
+
+Restore YAML body blocks.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def restore_yaml_blocks(text: str, blocks: list[YamlBlock]) -> str:
+    return _restore_delimited_blocks(
+        text, blocks, prefix=_YAML_BLOCK_PREFIX, pattern=_YAML_BLOCK_RE, formatter=_format_yaml_block
+    )
 ```
 
 </details>
@@ -168,6 +297,155 @@ def trim_trailing_blank_lines(text: str) -> str:
     if not lines:
         return "\n"
     return "\n".join(lines) + "\n"
+```
+
+</details>
+
+## 🔧 Function `_extract_delimited_blocks`
+
+```python
+def _extract_delimited_blocks(body: str) -> tuple[str, list[BlockT]]
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _extract_delimited_blocks(
+    body: str,
+    *,
+    delimiter: str,
+    prefix: str,
+    block_class: type[BlockT],
+) -> tuple[str, list[BlockT]]:
+    lines, trailing = split_lines(body)
+    result: list[str] = []
+    blocks: list[BlockT] = []
+    index = 0
+    line_index = 0
+
+    while line_index < len(lines):
+        if lines[line_index].strip() != delimiter:
+            result.append(lines[line_index])
+            line_index += 1
+            continue
+
+        close_index = _find_delimited_block_close(lines, line_index + 1, delimiter=delimiter)
+        if close_index is None:
+            result.append(lines[line_index])
+            line_index += 1
+            continue
+
+        block_lines = lines[line_index : close_index + 1]
+        blocks.append(block_class(index=index, lines=block_lines))
+        result.append(f"{prefix}{index}")
+        index += 1
+        line_index = close_index + 1
+
+    return join_lines(result, trailing_newline=trailing), blocks
+```
+
+</details>
+
+## 🔧 Function `_find_delimited_block_close`
+
+```python
+def _find_delimited_block_close(lines: list[str], start_index: int) -> int | None
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _find_delimited_block_close(lines: list[str], start_index: int, *, delimiter: str) -> int | None:
+    for line_index in range(start_index, len(lines)):
+        if lines[line_index].strip() == delimiter:
+            return line_index
+        if lines[line_index].strip() == "":
+            return None
+    return None
+```
+
+</details>
+
+## 🔧 Function `_format_yaml_block`
+
+```python
+def _format_yaml_block(block: YamlBlock) -> str
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _format_yaml_block(block: YamlBlock) -> str:
+    inner = [_format_yaml_line(line) for line in block.lines[1:-1] if line.strip()]
+    if not inner:
+        return "---\n---"
+    return "---\n" + "\n".join(inner) + "\n---"
+```
+
+</details>
+
+## 🔧 Function `_format_yaml_line`
+
+```python
+def _format_yaml_line(line: str) -> str
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _format_yaml_line(line: str) -> str:
+    stripped = line.strip()
+    if stripped.startswith("-"):
+        stripped = re.sub(r"^-\s+", "- ", stripped)
+    return re.sub(r":\s+", ": ", stripped)
+```
+
+</details>
+
+## 🔧 Function `_restore_delimited_blocks`
+
+```python
+def _restore_delimited_blocks(text: str, blocks: list[BlockT]) -> str
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _restore_delimited_blocks(
+    text: str,
+    blocks: list[BlockT],
+    *,
+    prefix: str,
+    pattern: re.Pattern[str],
+    formatter: Callable[[BlockT], str],
+) -> str:
+    if not blocks:
+        return text
+    blocks_by_index = {block.index: block for block in blocks}
+
+    def replace(match: re.Match[str]) -> str:
+        block_index = int(match.group().removeprefix(prefix))
+        block = blocks_by_index.get(block_index)
+        if block is None:
+            return match.group()
+        return formatter(block)
+
+    return pattern.sub(replace, text)
 ```
 
 </details>

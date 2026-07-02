@@ -11,16 +11,13 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `CodeBlock`](#️-class-codeblock)
+- [🏛️ Class `CodeBlock`](#%EF%B8%8F-class-codeblock)
 - [🔧 Function `extract_code_blocks`](#-function-extract_code_blocks)
 - [🔧 Function `restore_code_blocks`](#-function-restore_code_blocks)
-- [🔧 Function `_join_lines`](#-function-_join_lines)
+- [🔧 Function `_format_markdown_fence_block`](#-function-_format_markdown_fence_block)
 - [🔧 Function `_leading_whitespace`](#-function-_leading_whitespace)
-- [🔧 Function `_placeholder`](#-function-_placeholder)
 - [🔧 Function `_reindent_line`](#-function-_reindent_line)
-- [🔧 Function `_split_lines`](#-function-_split_lines)
-- [🔧 Function `_trim_trailing_blank_lines_before_closing_fence`](#-function-_tr
-  im_trailing_blank_lines_before_closing_fence)
+- [🔧 Function `_trim_trailing_blank_lines_before_closing_fence`](#-function-_trim_trailing_blank_lines_before_closing_fence)
 
 </details>
 
@@ -41,6 +38,7 @@ class CodeBlock:
     index: int
     lines: list[str]
     base_indent: str
+    tight: bool = False
 ```
 
 </details>
@@ -58,9 +56,7 @@ Replace fenced code blocks with placeholders and store originals verbatim.
 
 ```python
 def extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
-    from harrix_pylib.funcs_md import identify_code_blocks  # noqa: PLC0415
-
-    lines, has_trailing_newline = _split_lines(body)
+    lines, has_trailing_newline = split_lines(body)
     code_block_info = list(identify_code_blocks(lines))
     result: list[str] = []
     blocks: list[CodeBlock] = []
@@ -80,18 +76,21 @@ def extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
 
         block_lines = _trim_trailing_blank_lines_before_closing_fence(block_lines)
         base_indent = _leading_whitespace(block_lines[0])
-        blocks.append(CodeBlock(index=index, lines=block_lines, base_indent=base_indent))
-        placeholder_line = f"{base_indent}{_placeholder(index)}"
+        placeholder_line = f"{base_indent}{make_placeholder(PLACEHOLDER_PREFIX, index)}"
 
+        inserted_blank = False
         if result and result[-1].strip():
             result.append("")
+            inserted_blank = True
         result.append(placeholder_line)
         if line_index < len(lines) and lines[line_index].strip():
             result.append("")
+            inserted_blank = True
 
+        blocks.append(CodeBlock(index=index, lines=block_lines, base_indent=base_indent, tight=inserted_blank))
         index += 1
 
-    return _join_lines(result, trailing_newline=has_trailing_newline), blocks
+    return join_lines(result, trailing_newline=has_trailing_newline), blocks
 ```
 
 </details>
@@ -108,12 +107,12 @@ Restore fenced code blocks from placeholders.
 <summary>Code:</summary>
 
 ```python
-def restore_code_blocks(text: str, blocks: list[CodeBlock]) -> str:
+def restore_code_blocks(text: str, blocks: list[CodeBlock], *, options: FormatOptions | None = None) -> str:
     if not blocks:
         return text
 
     blocks_by_index = {block.index: block for block in blocks}
-    lines, has_trailing_newline = _split_lines(text)
+    lines, has_trailing_newline = split_lines(text)
     restored: list[str] = []
     for line in lines:
         stripped = line.strip()
@@ -127,19 +126,20 @@ def restore_code_blocks(text: str, blocks: list[CodeBlock]) -> str:
             if block is None:
                 restored.append(line)
                 continue
+            block_lines = _format_markdown_fence_block(block.lines, options=options)
             current_indent = _leading_whitespace(line)
-            restored.extend(_reindent_line(block_line, block.base_indent, current_indent) for block_line in block.lines)
+            restored.extend(_reindent_line(block_line, block.base_indent, current_indent) for block_line in block_lines)
             continue
         restored.append(line)
-    return _join_lines(restored, trailing_newline=has_trailing_newline)
+    return join_lines(restored, trailing_newline=has_trailing_newline)
 ```
 
 </details>
 
-## 🔧 Function `_join_lines`
+## 🔧 Function `_format_markdown_fence_block`
 
 ```python
-def _join_lines(lines: list[str]) -> str
+def _format_markdown_fence_block(block_lines: list[str]) -> list[str]
 ```
 
 _No docstring provided._
@@ -147,13 +147,24 @@ _No docstring provided._
 <details>
 <summary>Code:</summary>
 
-```python
-def _join_lines(lines: list[str], *, trailing_newline: bool) -> str:
-    text = "\n".join(lines)
-    if trailing_newline:
-        text += "\n"
-    return text
-```
+````python
+def _format_markdown_fence_block(block_lines: list[str], *, options: FormatOptions | None) -> list[str]:
+    if len(block_lines) < _MIN_FENCED_BLOCK_LINES:
+        return block_lines
+    opening = block_lines[0].strip()
+    if not opening.startswith("```"):
+        return block_lines
+    language = opening[3:].strip().lower()
+    if language != "markdown" or options is None:
+        return block_lines
+    inner = "\n".join(block_lines[1:-1])
+    if not inner.strip():
+        return block_lines
+    from harrix_pylib.md_format.formatter import _format_with_options  # noqa: PLC0415
+
+    formatted_inner = _format_with_options(inner, options).rstrip("\n")
+    return [block_lines[0], *formatted_inner.split("\n"), block_lines[-1]]
+````
 
 </details>
 
@@ -171,24 +182,6 @@ _No docstring provided._
 ```python
 def _leading_whitespace(line: str) -> str:
     return line[: len(line) - len(line.lstrip())]
-```
-
-</details>
-
-## 🔧 Function `_placeholder`
-
-```python
-def _placeholder(index: int) -> str
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _placeholder(index: int) -> str:
-    return f"{PLACEHOLDER_PREFIX}{index}"
 ```
 
 </details>
@@ -213,28 +206,6 @@ def _reindent_line(line: str, base_indent: str, current_indent: str) -> str:
     if base_indent:
         return current_indent + line
     return line
-```
-
-</details>
-
-## 🔧 Function `_split_lines`
-
-```python
-def _split_lines(text: str) -> tuple[list[str], bool]
-```
-
-Split text into lines without the trailing split artifact from a final newline.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _split_lines(text: str) -> tuple[list[str], bool]:
-    has_trailing_newline = text.endswith("\n")
-    lines = text.split("\n")
-    if has_trailing_newline and lines:
-        lines.pop()
-    return lines, has_trailing_newline
 ```
 
 </details>

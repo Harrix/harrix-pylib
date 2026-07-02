@@ -11,12 +11,9 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `IgnoreBlock`](#️-class-ignoreblock)
+- [🏛️ Class `IgnoreBlock`](#%EF%B8%8F-class-ignoreblock)
 - [🔧 Function `extract_ignore_blocks`](#-function-extract_ignore_blocks)
 - [🔧 Function `restore_ignore_blocks`](#-function-restore_ignore_blocks)
-- [🔧 Function `_join_lines`](#-function-_join_lines)
-- [🔧 Function `_placeholder`](#-function-_placeholder)
-- [🔧 Function `_split_lines`](#-function-_split_lines)
 
 </details>
 
@@ -53,7 +50,7 @@ Replace ignored regions with placeholders.
 
 ```python
 def extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
-    lines, trailing = _split_lines(body)
+    lines, trailing = split_lines(body)
     result: list[str] = []
     blocks: list[IgnoreBlock] = []
     index = 0
@@ -70,8 +67,11 @@ def extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
                     line_index += 1
                     break
                 line_index += 1
-            blocks.append(IgnoreBlock(index=index, text=_join_lines(block_lines, trailing_newline=False)))
-            result.append(_placeholder(index))
+            if any(block_line.lstrip().startswith(">") for block_line in block_lines):
+                result.extend(block_lines)
+                continue
+            blocks.append(IgnoreBlock(index=index, text=join_lines(block_lines, trailing_newline=False)))
+            result.append(make_placeholder(PLACEHOLDER_PREFIX, index))
             index += 1
             continue
 
@@ -85,15 +85,15 @@ def extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
                     break
                 block_lines.append(lines[line_index])
                 line_index += 1
-            blocks.append(IgnoreBlock(index=index, text=_join_lines(block_lines, trailing_newline=False)))
-            result.append(_placeholder(index))
+            blocks.append(IgnoreBlock(index=index, text=join_lines(block_lines, trailing_newline=False)))
+            result.append(make_placeholder(PLACEHOLDER_PREFIX, index))
             index += 1
             continue
 
         result.append(line)
         line_index += 1
 
-    return _join_lines(result, trailing_newline=trailing), blocks
+    return join_lines(result, trailing_newline=trailing), blocks
 ```
 
 </details>
@@ -114,10 +114,20 @@ def restore_ignore_blocks(text: str, blocks: list[IgnoreBlock]) -> str:
     if not blocks:
         return text
     blocks_by_index = {block.index: block for block in blocks}
-    lines, trailing = _split_lines(text)
+    lines, trailing = split_lines(text)
     restored: list[str] = []
     for line in lines:
         stripped = line.strip()
+        inline_match = _PLACEHOLDER_RE.search(line)
+        if inline_match and inline_match.start() > 0:
+            prefix = line[: inline_match.start()].rstrip()
+            if prefix:
+                restored.append(prefix)
+            block_index = int(inline_match.group().removeprefix(PLACEHOLDER_PREFIX))
+            block = blocks_by_index.get(block_index)
+            if block is not None:
+                restored.extend(block.text.split("\n"))
+                continue
         if stripped.startswith(PLACEHOLDER_PREFIX):
             try:
                 block_index = int(stripped.removeprefix(PLACEHOLDER_PREFIX))
@@ -131,68 +141,7 @@ def restore_ignore_blocks(text: str, blocks: list[IgnoreBlock]) -> str:
             restored.extend(block.text.split("\n"))
             continue
         restored.append(line)
-    return _join_lines(restored, trailing_newline=trailing)
-```
-
-</details>
-
-## 🔧 Function `_join_lines`
-
-```python
-def _join_lines(lines: list[str]) -> str
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _join_lines(lines: list[str], *, trailing_newline: bool) -> str:
-    text = "\n".join(lines)
-    if trailing_newline:
-        text += "\n"
-    return text
-```
-
-</details>
-
-## 🔧 Function `_placeholder`
-
-```python
-def _placeholder(index: int) -> str
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _placeholder(index: int) -> str:
-    return f"{PLACEHOLDER_PREFIX}{index}"
-```
-
-</details>
-
-## 🔧 Function `_split_lines`
-
-```python
-def _split_lines(text: str) -> tuple[list[str], bool]
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _split_lines(text: str) -> tuple[list[str], bool]:
-    has_trailing_newline = text.endswith("\n")
-    lines = text.split("\n")
-    if has_trailing_newline and lines:
-        lines.pop()
-    return lines, has_trailing_newline
+    return join_lines(restored, trailing_newline=trailing)
 ```
 
 </details>

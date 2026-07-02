@@ -17,8 +17,7 @@ lang: en
 - [🔧 Function `get_project_root`](#-function-get_project_root)
 - [🔧 Function `run_command`](#-function-run_command)
 - [🔧 Function `run_powershell_script`](#-function-run_powershell_script)
-- [🔧 Function `run_powershell_script_as_admin`](#-function-run_powershell_scrip
-  t_as_admin)
+- [🔧 Function `run_powershell_script_as_admin`](#-function-run_powershell_script_as_admin)
 - [🔧 Function `write_in_output_txt`](#-function-write_in_output_txt)
 
 </details>
@@ -166,8 +165,7 @@ def config_update_value(key: str, value: object, filename: str) -> None
 
 Update a single configuration value and save it to a JSON file.
 
-This function loads the configuration file, updates the specified key with the
-new value,
+This function loads the configuration file, updates the specified key with the new value,
 and saves the updated configuration back to the file.
 
 Args:
@@ -238,12 +236,9 @@ def get_project_root() -> Path
 
 Find the root folder of the current project.
 
-This function traverses up the folder tree from the caller's file location
-looking for a folder
-containing a `.venv` folder, which is assumed to indicate
-the project root. The function
-automatically detects the file that called it,
-making it work correctly both with PyPI
+This function traverses up the folder tree from the caller's file location looking for a folder
+containing a `.venv` folder, which is assumed to indicate the project root. The function
+automatically detects the file that called it, making it work correctly both with PyPI
 installations and editable installs.
 
 Returns:
@@ -309,14 +304,12 @@ def run_command(command: str) -> str
 Run a console command and return its output.
 
 This function executes a console command using the system's default shell
-and
-returns the combined output (stdout + stderr).
+and returns the combined output (stdout + stderr).
 
 Args:
 
 - `command` (`str`): The command to execute.
-- `is_shell` (`bool`): Whether to run the command through the shell. Defaults to
-  `True`.
+- `is_shell` (`bool`): Whether to run the command through the shell. Defaults to `True`.
 - `cwd` (`str | None`): Working directory for the command. Defaults to `None`.
 - `env` (`dict[str, str] | None`): Environment variables. Defaults to `None`.
 - `timeout` (`float | None`): Timeout in seconds. Defaults to `None`.
@@ -385,10 +378,8 @@ def run_powershell_script(commands: str) -> str
 
 Run a PowerShell script with the given commands.
 
-This function executes a PowerShell script by concatenating multiple commands
-into a single command string,
-which is then run through the `subprocess` module.
-It ensures that the output encoding is set to UTF-8.
+This function executes a PowerShell script by concatenating multiple commands into a single command string,
+which is then run through the `subprocess` module. It ensures that the output encoding is set to UTF-8.
 
 Args:
 
@@ -426,12 +417,8 @@ def run_powershell_script(commands: str) -> str:
         msg = "PowerShell executable not found."
         raise RuntimeError(msg)
 
-    process = subprocess.run(
-        [
-            powershell_path,
-            "-Command",
-            (
-                "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
+    process = subprocess.run( [powershell_path, "-Command", ( "[Console]:
+:OutputEncoding = [System.Text.Encoding]::UTF8; "
                 "$OutputEncoding = [System.Text.Encoding]::UTF8; "
                 f"{command}"
             ),
@@ -452,8 +439,7 @@ def run_powershell_script(commands: str) -> str:
 def run_powershell_script_as_admin(commands: str) -> str
 ```
 
-Execute a PowerShell script with administrator privileges and captures the
-output.
+Execute a PowerShell script with administrator privileges and captures the output.
 
 Args:
 
@@ -465,12 +451,9 @@ Returns:
 
 Note:
 
-- This function creates temporary files to store the script and its output,
-  which are deleted after execution.
-- Multiline scripts are written to a `.ps1` file as-is (not joined with `;`), so
-  block syntax is preserved.
-- The launcher uses `Start-Process -Verb RunAs -Wait` so execution finishes
-  before the output file is read.
+- This function creates temporary files to store the script and its output, which are deleted after execution.
+- Multiline scripts are written to a `.ps1` file as-is (not joined with `;`), so block syntax is preserved.
+- The launcher uses `Start-Process -Verb RunAs -Wait` so execution finishes before the output file is read.
 
 Examples:
 
@@ -587,8 +570,7 @@ Decorate to write function output to a temporary file and optionally display it.
 This decorator captures all output of the decorated function into a list,
 measures execution time, and writes this information into an `output.txt` file
 in a temporary folder within the project root. It also offers the option
-to
-automatically open this file after writing.
+to automatically open this file after writing.
 
 Args:
 

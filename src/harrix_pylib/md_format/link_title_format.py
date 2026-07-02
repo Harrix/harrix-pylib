@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
+
+from harrix_pylib.md_format.escape_format import ASCII_PUNCTUATION as _MARKDOWN_ESCAPABLE
+from harrix_pylib.md_format.text_lines import join_lines, split_lines
 
 _LINK_PREFIX_RE = re.compile(r"!?\[[^\]]*\]\(")
-_MARKDOWN_ESCAPABLE = frozenset("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~")
 _QUOTE_APOSTROPHE_PAREN = '"' + "'" + ")"
 _MAGICAL_TITLE_INNERS = frozenset(
     {
@@ -39,23 +42,21 @@ def format_parseable_link_title(title: str) -> str:
 
 def normalize_inline_link_titles(body: str) -> str:
     """Normalize quoted titles in inline links before parsing."""
-    has_trailing_newline = body.endswith("\n")
-    lines = body.split("\n")
-    if has_trailing_newline and lines:
-        lines.pop()
+    lines, trailing = split_lines(body)
     result_lines: list[str] = []
     for line in lines:
         if line.lstrip().startswith("|"):
             result_lines.append(line)
         else:
             result_lines.append(_normalize_inline_link_titles_in_text(line))
-    text = "\n".join(result_lines)
-    if has_trailing_newline:
-        text += "\n"
-    return text
+    return join_lines(result_lines, trailing_newline=trailing)
 
 
-def _normalize_inline_link_titles_in_text(body: str) -> str:
+def scan_inline_links(
+    body: str,
+    handler: Callable[[str, str, str], str],
+) -> str:
+    """Scan inline links and rebuild text with a per-link handler."""
     parts: list[str] = []
     last = 0
     while last < len(body):
@@ -73,13 +74,15 @@ def _normalize_inline_link_titles_in_text(body: str) -> str:
         prefix = body[match.start() : match.end()]
         destination = body[match.end() : close_index]
         suffix = body[close_index]
-        parts.append(_normalize_inline_link(prefix, destination, suffix))
+        parts.append(handler(prefix, destination, suffix))
         last = close_index + 1
     return "".join(parts)
 
 
 def split_inline_destination(destination: str) -> tuple[str, str | None]:
     destination = destination.strip()
+    if destination.endswith(' ""') or destination.endswith(" ''"):
+        return destination[:-3].rstrip(), None
     if destination.startswith("<") and destination.endswith(">"):
         return destination, None
     url, title = _split_trailing_link_title(destination)
@@ -90,10 +93,27 @@ def split_inline_destination(destination: str) -> tuple[str, str | None]:
     return destination, None
 
 
+def _balanced_paren_title_close(text: str, open_index: int) -> int | None:
+    index = open_index + 1
+    while index < len(text):
+        if text[index] == "\\" and index + 1 < len(text):
+            index += 2
+            continue
+        if text[index] == ")":
+            if index > open_index + 1 and text[index - 1] == "\\":
+                index += 1
+                continue
+            return index
+        if text[index] == "(":
+            return None
+        index += 1
+    return None
+
+
 def _canonicalize_link_title_content(content: str) -> str:
     """Normalize lightly escaped one-character titles from CommonMark parsing."""
     if content == _QUOTE_APOSTROPHE_PAREN or (
-        len(content) == 4 and content.endswith(")") and set(content) == {'\\', '"', "'", ")"}
+        len(content) == 4 and content.endswith(")") and set(content) == {"\\", '"', "'", ")"}
     ):
         return _QUOTE_APOSTROPHE_PAREN
     if content == "\\)":
@@ -103,6 +123,21 @@ def _canonicalize_link_title_content(content: str) -> str:
     if len(content) == 2 and content[0] == "\\" and content[1] == ")":
         return ")"
     return content
+
+
+def _decode_magical_quote_apostrophe_paren_inner(inner: str) -> str | None:
+    if inner in _MAGICAL_TITLE_INNERS:
+        return _QUOTE_APOSTROPHE_PAREN
+    return None
+
+
+def _decode_paren_escaped_title(inner: str) -> str | None:
+    match = re.fullmatch(r"(\\+)(\))", inner)
+    if not match:
+        return None
+    slashes, final = match.groups()
+    kept = _kept_backslashes_before_delimiter(len(slashes))
+    return "\\" * kept + final
 
 
 def _decode_simple_escaped_title(inner: str) -> str | None:
@@ -118,26 +153,9 @@ def _decode_simple_escaped_title(inner: str) -> str | None:
     return "\\" * kept + final
 
 
-def _decode_paren_escaped_title(inner: str) -> str | None:
-    match = re.fullmatch(r"(\\+)(\))", inner)
-    if not match:
-        return None
-    slashes, final = match.groups()
-    kept = _kept_backslashes_before_delimiter(len(slashes))
-    return "\\" * kept + final
-
-
-def _kept_backslashes_before_delimiter(slash_count: int) -> int:
-    if slash_count <= 2:
-        return 0
-    if slash_count > 4:
-        return (slash_count - 2) // 2
-    return slash_count // 2
-
-
 def _escape_title_content(content: str, delimiter: str) -> str:
     if delimiter == '"' and content.startswith('"'):
-        return "\\\\\"" + _escape_title_content(content[1:], delimiter)
+        return '\\\\"' + _escape_title_content(content[1:], delimiter)
     escaped: list[str] = []
     for char in content:
         if char in {"\\", delimiter}:
@@ -208,6 +226,14 @@ def _is_escaped_at(text: str, index: int) -> bool:
     return backslashes % 2 == 1
 
 
+def _kept_backslashes_before_delimiter(slash_count: int) -> int:
+    if slash_count <= 2:
+        return 0
+    if slash_count > 4:
+        return (slash_count - 2) // 2
+    return slash_count // 2
+
+
 def _normalize_inline_link(prefix: str, destination: str, suffix: str) -> str:
     url, title = split_inline_destination(destination)
     if title is None:
@@ -215,21 +241,10 @@ def _normalize_inline_link(prefix: str, destination: str, suffix: str) -> str:
     return f"{prefix}{url} {format_parseable_link_title(_unescape_title(title))}{suffix}"
 
 
-def _balanced_paren_title_close(text: str, open_index: int) -> int | None:
-    index = open_index + 1
-    while index < len(text):
-        if text[index] == "\\" and index + 1 < len(text):
-            index += 2
-            continue
-        if text[index] == ")":
-            if index > open_index + 1 and text[index - 1] == "\\":
-                index += 1
-                continue
-            return index
-        if text[index] == "(":
-            return None
-        index += 1
-    return None
+def _normalize_inline_link_titles_in_text(body: str) -> str:
+    return scan_inline_links(
+        body, lambda prefix, destination, suffix: _normalize_inline_link(prefix, destination, suffix)
+    )
 
 
 def _split_trailing_link_title(rest: str) -> tuple[str, str | None]:
@@ -259,12 +274,6 @@ def _title_quote_priority(content: str, quoted: str) -> tuple[int, int]:
     if "'" in content and '"' not in content:
         return (len(quoted), 0 if delimiter == '"' else 1)
     return (len(quoted), 0 if delimiter == '"' else 1)
-
-
-def _decode_magical_quote_apostrophe_paren_inner(inner: str) -> str | None:
-    if inner in _MAGICAL_TITLE_INNERS:
-        return _QUOTE_APOSTROPHE_PAREN
-    return None
 
 
 def _unescape_title(quoted: str) -> str:

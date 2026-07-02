@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from harrix_pylib.md_format.code_guard import PLACEHOLDER_PREFIX as CODE_PLACEHOLDER_PREFIX
 from harrix_pylib.md_format.list_format import is_list_line
+from harrix_pylib.md_format.text_lines import join_lines, split_lines
 
 
 @dataclass(frozen=True)
@@ -15,11 +17,9 @@ class ListLayout:
     loose_items: list[bool]
 
 
-def extract_list_layouts(
-    body: str, tight_code_indices: set[int] | None = None
-) -> tuple[str, list[ListLayout]]:
+def extract_list_layouts(body: str, tight_code_indices: set[int] | None = None) -> tuple[str, list[ListLayout]]:
     """Collect loose-list layout metadata for each list in the document."""
-    lines, trailing = _split_lines(body)
+    lines, trailing = split_lines(body)
     scan_lines = _drop_code_placeholder_blanks(lines, tight_code_indices or set())
     layouts: list[ListLayout] = []
     index = 0
@@ -28,33 +28,7 @@ def extract_list_layouts(
             index += 1
             continue
         index = _scan_list(scan_lines, index, layouts)
-    return _join_lines(lines, trailing_newline=trailing), layouts
-
-
-def _drop_code_placeholder_blanks(lines: list[str], tight_code_indices: set[int]) -> list[str]:
-    """Ignore blank lines that were auto-inserted around tightly attached code placeholders."""
-    if not tight_code_indices:
-        return lines
-
-    def _tight_placeholder(line: str) -> bool:
-        stripped = line.strip()
-        if not stripped.startswith("HSKMDFMTCODE"):
-            return False
-        try:
-            return int(stripped.removeprefix("HSKMDFMTCODE")) in tight_code_indices
-        except ValueError:
-            return False
-
-    is_tight = [_tight_placeholder(line) for line in lines]
-    result: list[str] = []
-    for index, line in enumerate(lines):
-        if not line.strip():
-            prev_is_tight = index > 0 and is_tight[index - 1]
-            next_is_tight = index + 1 < len(lines) and is_tight[index + 1]
-            if prev_is_tight or next_is_tight:
-                continue
-        result.append(line)
-    return result
+    return join_lines(lines, trailing_newline=trailing), layouts
 
 
 def _blank_separates_sibling_items(lines: list[str], item_index: int, base_indent: int) -> bool:
@@ -67,19 +41,7 @@ def _blank_separates_sibling_items(lines: list[str], item_index: int, base_inden
     return "](" not in parent_marker
 
 
-def _parent_list_marker_line(lines: list[str], from_index: int, base_indent: int) -> str | None:
-    index = from_index
-    while index >= 0:
-        line = lines[index]
-        if is_list_line(line) and _line_indent(line) == base_indent:
-            return line
-        index -= 1
-    return None
-
-
-def _consume_item(
-    lines: list[str], start: int, base_indent: int, nested_layouts: list[ListLayout]
-) -> tuple[int, bool]:
+def _consume_item(lines: list[str], start: int, base_indent: int, nested_layouts: list[ListLayout]) -> tuple[int, bool]:
     index = start + 1
     loose = False
     pending_blank = False
@@ -110,14 +72,51 @@ def _consume_item(
     return index, loose
 
 
-def _line_indent(line: str) -> int:
-    return len(line) - len(line.lstrip())
+def _drop_code_placeholder_blanks(lines: list[str], tight_code_indices: set[int]) -> list[str]:
+    """Ignore blank lines that were auto-inserted around tightly attached code placeholders."""
+    if not tight_code_indices:
+        return lines
+
+    def _tight_placeholder(line: str) -> bool:
+        stripped = line.strip()
+        if not stripped.startswith(CODE_PLACEHOLDER_PREFIX):
+            return False
+        try:
+            return int(stripped.removeprefix(CODE_PLACEHOLDER_PREFIX)) in tight_code_indices
+        except ValueError:
+            return False
+
+    is_tight = [_tight_placeholder(line) for line in lines]
+    result: list[str] = []
+    for index, line in enumerate(lines):
+        if not line.strip():
+            prev_is_tight = index > 0 and is_tight[index - 1]
+            next_is_tight = index + 1 < len(lines) and is_tight[index + 1]
+            if prev_is_tight or next_is_tight:
+                continue
+        result.append(line)
+    return result
 
 
 def _is_ordered_list_line(line: str) -> bool:
     """Return True when the line starts an ordered list item (not bullet)."""
     import re  # noqa: PLC0415
+
     return bool(re.match(r"^\s*\d+[.)]\s", line))
+
+
+def _line_indent(line: str) -> int:
+    return len(line) - len(line.lstrip())
+
+
+def _parent_list_marker_line(lines: list[str], from_index: int, base_indent: int) -> str | None:
+    index = from_index
+    while index >= 0:
+        line = lines[index]
+        if is_list_line(line) and _line_indent(line) == base_indent:
+            return line
+        index -= 1
+    return None
 
 
 def _scan_list(lines: list[str], start: int, layouts: list[ListLayout]) -> int:
@@ -148,18 +147,3 @@ def _scan_list(lines: list[str], start: int, layouts: list[ListLayout]) -> int:
     )
     layouts.extend(nested_layouts)
     return index
-
-
-def _join_lines(lines: list[str], *, trailing_newline: bool) -> str:
-    text = "\n".join(lines)
-    if trailing_newline:
-        text += "\n"
-    return text
-
-
-def _split_lines(text: str) -> tuple[list[str], bool]:
-    has_trailing_newline = text.endswith("\n")
-    lines = text.split("\n")
-    if has_trailing_newline and lines:
-        lines.pop()
-    return lines, has_trailing_newline

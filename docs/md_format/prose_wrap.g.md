@@ -11,10 +11,95 @@ lang: en
 
 ## Contents
 
+- [🔧 Function `should_omit_space_between`](#-function-should_omit_space_between)
+- [🔧 Function `wrap_paragraph_prose`](#-function-wrap_paragraph_prose)
 - [🔧 Function `wrap_prose`](#-function-wrap_prose)
+- [🔧 Function `_avoid_list_marker_line_starts`](#-function-_avoid_list_marker_line_starts)
 - [🔧 Function `_is_cjk`](#-function-_is_cjk)
+- [🔧 Function `_is_hangul`](#-function-_is_hangul)
+- [🔧 Function `_is_hiragana`](#-function-_is_hiragana)
+- [🔧 Function `_is_katakana`](#-function-_is_katakana)
+- [🔧 Function `_is_small_kana`](#-function-_is_small_kana)
+- [🔧 Function `_kana_continuation_join`](#-function-_kana_continuation_join)
+- [🔧 Function `_prose_display_width`](#-function-_prose_display_width)
 - [🔧 Function `_segments`](#-function-_segments)
+- [🔧 Function `_softbreak_prefers_newline`](#-function-_softbreak_prefers_newline)
+- [🔧 Function `_wrap_plain_words`](#-function-_wrap_plain_words)
+- [🔧 Function `_wrap_prose_after_hard_break`](#-function-_wrap_prose_after_hard_break)
 - [🔧 Function `_wrap_text_lines`](#-function-_wrap_text_lines)
+
+</details>
+
+## 🔧 Function `should_omit_space_between`
+
+```python
+def should_omit_space_between(left: str, right: str) -> bool
+```
+
+Return whether phrasing text on both sides of a break should be joined without a space.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def should_omit_space_between(left: str, right: str) -> bool:
+    if not left or not right:
+        return False
+    if _is_hangul(left[-1]) or _is_hangul(right[0]):
+        return False
+    last, first = left[-1], right[0]
+    if last == "・" or first == "・":
+        return True
+    if _kana_continuation_join(left, right):
+        return True
+    if _is_katakana(last) or _is_katakana(first):
+        return False
+    if last in "」』）】" and first == "(":
+        return True
+    if _is_cjk(last) and _is_cjk(first):
+        return True
+    if _is_cjk(last) and first.isascii() and first.isalnum():
+        return True
+    if first in "、。，．！？）】」〉》〕〗〙〛":
+        return True
+    if last in "（【「〈《〔〖〘〚":
+        return True
+    if last in ",.!?:;":
+        return False
+    if first in ",.!?:;":
+        return False
+    return False
+```
+
+</details>
+
+## 🔧 Function `wrap_paragraph_prose`
+
+```python
+def wrap_paragraph_prose(text: str) -> str
+```
+
+Wrap paragraph text, preserving hard breaks and backslash-only lead lines.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def wrap_paragraph_prose(text: str, *, width: int) -> str:
+    if not text or width <= 0:
+        return text
+    if text.startswith("\\") and "\n" in text:
+        lead, _, rest = text.partition("\n")
+        if lead and set(lead) <= {"\\"}:
+            wrapped_rest = wrap_prose(rest.lstrip(), width=width) if rest.strip() else rest
+            return f"{lead}\n{wrapped_rest}" if wrapped_rest else lead
+    hard_break = "  \n"
+    if hard_break not in text:
+        return wrap_prose(text, width=width)
+    head, tail = text.split(hard_break, 1)
+    wrapped_tail = _wrap_prose_after_hard_break(tail.lstrip(), width=width)
+    return f"{head}{hard_break}{wrapped_tail}"
+```
 
 </details>
 
@@ -35,7 +120,71 @@ def wrap_prose(text: str, *, width: int, prefix: str = "", continuation: str | N
         return text
     continuation = continuation if continuation is not None else prefix
     lines = _wrap_text_lines(text, width=width, first_prefix=prefix, next_prefix=continuation)
-    return "\n".join(lines)
+    return "\n".join(_avoid_list_marker_line_starts(lines))
+```
+
+</details>
+
+## 🔧 Function `_avoid_list_marker_line_starts`
+
+```python
+def _avoid_list_marker_line_starts(lines: list[str]) -> list[str]
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _avoid_list_marker_line_starts(lines: list[str]) -> list[str]:
+    if len(lines) < 2:
+        return lines
+    fixed = list(lines)
+    for index in range(1, len(fixed)):
+        line = fixed[index]
+        leading = line[: len(line) - len(line.lstrip())]
+        stripped = line.lstrip()
+        previous = fixed[index - 1].rstrip()
+        if not previous:
+            continue
+        while stripped.startswith(">") and (len(stripped) == 1 or stripped[1].isspace()):
+            if previous.lstrip().startswith(">"):
+                break
+            last_space = previous.rfind(" ")
+            if last_space <= 0:
+                break
+            word = previous[last_space + 1 :]
+            if not word:
+                break
+            fixed[index - 1] = previous[:last_space]
+            fixed[index] = f"{leading}{word} {stripped}"
+            stripped = fixed[index].lstrip()
+            previous = fixed[index - 1].rstrip()
+        if stripped.startswith("- "):
+            last_space = previous.rfind(" ")
+            if last_space <= 0:
+                continue
+            word = previous[last_space + 1 :]
+            fixed[index - 1] = previous[:last_space]
+            fixed[index] = f"{leading}{word} {stripped}"
+            continue
+        ordered_match = _ORDERED_LIST_LINE_START_RE.match(stripped)
+        if ordered_match is None:
+            continue
+        after_period = ordered_match.group(2)
+        if not after_period or after_period[0] != " ":
+            continue
+        after_content = after_period[1:]
+        if not after_content or after_content[0].isdigit():
+            continue
+        last_space = previous.rfind(" ")
+        if last_space <= 0:
+            continue
+        word = previous[last_space + 1 :]
+        fixed[index - 1] = previous[:last_space]
+        fixed[index] = f"{leading}{word} {stripped}"
+    return fixed
 ```
 
 </details>
@@ -70,6 +219,132 @@ def _is_cjk(char: str) -> bool:
 
 </details>
 
+## 🔧 Function `_is_hangul`
+
+```python
+def _is_hangul(char: str) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_hangul(char: str) -> bool:
+    if not char:
+        return False
+    code = ord(char)
+    return 0x1100 <= code <= 0x11FF or 0xAC00 <= code <= 0xD7AF
+```
+
+</details>
+
+## 🔧 Function `_is_hiragana`
+
+```python
+def _is_hiragana(char: str) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_hiragana(char: str) -> bool:
+    if not char:
+        return False
+    code = ord(char)
+    return 0x3040 <= code <= 0x309F
+```
+
+</details>
+
+## 🔧 Function `_is_katakana`
+
+```python
+def _is_katakana(char: str) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_katakana(char: str) -> bool:
+    if not char:
+        return False
+    code = ord(char)
+    return 0x30A0 <= code <= 0x30FF
+```
+
+</details>
+
+## 🔧 Function `_is_small_kana`
+
+```python
+def _is_small_kana(char: str) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_small_kana(char: str) -> bool:
+    return char in _SMALL_KANA
+```
+
+</details>
+
+## 🔧 Function `_kana_continuation_join`
+
+```python
+def _kana_continuation_join(left: str, right: str) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _kana_continuation_join(left: str, right: str) -> bool:
+    if not left or not right or not _is_small_kana(right[0]):
+        return False
+    trailing_kana = 0
+    for char in reversed(left):
+        if _is_katakana(char) or _is_hiragana(char):
+            trailing_kana += 1
+            continue
+        break
+    return trailing_kana >= 2
+```
+
+</details>
+
+## 🔧 Function `_prose_display_width`
+
+```python
+def _prose_display_width(text: str) -> int
+```
+
+Return display width treating each backslash escape (\X) as 1 column (like Prettier).
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _prose_display_width(text: str) -> int:
+    collapsed = re.sub(r"\\.", lambda m: m.group(0)[1], text)
+    return text_display_width(collapsed)
+```
+
+</details>
+
 ## 🔧 Function `_segments`
 
 ```python
@@ -91,9 +366,132 @@ def _segments(text: str) -> list[str]:
             segments.append(text[position])
             position += 1
             continue
-        segments.append(match.group(0))
+        segment = match.group(0)
+        if segment[:1] in {"_", "*", "~"} and position > 0 and text[position - 1] == "\\":
+            segments.append(text[position])
+            position += 1
+            continue
+        segments.append(segment)
         position = match.end()
     return segments
+```
+
+</details>
+
+## 🔧 Function `_softbreak_prefers_newline`
+
+```python
+def _softbreak_prefers_newline(before: str, after: str) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _softbreak_prefers_newline(before: str, after: str) -> bool:
+    if not before or not after or not after[0].isalpha():
+        return False
+    match = re.search(r"[A-Z][a-z]+$", before)
+    if match is None:
+        return False
+    return len(match.group()) >= 4
+```
+
+</details>
+
+## 🔧 Function `_wrap_plain_words`
+
+```python
+def _wrap_plain_words(text: str) -> list[str]
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _wrap_plain_words(text: str, *, width: int, first_prefix: str, next_prefix: str) -> list[str]:
+    words = re.split(r"(\s+)", text)
+    lines: list[str] = []
+    current = first_prefix
+    current_width = text_display_width(first_prefix)
+
+    for part in words:
+        if not part:
+            continue
+        part_width = text_display_width(part)
+        if part.isspace():
+            if current_width + part_width <= width:
+                current += part
+                current_width += part_width
+            continue
+        if current not in {first_prefix, next_prefix} and current_width + part_width > width:
+            lines.append(current.rstrip())
+            current = next_prefix + part
+            current_width = text_display_width(current)
+            continue
+        if current in {first_prefix, next_prefix}:
+            current += part
+        else:
+            current += part if current.endswith((" ", "\t")) or current == first_prefix else f" {part}"
+        current_width = text_display_width(current)
+
+    if current.strip() or current in {first_prefix, next_prefix}:
+        lines.append(current.rstrip())
+    return lines or [first_prefix.rstrip()]
+```
+
+</details>
+
+## 🔧 Function `_wrap_prose_after_hard_break`
+
+```python
+def _wrap_prose_after_hard_break(text: str) -> str
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _wrap_prose_after_hard_break(text: str, *, width: int) -> str:
+    words = re.findall(r"\S+", text)
+    if not words:
+        return text
+    lines: list[str] = []
+    current: list[str] = []
+    current_width = 0
+    first_line = True
+
+    for word in words:
+        word_width = text_display_width(word)
+        gap = 1 if current else 0
+        if current and current_width + gap + word_width > width and first_line and word_width <= width:
+            current.append(word)
+            lines.append(" ".join(current))
+            current = []
+            current_width = 0
+            first_line = False
+            continue
+        if current and current_width + gap + word_width > width and not first_line:
+            lines.append(" ".join(current))
+            current = [word]
+            current_width = word_width
+            continue
+        if current:
+            current.append(word)
+            current_width += gap + word_width
+        else:
+            current = [word]
+            current_width = word_width
+
+    if current:
+        lines.append(" ".join(current))
+    return "\n".join(lines)
 ```
 
 </details>
@@ -111,48 +509,71 @@ _No docstring provided._
 
 ```python
 def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: str) -> list[str]:
-    if text_display_width(first_prefix + text) <= width:
+    if _prose_display_width(first_prefix + text) <= width:
         return [first_prefix + text]
+
+    if not re.search(r"[*_`\[\]!<>~\\]", text):
+        return _wrap_plain_words(text, width=width, first_prefix=first_prefix, next_prefix=next_prefix)
 
     lines: list[str] = []
     current = first_prefix
-    current_width = text_display_width(first_prefix)
+    current_width = _prose_display_width(first_prefix)
 
     for segment in _segments(text):
         if segment == "\\\n":
             lines.append(current.rstrip())
             current = next_prefix
-            current_width = text_display_width(next_prefix)
+            current_width = _prose_display_width(next_prefix)
             continue
 
-        segment_width = text_display_width(segment)
+        segment_width = _prose_display_width(segment)
         if segment_width == 0:
             continue
 
-        if current_width + segment_width <= width or current in {first_prefix, next_prefix} and not current.strip():
-            if (
-                segment.isspace()
-                and current_width + segment_width > width
-                and current not in {first_prefix, next_prefix}
-            ):
+        width_with_segment = _prose_display_width(current + segment)
+        if width_with_segment <= width or (current in {first_prefix, next_prefix} and not current.strip()):
+            if segment.isspace() and width_with_segment > width and current not in {first_prefix, next_prefix}:
                 lines.append(current.rstrip())
                 current = next_prefix
-                current_width = text_display_width(next_prefix)
+                current_width = _prose_display_width(next_prefix)
                 if segment.isspace():
                     continue
             current += segment
-            current_width += segment_width
+            current_width = _prose_display_width(current)
             continue
 
         if segment.isspace():
             continue
 
+        if segment.startswith("[[") and "](" in segment:
+            current += segment
+            current_width = _prose_display_width(current)
+            continue
+
+        if current.startswith("[[") and re.fullmatch(r"[.,;:!?]+", segment):
+            current += segment
+            current_width = _prose_display_width(current)
+            continue
+
         if current not in {first_prefix, next_prefix} and current.strip():
             lines.append(current.rstrip())
             current = next_prefix
-            current_width = text_display_width(next_prefix)
+            current_width = _prose_display_width(next_prefix)
 
-        if segment_width > width - text_display_width(next_prefix):
+        if segment.startswith("[["):
+            current += segment
+            current_width = _prose_display_width(current)
+            continue
+
+        if segment_width > width - _prose_display_width(next_prefix):
+            if _LINK_SEGMENT_RE.fullmatch(segment):
+                if current.strip() and current not in {first_prefix, next_prefix}:
+                    lines.append(current.rstrip())
+                    current = next_prefix
+                    current_width = _prose_display_width(next_prefix)
+                current += segment
+                current_width = _prose_display_width(current)
+                continue
             for char in segment:
                 char_width = text_display_width(char)
                 if (
@@ -179,7 +600,7 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
             continue
 
         current += segment
-        current_width += segment_width
+        current_width = _prose_display_width(current)
 
     if current.strip() or current in {first_prefix, next_prefix}:
         lines.append(current.rstrip())

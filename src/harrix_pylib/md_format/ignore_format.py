@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from harrix_pylib.md_format.text_lines import join_lines, make_placeholder, split_lines
+
 PLACEHOLDER_PREFIX = "HSKMDFMTIGN"
 _PLACEHOLDER_RE = re.compile(r"HSKMDFMTIGN\d+")
 _IGNORE_LINE_RE = re.compile(r"<!--\s*prettier-ignore\s*-->")
@@ -22,7 +24,7 @@ class IgnoreBlock:
 
 def extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
     """Replace ignored regions with placeholders."""
-    lines, trailing = _split_lines(body)
+    lines, trailing = split_lines(body)
     result: list[str] = []
     blocks: list[IgnoreBlock] = []
     index = 0
@@ -42,8 +44,8 @@ def extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
             if any(block_line.lstrip().startswith(">") for block_line in block_lines):
                 result.extend(block_lines)
                 continue
-            blocks.append(IgnoreBlock(index=index, text=_join_lines(block_lines, trailing_newline=False)))
-            result.append(_placeholder(index))
+            blocks.append(IgnoreBlock(index=index, text=join_lines(block_lines, trailing_newline=False)))
+            result.append(make_placeholder(PLACEHOLDER_PREFIX, index))
             index += 1
             continue
 
@@ -57,15 +59,15 @@ def extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
                     break
                 block_lines.append(lines[line_index])
                 line_index += 1
-            blocks.append(IgnoreBlock(index=index, text=_join_lines(block_lines, trailing_newline=False)))
-            result.append(_placeholder(index))
+            blocks.append(IgnoreBlock(index=index, text=join_lines(block_lines, trailing_newline=False)))
+            result.append(make_placeholder(PLACEHOLDER_PREFIX, index))
             index += 1
             continue
 
         result.append(line)
         line_index += 1
 
-    return _join_lines(result, trailing_newline=trailing), blocks
+    return join_lines(result, trailing_newline=trailing), blocks
 
 
 def restore_ignore_blocks(text: str, blocks: list[IgnoreBlock]) -> str:
@@ -73,7 +75,7 @@ def restore_ignore_blocks(text: str, blocks: list[IgnoreBlock]) -> str:
     if not blocks:
         return text
     blocks_by_index = {block.index: block for block in blocks}
-    lines, trailing = _split_lines(text)
+    lines, trailing = split_lines(text)
     restored: list[str] = []
     for line in lines:
         stripped = line.strip()
@@ -100,23 +102,4 @@ def restore_ignore_blocks(text: str, blocks: list[IgnoreBlock]) -> str:
             restored.extend(block.text.split("\n"))
             continue
         restored.append(line)
-    return _join_lines(restored, trailing_newline=trailing)
-
-
-def _join_lines(lines: list[str], *, trailing_newline: bool) -> str:
-    text = "\n".join(lines)
-    if trailing_newline:
-        text += "\n"
-    return text
-
-
-def _placeholder(index: int) -> str:
-    return f"{PLACEHOLDER_PREFIX}{index}"
-
-
-def _split_lines(text: str) -> tuple[list[str], bool]:
-    has_trailing_newline = text.endswith("\n")
-    lines = text.split("\n")
-    if has_trailing_newline and lines:
-        lines.pop()
-    return lines, has_trailing_newline
+    return join_lines(restored, trailing_newline=trailing)

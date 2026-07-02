@@ -12,8 +12,7 @@ lang: en
 ## Contents
 
 - [🔧 Function `create_uv_new_project`](#-function-create_uv_new_project)
-- [🔧 Function `extract_functions_and_classes`](#-function-extract_functions_and
-  _classes)
+- [🔧 Function `extract_functions_and_classes`](#-function-extract_functions_and_classes)
 - [🔧 Function `generate_md_docs`](#-function-generate_md_docs)
 - [🔧 Function `generate_md_docs_content`](#-function-generate_md_docs_content)
 - [🔧 Function `lint_and_fix_python_code`](#-function-lint_and_fix_python_code)
@@ -35,8 +34,7 @@ Args:
 
 - `project_name` (`str`): The name of the new project.
 - `folder` (`Path | str`): The folder path where the project will be created.
-- `editor` (`str`): The name of the text editor for opening the project.
-  Example: `code`
+- `editor` (`str`): The name of the text editor for opening the project. Example: `code`
 - `cli_commands` (`Path | str`): The section of CLI commands for `README.md`.
 
 Example of `cli_commands`:
@@ -128,16 +126,13 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
 def extract_functions_and_classes(filename: Path | str) -> str
 ```
 
-Extract all classes and functions from a Python file and formats them into a
-Markdown list.
+Extract all classes and functions from a Python file and formats them into a Markdown list.
 
 Args:
 
 - `filename` (Path | str): The path to the Python file to be parsed.
-- `is_add_link_demo` (`bool`): Whether to add a link to the documentation demo.
-  Defaults to `True`.
-- `domain` (`str`): The domain for the documentation link. Defaults to an empty
-  string.
+- `is_add_link_demo` (`bool`): Whether to add a link to the documentation demo. Defaults to `True`.
+- `domain` (`str`): The domain for the documentation link. Defaults to an empty string.
 
 Returns:
 
@@ -595,16 +590,13 @@ Returns:
 
 Raises:
 
-- `subprocess.CalledProcessError`: If `ruff` command fails to execute or returns
-  an error status.
-- `OSError`: If there are issues with file operations (e.g., creating or
-  deleting the temporary file).
+- `subprocess.CalledProcessError`: If `ruff` command fails to execute or returns an error status.
+- `OSError`: If there are issues with file operations (e.g., creating or deleting the temporary file).
 
 Note:
 
 - This function assumes `ruff` is installed and accessible in the system's PATH.
-- Any exceptions from `ruff` or file operations are not caught within this
-  function and will propagate up.
+- Any exceptions from `ruff` or file operations are not caught within this function and will propagate up.
 
 Example:
 
@@ -652,21 +644,16 @@ def lint_and_fix_python_code(py_content: str) -> str:
 def sort_py_code(filename: str) -> None
 ```
 
-Sorts the Python code in the given file by organizing classes, functions, and
-statements.
+Sorts the Python code in the given file by organizing classes, functions, and statements.
 
-This function reads a Python file, parses it, sorts classes and functions
-alphabetically,
-and ensures that class attributes, methods, and other statements
-within classes are ordered
-in a structured manner. The sorted code is then
-written back to the file.
+This function reads a Python file, parses it, sorts classes and functions alphabetically,
+and ensures that class attributes, methods, and other statements within classes are ordered
+in a structured manner. The sorted code is then written back to the file.
 
 Args:
 
 - `filename` (`str`): The path to the Python file that needs sorting.
-- `is_use_ruff_format` (`bool`, optional): If True, use Ruff to format the
-  sorted code. Defaults to `True`.
+- `is_use_ruff_format` (`bool`, optional): If True, use Ruff to format the sorted code. Defaults to `True`.
 
 Returns:
 
@@ -679,8 +666,7 @@ Note:
   then sorted functions, and finally any trailing statements.
 - Within classes, `__init__` method is placed first among methods, followed by other methods
   sorted alphabetically, with single underscore methods at the end.
-- Functions and methods starting with single underscore are placed after regular
-  ones.
+- Functions and methods starting with single underscore are placed after regular ones.
 
 Example:
 

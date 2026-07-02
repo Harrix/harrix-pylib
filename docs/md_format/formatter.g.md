@@ -14,8 +14,7 @@ lang: en
 - [🔧 Function `format_markdown_content`](#-function-format_markdown_content)
 - [🔧 Function `normalize_line_endings`](#-function-normalize_line_endings)
 - [🔧 Function `read_markdown_text`](#-function-read_markdown_text)
-- [🔧 Function `_ensure_blank_line_in_empty_fences`](#-function-_ensure_blank_li
-  ne_in_empty_fences)
+- [🔧 Function `_ensure_blank_line_in_empty_fences`](#-function-_ensure_blank_line_in_empty_fences)
 - [🔧 Function `_format_with_options`](#-function-_format_with_options)
 - [🔧 Function `_normalize_end_of_line`](#-function-_normalize_end_of_line)
 
@@ -27,14 +26,23 @@ lang: en
 def format_markdown_content(text: str) -> str
 ```
 
-Format Markdown text with Prettier-like defaults.
+Format Markdown text.
+
+`prose_wrap` matches Prettier: `preserve` (default), `always`, or `never`.
+Line wrapping uses `print_width` only when `prose_wrap` is `always`.
 
 <details>
 <summary>Code:</summary>
 
 ```python
-def format_markdown_content(text: str, *, end_of_line: str = "crlf") -> str:
-    options = FormatOptions(end_of_line=end_of_line, prose_wrap="always")
+def format_markdown_content(
+    text: str,
+    *,
+    end_of_line: str = "crlf",
+    prose_wrap: str = "preserve",
+    print_width: int = 80,
+) -> str:
+    options = FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
     return _format_with_options(text, options)
 ```
 
@@ -49,10 +57,8 @@ def normalize_line_endings(text: str) -> str
 Normalize mixed or corrupted line endings to LF.
 
 Handles CRLF applied twice (`\r\r\n`), which otherwise becomes a blank
-line
-between every source line after the legacy two-step `\r` cleanup or
-after :func:
-`pathlib.Path.read_text` universal-newline translation.
+line between every source line after the legacy two-step `\r` cleanup or
+after :func:`pathlib.Path.read_text` universal-newline translation.
 
 <details>
 <summary>Code:</summary>
@@ -123,23 +129,46 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
         front_matter = compact_front_matter(front_matter)
     body = _ensure_blank_line_in_empty_fences(body)
     body, ignore_blocks = extract_ignore_blocks(body)
-    body, code_blocks = extract_code_blocks(body)
+    body, hard_break_styles = extract_backslash_hard_breaks(body)
+    body, angle_autolinks = extract_angle_autolinks(body)
     body, reference_blocks = extract_reference_blocks(body)
+    body, code_blocks = extract_code_blocks(body)
+    body, yaml_blocks = extract_yaml_blocks(body)
+    body, toml_blocks = extract_toml_blocks(body)
+    body, ordered_list_marker_groups = extract_ordered_list_marker_groups(body)
+    body, bullet_list_marker_groups = extract_bullet_list_marker_groups(body)
+    tight_code_indices = {block.index for block in code_blocks if block.tight}
+    body, list_layouts = extract_list_layouts(body, tight_code_indices)
     body, task_list_markers = extract_task_list_markers(body)
     body = collapse_extra_blank_lines(body)
     body = unwrap_spurious_table_rows(ensure_blank_line_after_tables(body))
     body = ensure_blank_line_after_lists(body)
+    body, link_destinations = prepare_inline_links(body)
     if not body.strip() and front_matter and not reference_blocks:
         result = front_matter.rstrip() + "\n"
     elif not body.strip() and not front_matter and reference_blocks:
-        rendered_body = restore_reference_blocks("", reference_blocks, print_width=options.print_width)
+        rendered_body = restore_reference_blocks("", reference_blocks, options=options)
         result = rendered_body
     else:
+        source_lines = body.split("\n")
         parser = get_markdown_parser()
         tokens = parser.parse(body)
-        rendered_body = render_tokens(tokens, options=options, task_list_markers=task_list_markers)
-        rendered_body = restore_code_blocks(rendered_body, code_blocks)
-        rendered_body = restore_reference_blocks(rendered_body, reference_blocks, print_width=options.print_width)
+        rendered_body = render_tokens(
+            tokens,
+            options=options,
+            task_list_markers=task_list_markers,
+            ordered_list_marker_groups=ordered_list_marker_groups,
+            bullet_list_marker_groups=bullet_list_marker_groups,
+            hard_break_styles=hard_break_styles,
+            list_layouts=list_layouts,
+            source_lines=source_lines,
+            link_destinations=link_destinations,
+        )
+        rendered_body = restore_code_blocks(rendered_body, code_blocks, options=options)
+        rendered_body = restore_angle_autolinks(rendered_body, angle_autolinks)
+        rendered_body = restore_reference_blocks(rendered_body, reference_blocks, options=options)
+        rendered_body = restore_toml_blocks(rendered_body, toml_blocks)
+        rendered_body = restore_yaml_blocks(rendered_body, yaml_blocks)
         rendered_body = restore_ignore_blocks(rendered_body, ignore_blocks)
         result = join_front_matter(front_matter, rendered_body) if front_matter else rendered_body
     result = trim_trailing_blank_lines(result)

@@ -6,14 +6,14 @@ import re
 from dataclasses import dataclass
 
 from harrix_pylib.md_format.link_title_format import (
-    _find_link_close_paren,
     _unescape_title,
     format_link_title,
+    scan_inline_links,
     split_inline_destination,
 )
+from harrix_pylib.md_format.text_lines import make_placeholder
 
 PLACEHOLDER_PREFIX = "HSKMDFMTLD"
-_LINK_PREFIX_RE = re.compile(r"!?\[[^\]]*\]\(")
 
 
 @dataclass(frozen=True)
@@ -27,27 +27,9 @@ class LinkDestination:
 
 def extract_link_destinations(body: str) -> tuple[str, list[LinkDestination]]:
     """Replace link destinations with placeholders before parsing."""
-    lines, trailing = _split_lines(body)
-    result_lines: list[str] = []
-    entries: list[LinkDestination] = []
-    index = 0
-    for line in lines:
-        if line.lstrip().startswith("|"):
-            result_lines.append(line)
-            continue
-        if line.startswith("    ") or line.startswith("\t"):
-            result_lines.append(line)
-            continue
-        processed, line_entries = _extract_link_destinations_from_text(line, start_index=index)
-        result_lines.append(processed)
-        entries.extend(line_entries)
-        index += len(line_entries)
-    return _join_lines(result_lines, trailing_newline=trailing), entries
+    from harrix_pylib.md_format.inline_link_format import prepare_inline_links  # noqa: PLC0415
 
-
-def format_link_url(url: str) -> str:
-    """Return canonical URL text for links and reference definitions."""
-    return _format_link_url(url)
+    return prepare_inline_links(body)
 
 
 def format_inline_link_destination(destination: str) -> str:
@@ -57,6 +39,11 @@ def format_inline_link_destination(destination: str) -> str:
     if title is None:
         return formatted_url
     return f"{formatted_url} {title}"
+
+
+def format_link_url(url: str, *, wrap_parentheses: bool = True) -> str:
+    """Return canonical URL text for links and reference definitions."""
+    return _format_link_url(url, wrap_parentheses=wrap_parentheses)
 
 
 def formatted_href_from_placeholder(href: str, entries_by_index: dict[int, LinkDestination]) -> str | None:
@@ -88,48 +75,6 @@ def formatted_title_from_placeholder(href: str, entries_by_index: dict[int, Link
     return entry.title
 
 
-def _extract_link_destinations_from_text(
-    body: str, *, start_index: int
-) -> tuple[str, list[LinkDestination]]:
-    parts: list[str] = []
-    entries: list[LinkDestination] = []
-    index = start_index
-    last = 0
-    while last < len(body):
-        match = _LINK_PREFIX_RE.search(body, last)
-        if match is None:
-            parts.append(body[last:])
-            break
-        parts.append(body[last : match.start()])
-        open_paren = match.end() - 1
-        close_index = _find_link_close_paren(body, open_paren)
-        if close_index is None:
-            parts.append(body[match.start() : match.end()])
-            last = match.end()
-            continue
-        prefix = body[match.start() : match.end()]
-        destination = body[match.end() : close_index]
-        url, title = split_inline_destination(destination)
-        suffix = body[close_index]
-        display_title = format_link_title(_unescape_title(title)) if title is not None else None
-        entries.append(LinkDestination(index=index, destination=url, title=display_title))
-        title_suffix = f" {title}" if title is not None else ""
-        parts.append(f"{prefix}{_placeholder(index)}{title_suffix}{suffix}")
-        index += 1
-        last = close_index + 1
-    return "".join(parts), entries
-
-
-def _format_link_url(url: str) -> str:
-    url = url.replace("&amp;", "&")
-    if url.startswith("<") and url.endswith(">"):
-        return url
-    if "()" in url:
-        encoded = _encode_special_characters(url)
-        return f"<{encoded}>"
-    return url
-
-
 def _encode_special_characters(url: str) -> str:
     result: list[str] = []
     index = 0
@@ -148,20 +93,28 @@ def _encode_special_characters(url: str) -> str:
     return "".join(result)
 
 
-def _join_lines(lines: list[str], *, trailing_newline: bool) -> str:
-    text = "\n".join(lines)
-    if trailing_newline:
-        text += "\n"
-    return text
+def _extract_link_destinations_from_text(body: str, *, start_index: int) -> tuple[str, list[LinkDestination]]:
+    entries: list[LinkDestination] = []
+    index = start_index
+
+    def handler(prefix: str, destination: str, suffix: str) -> str:
+        nonlocal index
+        url, title = split_inline_destination(destination)
+        display_title = format_link_title(_unescape_title(title)) if title is not None else None
+        entries.append(LinkDestination(index=index, destination=url, title=display_title))
+        title_suffix = f" {title}" if title is not None else ""
+        replacement = f"{prefix}{make_placeholder(PLACEHOLDER_PREFIX, index)}{title_suffix}{suffix}"
+        index += 1
+        return replacement
+
+    return scan_inline_links(body, handler), entries
 
 
-def _placeholder(index: int) -> str:
-    return f"{PLACEHOLDER_PREFIX}{index}"
-
-
-def _split_lines(text: str) -> tuple[list[str], bool]:
-    has_trailing_newline = text.endswith("\n")
-    lines = text.split("\n")
-    if has_trailing_newline and lines:
-        lines.pop()
-    return lines, has_trailing_newline
+def _format_link_url(url: str, *, wrap_parentheses: bool = True) -> str:
+    url = url.replace("&amp;", "&")
+    if url.startswith("<") and url.endswith(">"):
+        return url
+    if wrap_parentheses and "()" in url:
+        encoded = _encode_special_characters(url)
+        return f"<{encoded}>"
+    return url

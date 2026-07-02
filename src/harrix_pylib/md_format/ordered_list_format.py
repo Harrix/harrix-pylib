@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import re
 
+from harrix_pylib.md_format.text_lines import join_lines, split_lines
+
 _ORDERED_ITEM_RE = re.compile(r"^(\s*)(?:>\s*)?(\d+)[.)]\s+")
 
 
 def extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]:
     """Collect source marker numbers for each contiguous ordered list."""
-    lines, trailing = _split_lines(body)
+    lines, trailing = split_lines(body)
     groups: list[list[int]] = []
     current: list[int] = []
     current_indent: int | None = None
@@ -52,7 +54,7 @@ def extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]
         pending_break = False
     if current:
         groups.append(current)
-    return _join_lines(lines, trailing_newline=trailing), groups
+    return join_lines(lines, trailing_newline=trailing), groups
 
 
 def is_git_diff_friendly_ordered_list(markers: list[int]) -> bool:
@@ -73,18 +75,3 @@ def ordered_list_item_number(markers: list[int], item_index: int) -> int:
     if is_git_diff_friendly_ordered_list(markers):
         return markers[0] if item_index == 0 else 1
     return markers[0] + item_index
-
-
-def _join_lines(lines: list[str], *, trailing_newline: bool) -> str:
-    text = "\n".join(lines)
-    if trailing_newline:
-        text += "\n"
-    return text
-
-
-def _split_lines(text: str) -> tuple[list[str], bool]:
-    has_trailing_newline = text.endswith("\n")
-    lines = text.split("\n")
-    if has_trailing_newline and lines:
-        lines.pop()
-    return lines, has_trailing_newline

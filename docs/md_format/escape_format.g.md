@@ -12,22 +12,19 @@ lang: en
 ## Contents
 
 - [🔧 Function `escape_markdown_text`](#-function-escape_markdown_text)
-- [🔧 Function `escape_ordered_list_like_line_starts`](#-function-escape_ordered
-  _list_like_line_starts)
-- [🔧 Function `_escape_ordered_list_like_line_start`](#-function-_escape_ordere
-  d_list_like_line_start)
+- [🔧 Function `escape_ordered_list_like_line_starts`](#-function-escape_ordered_list_like_line_starts)
+- [🔧 Function `_escape_ordered_list_like_line_start`](#-function-_escape_ordered_list_like_line_start)
 - [🔧 Function `_is_alphanumeric`](#-function-_is_alphanumeric)
-- [🔧 Function `_is_identifier_leading_underscore`](#-function-_is_identifier_le
-  ading_underscore)
+- [🔧 Function `_is_failed_emphasis_underscore`](#-function-_is_failed_emphasis_underscore)
+- [🔧 Function `_is_identifier_leading_underscore`](#-function-_is_identifier_leading_underscore)
 - [🔧 Function `_is_left_flanking`](#-function-_is_left_flanking)
 - [🔧 Function `_is_punctuation`](#-function-_is_punctuation)
 - [🔧 Function `_is_right_flanking`](#-function-_is_right_flanking)
+- [🔧 Function `_is_single_char_emphasis_underscore`](#-function-_is_single_char_emphasis_underscore)
 - [🔧 Function `_is_whitespace`](#-function-_is_whitespace)
 - [🔧 Function `_should_escape_asterisk`](#-function-_should_escape_asterisk)
-- [🔧 Function `_should_escape_intraword_asterisk`](#-function-_should_escape_in
-  traword_asterisk)
-- [🔧 Function `_should_escape_underscore`](#-function-_should_escape_underscore
-  )
+- [🔧 Function `_should_escape_intraword_asterisk`](#-function-_should_escape_intraword_asterisk)
+- [🔧 Function `_should_escape_underscore`](#-function-_should_escape_underscore)
 
 </details>
 
@@ -54,8 +51,12 @@ def escape_markdown_text(text: str) -> str:
     while index < len(text):
         char = text[index]
         if char == "\\" and index + 1 < len(text):
-            parts.append(char)
-            parts.append(text[index + 1])
+            next_char = text[index + 1]
+            if next_char in _ASCII_PUNCTUATION:
+                parts.append(char + char)
+            else:
+                parts.append(char)
+            parts.append(next_char)
             index += 2
             continue
         if char == "*" and _should_escape_asterisk(text, index):
@@ -109,6 +110,8 @@ def _escape_ordered_list_like_line_start(line: str) -> str:
     after_period = match.group(2)
     if after_period and after_period[0].isdigit():
         return line
+    if after_period and after_period[0].isalpha():
+        return line
     return f"{match.group(1)}\\.{after_period}"
 ```
 
@@ -128,6 +131,28 @@ _No docstring provided._
 ```python
 def _is_alphanumeric(char: str) -> bool:
     return char.isalnum()
+```
+
+</details>
+
+## 🔧 Function `_is_failed_emphasis_underscore`
+
+```python
+def _is_failed_emphasis_underscore(text: str, index: int) -> bool
+```
+
+Do not escape `_` in `!_1_2`-style literals that are not emphasis.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_failed_emphasis_underscore(text: str, index: int) -> bool:
+    if text[index] != "_":
+        return False
+    if index + 2 < len(text) and text[index + 2] == "_" and len(text[index + 1]) == 1:
+        return True
+    return index >= 2 and text[index - 2] == "_" and text[index - 1] != "_" and len(text[index - 1]) == 1
 ```
 
 </details>
@@ -238,6 +263,24 @@ def _is_right_flanking(text: str, index: int) -> bool:
 
 </details>
 
+## 🔧 Function `_is_single_char_emphasis_underscore`
+
+```python
+def _is_single_char_emphasis_underscore(text: str, index: int) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_single_char_emphasis_underscore(text: str, index: int) -> bool:
+    return _is_failed_emphasis_underscore(text, index)
+```
+
+</details>
+
 ## 🔧 Function `_is_whitespace`
 
 ```python
@@ -315,6 +358,12 @@ _No docstring provided._
 
 ```python
 def _should_escape_underscore(text: str, index: int) -> bool:
+    if _is_single_char_emphasis_underscore(text, index):
+        return False
+    if index > 0 and text[index - 1] == "_":
+        return False
+    if index + 1 < len(text) and text[index + 1] == "_":
+        return False
     if index + 1 < len(text) and text[index + 1] == "[":
         return False
     if index > 0 and text[index - 1] == "[" and index + 1 < len(text) and _is_alphanumeric(text[index + 1]):

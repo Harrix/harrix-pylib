@@ -13,8 +13,11 @@ import yaml
 from requests import RequestException
 
 import harrix_pylib as h
+from harrix_pylib.md_format.code_fence import identify_code_blocks as _identify_code_blocks
+from harrix_pylib.md_format.code_fence import identify_code_blocks_line as _identify_code_blocks_line
 from harrix_pylib.md_format.formatter import format_markdown_content as _format_markdown_content
 from harrix_pylib.md_format.formatter import normalize_line_endings, read_markdown_text
+from harrix_pylib.md_format.front_matter import split_front_matter
 
 
 def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_content: str) -> tuple[str, Path]:
@@ -1165,7 +1168,9 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
     return yaml_md + "\n\n" + content_md
 
 
-def format_markdown(filename: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80) -> str:
+def format_markdown(
+    filename: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80
+) -> str:
     """Format a Markdown file in place when content changes.
 
     Args:
@@ -2593,21 +2598,7 @@ def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
     ```
 
     """
-    code_block_delimiter = None
-    for line in lines:
-        match = re.match(r"^\s*(`{3,})(.*)", line)
-        if match:
-            delimiter = match.group(1)
-            if code_block_delimiter is None:
-                code_block_delimiter = delimiter
-            elif code_block_delimiter == delimiter:
-                code_block_delimiter = None
-            yield line, True
-            continue
-        if code_block_delimiter:
-            yield line, True
-        else:
-            yield line, False
+    yield from _identify_code_blocks(lines)
 
 
 def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
@@ -2636,43 +2627,7 @@ def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
     ```
 
     """
-    current_text = ""
-    in_code = False
-    backtick_count = 0
-
-    i = 0
-    while i < len(markdown_line):
-        if markdown_line[i] == "`":
-            # Counting the number of consecutive backquotes
-            count = 1
-            while i + 1 < len(markdown_line) and markdown_line[i + 1] == "`":
-                count += 1
-                i += 1
-
-            if not in_code:
-                # Start of code block
-                if current_text:
-                    yield current_text, False
-                    current_text = ""
-                backtick_count = count
-                current_text = "`" * count
-                in_code = True
-            elif count == backtick_count:
-                # End of code block
-                current_text += "`" * count
-                yield current_text, True
-                current_text = ""
-                in_code = False
-            else:
-                # Backquotes inside the code
-                current_text += "`" * count
-        else:
-            current_text += markdown_line[i]
-
-        i += 1
-
-    if current_text:
-        yield current_text, False
+    yield from _identify_code_blocks_line(markdown_line)
 
 
 def increase_heading_level_content(markdown_text: str) -> str:
@@ -3695,13 +3650,7 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     ```
 
     """
-    if not markdown_text.startswith("---"):
-        return "", markdown_text
-    parts = markdown_text.split("---", 2)
-    min_count_parts = 3
-    if len(parts) < min_count_parts:
-        return "", markdown_text
-    return f"---{parts[1]}---", parts[2].lstrip()
+    return split_front_matter(markdown_text)
 
 
 def _is_toc_details_open(lines: list[str], index: int) -> bool:

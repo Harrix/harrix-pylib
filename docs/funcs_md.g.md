@@ -12,68 +12,49 @@ lang: en
 ## Contents
 
 - [🔧 Function `add_diary_entry_in_year`](#-function-add_diary_entry_in_year)
-- [🔧 Function `add_diary_new_cases_in_year`](#-function-add_diary_new_cases_in_
-  year)
-- [🔧 Function `add_diary_new_dairy_in_year`](#-function-add_diary_new_dairy_in_
-  year)
+- [🔧 Function `add_diary_new_cases_in_year`](#-function-add_diary_new_cases_in_year)
+- [🔧 Function `add_diary_new_dairy_in_year`](#-function-add_diary_new_dairy_in_year)
 - [🔧 Function `add_diary_new_diary`](#-function-add_diary_new_diary)
 - [🔧 Function `add_diary_new_dream`](#-function-add_diary_new_dream)
-- [🔧 Function `add_diary_new_dream_in_year`](#-function-add_diary_new_dream_in_
-  year)
+- [🔧 Function `add_diary_new_dream_in_year`](#-function-add_diary_new_dream_in_year)
 - [🔧 Function `add_diary_new_note`](#-function-add_diary_new_note)
 - [🔧 Function `add_note`](#-function-add_note)
-- [🔧 Function `append_path_to_local_links_images_line`](#-function-append_path_
-  to_local_links_images_line)
+- [🔧 Function `append_path_to_local_links_images_line`](#-function-append_path_to_local_links_images_line)
 - [🔧 Function `append_yaml_tag`](#-function-append_yaml_tag)
 - [🔧 Function `collect_subfolder_md`](#-function-collect_subfolder_md)
 - [🔧 Function `combine_markdown_files`](#-function-combine_markdown_files)
-- [🔧 Function `combine_markdown_files_recursively`](#-function-combine_markdown
-  _files_recursively)
-- [🔧 Function `decrease_heading_level_content`](#-function-decrease_heading_lev
-  el_content)
-- [🔧 Function `delete_g_md_files_recursively`](#-function-delete_g_md_files_rec
-  ursively)
-- [🔧 Function `download_and_replace_images`](#-function-download_and_replace_im
-  ages)
-- [🔧 Function `download_and_replace_images_content`](#-function-download_and_re
-  place_images_content)
+- [🔧 Function `combine_markdown_files_recursively`](#-function-combine_markdown_files_recursively)
+- [🔧 Function `decrease_heading_level_content`](#-function-decrease_heading_level_content)
+- [🔧 Function `delete_g_md_files_recursively`](#-function-delete_g_md_files_recursively)
+- [🔧 Function `download_and_replace_images`](#-function-download_and_replace_images)
+- [🔧 Function `download_and_replace_images_content`](#-function-download_and_replace_images_content)
 - [🔧 Function `format_markdown`](#-function-format_markdown)
 - [🔧 Function `format_markdown_content`](#-function-format_markdown_content)
 - [🔧 Function `format_markdown_folder`](#-function-format_markdown_folder)
-- [🔧 Function `format_quotes_as_markdown_content`](#-function-format_quotes_as_
-  markdown_content)
+- [🔧 Function `format_quotes_as_markdown_content`](#-function-format_quotes_as_markdown_content)
 - [🔧 Function `format_yaml`](#-function-format_yaml)
 - [🔧 Function `format_yaml_content`](#-function-format_yaml_content)
 - [🔧 Function `generate_author_book`](#-function-generate_author_book)
 - [🔧 Function `generate_id`](#-function-generate_id)
 - [🔧 Function `generate_image_captions`](#-function-generate_image_captions)
-- [🔧 Function `generate_image_captions_content`](#-function-generate_image_capt
-  ions_content)
-- [🔧 Function `generate_short_note_toc_with_links`](#-function-generate_short_n
-  ote_toc_with_links)
-- [🔧 Function `generate_short_note_toc_with_links_content`](#-function-generate
-  _short_note_toc_with_links_content)
+- [🔧 Function `generate_image_captions_content`](#-function-generate_image_captions_content)
+- [🔧 Function `generate_short_note_toc_with_links`](#-function-generate_short_note_toc_with_links)
+- [🔧 Function `generate_short_note_toc_with_links_content`](#-function-generate_short_note_toc_with_links_content)
 - [🔧 Function `generate_summaries`](#-function-generate_summaries)
 - [🔧 Function `generate_toc_with_links`](#-function-generate_toc_with_links)
-- [🔧 Function `generate_toc_with_links_content`](#-function-generate_toc_with_l
-  inks_content)
-- [🔧 Function `get_set_variables_from_yaml`](#-function-get_set_variables_from_
-  yaml)
+- [🔧 Function `generate_toc_with_links_content`](#-function-generate_toc_with_links_content)
+- [🔧 Function `get_set_variables_from_yaml`](#-function-get_set_variables_from_yaml)
 - [🔧 Function `get_yaml_content`](#-function-get_yaml_content)
 - [🔧 Function `identify_code_blocks`](#-function-identify_code_blocks)
-- [🔧 Function `identify_code_blocks_line`](#-function-identify_code_blocks_line
-  )
-- [🔧 Function `increase_heading_level_content`](#-function-increase_heading_lev
-  el_content)
+- [🔧 Function `identify_code_blocks_line`](#-function-identify_code_blocks_line)
+- [🔧 Function `increase_heading_level_content`](#-function-increase_heading_level_content)
 - [🔧 Function `is_note_in_named_folder`](#-function-is_note_in_named_folder)
 - [🔧 Function `iter_note_md_in_folder`](#-function-iter_note_md_in_folder)
 - [🔧 Function `named_note_md_path`](#-function-named_note_md_path)
 - [🔧 Function `note_md_path`](#-function-note_md_path)
-- [🔧 Function `remove_markdown_formatting_for_headings`](#-function-remove_mark
-  down_formatting_for_headings)
+- [🔧 Function `remove_markdown_formatting_for_headings`](#-function-remove_markdown_formatting_for_headings)
 - [🔧 Function `remove_toc_content`](#-function-remove_toc_content)
-- [🔧 Function `remove_yaml_and_code_content`](#-function-remove_yaml_and_code_c
-  ontent)
+- [🔧 Function `remove_yaml_and_code_content`](#-function-remove_yaml_and_code_content)
 - [🔧 Function `remove_yaml_content`](#-function-remove_yaml_content)
 - [🔧 Function `replace_section`](#-function-replace_section)
 - [🔧 Function `replace_section_content`](#-function-replace_section_content)
@@ -95,20 +76,17 @@ def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_
 Add a new diary entry to the yearly Markdown file.
 
 If the yearly file doesn't exist, it creates one with the provided front matter.
-If it exists, it adds a new entry after the year heading and the table of
-contents.
+If it exists, it adds a new entry after the year heading and the table of contents.
 
 Args:
 
 - `path_dream` (`Path | str`): The base path where the yearly file is stored.
-- `beginning_of_md` (`str`): The YAML front matter to include if creating a new
-  file.
+- `beginning_of_md` (`str`): The YAML front matter to include if creating a new file.
 - `entry_content` (`str`): The content to add after the date and time headers.
 
 Returns:
 
-- `tuple[str, Path]`: A message indicating success/failure and the path to the
-  yearly file.
+- `tuple[str, Path]`: A message indicating success/failure and the path to the yearly file.
 
 Example:
 
@@ -185,23 +163,18 @@ def add_diary_new_cases_in_year(path_cases: Path | str, beginning_of_md: str) ->
 
 Add new case entries to the yearly cases file.
 
-Cases are organized by year and month (## YYYY-MM). Each addition creates 16
-empty
-list items. If the month section does not exist, it is created with empty
-items.
+Cases are organized by year and month (## YYYY-MM). Each addition creates 16 empty
+list items. If the month section does not exist, it is created with empty items.
 If it exists, new items are inserted at the top of the month section.
 
 Args:
 
-- `path_cases` (`Path | str`): The base path where the yearly cases file is
-  stored.
-- `beginning_of_md` (`str`): The YAML front matter to include if creating a new
-  file.
+- `path_cases` (`Path | str`): The base path where the yearly cases file is stored.
+- `beginning_of_md` (`str`): The YAML front matter to include if creating a new file.
 
 Returns:
 
-- `tuple[str, Path]`: A message indicating success/failure and the path to the
-  yearly file.
+- `tuple[str, Path]`: A message indicating success/failure and the path to the yearly file.
 
 <details>
 <summary>Code:</summary>
@@ -257,15 +230,12 @@ Add a new diary entry to the yearly diary file.
 
 Args:
 
-- `path_dream` (`Path | str`): The base path where the yearly diary file is
-  stored.
-- `beginning_of_md` (`str`): The YAML front matter to include if creating a new
-  file.
+- `path_dream` (`Path | str`): The base path where the yearly diary file is stored.
+- `beginning_of_md` (`str`): The YAML front matter to include if creating a new file.
 
 Returns:
 
-- `tuple[str, Path]`: A message indicating success/failure and the path to the
-  yearly diary file.
+- `tuple[str, Path]`: A message indicating success/failure and the path to the yearly diary file.
 
 Example:
 
@@ -302,13 +272,11 @@ Args:
 
 - `path_diary` (`Path | str`): The path to the folder for diary notes.
 - `beginning_of_md` (`str`): The section of YAML for a Markdown note.
-- `is_with_images` (`bool`): Whether to create folders for images. Defaults to
-  `False`.
+- `is_with_images` (`bool`): Whether to create folders for images. Defaults to `False`.
 
 Returns:
 
-- `tuple[str, Path]`: The path to the created diary entry file or a string
-  message indicating creation.
+- `tuple[str, Path]`: The path to the created diary entry file or a string message indicating creation.
 
 Example:
 
@@ -360,20 +328,17 @@ def add_diary_new_diary(
 def add_diary_new_dream(path_dream: Path | str, beginning_of_md: str) -> tuple[str, Path]
 ```
 
-Create a new dream diary entry for the current day and time with placeholders
-for dream descriptions.
+Create a new dream diary entry for the current day and time with placeholders for dream descriptions.
 
 Args:
 
 - `path_dream` (`Path | str`): The path to the folder for dream notes.
 - `beginning_of_md` (`str`): The section of YAML for a Markdown note.
-- `is_with_images` (`bool`): Whether to create folders for images. Defaults to
-  `False`.
+- `is_with_images` (`bool`): Whether to create folders for images. Defaults to `False`.
 
 Returns:
 
-- `tuple[str, Path]`: The path to the created dream diary entry file or a string
-  message indicating creation.
+- `tuple[str, Path]`: The path to the created dream diary entry file or a string message indicating creation.
 
 Example:
 
@@ -430,15 +395,12 @@ Add a new dream diary entry to the yearly dream file.
 
 Args:
 
-- `path_dream` (`Path | str`): The base path where the yearly dream file is
-  stored.
-- `beginning_of_md` (`str`): The YAML front matter to include if creating a new
-  file.
+- `path_dream` (`Path | str`): The base path where the yearly dream file is stored.
+- `beginning_of_md` (`str`): The YAML front matter to include if creating a new file.
 
 Returns:
 
-- `tuple[str, Path]`: A message indicating success/failure and the path to the
-  yearly dream file.
+- `tuple[str, Path]`: A message indicating success/failure and the path to the yearly dream file.
 
 Example:
 
@@ -475,13 +437,11 @@ Args:
 
 - `base_path` (`Path | str`): The base path where the note should be added.
 - `text` (`str`): The content to write in the note.
-- `is_with_images` (`bool`): Whether to create a folder for images alongside the
-  note.
+- `is_with_images` (`bool`): Whether to create a folder for images alongside the note.
 
 Returns:
 
-- `tuple[str, Path]`: A tuple containing a message about file creation and the
-  path to the file.
+- `tuple[str, Path]`: A tuple containing a message about file creation and the path to the file.
 
 Example:
 
@@ -535,8 +495,7 @@ Args:
 
 Returns:
 
-- `tuple[str, Path]`: A tuple containing a message about file creation and the
-  path to the file.
+- `tuple[str, Path]`: A tuple containing a message about file creation and the path to the file.
 
 Example:
 
@@ -591,8 +550,7 @@ Returns:
 
 Note:
 
-This function processes only links that do not start with `http` or `https`,
-assuming they are local.
+This function processes only links that do not start with `http` or `https`, assuming they are local.
 
 Example:
 
@@ -632,15 +590,13 @@ def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> st
 
 Append a YAML tag to a Markdown file and save it.
 
-This function reads a Markdown file, adds or updates a YAML tag in the front
-matter,
+This function reads a Markdown file, adds or updates a YAML tag in the front matter,
 and saves the modified file back to disk.
 
 Args:
 
 - `filename` (`Path | str`): The path to the Markdown file to be processed.
-- `tuple_yaml_tag` (`tuple[str, str]`): Tuple of YAML tag. Example:
-  `("author", "Anton Sergienko")`.
+- `tuple_yaml_tag` (`tuple[str, str]`): Tuple of YAML tag. Example: `("author", "Anton Sergienko")`.
 
 Returns:
 
@@ -755,8 +711,7 @@ Args:
 
 Returns:
 
-- `list[Path]`: Sorted list of Markdown file paths (may be a single preferred
-  note).
+- `list[Path]`: Sorted list of Markdown file paths (may be a single preferred note).
 
 Note:
 
@@ -799,14 +754,12 @@ def collect_subfolder_md(subfolder: Path, should_include_file: Callable[[Path], 
 def combine_markdown_files(folder_path: Path | str) -> str
 ```
 
-Combine multiple Markdown files in a folder into a single file with intelligent
-YAML header merging.
+Combine multiple Markdown files in a folder into a single file with intelligent YAML header merging.
 
 Args:
 
 - `folder_path` (`str` or `Path`): Path to the folder containing Markdown files.
-- `is_recursive` (`bool`): Whether to include files from subfolders. Defaults to
-  `False`.
+- `is_recursive` (`bool`): Whether to include files from subfolders. Defaults to `False`.
 
 Returns:
 
@@ -814,8 +767,7 @@ Returns:
 
 Note:
 
-- Files with `.g.md` extension in the target folder will be deleted before
-  processing.
+- Files with `.g.md` extension in the target folder will be deleted before processing.
 - Files with `*.include.g.md` extension will be included in processing.
 - Files with `published: false` in their YAML headers will be skipped.
 - Heading levels in the content will be increased by one level.
@@ -1030,15 +982,12 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
 def combine_markdown_files_recursively(folder_path: Path | str) -> str
 ```
 
-Recursively process a folder structure and combines Markdown files in each
-folder that meets specific criteria.
-Process folders from the deepest level up
-to ensure hierarchical combination of notes.
+Recursively process a folder structure and combines Markdown files in each folder that meets specific criteria.
+Process folders from the deepest level up to ensure hierarchical combination of notes.
 
 Args:
 
-- `folder_path` (`str` or `Path`): Path to the root folder to process
-  recursively.
+- `folder_path` (`str` or `Path`): Path to the root folder to process recursively.
 - `is_delete_g_md_files` (`bool`, optional): Whether to delete existing `.g.md` files before processing.
   Defaults to `True`. Note: `*.include.g.md` files will not be deleted.
 
@@ -1177,8 +1126,7 @@ Decrease the heading level of Markdown content.
 
 This function processes a Markdown text and decreases the level of all headings
 (lines starting with '#') outside of code blocks by removing one '#' character.
-If a heading has only one '#', it remains unchanged to avoid creating invalid
-headings.
+If a heading has only one '#', it remains unchanged to avoid creating invalid headings.
 
 Args:
 
@@ -1191,10 +1139,8 @@ Returns:
 
 Note:
 
-- Code blocks are detected using the helper function `identify_code_blocks` and
-  are not modified.
-- Headings with only one '#' (h1) remain unchanged to maintain valid Markdown
-  structure.
+- Code blocks are detected using the helper function `identify_code_blocks` and are not modified.
+- Headings with only one '#' (h1) remain unchanged to maintain valid Markdown structure.
 
 Example:
 
@@ -1243,8 +1189,7 @@ Delete all `*.g.md` files recursively in the specified folder.
 
 Args:
 
-- `folder_path` (`Path | str`): The path to the folder where `*.g.md` files
-  should be deleted recursively.
+- `folder_path` (`Path | str`): The path to the folder where `*.g.md` files should be deleted recursively.
 
 Returns:
 
@@ -1288,18 +1233,15 @@ def delete_g_md_files_recursively(folder_path: Path | str) -> str:
 def download_and_replace_images(filename: Path | str) -> str
 ```
 
-Download remote images in Markdown text and replaces their URLs with local
-paths.
+Download remote images in Markdown text and replaces their URLs with local paths.
 
 Args:
 
-- `filename` (`Path` | `str`): The path to the Markdown file. Can be either a
-  `Path` object or a string.
+- `filename` (`Path` | `str`): The path to the Markdown file. Can be either a `Path` object or a string.
 
 Returns:
 
-- `str`: A string containing the status of the operation or if the file was
-  unchanged.
+- `str`: A string containing the status of the operation or if the file was unchanged.
 
 For example, here is the Markdown text before:
 
@@ -1348,20 +1290,17 @@ def download_and_replace_images(filename: Path | str) -> str:
 def download_and_replace_images_content(markdown_text: str, path_md: Path | str, image_folder: str = "img") -> str
 ```
 
-Download remote images in Markdown text and replaces their URLs with local
-paths.
+Download remote images in Markdown text and replaces their URLs with local paths.
 
 Args:
 
 - `markdown_text` (`str`): The Markdown text containing image links.
 - `path_md` (`Path | str`): The path to the Markdown file or its directory.
-- `image_folder` (`str`, Defaults to "img"): The folder where images will be
-  stored locally.
+- `image_folder` (`str`, Defaults to "img"): The folder where images will be stored locally.
 
 Returns:
 
-- `str`: The updated Markdown text with remote image URLs replaced by local
-  relative paths.
+- `str`: The updated Markdown text with remote image URLs replaced by local relative paths.
 
 For example, here is the Markdown text before:
 
@@ -1473,6 +1412,8 @@ Args:
 
 - `filename` (`Path | str`): Path to the Markdown file.
 - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+- `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
+- `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
 
 Returns:
 
@@ -1482,10 +1423,14 @@ Returns:
 <summary>Code:</summary>
 
 ```python
-def format_markdown(filename: Path | str, *, end_of_line: str = "crlf") -> str:
+def format_markdown(
+    filename: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80
+) -> str:
     path = Path(filename)
     document = read_markdown_text(path)
-    document_new = format_markdown_content(document, end_of_line=end_of_line)
+    document_new = format_markdown_content(
+        document, end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
+    )
     if document != document_new:
         path.write_text(document_new, encoding="utf-8", newline="")
         return f"✅ File {path} applied."
@@ -1506,6 +1451,8 @@ Args:
 
 - `markdown_text` (`str`): Markdown source text.
 - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+- `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
+- `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
 
 Returns:
 
@@ -1515,8 +1462,16 @@ Returns:
 <summary>Code:</summary>
 
 ```python
-def format_markdown_content(markdown_text: str, *, end_of_line: str = "crlf") -> str:
-    return _format_markdown_content(markdown_text, end_of_line=end_of_line)
+def format_markdown_content(
+    markdown_text: str,
+    *,
+    end_of_line: str = "crlf",
+    prose_wrap: str = "preserve",
+    print_width: int = 80,
+) -> str:
+    return _format_markdown_content(
+        markdown_text, end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
+    )
 ```
 
 </details>
@@ -1533,6 +1488,8 @@ Args:
 
 - `folder` (`Path | str`): Directory containing Markdown files.
 - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+- `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
+- `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
 
 Returns:
 
@@ -1542,8 +1499,12 @@ Returns:
 <summary>Code:</summary>
 
 ```python
-def format_markdown_folder(folder: Path | str, *, end_of_line: str = "crlf") -> str:
-    formatter = functools.partial(format_markdown, end_of_line=end_of_line)
+def format_markdown_folder(
+    folder: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80
+) -> str:
+    formatter = functools.partial(
+        format_markdown, end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
+    )
     return h.file.apply_func(folder, ".md", formatter)
 ```
 
@@ -1649,8 +1610,7 @@ Returns:
 
 Note:
 
-- The function will overwrite the file if changes are made to the YAML
-  formatting.
+- The function will overwrite the file if changes are made to the YAML formatting.
 - It uses a custom YAML dumper (`IndentDumper`) to adjust indentation.
 
 Example:
@@ -1762,8 +1722,7 @@ def format_yaml_content(markdown_text: str) -> str:
 def generate_author_book(filename: Path | str) -> str | None
 ```
 
-Add the author and the title of the book to the quotes and formats them as
-Markdown quotes.
+Add the author and the title of the book to the quotes and formats them as Markdown quotes.
 
 Args:
 
@@ -1771,8 +1730,7 @@ Args:
 
 Returns:
 
-- `str | None`: A string indicating whether changes were made to the file or
-  not.
+- `str | None`: A string indicating whether changes were made to the file or not.
 
 Example:
 
@@ -1816,8 +1774,7 @@ After processing:
 
 Note:
 
-- If the file does not exist or is not a Markdown file, the function will return
-  `None`.
+- If the file does not exist or is not a Markdown file, the function will return `None`.
 - If the file has been modified, it returns a message indicating the changes; otherwise,
   it indicates no changes were made.
 
@@ -1889,12 +1846,9 @@ def generate_id(text: str, existing_ids: set[str]) -> str
 
 Return exactly the same anchor slug GitHub creates for a Markdown heading.
 
-This function generates unique anchor IDs for Markdown headings following
-GitHub's
-algorithm. It converts text to lowercase, removes markdown formatting,
-handles
-special characters, and ensures uniqueness by adding numeric suffixes
-when needed.
+This function generates unique anchor IDs for Markdown headings following GitHub's
+algorithm. It converts text to lowercase, removes markdown formatting, handles
+special characters, and ensures uniqueness by adding numeric suffixes when needed.
 
 Args:
 
@@ -1975,8 +1929,7 @@ Process a Markdown file to add captions to images based on their alt text.
 This function reads a Markdown file, processes its content to:
 
 - Recognize images by their Markdown syntax.
-- Add automatic captions with sequential numbering, localized for Russian or
-  English.
+- Add automatic captions with sequential numbering, localized for Russian or English.
 - Skip image captions that already exist in italic format.
 - Ensure proper handling within and outside of code blocks.
 
@@ -1991,8 +1944,7 @@ Returns:
 Note:
 
 - The function modifies the file in place if changes are made.
-- The first argument of the function can be either a `Path` object or a string
-  representing the file path.
+- The first argument of the function can be either a `Path` object or a string representing the file path.
 
 Example:
 
@@ -2120,8 +2072,7 @@ Generate image captions in the provided Markdown text.
 This function reads a Markdown file, processes its content to:
 
 - Recognize images by their Markdown syntax.
-- Add automatic captions with sequential numbering, localized for Russian or
-  English.
+- Add automatic captions with sequential numbering, localized for Russian or English.
 - Skip image captions that already exist in italic format.
 - Ensure proper handling within and outside of code blocks.
 
@@ -2313,29 +2264,24 @@ def generate_image_captions_content(markdown_text: str) -> str:
 def generate_short_note_toc_with_links(filename: Path | str) -> str
 ```
 
-Generate a separate Markdown file with only the Table of Contents (TOC) from a
-given Markdown file.
+Generate a separate Markdown file with only the Table of Contents (TOC) from a given Markdown file.
 
-This function reads a Markdown file, processes its content to create a TOC, and
-writes
+This function reads a Markdown file, processes its content to create a TOC, and writes
 a new file with the ".short.g.md" extension containing only the TOC.
 
 Args:
 
-- `filename` (`Path` | `str`): The path to the Markdown file. Can be either a
-  `Path` object or a string.
+- `filename` (`Path` | `str`): The path to the Markdown file. Can be either a `Path` object or a string.
 
 Returns:
 
-- `str`: A string containing the status of the operation, including the path to
-  the generated file.
+- `str`: A string containing the status of the operation, including the path to the generated file.
 
 Note:
 
 - The function preserves YAML frontmatter if present in the original file.
 - The generated TOC file will have ": short" appended to the original title.
-- The TOC is presented as a hierarchical list of headers from the original
-  document.
+- The TOC is presented as a hierarchical list of headers from the original document.
 
 Example:
 
@@ -2390,8 +2336,7 @@ def generate_short_note_toc_with_links(filename: Path | str) -> str:
 def generate_short_note_toc_with_links_content(markdown_text: str) -> str
 ```
 
-Generate a Markdown content with only the Table of Contents (TOC) from a given
-Markdown text.
+Generate a Markdown content with only the Table of Contents (TOC) from a given Markdown text.
 
 Args:
 
@@ -2405,8 +2350,7 @@ Note:
 
 - The function preserves YAML frontmatter if present in the original text.
 - The generated TOC content will have ": short" appended to the original title.
-- The TOC is presented as a hierarchical list of headers from the original
-  document.
+- The TOC is presented as a hierarchical list of headers from the original document.
 
 Example:
 
@@ -2489,15 +2433,12 @@ def generate_summaries(folder: Path | str) -> str
 
 Generate two summary files for a directory of year-based Markdown files.
 
-1. `table.include.g.md` - A statistical table showing the count of book entries
-   by year
-2. `_[directory_name].short.g.md` - A hierarchical list of all book entries
-   organized by year
+1. `table.include.g.md` - A statistical table showing the count of book entries by year
+2. `_[directory_name].short.g.md` - A hierarchical list of all book entries organized by year
 
 Args:
 
-- `folder` (`Path | str`): Path to the directory containing Markdown files with
-  years in their names
+- `folder` (`Path | str`): Path to the directory containing Markdown files with years in their names
 
 Returns:
 
@@ -2508,10 +2449,8 @@ Notes:
 - The function looks for Markdown files with years in their names (e.g., "2023.md",
   "Before-2013-(Cinema).md", "After_2024.md")
 - Book entries are identified by second-level headings (## Title)
-- Ratings are extracted from headings in format "## Title: N" where N is a
-  number
-- YAML frontmatter from the first processed file will be copied to the summary
-  files
+- Ratings are extracted from headings in format "## Title: N" where N is a number
+- YAML frontmatter from the first processed file will be copied to the summary files
 
 Example:
 
@@ -2704,18 +2643,15 @@ def generate_summaries(folder: Path | str) -> str:
 def generate_toc_with_links(filename: Path | str) -> str
 ```
 
-Generate a Table of Contents (TOC) with clickable links for a given Markdown
-file and inserts or refreshes
+Generate a Table of Contents (TOC) with clickable links for a given Markdown file and inserts or refreshes
 the TOC in the document.
 
-This function reads a Markdown file, processes its content to create or update a
-TOC, and writes
+This function reads a Markdown file, processes its content to create or update a TOC, and writes
 back the changes if any were made.
 
 Args:
 
-- `filename` (`Path` | `str`): The path to the Markdown file. Can be either a
-  `Path` object or a string.
+- `filename` (`Path` | `str`): The path to the Markdown file. Can be either a `Path` object or a string.
 
 Returns:
 
@@ -2724,12 +2660,9 @@ Returns:
 
 Note:
 
-- The function handles YAML frontmatter by preserving it and only modifying the
-  content below the YAML if present.
-- If the TOC already exists in the document, it will be replaced with the new
-  TOC.
-- Headers in the document are used to generate TOC entries, with appropriate
-  indentation based on header level.
+- The function handles YAML frontmatter by preserving it and only modifying the content below the YAML if present.
+- If the TOC already exists in the document, it will be replaced with the new TOC.
+- Headers in the document are used to generate TOC entries, with appropriate indentation based on header level.
 
 Example:
 
@@ -2777,12 +2710,9 @@ Returns:
 
 Note:
 
-- The function handles YAML frontmatter by preserving it and only modifying the
-  content below the YAML if present.
-- If the TOC already exists in the document, it will be replaced with the new
-  TOC.
-- Headers in the document are used to generate TOC entries, with appropriate
-  indentation based on header level.
+- The function handles YAML frontmatter by preserving it and only modifying the content below the YAML if present.
+- If the TOC already exists in the document, it will be replaced with the new TOC.
+- Headers in the document are used to generate TOC entries, with appropriate indentation based on header level.
 
 Example:
 
@@ -2904,8 +2834,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
 def get_set_variables_from_yaml(folder_path: Path | str) -> list[str]
 ```
 
-Generate a sorted list of all variables from YAML from all Markdown files in
-folder recursively.
+Generate a sorted list of all variables from YAML from all Markdown files in folder recursively.
 
 Args:
 
@@ -2920,8 +2849,7 @@ Note:
 
 - Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
   are ignored during processing.
-- Hidden files and folders (those with names starting with a dot) are ignored
-  during processing.
+- Hidden files and folders (those with names starting with a dot) are ignored during processing.
 - The function recursively searches all subfolders.
 
 Example:
@@ -3052,28 +2980,23 @@ def get_yaml_content(markdown_text: str) -> str:
 def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]
 ```
 
-Process a sequence of text lines to identify code blocks and yield each line
-with a boolean flag.
+Process a sequence of text lines to identify code blocks and yield each line with a boolean flag.
 
 Args:
 
-- `lines` (`Sequence[str]`): A sequence of strings where each string is a line
-  of text to be processed.
+- `lines` (`Sequence[str]`): A sequence of strings where each string is a line of text to be processed.
 
 Returns:
 
-- `Iterator[tuple[str, bool]]`: An iterator yielding tuples. Each tuple
-  contains:
+- `Iterator[tuple[str, bool]]`: An iterator yielding tuples. Each tuple contains:
   - The original line of text (`str`).
-  - A boolean flag (`bool`) indicating if the line is within a code block (`True`)
-    or not (`False`).
+  - A boolean flag (`bool`) indicating if the line is within a code block (`True`) or not (`False`).
 
 Note:
 
 - This function identifies code blocks by looking for lines with three or more backticks (`` ` ``),
   optionally preceded by leading whitespace (e.g. fenced blocks inside list items).
-- Code blocks can be nested, and this function will toggle the
-  `code_block_delimiter` on matching delimiters.
+- Code blocks can be nested, and this function will toggle the `code_block_delimiter` on matching delimiters.
 
 Example:
 
@@ -3098,21 +3021,7 @@ for _, state in h.md.identify_code_blocks(content.splitlines()):
 
 ```python
 def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
-    code_block_delimiter = None
-    for line in lines:
-        match = re.match(r"^\s*(`{3,})(.*)", line)
-        if match:
-            delimiter = match.group(1)
-            if code_block_delimiter is None:
-                code_block_delimiter = delimiter
-            elif code_block_delimiter == delimiter:
-                code_block_delimiter = None
-            yield line, True
-            continue
-        if code_block_delimiter:
-            yield line, True
-        else:
-            yield line, False
+    yield from _identify_code_blocks(lines)
 ```
 
 </details>
@@ -3125,8 +3034,7 @@ def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]
 
 Parse a single line of Markdown to identify inline code blocks.
 
-This function scans through a Markdown line, identifying sequences of backticks
-(`) to determine where code
+This function scans through a Markdown line, identifying sequences of backticks (`) to determine where code
 blocks start and end.
 
 Args:
@@ -3153,43 +3061,7 @@ for segment, in_code in h.md.identify_code_blocks_line(line):
 
 ```python
 def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
-    current_text = ""
-    in_code = False
-    backtick_count = 0
-
-    i = 0
-    while i < len(markdown_line):
-        if markdown_line[i] == "`":
-            # Counting the number of consecutive backquotes
-            count = 1
-            while i + 1 < len(markdown_line) and markdown_line[i + 1] == "`":
-                count += 1
-                i += 1
-
-            if not in_code:
-                # Start of code block
-                if current_text:
-                    yield current_text, False
-                    current_text = ""
-                backtick_count = count
-                current_text = "`" * count
-                in_code = True
-            elif count == backtick_count:
-                # End of code block
-                current_text += "`" * count
-                yield current_text, True
-                current_text = ""
-                in_code = False
-            else:
-                # Backquotes inside the code
-                current_text += "`" * count
-        else:
-            current_text += markdown_line[i]
-
-        i += 1
-
-    if current_text:
-        yield current_text, False
+    yield from _identify_code_blocks_line(markdown_line)
 ```
 
 </details>
@@ -3203,8 +3075,7 @@ def increase_heading_level_content(markdown_text: str) -> str
 Increase the heading level of Markdown content.
 
 This function processes a Markdown text and increases the level of all headings
-(lines starting with '#') outside of code blocks by prepending an additional
-'#'.
+(lines starting with '#') outside of code blocks by prepending an additional '#'.
 
 Args:
 
@@ -3217,8 +3088,7 @@ Returns:
 
 Note:
 
-- Code blocks are detected using the helper function `identify_code_blocks` and
-  are not modified.
+- Code blocks are detected using the helper function `identify_code_blocks` and are not modified.
 
 Example:
 
@@ -3257,10 +3127,8 @@ def is_note_in_named_folder(md_path: Path) -> bool
 Check whether a Markdown path uses the named-folder layout.
 
 A note is in named-folder layout when it is stored as `Folder/Folder.md`,
-where
-the folder name matches the file stem (case-insensitive comparison).
-This
-function checks path structure only and does not verify that the file exists.
+where the folder name matches the file stem (case-insensitive comparison).
+This function checks path structure only and does not verify that the file exists.
 
 Args:
 
@@ -3303,14 +3171,10 @@ def iter_note_md_in_folder(folder: Path | str) -> Iterator[Path]
 Iterate scannable note Markdown files in a folder.
 
 Yields flat `*.md` files in `folder` and `Sub/Sub.md` notes in immediate
-subfolders (named-folder layout relative to the parent). Results are
-deduplicated
-by stem (case-insensitive). Generated files (`*.g.md`,
-`table.include.g.md`)
-and short-summary files (`_{dir_name}*`) are excluded.
-Ignored subfolders
-(for example `.git`) are skipped via
-`h.file.should_ignore_path()`.
+subfolders (named-folder layout relative to the parent). Results are deduplicated
+by stem (case-insensitive). Generated files (`*.g.md`, `table.include.g.md`)
+and short-summary files (`_{dir_name}*`) are excluded. Ignored subfolders
+(for example `.git`) are skipped via `h.file.should_ignore_path()`.
 
 Args:
 
@@ -3381,8 +3245,7 @@ def named_note_md_path(parent: Path | str, stem: str) -> Path
 
 Build the canonical named-folder path for a note.
 
-Returns `parent/stem/stem.md`, the preferred layout for new notes and file
-moves.
+Returns `parent/stem/stem.md`, the preferred layout for new notes and file moves.
 
 Args:
 
@@ -3423,8 +3286,7 @@ Resolve the path to an existing note, preferring the named-folder layout.
 
 The library supports two layouts: named-folder `parent/stem/stem.md` (canonical)
 and legacy flat `parent/stem.md`. When both files exist, the named-folder path
-is returned. When neither exists, the named-folder path is returned for
-creation.
+is returned. When neither exists, the named-folder path is returned for creation.
 
 Args:
 
@@ -3437,8 +3299,7 @@ Returns:
 
 Note:
 
-- Priority: named-folder layout, then flat layout, then named-folder path as
-  default.
+- Priority: named-folder layout, then flat layout, then named-folder path as default.
 
 Example:
 
@@ -3479,8 +3340,7 @@ Args:
 
 Returns:
 
-- `str`: The text with Markdown formatting removed (bold, italic, strikethrough,
-  links, and autolinks).
+- `str`: The text with Markdown formatting removed (bold, italic, strikethrough, links, and autolinks).
 
 Example:
 
@@ -3519,12 +3379,9 @@ def remove_toc_content(markdown_text: str) -> str
 
 Remove the table of contents (TOC) section from a Markdown document.
 
-The function identifies the TOC based on the document language (from YAML
-frontmatter)
-and removes the entire TOC section, including the details/summary
-tags and all TOC links.
-It preserves code blocks and other content in the
-document.
+The function identifies the TOC based on the document language (from YAML frontmatter)
+and removes the entire TOC section, including the details/summary tags and all TOC links.
+It preserves code blocks and other content in the document.
 
 Args:
 
@@ -3536,10 +3393,8 @@ Returns:
 
 Note:
 
-- The function detects the document language from the YAML frontmatter's `lang`
-  field.
-- TOC is identified as content between <details> and </details> tags containing
-  "📖 Contents".
+- The function detects the document language from the YAML frontmatter's `lang` field.
+- TOC is identified as content between <details> and </details> tags containing "📖 Contents".
 - The function preserves the YAML frontmatter in the output.
 
 Example:
@@ -3618,8 +3473,7 @@ Args:
 
 Returns:
 
-- `str`: A string containing the Markdown content with YAML front matter and
-  code blocks removed.
+- `str`: A string containing the Markdown content with YAML front matter and code blocks removed.
 
 Examples:
 
@@ -3725,22 +3579,17 @@ def remove_yaml_content(markdown_text: str) -> str:
 def replace_section(filename: Path | str, replace_content: str, title_section: str = "## 📋 List of commands") -> str
 ```
 
-Replace a section in a file defined by `title_section` with the provided
-`replace_content`.
+Replace a section in a file defined by `title_section` with the provided `replace_content`.
 
-This function searches for a section in a text file starting with
-`title_section` and
-ending at the next line starting with a '#'. It then
-replaces the content of that section
+This function searches for a section in a text file starting with `title_section` and
+ending at the next line starting with a '#'. It then replaces the content of that section
 with `replace_content`.
 
 Args:
 
-- `filename` (`Path | str`): The path to the file where the section needs to be
-  replaced.
+- `filename` (`Path | str`): The path to the file where the section needs to be replaced.
 - `replace_content` (`str`): The content to replace the section with.
-- `title_section` (`str`, Defaults to `"## 📋 List of commands"`): The title of
-  the section to be replaced.
+- `title_section` (`str`, Defaults to `"## 📋 List of commands"`): The title of the section to be replaced.
 
 Returns:
 
@@ -3749,8 +3598,7 @@ Returns:
 Notes:
 
 - If `start_index` or `end_index` is not found, the file remains unchanged.
-- The function assumes that the file uses UTF-8 encoding for reading and
-  writing.
+- The function assumes that the file uses UTF-8 encoding for reading and writing.
 - If no section matches the `title_section`, or if the section spans till the end of the file,
   only the content up to `end_index` (or the end of the file) will be replaced.
 
@@ -3788,21 +3636,17 @@ def replace_section(filename: Path | str, replace_content: str, title_section: s
 def replace_section_content(markdown_text: str, replace_content: str, title_section: str = "## 📋 List of commands") -> str
 ```
 
-Replace a section in the Markdown text defined by `title_section` with the
-provided `replace_content`.
+Replace a section in the Markdown text defined by `title_section` with the provided `replace_content`.
 
-This function searches for a section in the Markdown text starting with
-`title_section` and
-ending at the next line starting with a '#'. It then
-replaces the content of that section
+This function searches for a section in the Markdown text starting with `title_section` and
+ending at the next line starting with a '#'. It then replaces the content of that section
 with `replace_content`.
 
 Args:
 
 - `markdown_text` (`str`): The Markdown text.
 - `replace_content` (`str`): The content to replace the section with.
-- `title_section` (`str`, Defaults to `"## 📋 List of commands"`): The title of
-  the section to be replaced.
+- `title_section` (`str`, Defaults to `"## 📋 List of commands"`): The title of the section to be replaced.
 
 Returns:
 
@@ -3939,16 +3783,12 @@ def resolve_md_path(path: Path | str) -> Path:
 def sort_sections(filename: Path | str) -> str
 ```
 
-Sort the sections of a Markdown file by their headings, maintaining YAML front
-matter
+Sort the sections of a Markdown file by their headings, maintaining YAML front matter
 and code blocks in their original order.
 
-This function reads a Markdown file, splits it into a YAML front matter (if
-present) and content,
-then processes the content to identify and sort sections
-based on their headings (starting with `##`).
-Code blocks are kept intact and
-not reordered.
+This function reads a Markdown file, splits it into a YAML front matter (if present) and content,
+then processes the content to identify and sort sections based on their headings (starting with `##`).
+Code blocks are kept intact and not reordered.
 
 Args:
 
@@ -3969,8 +3809,7 @@ Notes:
 - The function assumes that sections are marked by `##` at the beginning of a line,
   and code blocks are delimited by triple backticks (```).
 - If there's no YAML front matter, the entire document is considered content.
-- The sorting of sections is done alphabetically, ignoring any code blocks or
-  other formatting within the section.
+- The sorting of sections is done alphabetically, ignoring any code blocks or other formatting within the section.
 - When `is_sort_section_from_yaml=True`, the YAML parameter `sort-section` must be set to `true`
   for sorting to occur.
 
@@ -4060,8 +3899,7 @@ def sort_sections(filename: Path | str, *, is_sort_section_from_yaml: bool = Fal
 def sort_sections_content(markdown_text: str) -> str
 ```
 
-Sort sections by their `##` headings: top sections first, then dates in
-descending order,
+Sort sections by their `##` headings: top sections first, then dates in descending order,
 then regular headings alphabetically.
 
 Args:
@@ -4078,12 +3916,10 @@ Returns:
 
 Note:
 
-- Sections marked with `<!-- top-section -->` are sorted alphabetically and
-  placed first.
+- Sections marked with `<!-- top-section -->` are sorted alphabetically and placed first.
 - Date headings (like `## 2024-01-01`) are sorted in descending order.
 - Regular headings are sorted alphabetically.
-- Preserves `<details>...</details>` blocks that contain
-  `<summary>📖 Contents ⬇️</summary>` (or in Russian).
+- Preserves `<details>...</details>` blocks that contain `<summary>📖 Contents ⬇️</summary>` (or in Russian).
 - When `is_sort_section_from_yaml=True`, the YAML parameter `sort-section` must be set to `true`
   for sorting to occur.
 
@@ -4333,8 +4169,7 @@ Separate the Table of Contents (TOC) from the rest of the Markdown content.
 
 Args:
 
-- `markdown_text` (`str`): The string containing the Markdown text which
-  includes a TOC.
+- `markdown_text` (`str`): The string containing the Markdown text which includes a TOC.
 
 Returns:
 
@@ -4392,8 +4227,7 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]
 
 Split a Markdown note into YAML front matter and the main content.
 
-This function assumes that the note starts with YAML front matter separated by
-'---' from the rest of the content.
+This function assumes that the note starts with YAML front matter separated by '---' from the rest of the content.
 
 Args:
 
@@ -4403,8 +4237,7 @@ Returns:
 
 - `tuple[str, str]`: A tuple containing:
   - The YAML front matter as a string, prefixed and suffixed with '---'.
-  - The remaining Markdown content after the YAML front matter, with leading
-    whitespace removed.
+  - The remaining Markdown content after the YAML front matter, with leading whitespace removed.
 
 Note:
 
@@ -4426,13 +4259,7 @@ yaml, content = h.md.split_yaml_content(md)
 
 ```python
 def split_yaml_content(markdown_text: str) -> tuple[str, str]:
-    if not markdown_text.startswith("---"):
-        return "", markdown_text
-    parts = markdown_text.split("---", 2)
-    min_count_parts = 3
-    if len(parts) < min_count_parts:
-        return "", markdown_text
-    return f"---{parts[1]}---", parts[2].lstrip()
+    return split_front_matter(markdown_text)
 ```
 
 </details>

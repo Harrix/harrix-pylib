@@ -11,15 +11,12 @@ lang: en
 
 ## Contents
 
-- [🔧 Function `ensure_blank_line_after_tables`](#-function-ensure_blank_line_af
-  ter_tables)
+- [🔧 Function `ensure_blank_line_after_tables`](#-function-ensure_blank_line_after_tables)
 - [🔧 Function `is_table_line`](#-function-is_table_line)
-- [🔧 Function `looks_like_prose_table_row`](#-function-looks_like_prose_table_r
-  ow)
+- [🔧 Function `looks_like_prose_table_row`](#-function-looks_like_prose_table_row)
 - [🔧 Function `parse_table_cells`](#-function-parse_table_cells)
 - [🔧 Function `text_display_width`](#-function-text_display_width)
-- [🔧 Function `unwrap_spurious_table_rows`](#-function-unwrap_spurious_table_ro
-  ws)
+- [🔧 Function `unwrap_spurious_table_rows`](#-function-unwrap_spurious_table_rows)
 - [🔧 Function `_is_emoji_base`](#-function-_is_emoji_base)
 
 </details>
@@ -37,21 +34,7 @@ Insert a blank line after a GFM table when the next line is not a table row.
 
 ```python
 def ensure_blank_line_after_tables(body: str) -> str:
-    lines = body.split("\n")
-    result: list[str] = []
-    in_table = False
-    for line in lines:
-        stripped = line.strip()
-        is_table = is_table_line(line)
-        if in_table and stripped and not is_table:
-            result.append("")
-            in_table = False
-        if is_table:
-            in_table = True
-        elif stripped:
-            in_table = False
-        result.append(line)
-    return "\n".join(result)
+    return ensure_blank_line_after_active_block(body, is_block_line=is_table_line)
 ```
 
 </details>

@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-import html
 import re
 from dataclasses import dataclass
 
+from harrix_pylib.md_format.link_destination_format import format_link_url
 from harrix_pylib.md_format.link_title_format import (
     _canonicalize_link_title_content,
-    _split_trailing_link_title,
     _unescape_title,
     format_link_title,
+    split_inline_destination,
 )
 from harrix_pylib.md_format.options import DEFAULT_PRINT_WIDTH, FormatOptions
 from harrix_pylib.md_format.prose_wrap import wrap_prose
 from harrix_pylib.md_format.table_format import text_display_width
+from harrix_pylib.md_format.text_lines import join_lines, make_placeholder, split_lines
 
 PLACEHOLDER_PREFIX = "HSKMDFMTREF"
 _PLACEHOLDER_RE = re.compile(r"HSKMDFMTREF\d+")
@@ -34,7 +35,7 @@ class ReferenceBlock:
 
 def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
     """Replace link/footnote definitions with placeholders."""
-    lines, trailing = _split_lines(body)
+    lines, trailing = split_lines(body)
     result: list[str] = []
     blocks: list[ReferenceBlock] = []
     index = 0
@@ -71,7 +72,7 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
             break
 
         blocks.append(ReferenceBlock(index=index, lines=block_lines, kind=kind))
-        placeholder = _placeholder(index)
+        placeholder = make_placeholder(PLACEHOLDER_PREFIX, index)
         previous_line = result[-1] if result else ""
         if (
             result
@@ -94,38 +95,12 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
                 if _LINK_DEF_RE.match(next_line) or _FOOTNOTE_DEF_RE.match(next_line):
                     line_index += 1
 
-    return _join_lines(result, trailing_newline=trailing), blocks
+    return join_lines(result, trailing_newline=trailing), blocks
 
 
-def _line_is_short_link_reference(line: str) -> bool:
-    stripped = line.strip()
-    return stripped.startswith("[") and stripped.endswith("][]")
-
-
-def _merge_multiline_link_definition(lines: list[str], line_index: int) -> tuple[str, int]:
-    """Join a link/footnote definition split across consecutive source lines."""
-    line = lines[line_index]
-    if _LINK_DEF_RE.match(line) or _FOOTNOTE_DEF_RE.match(line):
-        return line, 1
-    stripped = line.strip()
-    if not stripped.startswith("[") or "]:" in line:
-        return line, 1
-
-    merged = line
-    consumed = 1
-    while line_index + consumed < len(lines):
-        next_line = lines[line_index + consumed]
-        if not next_line.strip():
-            break
-        merged = f"{merged}\n{next_line}"
-        if "]:" in next_line:
-            if _LINK_DEF_RE.match(merged) or _FOOTNOTE_DEF_RE.match(merged):
-                return merged, consumed + 1
-            break
-        if _LINK_DEF_RE.match(next_line) or _FOOTNOTE_DEF_RE.match(next_line):
-            break
-        consumed += 1
-    return line, 1
+def format_reference_link_url(url: str) -> str:
+    """Return canonical URL text for link-reference definitions."""
+    return format_link_url(url, wrap_parentheses=False)
 
 
 def restore_reference_blocks(
@@ -141,7 +116,7 @@ def restore_reference_blocks(
     if not blocks:
         return text
     blocks_by_index = {block.index: block for block in blocks}
-    lines, trailing = _split_lines(text)
+    lines, trailing = split_lines(text)
     restored: list[str] = []
     line_index = 0
     while line_index < len(lines):
@@ -182,7 +157,34 @@ def restore_reference_blocks(
                 restored.extend(_format_reference_block(block, options=fmt_options, print_width=width))
                 emitted_block = True
         line_index += 1
-    return _join_lines(restored, trailing_newline=trailing)
+    return join_lines(restored, trailing_newline=trailing)
+
+
+def _canonicalize_reference_title(title: str) -> str:
+    return _canonicalize_link_title_content(_unescape_title(title))
+
+
+def _footnote_blockquote_lines(first_text: str, indented_lines: list[str]) -> list[str] | None:
+    lines: list[str] = []
+    if first_text.startswith(">"):
+        lines.append(first_text)
+    for line in indented_lines:
+        stripped = line.lstrip()
+        if not stripped:
+            continue
+        if stripped.startswith(">"):
+            lines.append(stripped)
+            continue
+        return None
+    return lines or None
+
+
+def _footnote_indented_lines_are_block_content(indented_lines: list[str]) -> bool:
+    for line in indented_lines:
+        stripped = line.lstrip()
+        if stripped.startswith((">", "```", "~~~")):
+            return True
+    return False
 
 
 def _format_footnote_block(lines: list[str], *, print_width: int) -> list[str]:
@@ -195,7 +197,7 @@ def _format_footnote_block(lines: list[str], *, print_width: int) -> list[str]:
     continuation = indent + "    "
     indented_lines = [line for line in lines[1:] if line.startswith("    ")]
     if indented_lines and not _footnote_indented_lines_are_block_content(indented_lines):
-        body_parts = [first_text, *[line[4:] if line.startswith("    ") else line for line in lines[1:]]]
+        body_parts = [first_text, *[line.removeprefix("    ") for line in lines[1:]]]
         body = " ".join(part.strip() for part in body_parts if part.strip())
         wrapped_inline = wrap_prose(body, width=print_width, prefix=prefix, continuation=continuation).split("\n")
         if len(wrapped_inline) == 1:
@@ -253,53 +255,16 @@ def _format_footnote_indented_block(
     return result
 
 
-def _footnote_indented_lines_are_block_content(indented_lines: list[str]) -> bool:
-    for line in indented_lines:
-        stripped = line.lstrip()
-        if stripped.startswith((">", "```", "~~~")):
-            return True
-    return False
-
-
-def _footnote_blockquote_lines(first_text: str, indented_lines: list[str]) -> list[str] | None:
-    lines: list[str] = []
-    if first_text.startswith(">"):
-        lines.append(first_text)
-    for line in indented_lines:
-        stripped = line.lstrip()
-        if not stripped:
-            continue
-        if stripped.startswith(">"):
-            lines.append(stripped)
-            continue
-        return None
-    return lines if lines else None
-
-
-def _format_reference_title(title: str) -> str:
-    unescaped = _unescape_title(title)
-    if title.startswith("(") and title.endswith(")"):
-        if " " in unescaped:
-            return f"({unescaped})"
-        return format_link_title(unescaped)
-    return format_link_title(unescaped)
-
-
-def _canonicalize_reference_title(title: str) -> str:
-    return _canonicalize_link_title_content(_unescape_title(title))
-
-
-def format_reference_link_url(url: str) -> str:
-    """Return canonical URL text for link-reference definitions."""
-    return url.replace("&amp;", "&")
-
-
-def _reference_label_markup(label: str) -> str:
-    normalized = _normalize_reference_label(label)
-    if label != label.strip():
-        inner = normalized.strip()
-        return f"[ {inner} ]" if " " in inner else f"[{inner}]"
-    return f"[{normalized}]"
+def _format_inline_reference_part(line: str) -> str:
+    match = _LINK_DEF_RE.match(line)
+    if not match:
+        return line
+    label = _normalize_reference_label(match.group(2))
+    url, title = split_inline_destination(match.group(3).rstrip())
+    url = format_reference_link_url(url)
+    if title is None:
+        return f"[{label}]: {url}"
+    return f"[{label}]: {url} {_format_reference_title(title)}"
 
 
 def _format_link_definition(line: str, *, print_width: int) -> list[str]:
@@ -307,7 +272,7 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
     if not match:
         return [line]
     indent, label, rest = match.group(1), match.group(2), match.group(3).rstrip()
-    url, title = _split_link_definition_rest(rest)
+    url, title = split_inline_destination(rest)
     url = format_reference_link_url(url)
     label_markup = _reference_label_markup(label)
     label_prefix = f"{indent}{label_markup}: "
@@ -347,53 +312,56 @@ def _format_reference_block(
     return formatted
 
 
-def _join_lines(lines: list[str], *, trailing_newline: bool) -> str:
-    text = "\n".join(lines)
-    if trailing_newline:
-        text += "\n"
-    return text
+def _format_reference_title(title: str) -> str:
+    unescaped = _unescape_title(title)
+    if title.startswith("(") and title.endswith(")"):
+        if " " in unescaped:
+            return f"({unescaped})"
+        return format_link_title(unescaped)
+    return format_link_title(unescaped)
 
 
-def _placeholder(index: int) -> str:
-    return f"{PLACEHOLDER_PREFIX}{index}"
+def _line_is_short_link_reference(line: str) -> bool:
+    stripped = line.strip()
+    return stripped.startswith("[") and stripped.endswith("][]")
 
 
-def _split_lines(text: str) -> tuple[list[str], bool]:
-    has_trailing_newline = text.endswith("\n")
-    lines = text.split("\n")
-    if has_trailing_newline and lines:
-        lines.pop()
-    return lines, has_trailing_newline
+def _merge_multiline_link_definition(lines: list[str], line_index: int) -> tuple[str, int]:
+    """Join a link/footnote definition split across consecutive source lines."""
+    line = lines[line_index]
+    if _LINK_DEF_RE.match(line) or _FOOTNOTE_DEF_RE.match(line):
+        return line, 1
+    stripped = line.strip()
+    if not stripped.startswith("[") or "]:" in line:
+        return line, 1
 
-
-def _split_link_definition_rest(rest: str) -> tuple[str, str | None]:
-    rest = rest.strip()
-    if rest.endswith(' ""') or rest.endswith(" ''"):
-        return rest[:-3].rstrip(), None
-    if len(rest) >= 2 and rest.startswith("<") and rest.endswith(">"):
-        return rest, None
-    url, title = _split_trailing_link_title(rest)
-    if title is not None:
-        if title in {'""', "''"}:
-            return url, None
-        return url, title
-    return rest, None
+    merged = line
+    consumed = 1
+    while line_index + consumed < len(lines):
+        next_line = lines[line_index + consumed]
+        if not next_line.strip():
+            break
+        merged = f"{merged}\n{next_line}"
+        if "]:" in next_line:
+            if _LINK_DEF_RE.match(merged) or _FOOTNOTE_DEF_RE.match(merged):
+                return merged, consumed + 1
+            break
+        if _LINK_DEF_RE.match(next_line) or _FOOTNOTE_DEF_RE.match(next_line):
+            break
+        consumed += 1
+    return line, 1
 
 
 def _normalize_reference_label(label: str) -> str:
     return " ".join(label.split())
 
 
-def _format_inline_reference_part(line: str) -> str:
-    match = _LINK_DEF_RE.match(line)
-    if not match:
-        return line
-    label = _normalize_reference_label(match.group(2))
-    url, title = _split_link_definition_rest(match.group(3).rstrip())
-    url = format_reference_link_url(url)
-    if title is None:
-        return f"[{label}]: {url}"
-    return f"[{label}]: {url} {_format_reference_title(title)}"
+def _reference_label_markup(label: str) -> str:
+    normalized = _normalize_reference_label(label)
+    if label != label.strip():
+        inner = normalized.strip()
+        return f"[ {inner} ]" if " " in inner else f"[{inner}]"
+    return f"[{normalized}]"
 
 
 def _restore_inline_reference_line(
@@ -465,4 +433,3 @@ def _wrap_protected_urls(text: str, *, width: int) -> list[str]:
     for index, url in enumerate(protected_urls):
         wrapped = wrapped.replace(f"\x00URL{index}\x00", url)
     return wrapped.split("\n")
-

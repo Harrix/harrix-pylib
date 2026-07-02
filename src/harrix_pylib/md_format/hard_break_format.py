@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from harrix_pylib.md_format.text_lines import join_lines, split_lines
+
 
 @dataclass
 class HardBreakStyles:
@@ -19,7 +21,7 @@ class HardBreakStyles:
 
 def extract_backslash_hard_breaks(body: str) -> tuple[str, HardBreakStyles]:
     """Record hard-break styles and normalize single trailing backslashes for parsing."""
-    lines, trailing = _split_lines(body)
+    lines, trailing = split_lines(body)
     styles = HardBreakStyles()
     converted: list[str] = []
     for index, line in enumerate(lines):
@@ -31,14 +33,7 @@ def extract_backslash_hard_breaks(body: str) -> tuple[str, HardBreakStyles]:
         if _line_has_space_hard_break(line, next_line=next_line):
             styles.backslash_breaks.append(False)
         converted.append(line)
-    return _join_lines(converted, trailing_newline=trailing), styles
-
-
-def _join_lines(lines: list[str], *, trailing_newline: bool) -> str:
-    text = "\n".join(lines)
-    if trailing_newline:
-        text += "\n"
-    return text
+    return join_lines(converted, trailing_newline=trailing), styles
 
 
 def _line_has_single_backslash_hard_break(line: str, *, next_line: str) -> bool:
@@ -53,11 +48,3 @@ def _line_has_space_hard_break(line: str, *, next_line: str) -> bool:
     if not next_line.strip():
         return False
     return line.endswith("  ") or line.endswith("\t")
-
-
-def _split_lines(text: str) -> tuple[list[str], bool]:
-    has_trailing_newline = text.endswith("\n")
-    lines = text.split("\n")
-    if has_trailing_newline and lines:
-        lines.pop()
-    return lines, has_trailing_newline

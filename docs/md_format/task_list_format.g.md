@@ -11,15 +11,11 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `TaskListMarker`](#️-class-tasklistmarker)
-- [🔧 Function `extract_task_list_markers`](#-function-extract_task_list_markers
-  )
+- [🏛️ Class `TaskListMarker`](#%EF%B8%8F-class-tasklistmarker)
+- [🔧 Function `extract_task_list_markers`](#-function-extract_task_list_markers)
 - [🔧 Function `strip_task_placeholder`](#-function-strip_task_placeholder)
-- [🔧 Function `task_list_marker_for_text`](#-function-task_list_marker_for_text
-  )
-- [🔧 Function `_join_lines`](#-function-_join_lines)
-- [🔧 Function `_placeholder`](#-function-_placeholder)
-- [🔧 Function `_split_lines`](#-function-_split_lines)
+- [🔧 Function `task_list_entry_for_text`](#-function-task_list_entry_for_text)
+- [🔧 Function `task_list_marker_for_text`](#-function-task_list_marker_for_text)
 
 </details>
 
@@ -39,6 +35,7 @@ class TaskListMarker:
 
     index: int
     checked: bool
+    marker_spaces: int = 1
 ```
 
 </details>
@@ -56,7 +53,7 @@ Replace task-list markers with placeholders the parser will keep in text.
 
 ```python
 def extract_task_list_markers(body: str) -> tuple[str, list[TaskListMarker]]:
-    lines, trailing = _split_lines(body)
+    lines, trailing = split_lines(body)
     result: list[str] = []
     markers: list[TaskListMarker] = []
     index = 0
@@ -65,12 +62,12 @@ def extract_task_list_markers(body: str) -> tuple[str, list[TaskListMarker]]:
         if not match:
             result.append(line)
             continue
-        indent, bullet, checked_char, rest = match.groups()
+        indent, marker, marker_spaces, checked_char, rest = match.groups()
         checked = checked_char.lower() == "x"
-        markers.append(TaskListMarker(index=index, checked=checked))
-        result.append(f"{indent}{bullet} {_placeholder(index)} {rest}")
+        markers.append(TaskListMarker(index=index, checked=checked, marker_spaces=len(marker_spaces)))
+        result.append(f"{indent}{marker}{marker_spaces}{make_placeholder(PLACEHOLDER_PREFIX, index)} {rest}")
         index += 1
-    return _join_lines(result, trailing_newline=trailing), markers
+    return join_lines(result, trailing_newline=trailing), markers
 ```
 
 </details>
@@ -97,19 +94,19 @@ def strip_task_placeholder(text: str) -> str:
 
 </details>
 
-## 🔧 Function `task_list_marker_for_text`
+## 🔧 Function `task_list_entry_for_text`
 
 ```python
-def task_list_marker_for_text(text: str, markers: list[TaskListMarker]) -> str | None
+def task_list_entry_for_text(text: str, markers: list[TaskListMarker]) -> tuple[str, TaskListMarker] | None
 ```
 
-Return `[ ] ` or `[x] ` when paragraph text starts with a task placeholder.
+Return task marker text and metadata when paragraph text starts with a placeholder.
 
 <details>
 <summary>Code:</summary>
 
 ```python
-def task_list_marker_for_text(text: str, markers: list[TaskListMarker]) -> str | None:
+def task_list_entry_for_text(text: str, markers: list[TaskListMarker]) -> tuple[str, TaskListMarker] | None:
     stripped = text.lstrip()
     if not stripped.startswith(PLACEHOLDER_PREFIX):
         return None
@@ -120,69 +117,27 @@ def task_list_marker_for_text(text: str, markers: list[TaskListMarker]) -> str |
         return None
     for marker in markers:
         if marker.index == marker_index:
-            return "[x] " if marker.checked else "[ ] "
+            return ("[x] " if marker.checked else "[ ] ", marker)
     return None
 ```
 
 </details>
 
-## 🔧 Function `_join_lines`
+## 🔧 Function `task_list_marker_for_text`
 
 ```python
-def _join_lines(lines: list[str]) -> str
+def task_list_marker_for_text(text: str, markers: list[TaskListMarker]) -> str | None
 ```
 
-_No docstring provided._
+Return ` [ ]  ` or ` [x]  ` when paragraph text starts with a task placeholder.
 
 <details>
 <summary>Code:</summary>
 
 ```python
-def _join_lines(lines: list[str], *, trailing_newline: bool) -> str:
-    text = "\n".join(lines)
-    if trailing_newline:
-        text += "\n"
-    return text
-```
-
-</details>
-
-## 🔧 Function `_placeholder`
-
-```python
-def _placeholder(index: int) -> str
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _placeholder(index: int) -> str:
-    return f"{PLACEHOLDER_PREFIX}{index}"
-```
-
-</details>
-
-## 🔧 Function `_split_lines`
-
-```python
-def _split_lines(text: str) -> tuple[list[str], bool]
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _split_lines(text: str) -> tuple[list[str], bool]:
-    has_trailing_newline = text.endswith("\n")
-    lines = text.split("\n")
-    if has_trailing_newline and lines:
-        lines.pop()
-    return lines, has_trailing_newline
+def task_list_marker_for_text(text: str, markers: list[TaskListMarker]) -> str | None:
+    entry = task_list_entry_for_text(text, markers)
+    return entry[0] if entry else None
 ```
 
 </details>
