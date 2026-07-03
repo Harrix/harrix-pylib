@@ -654,6 +654,13 @@ def test_format_markdown_content_keeps_blank_line_in_empty_fenced_block() -> Non
     assert result == "```\n\n```\n"
 
 
+def test_format_markdown_content_preserves_reference_comment_inside_fenced_block() -> None:
+    source = '```markdown\n[//]: # "Hidden comment"\n```\n'
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == source
+    assert "```markdown [//]:" not in result
+
+
 def test_format_markdown_content_preserves_blank_line_between_blockquote_paragraphs() -> None:
     source = "> The first paragraph in the quote.\n>\n> The second paragraph in the quote.\n"
     result = format_markdown_content(source).replace("\r\n", "\n")
