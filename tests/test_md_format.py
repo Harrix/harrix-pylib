@@ -106,6 +106,15 @@ def test_format_markdown_content_preserves_links(source: str, expected: str, for
         assert forbidden not in result
 
 
+def test_format_markdown_content_converts_self_referential_url_link_to_angle_autolink() -> None:
+    url = "http://www.example.org/docs/report-1-7.pdf"
+    source = f"[{url}]({url})\n"
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == f"<{url}>\n"
+    assert f"[{url}]({url})" not in result
+    assert result.strip() != url
+
+
 def test_format_markdown_content_preserves_many_angle_autolinks_without_placeholder_collision() -> None:
     """Placeholder restore must match full indices (AL1 must not corrupt AL10)."""
     links = [f"<https://example.com/{index}>" for index in range(12)]

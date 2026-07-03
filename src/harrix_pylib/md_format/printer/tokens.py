@@ -84,6 +84,30 @@ def _link_raw_text(children: list[Token], link_open_index: int) -> str | None:
     return "".join(parts)
 
 
+def _inline_link_is_standalone(children: list[Token], link_open_index: int) -> bool:
+    """Return whether the link is the only meaningful inline content in its run."""
+    close_index = link_open_index + 1
+    while close_index < len(children) and children[close_index].type != "link_close":
+        close_index += 1
+    if close_index >= len(children):
+        return False
+    after = close_index + 1
+    while after < len(children):
+        token = children[after]
+        if token.type == "text" and not token.content:
+            after += 1
+            continue
+        return False
+    before = link_open_index
+    while before > 0:
+        token = children[before - 1]
+        if token.type == "text" and not token.content:
+            before -= 1
+            continue
+        return False
+    return True
+
+
 def _normalize_bullet_marker(marker: str, *, normalize_star_to_dash: bool = False) -> str:
     if marker == "+":
         return "*"

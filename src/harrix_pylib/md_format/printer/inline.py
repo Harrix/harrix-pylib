@@ -28,7 +28,12 @@ from harrix_pylib.md_format.text_format import normalize_inline_spaces
 if TYPE_CHECKING:
     from markdown_it.token import Token
 
-from harrix_pylib.md_format.printer.tokens import _choose_emphasis_delimiter, _contains_strong, _link_raw_text
+from harrix_pylib.md_format.printer.tokens import (
+    _choose_emphasis_delimiter,
+    _contains_strong,
+    _inline_link_is_standalone,
+    _link_raw_text,
+)
 
 
 def _wrap_inline_code_with_edge_spaces(content: str, fence: str) -> str:
@@ -70,7 +75,7 @@ def _format_self_referential_link(href: str, inner: str) -> str | None:
         return f"<{inner}>"
 
     if inner == href:
-        return href
+        return f"<{href}>"
 
     if href.startswith(("http://", "https://")):
         href_without_scheme = href.removeprefix("https://").removeprefix("http://").rstrip("/")
@@ -277,8 +282,10 @@ def _render_inline_token(
         if not title:
             raw_inner = _link_raw_text(children, index)
             if raw_inner is not None:
+                if raw_inner == href and not _inline_link_is_standalone(children, index):
+                    return href, next_index
                 autolink = _format_self_referential_link(href, raw_inner)
-                if autolink is not None:
+                if autolink is not None and _inline_link_is_standalone(children, index):
                     return autolink, next_index
         inner_parts: list[str] = []
         inner_index = index + 1
