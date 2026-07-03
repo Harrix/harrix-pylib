@@ -64,6 +64,8 @@ def _blockquote_needs_blank_line(previous: str, current: str) -> bool:
     if previous_last.startswith("<!--") and current_first.startswith("<!--"):
         return False
     if current_first.startswith("-"):
+        if current_first.startswith("--"):
+            return True
         if previous_last.startswith(("-", "*", "+")):
             return False
         if previous_last and previous_last[0].isdigit() and ". " in previous_last[:4]:

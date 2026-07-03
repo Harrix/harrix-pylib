@@ -680,6 +680,19 @@ def test_format_markdown_content_preserves_ordered_list_in_blockquote() -> None:
     assert "> 2\\. Второй" not in result
 
 
+def test_format_markdown_content_preserves_blank_line_before_attribution_after_blockquote_list() -> None:
+    source = (
+        "> 1. Ошибки репликации наследуются (проходят через циклы репликации).\n"
+        "> 2. Существует обратная связь между генотипом и фенотипом: некоторые ошибки репликации "
+        "влияют на эффективность и точность репликации как отрицательно, так и положительно.\n"
+        ">\n"
+        "> -- _Author Name, Book Title_\n"
+    )
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == source
+    assert ">\n> -- _Author Name" in result
+
+
 def test_format_markdown_content_keeps_decimal_ratings_in_bullet_list_items() -> None:
     source = "- 10 - Транс\n- 7,5 - Чудеса\n- 9.5 - Тихоокеанский рубеж\n- 9,5 - Воображариум\n"
     result = format_markdown_content(source).replace("\r\n", "\n")
