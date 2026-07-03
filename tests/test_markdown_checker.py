@@ -570,6 +570,18 @@ def test_markdown_checker() -> None:
         errors = checker.check(double_hyphen_file, select={"H016"})
         assert any("H016" in e and " -- " in e for e in errors)
 
+        # Blockquote attribution "--" should not trigger H016
+        blockquote_attribution_file = temp_path / "blockquote_attribution.md"
+        blockquote_attribution_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "> Более того, нельзя запретить пытливым умам думать.\n"
+            ">\n"
+            "> -- _Хокинг Стивен, Черные дыры и молодые вселенные_\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(blockquote_attribution_file, select={"H016"})
+        assert not any("H016" in e for e in errors), "H016 must not fire for blockquote attribution --"
+
         # Unicode minus " − " should trigger H016  # noqa: RUF003
         minus_sign_file = temp_path / "minus_sign.md"
         minus_sign_file.write_text("---\nlang: en\n---\n\nValue \u2212 5.\n", encoding="utf-8")

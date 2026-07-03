@@ -555,7 +555,10 @@ class MarkdownChecker:
     def _check_dash_usage(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for incorrect dash/hyphen usage (H016). Applies only to markdown text, not YAML/code."""
+        """Check for incorrect dash/hyphen usage (H016). Applies only to markdown text, not YAML/code.
+
+        Exception: ``--`` at the start of blockquote attribution lines (e.g. ``> -- Author``).
+        """
         # Single pass over segments: check for " - ", " − " (Unicode minus), and " -- "  # noqa: RUF003
         hyphen_found = False
         minus_or_double_found = False
@@ -576,10 +579,11 @@ class MarkdownChecker:
                         yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
                         minus_or_double_found = True
                     elif " -- " in segment:
-                        col = offset + segment.find(" -- ") + 1
-                        error_msg = f'{self.RULES["H016"]}: " -- " should be " — " (em dash)'
-                        yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
-                        minus_or_double_found = True
+                        if not self._is_blockquote_attribution_line(line):
+                            col = offset + segment.find(" -- ") + 1
+                            error_msg = f'{self.RULES["H016"]}: " -- " should be " — " (em dash)'
+                            yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
+                            minus_or_double_found = True
 
             offset += len(segment)
             if hyphen_found and minus_or_double_found:
@@ -1203,6 +1207,17 @@ class MarkdownChecker:
         if not stripped or " " in stripped:
             return False
         return any(c in stripped for c in "-._")
+
+    @staticmethod
+    def _is_blockquote_attribution_line(line: str) -> bool:
+        """Return True if line is a blockquote attribution (e.g. '> -- Author')."""
+        stripped = line.lstrip()
+        if not stripped.startswith(">"):
+            return False
+        content = stripped
+        while content.lstrip().startswith(">"):
+            content = content.lstrip()[1:].lstrip()
+        return content.startswith("--")
 
     def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
         """Return True if position pos in line is inside a table cell that contains only a hyphen."""
