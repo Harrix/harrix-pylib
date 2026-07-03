@@ -37,6 +37,7 @@ lang: en
   - [⚙️ Method `_check_non_code_line_rules`](#%EF%B8%8F-method-_check_non_code_line_rules)
   - [⚙️ Method `_check_numero_space`](#%EF%B8%8F-method-_check_numero_space)
   - [⚙️ Method `_check_question_mark_period`](#%EF%B8%8F-method-_check_question_mark_period)
+  - [⚙️ Method `_check_space_after_emphasis_colon`](#%EF%B8%8F-method-_check_space_after_emphasis_colon)
   - [⚙️ Method `_check_quotes`](#%EF%B8%8F-method-_check_quotes)
   - [⚙️ Method `_check_russian_polite_pronouns`](#%EF%B8%8F-method-_check_russian_polite_pronouns)
   - [⚙️ Method `_check_space_before_punctuation`](#%EF%B8%8F-method-_check_space_before_punctuation)
@@ -96,6 +97,7 @@ Rules:
 - **H026** - Horizontal bar "―" (dialogue dash) should not be used.
 - **H027** - Space required after "№".
 - **H028** - Question mark followed by period (?.).
+- **H029** - Space required after colon in inline emphasis.
 
 <details>
 <summary>Code:</summary>
@@ -159,7 +161,24 @@ class MarkdownChecker:
         "H026": "Horizontal bar ― (dialogue dash) should not be used",
         "H027": "Space required after №",
         "H028": "Question mark followed by period (?.)",
+        "H029": "Space required after colon in inline emphasis",
     }
+
+    # Patterns for H029: colon inside or after inline emphasis without following space
+    _EMPHASIS_COLON_NO_SPACE_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
+        re.compile(r"\*\*\*[^*\n]+:\*\*\*(?=\S)"),
+        re.compile(r"\*\*\*[^*\n]+\*\*\*:(?=\S)"),
+        re.compile(r"\*\*[^*\n]+:\*\*(?=\S)"),
+        re.compile(r"\*\*[^*\n]+\*\*:(?=\S)"),
+        re.compile(r"(?<!\*)\*(?!\*)[^*\n]+:\*(?!\*)(?=\S)"),
+        re.compile(r"(?<!\*)\*(?!\*)[^*\n]+\*(?!\*):(?=\S)"),
+        re.compile(r"__[^_\n]+:__(?=\S)"),
+        re.compile(r"__[^_\n]+__:(?=\S)"),
+        re.compile(r"(?<!_)_(?!_)[^_\n]+:_(?!_)(?=\S)"),
+        re.compile(r"(?<!_)_(?!_)[^_\n]+_(?!_):(?=\S)"),
+        re.compile(r"~~[^~\n]+:~~(?=\S)"),
+        re.compile(r"~~[^~\n]+~~:(?=\S)"),
+    )
 
     # Russian polite "you" pronouns that must be lowercase when addressing the reader (lang: ru)
     RUSSIAN_POLITE_PRONOUNS_CAPITALIZED: ClassVar[tuple[str, ...]] = (
@@ -860,6 +879,9 @@ class MarkdownChecker:
         if "H028" in rules:
             yield from self._check_question_mark_period(filename, line, line_num)
 
+        if "H029" in rules:
+            yield from self._check_space_after_emphasis_colon(filename, line, line_num)
+
     def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that '№' is followed by a space (H027).
 
@@ -878,6 +900,35 @@ class MarkdownChecker:
                 yield self._format_error("H028", self.RULES["H028"], filename, line_num=line_num, col=col)
                 return
             offset += len(segment)
+
+    def _check_space_after_emphasis_colon(
+        self, filename: Path, line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        """Check for missing space after colon in or after inline emphasis (H029).
+
+        Colon inside or after *, **, _, __, ~~ must be followed by a space before text.
+        Uses original line; matches inside inline code are skipped.
+        """
+        code_ranges: list[tuple[int, int]] = []
+        pos = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
+        reported_cols: set[int] = set()
+        for pattern in self._EMPHASIS_COLON_NO_SPACE_PATTERNS:
+            for match in pattern.finditer(line):
+                if _inside_inline_code(match.start()):
+                    continue
+                col = match.end() + 1
+                if col in reported_cols:
+                    continue
+                reported_cols.add(col)
+                yield self._format_error("H029", self.RULES["H029"], filename, line_num=line_num, col=col)
 
     def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
         """Check for incorrect quote characters (H018).
@@ -1891,7 +1942,7 @@ def _check_image_not_at_line_start(self, filename: Path, line: str, line_num: in
 def _check_incorrect_words(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for incorrect word forms (H006). Uses pre-compiled patterns from \_INCORRECT_WORD_PATTERNS.
+Check for incorrect word forms (H006). Uses pre-compiled patterns from _INCORRECT_WORD_PATTERNS.
 
 <details>
 <summary>Code:</summary>
@@ -2039,6 +2090,9 @@ def _check_non_code_line_rules(
 
         if "H028" in rules:
             yield from self._check_question_mark_period(filename, line, line_num)
+
+        if "H029" in rules:
+            yield from self._check_space_after_emphasis_colon(filename, line, line_num)
 ```
 
 </details>
@@ -2085,6 +2139,48 @@ def _check_question_mark_period(self, filename: Path, line: str, line_num: int) 
                 yield self._format_error("H028", self.RULES["H028"], filename, line_num=line_num, col=col)
                 return
             offset += len(segment)
+```
+
+</details>
+
+### ⚙️ Method `_check_space_after_emphasis_colon`
+
+```python
+def _check_space_after_emphasis_colon(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
+```
+
+Check for missing space after colon in or after inline emphasis (H029).
+
+Colon inside or after *, **, _, __, ~~ must be followed by a space before text.
+Uses original line; matches inside inline code are skipped.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _check_space_after_emphasis_colon(
+        self, filename: Path, line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        code_ranges: list[tuple[int, int]] = []
+        pos = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
+        reported_cols: set[int] = set()
+        for pattern in self._EMPHASIS_COLON_NO_SPACE_PATTERNS:
+            for match in pattern.finditer(line):
+                if _inside_inline_code(match.start()):
+                    continue
+                col = match.end() + 1
+                if col in reported_cols:
+                    continue
+                reported_cols.add(col)
+                yield self._format_error("H029", self.RULES["H029"], filename, line_num=line_num, col=col)
 ```
 
 </details>
@@ -2158,11 +2254,10 @@ def _check_russian_polite_pronouns(self, filename: Path, line: str, _clean_line:
 Check for capitalized Russian polite pronouns (H023). Use lowercase when addressing the reader.
 
 Exception: pronoun at sentence start is allowed:
-
 - after line start or after .!?;
-- after opening guillemet « (direct speech, e.g. «Ваша задача); # ignore: HP001
-- after dash at line start (dialogue, e.g. — Ваша работа хороша). # ignore: HP001
-  Yields at most one error per line.
+- after opening guillemet « (direct speech, e.g. «Ваша задача);  # ignore: HP001
+- after dash at line start (dialogue, e.g. — Ваша работа хороша).  # ignore: HP001
+Yields at most one error per line.
 
 <details>
 <summary>Code:</summary>
@@ -2273,7 +2368,7 @@ def _check_space_before_punctuation(
 def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '\*' (H024).
+Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '&ast;' (H024).
 
 Only checks text outside inline code and outside link URLs.
 Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C);

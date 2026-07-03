@@ -43,6 +43,7 @@ class MarkdownChecker:
     - **H026** - Horizontal bar "―" (dialogue dash) should not be used.
     - **H027** - Space required after "№".
     - **H028** - Question mark followed by period (?.).
+    - **H029** - Space required after colon in inline emphasis.
 
     """
 
@@ -102,7 +103,24 @@ class MarkdownChecker:
         "H026": "Horizontal bar ― (dialogue dash) should not be used",
         "H027": "Space required after №",
         "H028": "Question mark followed by period (?.)",
+        "H029": "Space required after colon in inline emphasis",
     }
+
+    # Patterns for H029: colon inside or after inline emphasis without following space
+    _EMPHASIS_COLON_NO_SPACE_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
+        re.compile(r"\*\*\*[^*\n]+:\*\*\*(?=\S)"),
+        re.compile(r"\*\*\*[^*\n]+\*\*\*:(?=\S)"),
+        re.compile(r"\*\*[^*\n]+:\*\*(?=\S)"),
+        re.compile(r"\*\*[^*\n]+\*\*:(?=\S)"),
+        re.compile(r"(?<!\*)\*(?!\*)[^*\n]+:\*(?!\*)(?=\S)"),
+        re.compile(r"(?<!\*)\*(?!\*)[^*\n]+\*(?!\*):(?=\S)"),
+        re.compile(r"__[^_\n]+:__(?=\S)"),
+        re.compile(r"__[^_\n]+__:(?=\S)"),
+        re.compile(r"(?<!_)_(?!_)[^_\n]+:_(?!_)(?=\S)"),
+        re.compile(r"(?<!_)_(?!_)[^_\n]+_(?!_):(?=\S)"),
+        re.compile(r"~~[^~\n]+:~~(?=\S)"),
+        re.compile(r"~~[^~\n]+~~:(?=\S)"),
+    )
 
     # Russian polite "you" pronouns that must be lowercase when addressing the reader (lang: ru)
     RUSSIAN_POLITE_PRONOUNS_CAPITALIZED: ClassVar[tuple[str, ...]] = (
@@ -803,6 +821,9 @@ class MarkdownChecker:
         if "H028" in rules:
             yield from self._check_question_mark_period(filename, line, line_num)
 
+        if "H029" in rules:
+            yield from self._check_space_after_emphasis_colon(filename, line, line_num)
+
     def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that '№' is followed by a space (H027).
 
@@ -821,6 +842,35 @@ class MarkdownChecker:
                 yield self._format_error("H028", self.RULES["H028"], filename, line_num=line_num, col=col)
                 return
             offset += len(segment)
+
+    def _check_space_after_emphasis_colon(
+        self, filename: Path, line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        """Check for missing space after colon in or after inline emphasis (H029).
+
+        Colon inside or after *, **, _, __, ~~ must be followed by a space before text.
+        Uses original line; matches inside inline code are skipped.
+        """
+        code_ranges: list[tuple[int, int]] = []
+        pos = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
+        reported_cols: set[int] = set()
+        for pattern in self._EMPHASIS_COLON_NO_SPACE_PATTERNS:
+            for match in pattern.finditer(line):
+                if _inside_inline_code(match.start()):
+                    continue
+                col = match.end() + 1
+                if col in reported_cols:
+                    continue
+                reported_cols.add(col)
+                yield self._format_error("H029", self.RULES["H029"], filename, line_num=line_num, col=col)
 
     def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
         """Check for incorrect quote characters (H018).

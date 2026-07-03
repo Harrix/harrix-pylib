@@ -939,3 +939,31 @@ def test_markdown_checker() -> None:
         normal_punct_file.write_text("---\nlang: en\n---\n\nReally? Yes.\n", encoding="utf-8")
         errors = checker.check(normal_punct_file, select={"H028"})
         assert not errors
+
+        # =====================================================================
+        # H029: Space required after colon in inline emphasis
+        # =====================================================================
+        emphasis_colon_no_space_file = temp_path / "emphasis_colon_no_space.md"
+        emphasis_colon_no_space_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "- **Annotation:**Хвалился Комар, что никому его не одолеть.\n"
+            "*Note:*text\n"
+            "__Label:__value\n"
+            "~~Strike:~~word\n"
+            "**URL**:<https://example.com>\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(emphasis_colon_no_space_file, select={"H029"})
+        assert len([e for e in errors if "H029" in e]) >= 5  # noqa: PLR2004
+
+        emphasis_colon_ok_file = temp_path / "emphasis_colon_ok.md"
+        emphasis_colon_ok_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "- **Author's name in English:** Vitaly Bianki\n"
+            "- **URL**: <https://fantlab.ru/work483028>\n"
+            "Label: value\n"
+            "Use `**Bold:**text` in code.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(emphasis_colon_ok_file, select={"H029"})
+        assert not errors
