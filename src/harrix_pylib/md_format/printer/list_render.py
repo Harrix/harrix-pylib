@@ -9,7 +9,7 @@ from harrix_pylib.md_format.hard_break_format import HardBreakStyles
 from harrix_pylib.md_format.list_format import LIST_MARKER_LINE_RE, is_list_line
 from harrix_pylib.md_format.list_loose_format import ListLayout
 from harrix_pylib.md_format.options import FormatOptions
-from harrix_pylib.md_format.ordered_list_format import ordered_list_item_number
+from harrix_pylib.md_format.ordered_list_format import ordered_list_item_number, parse_ordered_list_marker
 from harrix_pylib.md_format.prose_wrap import (
     wrap_prose,
 )
@@ -344,9 +344,9 @@ def _ordered_marker_specs_from_source(
             continue
         tok_map = tokens[item_index].map
         if tok_map and 0 <= tok_map[0] < len(source_lines):
-            m = re.match(r"^\s*(\d+)([.)])\s+", source_lines[tok_map[0]])
-            if m:
-                markers.append((int(m.group(1)), m.group(2)))
+            parsed = parse_ordered_list_marker(source_lines[tok_map[0]])
+            if parsed is not None:
+                markers.append(parsed)
         item_index = _find_close(tokens, item_index, "list_item_close") + 1
     return markers
 

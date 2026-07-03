@@ -6,7 +6,21 @@ import re
 
 from harrix_pylib.md_format.text_lines import join_lines, split_lines
 
-_ORDERED_ITEM_RE = re.compile(r"^(\s*)(?:>\s*)?(\d+)[.)]\s+")
+_ORDERED_ITEM_RE = re.compile(r"^(\s*)(?:>\s*)?(\d+)([.)])\s+")
+_BLOCKQUOTE_LIST_CONTINUATION_RE = re.compile(r"^>\s{2,}\S")
+
+
+def parse_ordered_list_marker(line: str) -> tuple[int, str] | None:
+    """Return marker number and delimiter from an ordered-list source line."""
+    match = _ORDERED_ITEM_RE.match(line)
+    if not match:
+        return None
+    return int(match.group(2)), match.group(3)
+
+
+def _is_blockquote_list_continuation_line(line: str) -> bool:
+    """Return whether a blockquote line continues the previous list item body."""
+    return bool(_BLOCKQUOTE_LIST_CONTINUATION_RE.match(line))
 
 
 def extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]:
@@ -44,6 +58,9 @@ def extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]
             line_indent = len(line) - len(line.lstrip())
             if line_indent > current_indent:
                 # Continuation content — don't close the group.
+                pending_break = False
+                continue
+            if _is_blockquote_list_continuation_line(line):
                 pending_break = False
                 continue
         # Different content at same or lower indent — close the group.

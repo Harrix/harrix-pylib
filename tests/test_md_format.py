@@ -693,6 +693,43 @@ def test_format_markdown_content_preserves_blank_line_before_attribution_after_b
     assert ">\n> -- _Author Name" in result
 
 
+def test_format_markdown_content_preserves_ordered_list_after_blockquote_item_continuation() -> None:
+    source = (
+        "> 1. First item.\n"
+        "> 2. Second item.\n"
+        "> 3. Third item.\n"
+        "> 4. Fourth item.\n"
+        "> 5. Fifth item.\n"
+        "> 6. Sixth item.\n"
+        "> 7. Seventh item starts here.\n"
+        ">    Seventh item continues on the next line.\n"
+        "> 8. Eighth item.\n"
+        "> 9. Ninth item.\n"
+        "> 10. Tenth item.\n"
+        ">\n"
+        "> -- _Source A_\n"
+        "\n"
+        "---\n"
+        "\n"
+        "> Intro paragraph before the next list.\n"
+        ">\n"
+        "> Section title\n"
+        ">\n"
+        "> 1. Alpha point.\n"
+        "> 2. Beta point.\n"
+        "> 3. Gamma point.\n"
+        ">\n"
+        "> -- _Source B_\n"
+    )
+    result = format_markdown_content(source, end_of_line="lf")
+    assert "> 10. Tenth item.\n" in result
+    assert "> 1. Alpha point.\n" in result
+    assert "> 2. Beta point.\n" in result
+    assert "> 3. Gamma point.\n" in result
+    assert "> 8. Alpha" not in result
+    assert "> 9. Beta" not in result
+
+
 def test_format_markdown_content_keeps_decimal_ratings_in_bullet_list_items() -> None:
     source = "- 10 - Транс\n- 7,5 - Чудеса\n- 9.5 - Тихоокеанский рубеж\n- 9,5 - Воображариум\n"
     result = format_markdown_content(source).replace("\r\n", "\n")
