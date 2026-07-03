@@ -415,8 +415,25 @@ def _render_indented_code_block(content: str) -> str:
     return "\n".join(f"    {line}" if line.strip() else "" for line in lines) + "\n"
 
 
+def _normalize_math_block_content(content: str) -> str:
+    """Strip blockquote continuation markers absorbed into math block content."""
+    lines: list[str] = []
+    for line in content.strip().splitlines():
+        stripped = line.strip()
+        if stripped.startswith("> "):
+            stripped = stripped[2:]
+        elif stripped == ">":
+            stripped = ""
+        elif stripped.startswith(">"):
+            stripped = stripped[1:].lstrip()
+        lines.append(stripped)
+    while lines and not lines[-1]:
+        lines.pop()
+    return "\n".join(lines)
+
+
 def _render_math_block(token: Token, *, label: str | None = None) -> str:
-    content = token.content.strip()
+    content = _normalize_math_block_content(token.content)
     if label:
         return f"$$\n{content}\n$$ ({label})\n"
     return f"$$\n{content}\n$$\n"

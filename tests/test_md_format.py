@@ -373,6 +373,18 @@ def test_format_markdown_content_formats_math() -> None:
     assert "x + y" in block
 
 
+def test_format_markdown_content_preserves_block_math_inside_blockquote() -> None:
+    source = (
+        "---\n\n"
+        "> $$\n"
+        "> x^{5+y}=\\frac{x+y_6}{\\sqrt{x+\\frac{1}{x}}}\n"
+        "> $$\n"
+    )
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == source
+    assert "> >" not in result
+
+
 def test_format_sample_fixture() -> None:
     before = _read_fixture("format_sample__before.md")
     result = format_markdown_content(before)
