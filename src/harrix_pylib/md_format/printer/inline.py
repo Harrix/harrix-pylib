@@ -31,6 +31,14 @@ if TYPE_CHECKING:
 from harrix_pylib.md_format.printer.tokens import _choose_emphasis_delimiter, _contains_strong, _link_raw_text
 
 
+def _wrap_inline_code_with_edge_spaces(content: str, fence: str) -> str:
+    if content and not content.strip():
+        return f"{fence}{content}{fence}"
+    if content.startswith(" ") and content.endswith(" "):
+        return f"{fence} {content} {fence}"
+    return f"{fence}{content}{fence}"
+
+
 def _format_code_inline(
     content: str,
     *,
@@ -40,11 +48,7 @@ def _format_code_inline(
         content = content.replace("|", "\\|")
     max_run = _max_backtick_run(content)
     if max_run == 0:
-        if content and not content.strip():
-            return f"`{content}`"
-        if content.startswith(" ") or content.endswith(" "):
-            return f"` {content} `"
-        return f"`{content}`"
+        return _wrap_inline_code_with_edge_spaces(content, "`")
     if max_run >= 3:
         if content.startswith(" ") or content.endswith(" "):
             fence = "`" * (max_run + 1)

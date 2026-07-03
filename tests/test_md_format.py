@@ -731,3 +731,10 @@ def test_format_markdown_content_preserves_backslash_in_fenced_python_comments()
     assert "print(p.root)  # \\\n" in result
     assert "print(p.anchor)  #   \n" not in result
     assert "print(p.root)  #   \n" not in result
+
+
+def test_format_markdown_content_preserves_trailing_space_in_inline_code_before_text() -> None:
+    source = "`cd .. ` — go to parent folder\n"
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == source
+    assert "` cd ..  `" not in result
