@@ -174,6 +174,19 @@ def test_format_markdown_content_preserves_inline_code_with_backticks() -> None:
     assert "`` `\\n`$1`:` ``" in result
 
 
+def test_format_markdown_content_does_not_scan_links_inside_inline_code() -> None:
+    source = (
+        "Вот когда пришло время вступать в действие перегруженному оператору индексации. "
+        "Теперь мы можем заменить функции `getElementAt()` и `setElementAt()` "
+        "оператором `operator[]()`.\n"
+    )
+    result = format_markdown_content(source, end_of_line="lf")
+    assert "`operator[]()`" in result
+    assert "`getElementAt()`" in result
+    assert "`setElementAt()`" in result
+    assert "HSKMDFMTLD" not in result
+
+
 def test_format_markdown_content_preserves_escaped_pipe_in_table_inline_code() -> None:
     source = "| Col1 | Col2 |\n| --- | --- |\n| `a\\|b` | Соответствует a или b |\n"
     result = format_markdown_content(source)

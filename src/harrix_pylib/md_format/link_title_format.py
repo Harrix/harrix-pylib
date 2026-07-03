@@ -56,7 +56,20 @@ def scan_inline_links(
     body: str,
     handler: Callable[[str, str, str], str],
 ) -> str:
-    """Scan inline links and rebuild text with a per-link handler."""
+    """Scan inline links and rebuild text with a per-link handler.
+
+    Inline code spans are treated as opaque text and are never scanned for links.
+    """
+    parts: list[str] = []
+    for segment, is_code in _split_inline_code_segments(body):
+        if is_code:
+            parts.append(segment)
+        else:
+            parts.append(_scan_inline_links_in_plain_text(segment, handler))
+    return "".join(parts)
+
+
+def _scan_inline_links_in_plain_text(body: str, handler: Callable[[str, str, str], str]) -> str:
     parts: list[str] = []
     last = 0
     while last < len(body):
@@ -77,6 +90,31 @@ def scan_inline_links(
         parts.append(handler(prefix, destination, suffix))
         last = close_index + 1
     return "".join(parts)
+
+
+def _split_inline_code_segments(text: str) -> list[tuple[str, bool]]:
+    segments: list[tuple[str, bool]] = []
+    index = 0
+    while index < len(text):
+        open_index = text.find("`", index)
+        if open_index < 0:
+            if index < len(text):
+                segments.append((text[index:], False))
+            break
+        if open_index > index:
+            segments.append((text[index:open_index], False))
+        run_end = open_index
+        while run_end < len(text) and text[run_end] == "`":
+            run_end += 1
+        fence = text[open_index:run_end]
+        close_index = text.find(fence, run_end)
+        if close_index < 0:
+            segments.append((text[open_index:], False))
+            break
+        close_end = close_index + len(fence)
+        segments.append((text[open_index:close_end], True))
+        index = close_end
+    return segments
 
 
 def split_inline_destination(destination: str) -> tuple[str, str | None]:
