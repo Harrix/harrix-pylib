@@ -187,6 +187,14 @@ def test_format_markdown_content_does_not_scan_links_inside_inline_code() -> Non
     assert "HSKMDFMTLD" not in result
 
 
+def test_format_markdown_content_scans_real_links_but_not_inline_code_in_same_line() -> None:
+    source = "Ссылка [harrix-pylib](https://github.com/Harrix/harrix-pylib) и код `operator[]()`.\n"
+    result = format_markdown_content(source, end_of_line="lf")
+    assert "[harrix-pylib](https://github.com/Harrix/harrix-pylib)" in result
+    assert "`operator[]()`" in result
+    assert "HSKMDFMTLD" not in result
+
+
 def test_format_markdown_content_preserves_escaped_pipe_in_table_inline_code() -> None:
     source = "| Col1 | Col2 |\n| --- | --- |\n| `a\\|b` | Соответствует a или b |\n"
     result = format_markdown_content(source)
