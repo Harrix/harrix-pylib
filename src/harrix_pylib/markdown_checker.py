@@ -44,6 +44,7 @@ class MarkdownChecker:
     - **H027** - Space required after "№".
     - **H028** - Question mark followed by period (?.).
     - **H029** - Space required after colon in inline emphasis.
+    - **H030** - Colon outside inline emphasis (should be inside).
 
     """
 
@@ -104,6 +105,7 @@ class MarkdownChecker:
         "H027": "Space required after №",
         "H028": "Question mark followed by period (?.)",
         "H029": "Space required after colon in inline emphasis",
+        "H030": "Colon outside inline emphasis (should be inside)",
     }
 
     # Patterns for H029: colon inside or after inline emphasis without following space
@@ -120,6 +122,16 @@ class MarkdownChecker:
         re.compile(r"(?<!_)_(?!_)[^_\n]+_(?!_):(?=\S)"),
         re.compile(r"~~[^~\n]+:~~(?=\S)"),
         re.compile(r"~~[^~\n]+~~:(?=\S)"),
+    )
+
+    # Patterns for H030: colon outside inline emphasis (should be inside markers)
+    _EMPHASIS_COLON_OUTSIDE_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
+        re.compile(r"\*\*\*[^*\n]+\*\*\*:"),
+        re.compile(r"\*\*[^*\n]+\*\*:"),
+        re.compile(r"(?<!\*)\*(?!\*)[^*\n]+\*(?!\*):"),
+        re.compile(r"__[^_\n]+__:"),
+        re.compile(r"(?<!_)_(?!_)[^_\n]+_:"),
+        re.compile(r"~~[^~\n]+~~:"),
     )
 
     # Russian polite "you" pronouns that must be lowercase when addressing the reader (lang: ru)
@@ -824,6 +836,9 @@ class MarkdownChecker:
         if "H029" in rules:
             yield from self._check_space_after_emphasis_colon(filename, line, line_num)
 
+        if "H030" in rules:
+            yield from self._check_colon_outside_emphasis(filename, line, line_num)
+
     def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that '№' is followed by a space (H027).
 
@@ -871,6 +886,35 @@ class MarkdownChecker:
                     continue
                 reported_cols.add(col)
                 yield self._format_error("H029", self.RULES["H029"], filename, line_num=line_num, col=col)
+
+    def _check_colon_outside_emphasis(
+        self, filename: Path, line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        """Check for colon outside inline emphasis (H030).
+
+        Colon after *, **, _, __, ~~ labels should be inside emphasis markers.
+        Uses original line; matches inside inline code are skipped.
+        """
+        code_ranges: list[tuple[int, int]] = []
+        pos = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
+        reported_cols: set[int] = set()
+        for pattern in self._EMPHASIS_COLON_OUTSIDE_PATTERNS:
+            for match in pattern.finditer(line):
+                if _inside_inline_code(match.start()):
+                    continue
+                col = match.end()
+                if col in reported_cols:
+                    continue
+                reported_cols.add(col)
+                yield self._format_error("H030", self.RULES["H030"], filename, line_num=line_num, col=col)
 
     def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
         """Check for incorrect quote characters (H018).

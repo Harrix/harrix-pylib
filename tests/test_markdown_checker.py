@@ -967,3 +967,32 @@ def test_markdown_checker() -> None:
         )
         errors = checker.check(emphasis_colon_ok_file, select={"H029"})
         assert not errors
+
+        # =====================================================================
+        # H030: Colon outside inline emphasis (should be inside)
+        # =====================================================================
+        colon_outside_emphasis_file = temp_path / "colon_outside_emphasis.md"
+        colon_outside_emphasis_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "- **Date reading**: 2015\n"
+            "**URL**: <https://example.com>\n"
+            "*Note*: text\n"
+            "__Label__: value\n"
+            "~~Strike~~: word\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(colon_outside_emphasis_file, select={"H030"})
+        assert len([e for e in errors if "H030" in e]) >= 5  # noqa: PLR2004
+
+        colon_inside_emphasis_ok_file = temp_path / "colon_inside_emphasis_ok.md"
+        colon_inside_emphasis_ok_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "- **Date reading:** 2015\n"
+            "- **Author's name in English:** Vitaly Bianki\n"
+            "- **URL:** <https://fantlab.ru/work483028>\n"
+            "Label: value\n"
+            "Use `**Bold**: text` in code.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(colon_inside_emphasis_ok_file, select={"H030"})
+        assert not errors
