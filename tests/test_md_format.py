@@ -125,11 +125,31 @@ def test_format_markdown_content_preserves_many_angle_autolinks_without_placehol
     assert result.count("<https://example.com/1>") == 1
 
 
-def test_format_markdown_content_formats_bare_domain_as_angle_autolink() -> None:
+def test_format_markdown_content_preserves_linkify_bare_domain_without_protocol() -> None:
     source = "| Site | www.msi.com |\n| --- | --- |\n"
     result = format_markdown_content(source)
-    assert "<www.msi.com>" in result
+    assert "www.msi.com" in result
+    assert "<www.msi.com>" not in result
     assert "[www.msi.com](http://www.msi.com)" not in result
+
+
+def test_format_markdown_content_preserves_bare_domains_in_list() -> None:
+    source = "\n".join(
+        [
+            "- jsfiddle.net",
+            "- drive.google.com",
+            "- vimeo.com",
+            "- www.youtube.com",
+        ]
+    ) + "\n"
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == source
+
+
+def test_format_markdown_content_converts_explicit_bare_domain_link_to_angle_autolink() -> None:
+    source = "[www.example.com](http://www.example.com)\n"
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == "<www.example.com>\n"
 
 
 def test_format_markdown_content_preserves_front_matter() -> None:

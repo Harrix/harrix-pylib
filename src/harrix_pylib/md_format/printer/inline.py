@@ -66,6 +66,14 @@ def _format_code_inline(
     return f"{fence}{content}{fence}"
 
 
+def _inner_has_url_scheme(text: str) -> bool:
+    return "://" in text
+
+
+def _is_linkify_link(token: Token) -> bool:
+    return token.markup == "autolink"
+
+
 def _format_self_referential_link(href: str, inner: str) -> str | None:
     """Return autolink or bare URL syntax for self-referential links."""
     mailto_prefix = "mailto:"
@@ -284,6 +292,12 @@ def _render_inline_token(
             if raw_inner is not None:
                 if raw_inner == href and not _inline_link_is_standalone(children, index):
                     return href, next_index
+                if (
+                    _is_linkify_link(child)
+                    and not _inner_has_url_scheme(raw_inner)
+                    and _inline_link_is_standalone(children, index)
+                ):
+                    return raw_inner, next_index
                 autolink = _format_self_referential_link(href, raw_inner)
                 if autolink is not None and _inline_link_is_standalone(children, index):
                     return autolink, next_index
