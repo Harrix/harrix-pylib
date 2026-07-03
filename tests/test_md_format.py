@@ -291,6 +291,17 @@ def test_format_markdown_content_aligns_table_columns() -> None:
     )
 
 
+def test_format_markdown_content_aligns_table_columns_with_angle_autolinks() -> None:
+    source = (
+        "| Title            | Downloads oer week | Link                                             |\n"
+        "| ---------------- | ------------------ | ------------------------------------------------ |\n"
+        "| bootstrap        | 4 459 946          | <https://www.npmjs.com/package/bootstrap>        |\n"
+        "| Bulma            | 199 847            | <https://www.npmjs.com/package/bulma>            |\n"
+    )
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == source
+
+
 def test_format_markdown_content_keeps_paragraph_after_table() -> None:
     source = (
         "| File | Config key | Purpose |\n"

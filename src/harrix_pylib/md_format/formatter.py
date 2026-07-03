@@ -116,6 +116,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
             list_layouts=list_layouts,
             source_lines=source_lines,
             link_destinations=link_destinations,
+            angle_autolinks=angle_autolinks,
         )
         rendered_body = restore_code_blocks(rendered_body, code_blocks, options=options)
         rendered_body = restore_angle_autolinks(rendered_body, angle_autolinks)

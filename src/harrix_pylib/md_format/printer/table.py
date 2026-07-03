@@ -5,8 +5,10 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from harrix_pylib.md_format.autolink_format import restore_angle_autolinks
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles
 from harrix_pylib.md_format.options import FormatOptions
+from harrix_pylib.md_format.printer import context as printer_context
 from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text_display_width
 
 if TYPE_CHECKING:
@@ -14,6 +16,8 @@ if TYPE_CHECKING:
 
 from harrix_pylib.md_format.printer.inline import _render_inline
 from harrix_pylib.md_format.printer.tokens import _alignment_separator, _find_close
+
+_TABLE_SEPARATOR_CELL_RE = re.compile(r"^[-: ]+$")
 
 
 def _escape_table_cell(cell: str) -> str:
@@ -102,12 +106,27 @@ def _parse_table_rows(text: str) -> list[list[str]]:
     return rows
 
 
+def _expand_table_cell_placeholders(cell: str) -> str:
+    autolinks = printer_context.ACTIVE_ANGLE_AUTOLINKS
+    if not autolinks:
+        return cell
+    return restore_angle_autolinks(cell, autolinks)
+
+
+def _table_data_rows(rows: list[list[str]]) -> list[list[str]]:
+    return [row for row in rows if not all(_TABLE_SEPARATOR_CELL_RE.fullmatch(cell or "") for cell in row)]
+
+
+def _parse_table_rows_expanded(text: str) -> list[list[str]]:
+    return [[_expand_table_cell_placeholders(cell) for cell in row] for row in _parse_table_rows(text)]
+
+
 def _prefer_source_table_block(source_text: str, formatted_text: str) -> str | None:
-    source_rows = _parse_table_rows(source_text)
-    formatted_rows = _parse_table_rows(formatted_text)
+    source_rows = _table_data_rows(_parse_table_rows_expanded(source_text))
+    formatted_rows = _table_data_rows(_parse_table_rows(formatted_text))
     if not source_rows or source_rows != formatted_rows:
         return None
-    if len(source_text) >= len(formatted_text):
+    if len(source_text.rstrip("\n")) >= len(formatted_text.rstrip("\n")):
         return source_text if source_text.endswith("\n") else f"{source_text}\n"
     return None
 
@@ -183,13 +202,17 @@ def _render_table(
             trailing_paragraphs.append(padded_row[0].strip())
         else:
             filtered_body_rows.append(padded_row[:width])
-    width_rows = [[_escape_table_cell(cell) for cell in row] for row in [header, *filtered_body_rows]]
+    expanded_header = [_expand_table_cell_placeholders(cell) for cell in header]
+    expanded_body_rows = [[_expand_table_cell_placeholders(cell) for cell in row] for row in filtered_body_rows]
+    width_rows = [
+        [_escape_table_cell(cell) for cell in row] for row in [expanded_header, *expanded_body_rows]
+    ]
     column_widths = _table_column_widths(width_rows, width)
     align_row = rows[1] if len(rows) > 1 else ["---"] * width
     lines = [
-        _format_table_row(header, column_widths, align_row),
+        _format_table_row(expanded_header, column_widths, align_row),
         _format_table_separator(column_widths, align_row),
-        *(_format_table_row(row, column_widths, align_row) for row in filtered_body_rows),
+        *(_format_table_row(row, column_widths, align_row) for row in expanded_body_rows),
     ]
     result = "\n".join(lines) + "\n"
     if trailing_paragraphs:

@@ -31,12 +31,15 @@ def render_tokens(
     list_layouts: list[ListLayout] | None = None,
     source_lines: list[str] | None = None,
     link_destinations: list[LinkDestination] | None = None,
+    angle_autolinks: list[str] | None = None,
 ) -> str:
     """Render top-level block tokens to Markdown."""
     previous_destinations = printer_context.ACTIVE_LINK_DESTINATIONS
+    previous_angle_autolinks = printer_context.ACTIVE_ANGLE_AUTOLINKS
     printer_context.ACTIVE_LINK_DESTINATIONS = (
         {entry.index: entry for entry in link_destinations} if link_destinations else None
     )
+    printer_context.ACTIVE_ANGLE_AUTOLINKS = angle_autolinks
     try:
         return _render_tokens_impl(
             tokens,
@@ -50,6 +53,7 @@ def render_tokens(
         )
     finally:
         printer_context.ACTIVE_LINK_DESTINATIONS = previous_destinations
+        printer_context.ACTIVE_ANGLE_AUTOLINKS = previous_angle_autolinks
 
 
 def _render_tokens_impl(
