@@ -700,3 +700,34 @@ def test_format_markdown_content_renders_hard_breaks_with_backslash() -> None:
     two_space_source = "line one  \nline two\n"
     two_space_result = format_markdown_content(two_space_source).replace("\r\n", "\n")
     assert two_space_result == "line one  \nline two\n"
+
+
+def test_format_markdown_content_preserves_trailing_backslash_in_fenced_text_block() -> None:
+    path_line = "C:\\Users\\Default\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\\n"
+    source = "```text\n" + path_line + "```\n"
+    result = format_markdown_content(source).replace("\r\n", "\n")
+    assert path_line in result
+    assert "Programs  \n" not in result
+
+
+def test_format_markdown_content_preserves_backslash_in_fenced_python_comments() -> None:
+    source = (
+        "```python\n"
+        "from pathlib import Path\n"
+        "\n"
+        "p = Path('C:\\Program Files\\Internet Explorer\\iexplore.exe')\n"
+        "print(p.name)  # iexplore.exe\n"
+        "print(p.suffix)  # .exe\n"
+        "print(p.suffixes)  # ['.exe']\n"
+        "print(p.drive)  # C:\n"
+        "print(p.stem)  # iexplore\n"
+        "print(p.anchor)  # \\\n"
+        "print(p.root)  # \\\n"
+        "print(p.parts)  # ('C:\\\\', 'Program Files', 'Internet Explorer', 'iexplore.exe')\n"
+        "```\n"
+    )
+    result = format_markdown_content(source).replace("\r\n", "\n")
+    assert "print(p.anchor)  # \\\n" in result
+    assert "print(p.root)  # \\\n" in result
+    assert "print(p.anchor)  #   \n" not in result
+    assert "print(p.root)  #   \n" not in result
