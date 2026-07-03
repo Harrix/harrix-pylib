@@ -702,6 +702,7 @@ def test_format_markdown_content_preserves_ordered_list_after_blockquote_item_co
         "> 5. Fifth item.\n"
         "> 6. Sixth item.\n"
         "> 7. Seventh item starts here.\n"
+        ">\n"
         ">    Seventh item continues on the next line.\n"
         "> 8. Eighth item.\n"
         "> 9. Ninth item.\n"
@@ -728,6 +729,18 @@ def test_format_markdown_content_preserves_ordered_list_after_blockquote_item_co
     assert "> 3. Gamma point.\n" in result
     assert "> 8. Alpha" not in result
     assert "> 9. Beta" not in result
+
+
+def test_format_markdown_content_preserves_blank_lines_in_blockquote_list_item_paragraphs() -> None:
+    source = (
+        "> 1. Opening paragraph of the first item.\n"
+        ">\n"
+        ">    Indented continuation of the first item.\n"
+        ">\n"
+        "> 2. Second item paragraph.\n"
+    )
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == source
 
 
 def test_format_markdown_content_keeps_decimal_ratings_in_bullet_list_items() -> None:

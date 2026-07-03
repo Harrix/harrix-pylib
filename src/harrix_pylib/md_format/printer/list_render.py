@@ -351,6 +351,63 @@ def _ordered_marker_specs_from_source(
     return markers
 
 
+def _list_item_last_source_line_index(
+    tokens: list[Token], item_open_index: int, item_close_index: int
+) -> int | None:
+    item_map = tokens[item_open_index].map
+    if not item_map:
+        return None
+    last_line = item_map[0]
+    child_index = item_open_index + 1
+    while child_index < item_close_index:
+        token = tokens[child_index]
+        if token.map:
+            last_line = max(last_line, token.map[1] - 1)
+        if token.type == "paragraph_open":
+            child_index += 3
+            continue
+        if token.type in {"bullet_list_open", "ordered_list_open"}:
+            nested_close = _find_close(
+                tokens,
+                child_index,
+                "ordered_list_close" if token.type == "ordered_list_open" else "bullet_list_close",
+            )
+            if tokens[nested_close].map:
+                last_line = max(last_line, tokens[nested_close].map[1] - 1)
+            child_index = nested_close + 1
+            continue
+        child_index += 1
+    return last_line
+
+
+def _source_has_blockquote_blank_line(source_lines: list[str], start: int, end: int) -> bool:
+    for line_index in range(start, end):
+        if line_index < 0 or line_index >= len(source_lines):
+            continue
+        line = source_lines[line_index]
+        if not line.strip():
+            return True
+        if re.fullmatch(r">\s*", line):
+            return True
+    return False
+
+
+def _blank_line_before_list_item(
+    tokens: list[Token],
+    item_index: int,
+    prev_item_index: int,
+    source_lines: list[str] | None,
+) -> bool:
+    if not source_lines:
+        return False
+    prev_close = _find_close(tokens, prev_item_index, "list_item_close")
+    prev_last_line = _list_item_last_source_line_index(tokens, prev_item_index, prev_close)
+    curr_map = tokens[item_index].map
+    if prev_last_line is None or not curr_map:
+        return False
+    return _source_has_blockquote_blank_line(source_lines, prev_last_line + 1, curr_map[0])
+
+
 def _ordered_sibling_gap_before_item(
     tokens: list[Token],
     item_index: int,
@@ -615,6 +672,8 @@ def _render_list(
                 )
             ):
                 gap = True
+            if not gap and in_blockquote and source_lines and prev_item_index is not None:
+                gap = _blank_line_before_list_item(tokens, item_index, prev_item_index, source_lines)
             if gap:
                 lines.append("")
         if layout and rendered_item_count < len(layout.loose_items):
@@ -637,6 +696,14 @@ def _render_list(
         prev_item_index = item_index
         item_index = item_close + 1
     return "\n".join(lines) + "\n", close_index + 1
+
+
+def _is_prose_list_item_block(block: str) -> bool:
+    if not block.strip():
+        return False
+    if _is_list_block(block):
+        return False
+    return not block.lstrip().startswith(">")
 
 
 def _render_list_item_lines(
@@ -702,15 +769,17 @@ def _render_list_item_lines(
                 else:
                     rendered.append(f"{first_continuation}{continuation_line}")
             continue
-        if block_index > 0 and not in_blockquote:
+        if block_index > 0:
             previous_block = item_lines[block_index - 1]
             needs_gap = False
             if loose:
                 if _is_list_block(block) and _is_list_block(previous_block):
                     needs_gap = False
+                elif in_blockquote:
+                    needs_gap = _is_prose_list_item_block(previous_block) and _is_prose_list_item_block(block)
                 else:
                     needs_gap = not (_is_list_block(block) and previous_block.lstrip().startswith(">"))
-            elif _is_list_block(previous_block) and not _is_list_block(block):
+            elif not in_blockquote and _is_list_block(previous_block) and not _is_list_block(block):
                 needs_gap = not previous_block.lstrip().startswith(">")
             if needs_gap:
                 rendered.append("")
