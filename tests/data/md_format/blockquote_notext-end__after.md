@@ -1,4 +1,5 @@
-> [!NOTE] `DOOM`
+> [!NOTE]
+> `DOOM`
 
 > _b_
 >

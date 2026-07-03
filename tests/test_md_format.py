@@ -661,6 +661,43 @@ def test_format_markdown_content_preserves_reference_comment_inside_fenced_block
     assert "```markdown [//]:" not in result
 
 
+def test_format_markdown_content_preserves_github_alerts() -> None:
+    source = (
+        "> [!NOTE]\n"
+        "> Information the user should notice even if skimming.\n"
+        "\n"
+        "> [!TIP]\n"
+        "> Optional information to help a user be more successful.\n"
+        "\n"
+        "> [!IMPORTANT]\n"
+        "> Essential information required for user success.\n"
+        "\n"
+        "> [!CAUTION]\n"
+        "> Negative potential consequences of an action.\n"
+        "\n"
+        "> [!WARNING]\n"
+        "> Dangerous certain consequences of an action.\n"
+    )
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == source
+    assert "> [!NOTE] Information" not in result
+
+
+def test_format_markdown_content_preserves_github_alerts_inside_fenced_markdown_block() -> None:
+    source = (
+        "```markdown\n"
+        "> [!NOTE]\n"
+        "> Information the user should notice even if skimming.\n"
+        "\n"
+        "> [!TIP]\n"
+        "> Optional information to help a user be more successful.\n"
+        "```\n"
+    )
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == source
+    assert "> [!NOTE] Information" not in result
+
+
 def test_format_markdown_content_preserves_blank_line_between_blockquote_paragraphs() -> None:
     source = "> The first paragraph in the quote.\n>\n> The second paragraph in the quote.\n"
     result = format_markdown_content(source).replace("\r\n", "\n")

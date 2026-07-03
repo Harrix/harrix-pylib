@@ -90,21 +90,8 @@ def restore_code_blocks(text: str, blocks: list[CodeBlock], *, options: FormatOp
 
 
 def _format_markdown_fence_block(block_lines: list[str], *, options: FormatOptions | None) -> list[str]:
-    if len(block_lines) < _MIN_FENCED_BLOCK_LINES:
-        return block_lines
-    opening = block_lines[0].strip()
-    if not opening.startswith("```"):
-        return block_lines
-    language = opening[3:].strip().lower()
-    if language != "markdown" or options is None:
-        return block_lines
-    inner = "\n".join(block_lines[1:-1])
-    if not inner.strip():
-        return block_lines
-    from harrix_pylib.md_format.formatter import _format_with_options  # noqa: PLC0415
-
-    formatted_inner = _format_with_options(inner, options).rstrip("\n")
-    return [block_lines[0], *formatted_inner.split("\n"), block_lines[-1]]
+    """Return fenced blocks verbatim; do not recursively format ``markdown`` fences."""
+    return block_lines
 
 
 def _leading_whitespace(line: str) -> str:

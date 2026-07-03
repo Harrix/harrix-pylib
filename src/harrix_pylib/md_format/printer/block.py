@@ -165,13 +165,21 @@ def _render_alert(
             preserve_source_line=False,
         )
         if chunk:
-            body_parts.append(chunk.strip())
-    body = normalize_inline_spaces(" ".join(body_parts))
-    alert_line = f"[!{kind}] {body}".rstrip() if body else f"[!{kind}]"
-    if options.prose_wrap == "always":
-        quoted = _wrap_blockquote_block(alert_line, options=options) + "\n"
-    else:
-        quoted = f"> {alert_line}\n"
+            body_parts.append(chunk.rstrip("\n"))
+    quoted_lines = [f"> [!{kind}]"]
+    if body_parts:
+        body = "\n\n".join(part for part in body_parts if part.strip())
+        if options.prose_wrap == "always":
+            body = normalize_inline_spaces(body.replace("\n", " "))
+            wrapped = _wrap_blockquote_block(body, options=options).rstrip("\n")
+            quoted_lines.extend(wrapped.splitlines())
+        else:
+            for part in body_parts:
+                if not part.strip():
+                    continue
+                for line in part.splitlines():
+                    quoted_lines.append(f"> {line}" if line else ">")
+    quoted = "\n".join(quoted_lines) + "\n"
     return quoted, close_index + 1
 
 
