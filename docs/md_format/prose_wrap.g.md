@@ -332,7 +332,7 @@ def _kana_continuation_join(left: str, right: str) -> bool:
 def _prose_display_width(text: str) -> int
 ```
 
-Return display width treating each backslash escape (\X) as 1 column (like Prettier).
+Return display width treating each backslash escape (\\X) as 1 column (like Prettier).
 
 <details>
 <summary>Code:</summary>

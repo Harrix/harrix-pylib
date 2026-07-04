@@ -177,7 +177,7 @@ def _is_indented_source_codeblock(token: Token, source_lines: list[str] | None) 
     if not code_map:
         return True
     line = source_lines[code_map[0]]
-    return bool(line.startswith("    ") or line.startswith("\t") or line[:1] == " ")
+    return bool(line.startswith(("    ", "\t")) or line[:1] == " ")
 ```
 
 </details>
@@ -933,10 +933,7 @@ def _render_list(
         if checkbox:
             marker = f"- {checkbox}".rstrip()
         if ordered and item_leading_spaces > 1 and not preserve_marker_spacing:
-            if list_depth == 0 or not parent_is_ordered:
-                item_is_aligned = True
-            else:
-                item_is_aligned = parent_is_aligned
+            item_is_aligned = True if list_depth == 0 or not parent_is_ordered else parent_is_aligned
         else:
             item_is_aligned = False
         marker_content_spaces = item_leading_spaces if preserve_marker_spacing else None
@@ -985,7 +982,7 @@ def _render_list(
                 )
                 item_lines.append(nested.rstrip("\n"))
             else:
-                from harrix_pylib.md_format.printer.block import _render_block
+                from harrix_pylib.md_format.printer.block import _render_block  # noqa: PLC0415
 
                 chunk, child_index = _render_block(
                     tokens,
@@ -1129,7 +1126,7 @@ def _render_list_item_lines(
     first_continuation = " " * (len(prefix) + 4) if task_item else indent
     if marker.startswith("- ["):
         continuation_indent = " " * (base_indent + 2)
-    elif base_indent == 0 or marker.endswith(".") or marker.endswith(")"):
+    elif base_indent == 0 or marker.endswith((".", ")")):
         continuation_indent = " " * len(prefix)
     else:
         continuation_indent = " " * (base_indent + 2)

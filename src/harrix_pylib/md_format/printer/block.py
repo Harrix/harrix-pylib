@@ -5,18 +5,19 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles
-from harrix_pylib.md_format.list_loose_format import ListLayout
-from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.prose_wrap import (
     wrap_prose,
-)
-from harrix_pylib.md_format.task_list_format import (
-    TaskListMarker,
 )
 from harrix_pylib.md_format.text_format import normalize_inline_spaces
 
 if TYPE_CHECKING:
     from markdown_it.token import Token
+
+    from harrix_pylib.md_format.list_loose_format import ListLayout
+    from harrix_pylib.md_format.options import FormatOptions
+    from harrix_pylib.md_format.task_list_format import (
+        TaskListMarker,
+    )
 
 from harrix_pylib.md_format.printer.inline import _render_inline
 from harrix_pylib.md_format.printer.list_render import _render_list
@@ -68,12 +69,8 @@ def _blockquote_needs_blank_line(previous: str, current: str) -> bool:
             return True
         if previous_last.startswith(("-", "*", "+")):
             return False
-        if previous_last and previous_last[0].isdigit() and ". " in previous_last[:4]:
-            return False
-        return True
-    if current_first.startswith(("#", "|", "```")):
-        return False
-    return True
+        return not (previous_last and previous_last[0].isdigit() and ". " in previous_last[:4])
+    return not current_first.startswith(("#", "|", "```"))
 
 
 def _empty_math_middle_text(content: str) -> str:
@@ -135,14 +132,15 @@ def _join_blocks(
 def _normalize_math_block_content(content: str) -> str:
     """Strip blockquote continuation markers absorbed into math block content."""
     lines: list[str] = []
-    for line in content.strip().splitlines():
-        if line.startswith("> "):
-            line = line[2:]
-        elif line == ">":
-            line = ""
-        elif line.startswith(">"):
-            line = line[1:]
-        lines.append(line)
+    for raw_line in content.strip().splitlines():
+        normalized = raw_line
+        if raw_line.startswith("> "):
+            normalized = raw_line[2:]
+        elif raw_line == ">":
+            normalized = ""
+        elif raw_line.startswith(">"):
+            normalized = raw_line[1:]
+        lines.append(normalized)
     while lines and not lines[-1].strip():
         lines.pop()
     return "\n".join(lines)
@@ -207,8 +205,7 @@ def _render_alert(
             for part in body_parts:
                 if not part.strip():
                     continue
-                for line in part.splitlines():
-                    quoted_lines.append(f"> {line}" if line else ">")
+                quoted_lines.extend(f"> {part_line}" if part_line else ">" for part_line in part.splitlines())
     quoted = "\n".join(quoted_lines) + "\n"
     return quoted, close_index + 1
 
@@ -508,9 +505,7 @@ def _should_join_without_blank_line(previous: str, current: str) -> bool:
     last_line = prev_lines[-1].strip()
     if last_line.startswith("<!-- prettier-ignore"):
         return True
-    if current.lstrip().startswith("<!-- prettier-ignore"):
-        return True
-    return False
+    return bool(current.lstrip().startswith("<!-- prettier-ignore"))
 
 
 def _wrap_blockquote_block(block: str, *, options: FormatOptions) -> str:

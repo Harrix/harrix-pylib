@@ -20,10 +20,7 @@ def test_escape_markdown_text_keeps_non_emphasis_like_characters() -> None:
 
 
 def test_escape_markdown_text_escapes_intraword_asterisk_with_non_ascii_letters() -> None:
-    assert (
-        escape_markdown_text("Двигатель. Его мощность ток*напражение")  # noqa: RUF001
-        == "Двигатель. Его мощность ток\\*напражение"  # noqa: RUF001
-    )
+    assert escape_markdown_text("Двигатель. Его мощность ток*напражение") == "Двигатель. Его мощность ток\\*напражение"
     assert escape_markdown_text("ток*напражение") == "ток\\*напражение"
 
 

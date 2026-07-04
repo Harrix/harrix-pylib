@@ -370,8 +370,7 @@ def _format_footnote_indented_block(
     blockquote_lines = _footnote_blockquote_lines(first_stripped, indented_lines)
     if blockquote_lines is not None and len(blockquote_lines) > 1:
         result = [f"{indent}[^{label}]:"]
-        for line in blockquote_lines:
-            result.append(f"{continuation}{line.rstrip()}")
+        result.extend(f"{continuation}{line.rstrip()}" for line in blockquote_lines)
         return result
     if not first_stripped:
         result = [f"{indent}[^{label}]:"]
@@ -439,10 +438,7 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
     label_markup = _reference_label_markup(label)
     label_prefix = f"{indent}{label_markup}: "
     continuation = indent + "  "
-    if title is None:
-        body = url
-    else:
-        body = f"{url} {_format_reference_title(title)}"
+    body = url if title is None else f"{url} {_format_reference_title(title)}"
     if text_display_width(label_prefix + body) <= print_width:
         if title is None:
             return [f"{label_prefix}{url}"]
@@ -638,8 +634,7 @@ def _restore_inline_reference_line(
     body = " ".join(ref_parts)
     if not prefix:
         return _wrap_inline_reference_body(body, width=print_width)
-    wrapped = _wrap_inline_reference_body(f"{prefix} {body}", width=print_width)
-    return wrapped
+    return _wrap_inline_reference_body(f"{prefix} {body}", width=print_width)
 ```
 
 </details>

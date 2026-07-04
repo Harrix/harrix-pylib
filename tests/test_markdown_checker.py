@@ -108,18 +108,18 @@ def test_markdown_checker() -> None:
 
         # Test Russian phrases
         ru_file = temp_path / "ru_test.md"
-        ru_file.write_text("---\nlang: ru\n---\nЭто web приложение и web документ", encoding="utf-8")  # noqa: RUF001
+        ru_file.write_text("---\nlang: ru\n---\nЭто web приложение и web документ", encoding="utf-8")
         errors = checker.check(ru_file)
         assert any("H006" in error for error in errors)
 
         # Test Russian abbreviations without spaces (т.е., т.д., т.ч., т.п.)  # noqa: RUF003
         ru_abbrev_file = temp_path / "ru_abbrev.md"
         ru_abbrev_file.write_text(
-            "---\nlang: ru\n---\n\nТо есть т.е. и т.д. правильно писать т. е. и т. д.\n",  # noqa: RUF001
+            "---\nlang: ru\n---\n\nТо есть т.е. и т.д. правильно писать т. е. и т. д.\n",
             encoding="utf-8",
         )
         errors = checker.check(ru_abbrev_file, select={"H006"})
-        assert any("H006" in e and "т.е." in e for e in errors)  # noqa: RUF001
+        assert any("H006" in e and "т.е." in e for e in errors)
         assert any("H006" in e and "т.д." in e for e in errors)
 
         # Test that code blocks are ignored
@@ -331,7 +331,7 @@ def test_markdown_checker() -> None:
         # Tab inside code block (e.g. TSV/CSV example) should not trigger H010
         tab_in_code_file = temp_path / "tab_in_code.md"
         tab_in_code_file.write_text(
-            "---\nlang: ru\n---\n\n```text\nМороженое\tFood\t494 ₽\n```\n",  # noqa: RUF001
+            "---\nlang: ru\n---\n\n```text\nМороженое\tFood\t494 ₽\n```\n",
             encoding="utf-8",
         )
         errors = checker.check(tab_in_code_file, select={"H010"})
@@ -518,13 +518,13 @@ def test_markdown_checker() -> None:
 
         # En dash between digits should not trigger H016
         endash_digits_file = temp_path / "endash_digits.md"
-        endash_digits_file.write_text("---\nlang: en\n---\n\nRange is 1–10 pages.\n", encoding="utf-8")  # noqa: RUF001
+        endash_digits_file.write_text("---\nlang: en\n---\n\nRange is 1–10 pages.\n", encoding="utf-8")
         errors = checker.check(endash_digits_file, select={"H016"})
         assert not errors
 
         # En dash NOT between digits should trigger H016
         endash_wrong_file = temp_path / "endash_wrong.md"
-        endash_wrong_file.write_text("---\nlang: en\n---\n\nWord–word is wrong.\n", encoding="utf-8")  # noqa: RUF001
+        endash_wrong_file.write_text("---\nlang: en\n---\n\nWord–word is wrong.\n", encoding="utf-8")
         errors = checker.check(endash_wrong_file, select={"H016"})
         assert any("H016" in e for e in errors)
 
@@ -619,7 +619,7 @@ def test_markdown_checker() -> None:
         # =====================================================================
         straight_quote_file = temp_path / "straight_quote.md"
         straight_quote_file.write_text(
-            '---\nlang: ru\n---\n\nОн сказал "привет".\n',  # noqa: RUF001  # ignore: HP001
+            '---\nlang: ru\n---\n\nОн сказал "привет".\n',  # ignore: HP001
             encoding="utf-8",
         )
         errors = checker.check(straight_quote_file, select={"H018"})
@@ -627,7 +627,7 @@ def test_markdown_checker() -> None:
 
         curly_quote_file = temp_path / "curly_quote.md"
         curly_quote_file.write_text(
-            "---\nlang: ru\n---\n\nОн сказал \u201cпривет\u201d.\n",  # ignore: HP001  # noqa: RUF001
+            "---\nlang: ru\n---\n\nОн сказал \u201cпривет\u201d.\n",  # ignore: HP001
             encoding="utf-8",
         )
         errors = checker.check(curly_quote_file, select={"H018"})
@@ -636,7 +636,7 @@ def test_markdown_checker() -> None:
         # Space after « should trigger H018
         space_after_lquote_file = temp_path / "space_lquote.md"
         space_after_lquote_file.write_text(
-            "---\nlang: ru\n---\n\nСказал « привет».\n",  # ignore: HP001  # noqa: RUF001
+            "---\nlang: ru\n---\n\nСказал « привет».\n",  # ignore: HP001
             encoding="utf-8",
         )
         errors = checker.check(space_after_lquote_file, select={"H018"})
@@ -645,7 +645,7 @@ def test_markdown_checker() -> None:
         # Space before » should trigger H018
         space_before_rquote_file = temp_path / "space_rquote.md"
         space_before_rquote_file.write_text(
-            "---\nlang: ru\n---\n\nСказал «привет ».\n",  # ignore: HP001  # noqa: RUF001
+            "---\nlang: ru\n---\n\nСказал «привет ».\n",  # ignore: HP001
             encoding="utf-8",
         )
         errors = checker.check(space_before_rquote_file, select={"H018"})
@@ -669,7 +669,7 @@ def test_markdown_checker() -> None:
         # Inch notation (e.g. 14", 15.6") should not trigger H018
         inch_quote_file = temp_path / "inch_quote.md"
         inch_quote_file.write_text(
-            '---\nlang: ru\n---\n\n| ДИСПЛЕЙ | 14" FHD (1920×1080), IPS |\n',  # noqa: RUF001
+            '---\nlang: ru\n---\n\n| ДИСПЛЕЙ | 14" FHD (1920×1080), IPS |\n',
             encoding="utf-8",
         )
         errors = checker.check(inch_quote_file, select={"H018"})
@@ -757,7 +757,7 @@ def test_markdown_checker() -> None:
         # Russian abbreviations "т. д.", "т. е." should not trigger H021  # noqa: RUF003
         ru_abbrev_file = temp_path / "ru_abbrev_td_te.md"
         ru_abbrev_file.write_text(
-            "---\nlang: ru\n---\n\nНачинкой (капустной, крапивной и т. д.) заливают. Используют т. е. так.\n",  # noqa: RUF001
+            "---\nlang: ru\n---\n\nНачинкой (капустной, крапивной и т. д.) заливают. Используют т. е. так.\n",
             encoding="utf-8",
         )
         errors = checker.check(ru_abbrev_file, select={"H021"})
@@ -781,7 +781,7 @@ def test_markdown_checker() -> None:
         # =====================================================================
         ru_vy_file = temp_path / "ru_vy.md"
         ru_vy_file.write_text(
-            "---\nlang: ru\n---\n\nОбращаемся к Вам с предложением.\n",  # noqa: RUF001
+            "---\nlang: ru\n---\n\nОбращаемся к Вам с предложением.\n",
             encoding="utf-8",
         )
         errors = checker.check(ru_vy_file, select={"H023"})
@@ -790,7 +790,7 @@ def test_markdown_checker() -> None:
         # "Вы" at sentence start is allowed (only flag mid-sentence)
         ru_vy_sentence_start_file = temp_path / "ru_vy_sentence_start.md"
         ru_vy_sentence_start_file.write_text(
-            "---\nlang: ru\n---\n\nВы можете это увидеть.\n\nТут Вам не рады.\n",  # noqa: RUF001
+            "---\nlang: ru\n---\n\nВы можете это увидеть.\n\nТут Вам не рады.\n",
             encoding="utf-8",
         )
         errors = checker.check(ru_vy_sentence_start_file, select={"H023"})
@@ -801,7 +801,7 @@ def test_markdown_checker() -> None:
         # Lowercase "вы" should not trigger H023
         ru_vy_lower_file = temp_path / "ru_vy_lower.md"
         ru_vy_lower_file.write_text(
-            "---\nlang: ru\n---\n\nОбращаемся к вам с предложением.\n",  # noqa: RUF001
+            "---\nlang: ru\n---\n\nОбращаемся к вам с предложением.\n",
             encoding="utf-8",
         )
         errors = checker.check(ru_vy_lower_file, select={"H023"})
@@ -825,7 +825,7 @@ def test_markdown_checker() -> None:
         # "Ваша" after « (direct speech) is sentence start — no H023
         ru_vy_guillemet_file = temp_path / "ru_vy_guillemet.md"
         ru_vy_guillemet_file.write_text(
-            "---\nlang: ru\n---\n\nВедущий говорит: «Ваша задача определить, сколько я показываю гаражей».\n",  # noqa: RUF001
+            "---\nlang: ru\n---\n\nВедущий говорит: «Ваша задача определить, сколько я показываю гаражей».\n",
             encoding="utf-8",
         )
         errors = checker.check(ru_vy_guillemet_file, select={"H023"})

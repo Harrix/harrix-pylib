@@ -109,12 +109,8 @@ def _blockquote_needs_blank_line(previous: str, current: str) -> bool:
             return True
         if previous_last.startswith(("-", "*", "+")):
             return False
-        if previous_last and previous_last[0].isdigit() and ". " in previous_last[:4]:
-            return False
-        return True
-    if current_first.startswith(("#", "|", "```")):
-        return False
-    return True
+        return not (previous_last and previous_last[0].isdigit() and ". " in previous_last[:4])
+    return not current_first.startswith(("#", "|", "```"))
 ````
 
 </details>
@@ -230,14 +226,15 @@ Strip blockquote continuation markers absorbed into math block content.
 ```python
 def _normalize_math_block_content(content: str) -> str:
     lines: list[str] = []
-    for line in content.strip().splitlines():
-        if line.startswith("> "):
-            line = line[2:]
-        elif line == ">":
-            line = ""
-        elif line.startswith(">"):
-            line = line[1:]
-        lines.append(line)
+    for raw_line in content.strip().splitlines():
+        normalized = raw_line
+        if raw_line.startswith("> "):
+            normalized = raw_line[2:]
+        elif raw_line == ">":
+            normalized = ""
+        elif raw_line.startswith(">"):
+            normalized = raw_line[1:]
+        lines.append(normalized)
     while lines and not lines[-1].strip():
         lines.pop()
     return "\n".join(lines)
@@ -316,8 +313,7 @@ def _render_alert(
             for part in body_parts:
                 if not part.strip():
                     continue
-                for line in part.splitlines():
-                    quoted_lines.append(f"> {line}" if line else ">")
+                quoted_lines.extend(f"> {part_line}" if part_line else ">" for part_line in part.splitlines())
     quoted = "\n".join(quoted_lines) + "\n"
     return quoted, close_index + 1
 ```
@@ -729,9 +725,7 @@ def _should_join_without_blank_line(previous: str, current: str) -> bool:
     last_line = prev_lines[-1].strip()
     if last_line.startswith("<!-- prettier-ignore"):
         return True
-    if current.lstrip().startswith("<!-- prettier-ignore"):
-        return True
-    return False
+    return bool(current.lstrip().startswith("<!-- prettier-ignore"))
 ```
 
 </details>

@@ -5,19 +5,20 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles
-from harrix_pylib.md_format.link_destination_format import LinkDestination
-from harrix_pylib.md_format.list_loose_format import ListLayout
-from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.printer import context as printer_context
 from harrix_pylib.md_format.printer.block import _join_blocks, _render_block
 from harrix_pylib.md_format.printer.paragraph import (
     _try_render_merged_link_paragraphs,
     _try_render_merged_paragraphs,
 )
-from harrix_pylib.md_format.task_list_format import TaskListMarker
 
 if TYPE_CHECKING:
     from markdown_it.token import Token
+
+    from harrix_pylib.md_format.link_destination_format import LinkDestination
+    from harrix_pylib.md_format.list_loose_format import ListLayout
+    from harrix_pylib.md_format.options import FormatOptions
+    from harrix_pylib.md_format.task_list_format import TaskListMarker
 
 
 def render_tokens(

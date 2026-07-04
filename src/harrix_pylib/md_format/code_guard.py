@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from harrix_pylib.md_format.code_fence import identify_code_blocks
-from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.text_lines import join_lines, make_placeholder, split_lines
+
+if TYPE_CHECKING:
+    from harrix_pylib.md_format.options import FormatOptions
 
 PLACEHOLDER_PREFIX = "HSKMDFMTCODE"
 _MIN_FENCED_BLOCK_LINES = 2
@@ -81,7 +84,7 @@ def restore_code_blocks(text: str, blocks: list[CodeBlock], *, options: FormatOp
             if block is None:
                 restored.append(line)
                 continue
-            block_lines = _format_markdown_fence_block(block.lines, options=options)
+            block_lines = _format_markdown_fence_block(block.lines, _options=options)
             current_indent = _leading_whitespace(line)
             restored.extend(_reindent_line(block_line, block.base_indent, current_indent) for block_line in block_lines)
             continue
@@ -89,7 +92,7 @@ def restore_code_blocks(text: str, blocks: list[CodeBlock], *, options: FormatOp
     return join_lines(restored, trailing_newline=has_trailing_newline)
 
 
-def _format_markdown_fence_block(block_lines: list[str], *, options: FormatOptions | None) -> list[str]:
+def _format_markdown_fence_block(block_lines: list[str], *, _options: FormatOptions | None) -> list[str]:
     """Return fenced blocks verbatim; do not recursively format ``markdown`` fences."""
     return block_lines
 

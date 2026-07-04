@@ -13,7 +13,6 @@ from harrix_pylib.md_format.link_destination_format import (
     formatted_title_from_placeholder,
 )
 from harrix_pylib.md_format.link_title_format import format_link_title
-from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.printer import context as printer_context
 from harrix_pylib.md_format.printer.context import (
     DEFAULT_OPTIONS,
@@ -27,6 +26,8 @@ from harrix_pylib.md_format.text_format import normalize_inline_spaces
 
 if TYPE_CHECKING:
     from markdown_it.token import Token
+
+    from harrix_pylib.md_format.options import FormatOptions
 
 from harrix_pylib.md_format.printer.tokens import (
     _choose_emphasis_delimiter,

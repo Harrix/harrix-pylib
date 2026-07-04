@@ -6,13 +6,14 @@ import re
 from typing import TYPE_CHECKING
 
 from harrix_pylib.md_format.autolink_format import restore_angle_autolinks
-from harrix_pylib.md_format.hard_break_format import HardBreakStyles
-from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.printer import context as printer_context
 from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text_display_width
 
 if TYPE_CHECKING:
     from markdown_it.token import Token
+
+    from harrix_pylib.md_format.hard_break_format import HardBreakStyles
+    from harrix_pylib.md_format.options import FormatOptions
 
 from harrix_pylib.md_format.printer.inline import _render_inline
 from harrix_pylib.md_format.printer.tokens import _alignment_separator, _find_close

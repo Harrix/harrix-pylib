@@ -76,7 +76,7 @@ def extract_list_layouts(body: str, tight_code_indices: set[int] | None = None) 
 def _blank_separates_sibling_items(lines: list[str], item_index: int, base_indent: int) -> bool
 ```
 
-True when a blank line in source separates two same-level list markers.
+Return whether a blank line in source separates two same-level list markers.
 
 <details>
 <summary>Code:</summary>

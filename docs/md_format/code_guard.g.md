@@ -126,7 +126,7 @@ def restore_code_blocks(text: str, blocks: list[CodeBlock], *, options: FormatOp
             if block is None:
                 restored.append(line)
                 continue
-            block_lines = _format_markdown_fence_block(block.lines, options=options)
+            block_lines = _format_markdown_fence_block(block.lines, _options=options)
             current_indent = _leading_whitespace(line)
             restored.extend(_reindent_line(block_line, block.base_indent, current_indent) for block_line in block_lines)
             continue
@@ -148,7 +148,7 @@ Return fenced blocks verbatim; do not recursively format `markdown` fences.
 <summary>Code:</summary>
 
 ```python
-def _format_markdown_fence_block(block_lines: list[str], *, options: FormatOptions | None) -> list[str]:
+def _format_markdown_fence_block(block_lines: list[str], *, _options: FormatOptions | None) -> list[str]:
     return block_lines
 ```
 

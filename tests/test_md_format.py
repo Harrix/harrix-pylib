@@ -59,7 +59,7 @@ def test_format_markdown_content_matches_fixture(before_name: str, after_name: s
 
 
 def test_format_markdown_content_does_not_wrap_long_list_links_by_default() -> None:
-    source = "- [Не сохраняем сессию с открытыми файлами](#не-сохраняем-сессию-с-открытыми-файлами)\n"  # noqa: RUF001
+    source = "- [Не сохраняем сессию с открытыми файлами](#не-сохраняем-сессию-с-открытыми-файлами)\n"
     result = format_markdown_content(source, end_of_line="lf")
     expected_link = source.strip().removeprefix("- ")
     assert expected_link in result
@@ -191,7 +191,7 @@ def test_format_markdown_content_formats_italic_with_underscores() -> None:
     [
         (
             "- [Жареная картошка](#жареная-картошка)\n"
-            "- [Заклинание «Соль-вода!» против ос и пчёл](#заклинание-соль-вода-против-ос-и-пчёл)\n"  # noqa: RUF001
+            "- [Заклинание «Соль-вода!» против ос и пчёл](#заклинание-соль-вода-против-ос-и-пчёл)\n"
         ),
         "![Настройки клавиатуры](Ноутбук__Gigabyte-Aero-15-OLED-XD/img/keyboard.png)\n",
     ],
@@ -475,10 +475,10 @@ def test_format_markdown_content_preserves_paragraph_blank_lines() -> None:
 
 
 def test_format_markdown_content_preserves_single_newline_paragraph() -> None:
-    source = "Первый абзац.\nВторой абзац.\n"  # noqa: RUF001
+    source = "Первый абзац.\nВторой абзац.\n"
     result = format_markdown_content(source)
-    assert "Первый абзац.\r\nВторой абзац." in result  # noqa: RUF001
-    assert "Первый абзац.\r\n\r\nВторой абзац." not in result  # noqa: RUF001
+    assert "Первый абзац.\r\nВторой абзац." in result
+    assert "Первый абзац.\r\n\r\nВторой абзац." not in result
 
 
 def test_read_markdown_text_handles_r_double_crlf_on_disk(tmp_path: Path) -> None:
@@ -612,20 +612,20 @@ def test_format_markdown_content_indents_list_item_soft_break() -> None:
     long_result = format_markdown_content(long_source)
     assert "you will have to\r\n     regenerate the token." in long_result
 
-    bullet_source = "- Пример.\nПереод строки.\n"  # noqa: RUF001
+    bullet_source = "- Пример.\nПереод строки.\n"
     bullet_result = format_markdown_content(bullet_source)
     assert "- Пример.\r\n  Переод строки." in bullet_result
 
 
 def test_format_markdown_content_escapes_emphasis_like_characters() -> None:
     source = (
-        "к сверхмассивной чёрной дыре Стрелец А* в центре Млечного Пути\n"  # noqa: RUF001
-        "Все исключения поддерживают метод what() , который возвращает строку типа char* с описанием.\n"  # noqa: RUF001
+        "к сверхмассивной чёрной дыре Стрелец А* в центре Млечного Пути\n"
+        "Все исключения поддерживают метод what() , который возвращает строку типа char* с описанием.\n"
         "Вариант 3: имена типов дополняются префиксом «t_»\n"
     )
     result = format_markdown_content(source)
-    assert "Стрелец А\\* в центре" in result  # noqa: RUF001
-    assert "char\\* с описанием" in result  # noqa: RUF001
+    assert "Стрелец А\\* в центре" in result
+    assert "char\\* с описанием" in result
     assert "«t\\_»" in result
 
 
@@ -666,7 +666,7 @@ def test_format_markdown_content_escapes_identifier_underscores() -> None:
         "Return a path in folder that does not exist, using base_name and suffix with _1, _2 if needed.\n"
         "If folder contains aggregated file _<FolderName>.g.md (e.g. Fiction -> _Fiction.g.md),\n"
         "Inline code keeps literals: `_<FolderName>.g.md` and `_Fiction.g.md`.\n"
-        "В Windows все наборы инструментов определяют макрос _WIN32.\n"  # noqa: RUF001
+        "В Windows все наборы инструментов определяют макрос _WIN32.\n"
         "t._id, t.amount\n"
     )
     result = format_markdown_content(source)
@@ -805,7 +805,7 @@ def test_format_markdown_content_preserves_blank_line_between_blockquote_paragra
 
 def test_format_markdown_content_preserves_escaped_ordered_list_like_line_start_in_blockquote() -> None:
     source = (
-        "> В этом абзаце 39. означает номер фрагмента, а не элемент списка.\n"  # noqa: RUF001
+        "> В этом абзаце 39. означает номер фрагмента, а не элемент списка.\n"
         ">\n"
         "> 39\\. Первый фрагмент текста. 40. Второй фрагмент. 41. Третий фрагмент.\n"
     )
@@ -903,11 +903,7 @@ def test_format_markdown_content_keeps_decimal_ratings_in_bullet_list_items() ->
 
 
 def test_format_markdown_content_renders_hard_breaks_with_backslash() -> None:
-    source = (
-        "У лукоморья дуб зелёный;\\\n"  # noqa: RUF001
-        "Златая цепь на дубе том:\\\n"
-        "И днём и ночью кот учёный\\\n"
-    )
+    source = "У лукоморья дуб зелёный;\\\nЗлатая цепь на дубе том:\\\nИ днём и ночью кот учёный\\\n"
     result = format_markdown_content(source).replace("\r\n", "\n")
     assert result == source
     assert "  \n" not in result

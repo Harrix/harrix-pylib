@@ -95,7 +95,7 @@ _No docstring provided._
 
 ```python
 def _should_skip_link_line(line: str) -> bool:
-    return line.lstrip().startswith("|") or line.startswith("    ") or line.startswith("\t")
+    return line.lstrip().startswith("|") or line.startswith(("    ", "\t"))
 ```
 
 </details>

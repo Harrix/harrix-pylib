@@ -52,4 +52,4 @@ def _prepare_inline_links_in_text(body: str, *, start_index: int) -> tuple[str, 
 
 
 def _should_skip_link_line(line: str) -> bool:
-    return line.lstrip().startswith("|") or line.startswith("    ") or line.startswith("\t")
+    return line.lstrip().startswith("|") or line.startswith(("    ", "\t"))

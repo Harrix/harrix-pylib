@@ -35,6 +35,7 @@ class FormatOptions:
     print_width: int = DEFAULT_PRINT_WIDTH
 
     def __post_init__(self) -> None:
+        """Validate formatter options after initialization."""
         if self.prose_wrap not in PROSE_WRAP_CHOICES:
             msg = f"Unsupported prose_wrap value: {self.prose_wrap}"
             raise ValueError(msg)
@@ -51,7 +52,7 @@ class FormatOptions:
 def __post_init__(self) -> None
 ```
 
-_No docstring provided._
+Validate formatter options after initialization.
 
 <details>
 <summary>Code:</summary>

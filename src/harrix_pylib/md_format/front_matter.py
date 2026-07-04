@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from harrix_pylib.md_format.text_lines import join_lines, split_lines
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 _MIN_FRONT_MATTER_PARTS = 3
 _YAML_BLOCK_PREFIX = "HSKMDFMTYAML"

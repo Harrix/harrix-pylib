@@ -36,6 +36,7 @@ class HardBreakStyles:
     backslash_breaks: list[bool] = field(default_factory=list)
 
     def next_is_backslash(self) -> bool:
+        """Return whether the next hard break should use a backslash."""
         if not self.backslash_breaks:
             return False
         return self.backslash_breaks.pop(0)
@@ -49,7 +50,7 @@ class HardBreakStyles:
 def next_is_backslash(self) -> bool
 ```
 
-_No docstring provided._
+Return whether the next hard break should use a backslash.
 
 <details>
 <summary>Code:</summary>
@@ -134,7 +135,7 @@ _No docstring provided._
 def _line_has_space_hard_break(line: str, *, next_line: str) -> bool:
     if not next_line.strip():
         return False
-    return line.endswith("  ") or line.endswith("\t")
+    return line.endswith(("  ", "\t"))
 ```
 
 </details>

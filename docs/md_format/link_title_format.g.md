@@ -142,7 +142,7 @@ def scan_inline_links(
 def split_inline_destination(destination: str) -> tuple[str, str | None]
 ```
 
-_No docstring provided._
+Split an inline link destination into URL and optional title.
 
 <details>
 <summary>Code:</summary>
@@ -150,7 +150,7 @@ _No docstring provided._
 ```python
 def split_inline_destination(destination: str) -> tuple[str, str | None]:
     destination = destination.strip()
-    if destination.endswith(' ""') or destination.endswith(" ''"):
+    if destination.endswith((' ""', " ''")):
         return destination[:-3].rstrip(), None
     if destination.startswith("<") and destination.endswith(">"):
         return destination, None
@@ -477,9 +477,7 @@ _No docstring provided._
 
 ```python
 def _normalize_inline_link_titles_in_text(body: str) -> str:
-    return scan_inline_links(
-        body, lambda prefix, destination, suffix: _normalize_inline_link(prefix, destination, suffix)
-    )
+    return scan_inline_links(body, _normalize_inline_link)
 ```
 
 </details>
@@ -546,9 +544,8 @@ def _split_trailing_link_title(rest: str) -> tuple[str, str | None]:
     delimiter = rest[-1]
     index = len(rest) - 2
     while index >= 0:
-        if rest[index] == delimiter and not _is_escaped_at(rest, index):
-            if index == 0 or rest[index - 1].isspace():
-                return rest[:index].rstrip(), rest[index:]
+        if rest[index] == delimiter and not _is_escaped_at(rest, index) and (index == 0 or rest[index - 1].isspace()):
+            return rest[:index].rstrip(), rest[index:]
         index -= 1
     return rest, None
 ```

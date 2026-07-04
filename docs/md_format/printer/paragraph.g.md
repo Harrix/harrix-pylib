@@ -58,7 +58,7 @@ def _broken_wiki_link_source_paragraph(tokens: list[Token], index: int, source_l
     paragraph_map = tokens[index].map
     if not paragraph_map:
         return None
-    span = paragraph_map[1] - paragraph_map[0]
+    paragraph_map[1] - paragraph_map[0]
     source = "\n".join(source_lines[paragraph_map[0] : paragraph_map[1]])
     if "[[" not in source:
         return None
@@ -749,10 +749,7 @@ _No docstring provided._
 def _source_line_is_more_literal(source_line: str, rendered_line: str) -> bool:
     if source_line.count("\\") > rendered_line.count("\\"):
         return True
-    if "&" in source_line and source_line != rendered_line:
-        if "&amp;" in source_line or "&#" in source_line:
-            return True
-    return False
+    return bool("&" in source_line and source_line != rendered_line and ("&amp;" in source_line or "&#" in source_line))
 ```
 
 </details>
@@ -847,10 +844,14 @@ def _try_render_merged_paragraphs(
     if _merged_run_is_whitespace_inline_code(tokens, index, run_end):
         return f"{_render_merged_whitespace_inline_code(tokens, index, run_end)}\n", run_end
     if _merged_run_should_join_as_prose(tokens, index, run_end):
-        return (
-            f"{_render_joined_prose_run(tokens, index, run_end, options=options, hard_break_styles=hard_break_styles)}\n",
+        joined = _render_joined_prose_run(
+            tokens,
+            index,
             run_end,
+            options=options,
+            hard_break_styles=hard_break_styles,
         )
+        return f"{joined}\n", run_end
     return None, index
 ```
 

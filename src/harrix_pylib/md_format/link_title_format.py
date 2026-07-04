@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from harrix_pylib.md_format.code_fence import identify_code_blocks_line
 from harrix_pylib.md_format.escape_format import ASCII_PUNCTUATION as _MARKDOWN_ESCAPABLE
 from harrix_pylib.md_format.text_lines import join_lines, split_lines
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 _LINK_PREFIX_RE = re.compile(r"!?\[[^\]]*\]\(")
 _QUOTE_APOSTROPHE_PAREN = '"' + "'" + ")"
@@ -71,8 +74,9 @@ def scan_inline_links(
 
 
 def split_inline_destination(destination: str) -> tuple[str, str | None]:
+    """Split an inline link destination into URL and optional title."""
     destination = destination.strip()
-    if destination.endswith(' ""') or destination.endswith(" ''"):
+    if destination.endswith((' ""', " ''")):
         return destination[:-3].rstrip(), None
     if destination.startswith("<") and destination.endswith(">"):
         return destination, None
@@ -233,9 +237,7 @@ def _normalize_inline_link(prefix: str, destination: str, suffix: str) -> str:
 
 
 def _normalize_inline_link_titles_in_text(body: str) -> str:
-    return scan_inline_links(
-        body, lambda prefix, destination, suffix: _normalize_inline_link(prefix, destination, suffix)
-    )
+    return scan_inline_links(body, _normalize_inline_link)
 
 
 def _scan_inline_links_in_plain_text(body: str, handler: Callable[[str, str, str], str]) -> str:
@@ -274,9 +276,8 @@ def _split_trailing_link_title(rest: str) -> tuple[str, str | None]:
     delimiter = rest[-1]
     index = len(rest) - 2
     while index >= 0:
-        if rest[index] == delimiter and not _is_escaped_at(rest, index):
-            if index == 0 or rest[index - 1].isspace():
-                return rest[:index].rstrip(), rest[index:]
+        if rest[index] == delimiter and not _is_escaped_at(rest, index) and (index == 0 or rest[index - 1].isspace()):
+            return rest[:index].rstrip(), rest[index:]
         index -= 1
     return rest, None
 
