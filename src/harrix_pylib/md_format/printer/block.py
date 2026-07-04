@@ -432,10 +432,32 @@ def _normalize_math_block_content(content: str) -> str:
 
 
 def _render_math_block(token: Token, *, label: str | None = None) -> str:
-    content = _normalize_math_block_content(token.content)
+    raw_content = token.content
+    content = _normalize_math_block_content(raw_content)
+    if not content:
+        middle = _empty_math_middle_text(raw_content)
+        if label:
+            return f"$$\n{middle}$$ ({label})\n" if middle else f"$$\n$$ ({label})\n"
+        if middle:
+            return f"$$\n{middle}\n$$\n"
+        return "$$\n$$\n"
     if label:
         return f"$$\n{content}\n$$ ({label})\n"
     return f"$$\n{content}\n$$\n"
+
+
+def _empty_math_middle_text(content: str) -> str:
+    """Preserve blank interior lines in empty block math."""
+    if content.strip():
+        return ""
+    lines = content.split("\n")
+    while lines and lines[-1] == "":
+        lines.pop()
+    while lines and lines[0] == "":
+        lines.pop(0)
+    if not lines or not all(not line.strip() for line in lines):
+        return ""
+    return "\n".join(lines)
 
 
 def _render_until_close(

@@ -22,6 +22,7 @@ from harrix_pylib.md_format.front_matter import (
 from harrix_pylib.md_format.hard_break_format import extract_backslash_hard_breaks
 from harrix_pylib.md_format.ignore_format import extract_ignore_blocks, restore_ignore_blocks
 from harrix_pylib.md_format.inline_link_format import prepare_inline_links
+from harrix_pylib.md_format.math_guard import extract_empty_math_blocks, restore_empty_math_blocks
 from harrix_pylib.md_format.list_format import ensure_blank_line_after_lists
 from harrix_pylib.md_format.list_loose_format import extract_list_layouts
 from harrix_pylib.md_format.options import FormatOptions
@@ -81,6 +82,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     if front_matter:
         front_matter = compact_front_matter(front_matter)
     body = _ensure_blank_line_in_empty_fences(body)
+    body, empty_math_blocks = extract_empty_math_blocks(body)
     body, ignore_blocks = extract_ignore_blocks(body)
     body, hard_break_styles = extract_backslash_hard_breaks(body)
     body, angle_autolinks = extract_angle_autolinks(body)
@@ -119,6 +121,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
             angle_autolinks=angle_autolinks,
         )
         rendered_body = restore_code_blocks(rendered_body, code_blocks, options=options)
+        rendered_body = restore_empty_math_blocks(rendered_body, empty_math_blocks)
         rendered_body = restore_angle_autolinks(rendered_body, angle_autolinks)
         rendered_body = restore_reference_blocks(rendered_body, reference_blocks, options=options)
         rendered_body = restore_toml_blocks(rendered_body, toml_blocks)

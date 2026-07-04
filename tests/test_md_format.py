@@ -427,6 +427,18 @@ def test_format_markdown_content_preserves_indentation_in_block_math() -> None:
     assert result == source
 
 
+def test_format_markdown_content_preserves_empty_block_math() -> None:
+    source = "$$\n\n$$\n"
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == source
+
+
+def test_format_markdown_content_preserves_tight_empty_block_math() -> None:
+    source = "$$\n$$\n"
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == source
+
+
 def test_format_sample_fixture() -> None:
     before = _read_fixture("format_sample__before.md")
     result = format_markdown_content(before)
