@@ -57,6 +57,7 @@ lang: en
   - [⚙️ Method `_is_hyphenated_identifier_fragment`](#️-method-_is_hyphenated_identifier_fragment)
   - [⚙️ Method `_is_identifier_like_link_label`](#️-method-_is_identifier_like_link_label)
   - [⚙️ Method `_is_table_cell_only_dash`](#️-method-_is_table_cell_only_dash)
+  - [⚙️ Method `_paragraph_last_char`](#️-method-_paragraph_last_char)
   - [⚙️ Method `_remove_inline_code`](#️-method-_remove_inline_code)
   - [⚙️ Method `_should_check_paragraph_end`](#️-method-_should_check_paragraph_end)
 
@@ -502,7 +503,7 @@ class MarkdownChecker:
         if not (next_line.strip() == "" and next_next_line.strip().startswith("```")):
             return
 
-        last_char = line.rstrip()[-1] if line.rstrip() else ""
+        last_char, col = self._paragraph_last_char(line)
 
         if any(marker in line for marker in self._COLON_SKIP_MARKERS):
             return
@@ -510,7 +511,7 @@ class MarkdownChecker:
             return
         if last_char != ":":
             error_msg = f'{self.RULES["H013"]}: last char is "{last_char}"'
-            yield self._format_error("H013", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
+            yield self._format_error("H013", error_msg, filename, line_num=line_num, col=col)
 
     def _check_colon_before_image(
         self, filename: Path, line: str, line_num: int, content_lines: list[str], line_index: int
@@ -535,7 +536,7 @@ class MarkdownChecker:
         if next_next_line.count("![") > 1:
             return
 
-        last_char = line.rstrip()[-1] if line.rstrip() else ""
+        last_char, col = self._paragraph_last_char(line)
 
         if any(marker in line for marker in self._COLON_SKIP_MARKERS):
             return
@@ -552,7 +553,7 @@ class MarkdownChecker:
 
         if last_char != ":":
             error_msg = f'{self.RULES["H014"]}: last char is "{last_char}"'
-            yield self._format_error("H014", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
+            yield self._format_error("H014", error_msg, filename, line_num=line_num, col=col)
 
     def _check_colon_outside_emphasis(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check for colon outside inline emphasis (H030).
@@ -1314,13 +1315,27 @@ class MarkdownChecker:
             start = end + 1  # +1 for the | separator
         return False
 
-    def _remove_inline_code(self, line: str) -> str:
-        """Remove inline code segments from line, keeping only non-code text."""
-        return "".join(segment for segment, in_code in h.md.identify_code_blocks_line(line) if not in_code)
-
     # =========================================================================
     # Helper Methods
     # =========================================================================
+
+    def _paragraph_last_char(self, line: str) -> tuple[str, int]:
+        """Return last meaningful character and its 1-based column for colon checks.
+
+        Trailing Markdown emphasis markers (``*``, ``_``) are ignored so lines like
+        ``**Title:**`` are treated as ending with ``:``.
+        """
+        stripped = line.rstrip()
+        end = len(stripped)
+        while end > 0 and stripped[end - 1] in "*_":
+            end -= 1
+        if end == 0:
+            return "", 0
+        return stripped[end - 1], end
+
+    def _remove_inline_code(self, line: str) -> str:
+        """Remove inline code segments from line, keeping only non-code text."""
+        return "".join(segment for segment, in_code in h.md.identify_code_blocks_line(line) if not in_code)
 
     def _should_check_paragraph_end(self, line: str) -> bool:
         """Return True if line is a regular paragraph that should end with colon before code/image."""
@@ -1595,7 +1610,7 @@ def _check_colon_before_code(
         if not (next_line.strip() == "" and next_next_line.strip().startswith("```")):
             return
 
-        last_char = line.rstrip()[-1] if line.rstrip() else ""
+        last_char, col = self._paragraph_last_char(line)
 
         if any(marker in line for marker in self._COLON_SKIP_MARKERS):
             return
@@ -1603,7 +1618,7 @@ def _check_colon_before_code(
             return
         if last_char != ":":
             error_msg = f'{self.RULES["H013"]}: last char is "{last_char}"'
-            yield self._format_error("H013", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
+            yield self._format_error("H013", error_msg, filename, line_num=line_num, col=col)
 ````
 
 </details>
@@ -1642,7 +1657,7 @@ def _check_colon_before_image(
         if next_next_line.count("![") > 1:
             return
 
-        last_char = line.rstrip()[-1] if line.rstrip() else ""
+        last_char, col = self._paragraph_last_char(line)
 
         if any(marker in line for marker in self._COLON_SKIP_MARKERS):
             return
@@ -1659,7 +1674,7 @@ def _check_colon_before_image(
 
         if last_char != ":":
             error_msg = f'{self.RULES["H014"]}: last char is "{last_char}"'
-            yield self._format_error("H014", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
+            yield self._format_error("H014", error_msg, filename, line_num=line_num, col=col)
 ```
 
 </details>
@@ -2885,6 +2900,33 @@ def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
                 return part.strip() == "-"
             start = end + 1  # +1 for the | separator
         return False
+```
+
+</details>
+
+### ⚙️ Method `_paragraph_last_char`
+
+```python
+def _paragraph_last_char(self, line: str) -> tuple[str, int]
+```
+
+Return last meaningful character and its 1-based column for colon checks.
+
+Trailing Markdown emphasis markers (`*`, `_`) are ignored so lines like
+`**Title:**` are treated as ending with `:`.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _paragraph_last_char(self, line: str) -> tuple[str, int]:
+        stripped = line.rstrip()
+        end = len(stripped)
+        while end > 0 and stripped[end - 1] in "*_":
+            end -= 1
+        if end == 0:
+            return "", 0
+        return stripped[end - 1], end
 ```
 
 </details>

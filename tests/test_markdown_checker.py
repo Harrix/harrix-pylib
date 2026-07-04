@@ -411,6 +411,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(admonition_code_file, select={"H013"})
         assert not errors
 
+        # Bold heading with colon before code block should not trigger H013
+        bold_colon_code_file = temp_path / "bold_colon_code.md"
+        bold_colon_code_file.write_text(
+            "---\nlang: en\n---\n\n**From an already-cloned repo:**\n\n```powershell\n.\\install\\script.ps1\n```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(bold_colon_code_file, select={"H013"})
+        assert not errors
+
         # =====================================================================
         # H014: Missing colon before image
         # =====================================================================
