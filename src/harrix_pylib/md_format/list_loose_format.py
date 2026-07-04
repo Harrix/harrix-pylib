@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from harrix_pylib.md_format.code_guard import PLACEHOLDER_PREFIX as CODE_PLACEHOLDER_PREFIX
@@ -100,8 +101,6 @@ def _drop_code_placeholder_blanks(lines: list[str], tight_code_indices: set[int]
 
 def _is_ordered_list_line(line: str) -> bool:
     """Return True when the line starts an ordered list item (not bullet)."""
-    import re  # noqa: PLC0415
-
     return bool(re.match(r"^\s*\d+[.)]\s", line))
 
 
