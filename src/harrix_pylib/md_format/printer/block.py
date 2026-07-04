@@ -419,15 +419,14 @@ def _normalize_math_block_content(content: str) -> str:
     """Strip blockquote continuation markers absorbed into math block content."""
     lines: list[str] = []
     for line in content.strip().splitlines():
-        stripped = line.strip()
-        if stripped.startswith("> "):
-            stripped = stripped[2:]
-        elif stripped == ">":
-            stripped = ""
-        elif stripped.startswith(">"):
-            stripped = stripped[1:].lstrip()
-        lines.append(stripped)
-    while lines and not lines[-1]:
+        if line.startswith("> "):
+            line = line[2:]
+        elif line == ">":
+            line = ""
+        elif line.startswith(">"):
+            line = line[1:]
+        lines.append(line)
+    while lines and not lines[-1].strip():
         lines.pop()
     return "\n".join(lines)
 

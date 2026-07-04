@@ -385,6 +385,29 @@ def test_format_markdown_content_preserves_block_math_inside_blockquote() -> Non
     assert "> >" not in result
 
 
+def test_format_markdown_content_preserves_indentation_in_block_math() -> None:
+    source = (
+        "$$\n"
+        "\\def\\arraystretch{1.5}\n"
+        "   \\begin{array}{c:c:c}\n"
+        "   a & b & c \\\\ \\hline\n"
+        "   d & e & f \\\\\n"
+        "   \\hdashline\n"
+        "   g & h & i\n"
+        "\\end{array}\n"
+        "$$\n\n"
+        "$$\n"
+        "M=\\begin{bmatrix}\n"
+        "  1 & 2 & 1 \\\\\n"
+        "  3 & 0 & 1 \\\\\n"
+        "  0 & 2 & 4\n"
+        "\\end{bmatrix}\n"
+        "$$\n"
+    )
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == source
+
+
 def test_format_sample_fixture() -> None:
     before = _read_fixture("format_sample__before.md")
     result = format_markdown_content(before)
