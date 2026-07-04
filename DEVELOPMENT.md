@@ -28,8 +28,7 @@ Install the following software:
 - Git
 - Cursor or VSCode (with Python extensions)
 - [uv](https://docs.astral.sh/uv/) (
-  [Installing and Working with uv (Python) in VSCode](https://github.com/Harrix/
-  harrix.dev-articles-2025-en/blob/main/uv-vscode-python/uv-vscode-python.md))
+  [Installing and Working with uv (Python) in VSCode](https://github.com/Harrix/harrix.dev-articles-2025-en/blob/main/uv-vscode-python/uv-vscode-python.md))
 
 ### 📥 Installation steps
 

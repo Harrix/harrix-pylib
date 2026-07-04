@@ -20,7 +20,7 @@ _TOML_BLOCK_RE = re.compile(rf"{_TOML_BLOCK_PREFIX}\d+")
 
 @dataclass(frozen=True)
 class TomlBlock:
-    """Stored TOML front matter style block from the markdown body."""
+    """Stored TOML front matter style block from the Markdown body."""
 
     index: int
     lines: list[str]
@@ -28,7 +28,7 @@ class TomlBlock:
 
 @dataclass(frozen=True)
 class YamlBlock:
-    """Stored YAML block from the markdown body."""
+    """Stored YAML block from the Markdown body."""
 
     index: int
     lines: list[str]
@@ -60,12 +60,12 @@ def compact_front_matter(front_matter: str) -> str:
 
 
 def extract_toml_blocks(body: str) -> tuple[str, list[TomlBlock]]:
-    """Replace standalone TOML blocks in the markdown body with placeholders."""
+    """Replace standalone TOML blocks in the Markdown body with placeholders."""
     return _extract_delimited_blocks(body, delimiter="+++", prefix=_TOML_BLOCK_PREFIX, block_class=TomlBlock)
 
 
 def extract_yaml_blocks(body: str) -> tuple[str, list[YamlBlock]]:
-    """Replace standalone YAML blocks in the markdown body with placeholders."""
+    """Replace standalone YAML blocks in the Markdown body with placeholders."""
     return _extract_delimited_blocks(body, delimiter="---", prefix=_YAML_BLOCK_PREFIX, block_class=YamlBlock)
 
 
