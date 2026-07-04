@@ -186,6 +186,17 @@ def test_markdown_checker() -> None:
         errors = checker.check(prose_link_file, select={"H006"})
         assert any("H006" in error and "markdown" in error for error in errors)
 
+        # Test that hyphenated identifiers are ignored (e.g. markdown-it, git-diff-friendly)
+        hyphenated_id_file = temp_path / "hyphenated_id_test.md"
+        hyphenated_id_file.write_text(
+            "---\nlang: en\n---\n"
+            "Return a quoted title that markdown-it can parse before rendering.\n"
+            "Return whether ordered list markers should use git-diff-friendly `1.` suffixes.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(hyphenated_id_file, select={"H006"})
+        assert not any("H006" in error for error in errors)
+
         # Test valid file with no errors
         valid_file = temp_path / "valid.md"
         valid_file.write_text(

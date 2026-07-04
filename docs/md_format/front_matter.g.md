@@ -37,7 +37,7 @@ lang: en
 class TomlBlock
 ```
 
-Stored TOML front matter style block from the markdown body.
+Stored TOML front matter style block from the Markdown body.
 
 <details>
 <summary>Code:</summary>
@@ -57,7 +57,7 @@ class TomlBlock:
 class YamlBlock
 ```
 
-Stored YAML block from the markdown body.
+Stored YAML block from the Markdown body.
 
 <details>
 <summary>Code:</summary>
@@ -128,7 +128,7 @@ def compact_front_matter(front_matter: str) -> str:
 def extract_toml_blocks(body: str) -> tuple[str, list[TomlBlock]]
 ```
 
-Replace standalone TOML blocks in the markdown body with placeholders.
+Replace standalone TOML blocks in the Markdown body with placeholders.
 
 <details>
 <summary>Code:</summary>
@@ -146,7 +146,7 @@ def extract_toml_blocks(body: str) -> tuple[str, list[TomlBlock]]:
 def extract_yaml_blocks(body: str) -> tuple[str, list[YamlBlock]]
 ```
 
-Replace standalone YAML blocks in the markdown body with placeholders.
+Replace standalone YAML blocks in the Markdown body with placeholders.
 
 <details>
 <summary>Code:</summary>

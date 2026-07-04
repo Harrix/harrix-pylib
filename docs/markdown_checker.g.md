@@ -54,6 +54,7 @@ lang: en
   - [⚙️ Method `_get_link_url_ranges`](#️-method-_get_link_url_ranges)
   - [⚙️ Method `_get_relative_path`](#️-method-_get_relative_path)
   - [⚙️ Method `_is_blockquote_attribution_line`](#️-method-_is_blockquote_attribution_line)
+  - [⚙️ Method `_is_hyphenated_identifier_fragment`](#️-method-_is_hyphenated_identifier_fragment)
   - [⚙️ Method `_is_identifier_like_link_label`](#️-method-_is_identifier_like_link_label)
   - [⚙️ Method `_is_table_cell_only_dash`](#️-method-_is_table_cell_only_dash)
   - [⚙️ Method `_remove_inline_code`](#️-method-_remove_inline_code)
@@ -813,11 +814,22 @@ class MarkdownChecker:
     ) -> Generator[str, None, None]:
         """Check for incorrect word forms (H006). Uses pre-compiled patterns from _INCORRECT_WORD_PATTERNS."""
         for incorrect_word, (pattern, correct_word) in self._INCORRECT_WORD_PATTERNS.items():
-            if pattern.search(clean_line):
-                match = pattern.search(line)
-                col = match.start() + 1 if match else 1
+            for match in pattern.finditer(clean_line):
+                start, end = match.span()
+                if self._is_hyphenated_identifier_fragment(clean_line, start, end):
+                    continue
+                line_match = next(
+                    (
+                        m
+                        for m in pattern.finditer(line)
+                        if not self._is_hyphenated_identifier_fragment(line, m.start(), m.end())
+                    ),
+                    None,
+                )
+                col = line_match.start() + 1 if line_match else start + 1
                 error_message = f'{self.RULES["H006"]}: "{incorrect_word}" should be "{correct_word}"'
                 yield self._format_error("H006", error_message, filename, line_num=line_num, col=col)
+                break
 
     def _check_lowercase_after_punctuation(
         self, filename: Path, line: str, clean_line: str, line_num: int
@@ -1266,6 +1278,13 @@ class MarkdownChecker:
         while content.lstrip().startswith(">"):
             content = content.lstrip()[1:].lstrip()
         return content.startswith("--")
+
+    @staticmethod
+    def _is_hyphenated_identifier_fragment(text: str, start: int, end: int) -> bool:
+        """Return True if span is part of a hyphenated identifier (e.g. ``markdown-it``, ``git-diff-friendly``)."""
+        if start > 0 and text[start - 1] == "-":
+            return True
+        return end < len(text) and text[end] == "-"
 
     @staticmethod
     def _is_identifier_like_link_label(label: str) -> bool:
@@ -2052,11 +2071,22 @@ def _check_incorrect_words(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
         for incorrect_word, (pattern, correct_word) in self._INCORRECT_WORD_PATTERNS.items():
-            if pattern.search(clean_line):
-                match = pattern.search(line)
-                col = match.start() + 1 if match else 1
+            for match in pattern.finditer(clean_line):
+                start, end = match.span()
+                if self._is_hyphenated_identifier_fragment(clean_line, start, end):
+                    continue
+                line_match = next(
+                    (
+                        m
+                        for m in pattern.finditer(line)
+                        if not self._is_hyphenated_identifier_fragment(line, m.start(), m.end())
+                    ),
+                    None,
+                )
+                col = line_match.start() + 1 if line_match else start + 1
                 error_message = f'{self.RULES["H006"]}: "{incorrect_word}" should be "{correct_word}"'
                 yield self._format_error("H006", error_message, filename, line_num=line_num, col=col)
+                break
 ```
 
 </details>
@@ -2775,6 +2805,26 @@ def _is_blockquote_attribution_line(line: str) -> bool:
         while content.lstrip().startswith(">"):
             content = content.lstrip()[1:].lstrip()
         return content.startswith("--")
+```
+
+</details>
+
+### ⚙️ Method `_is_hyphenated_identifier_fragment`
+
+```python
+def _is_hyphenated_identifier_fragment(text: str, start: int, end: int) -> bool
+```
+
+Return True if span is part of a hyphenated identifier (e.g. `markdown-it`, `git-diff-friendly`).
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_hyphenated_identifier_fragment(text: str, start: int, end: int) -> bool:
+        if start > 0 and text[start - 1] == "-":
+            return True
+        return end < len(text) and text[end] == "-"
 ```
 
 </details>
