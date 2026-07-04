@@ -771,25 +771,31 @@ class MarkdownChecker:
                 break
 
     def _check_lowercase_after_punctuation(
-        self, filename: Path, line: str, clean_line: str, line_num: int
+        self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for lowercase letter after sentence-ending punctuation (H021)."""
+        """Check for lowercase letter after sentence-ending punctuation (H021).
+
+        Checks each non-inline-code segment separately so removed code (e.g.
+        ``Optional. `"value"` stores``) does not falsely join a period with the
+        next word.
+        """
         pattern = r"[.!?]\s+([a-zа-яё])"  # noqa: RUF001  # ignore: HP001
         exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001  # ignore: HP001
 
-        for match in re.finditer(pattern, clean_line):
-            letter = match.group(1)
-            pos = match.start()
-            context = clean_line[max(0, pos - 4) : match.end()]
-            if any(exc in context.lower() for exc in exceptions):
-                continue
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                for match in re.finditer(pattern, segment):
+                    letter = match.group(1)
+                    pos = match.start()
+                    context = segment[max(0, pos - 4) : match.end()]
+                    if any(exc in context.lower() for exc in exceptions):
+                        continue
 
-            line_match = re.search(re.escape(match.group(0)), line)
-            offset = match.start(1) - match.start(0)
-            col = line_match.start(0) + offset + 1 if line_match else match.start(1) + 1
-
-            error_msg = f'{self.RULES["H021"]}: found lowercase "{letter}" after punctuation'
-            yield self._format_error("H021", error_msg, filename, line_num=line_num, col=col)
+                    col = offset + match.start(1) + 1
+                    error_msg = f'{self.RULES["H021"]}: found lowercase "{letter}" after punctuation'
+                    yield self._format_error("H021", error_msg, filename, line_num=line_num, col=col)
+            offset += len(segment)
 
     def _check_non_code_line_rules(
         self,

@@ -774,6 +774,15 @@ def test_markdown_checker() -> None:
         errors = checker.check(ru_abbrev_file, select={"H021"})
         assert not errors
 
+        # Inline code between period and next word should not trigger H021
+        inline_code_after_period_file = temp_path / "inline_code_after_period.md"
+        inline_code_after_period_file.write_text(
+            '---\nlang: en\n---\n\n- `path_layout` — Optional. `"city_note"` stores each entry.\n',
+            encoding="utf-8",
+        )
+        errors = checker.check(inline_code_after_period_file, select={"H021"})
+        assert not errors
+
         # =====================================================================
         # H022: Non-breaking space
         # =====================================================================
