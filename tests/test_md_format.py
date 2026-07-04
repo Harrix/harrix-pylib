@@ -59,9 +59,10 @@ def test_format_markdown_content_matches_fixture(before_name: str, after_name: s
 
 
 def test_format_markdown_content_does_not_wrap_long_list_links_by_default() -> None:
-    source = "- [Не сохраняем сессию с открытыми файлами](#не-сохраняем-сессию-с-открытыми-файлами)\n"
+    source = "- [Не сохраняем сессию с открытыми файлами](#не-сохраняем-сессию-с-открытыми-файлами)\n"  # noqa: RUF001
     result = format_markdown_content(source, end_of_line="lf")
-    assert "[Не сохраняем сессию с открытыми файлами](#не-сохраняем-сессию-с-открытыми-файлами)" in result
+    expected_link = source.strip().removeprefix("- ")
+    assert expected_link in result
     assert "фай\n" not in result
 
 
@@ -132,7 +133,7 @@ def test_format_markdown_content_preserves_many_angle_autolinks_without_placehol
     links = [f"<https://example.com/{index}>" for index in range(12)]
     source = "\n".join(f"- {link}" for link in links) + "\n"
     result = format_markdown_content(source, end_of_line="lf")
-    for index, link in enumerate(links):
+    for link in links:
         assert link in result
     assert result.count("<https://example.com/1>") == 1
 
@@ -146,17 +147,7 @@ def test_format_markdown_content_preserves_linkify_bare_domain_without_protocol(
 
 
 def test_format_markdown_content_preserves_bare_domains_in_list() -> None:
-    source = (
-        "\n".join(
-            [
-                "- jsfiddle.net",
-                "- drive.google.com",
-                "- vimeo.com",
-                "- www.youtube.com",
-            ]
-        )
-        + "\n"
-    )
+    source = "- jsfiddle.net\n- drive.google.com\n- vimeo.com\n- www.youtube.com\n"
     result = format_markdown_content(source, end_of_line="lf")
     assert result == source
 
@@ -394,8 +385,10 @@ def test_format_markdown_content_keeps_multiple_trailing_empty_table_cells() -> 
     assert table_lines
     expected_pipes = table_lines[0].count("|")
     assert all(line.count("|") == expected_pipes for line in table_lines)
-    assert "ACER" in result and "Del, F2" in result
-    assert "ASUS" in result and "desktop" in result
+    assert "ACER" in result
+    assert "Del, F2" in result
+    assert "ASUS" in result
+    assert "desktop" in result
 
 
 def test_format_markdown_content_formats_math() -> None:
