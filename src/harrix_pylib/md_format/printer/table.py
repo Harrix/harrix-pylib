@@ -30,6 +30,13 @@ def _escape_table_cell(cell: str) -> str:
     return cell.replace("|", r"\\|")
 
 
+def _expand_table_cell_placeholders(cell: str) -> str:
+    autolinks = printer_context.ACTIVE_ANGLE_AUTOLINKS
+    if not autolinks:
+        return cell
+    return restore_angle_autolinks(cell, autolinks)
+
+
 def _format_table_row(
     cells: list[str],
     column_widths: list[int],
@@ -104,17 +111,6 @@ def _parse_table_rows(text: str) -> list[list[str]]:
         if cells is not None:
             rows.append(cells)
     return rows
-
-
-def _expand_table_cell_placeholders(cell: str) -> str:
-    autolinks = printer_context.ACTIVE_ANGLE_AUTOLINKS
-    if not autolinks:
-        return cell
-    return restore_angle_autolinks(cell, autolinks)
-
-
-def _table_data_rows(rows: list[list[str]]) -> list[list[str]]:
-    return [row for row in rows if not all(_TABLE_SEPARATOR_CELL_RE.fullmatch(cell or "") for cell in row)]
 
 
 def _parse_table_rows_expanded(text: str) -> list[list[str]]:
@@ -204,9 +200,7 @@ def _render_table(
             filtered_body_rows.append(padded_row[:width])
     expanded_header = [_expand_table_cell_placeholders(cell) for cell in header]
     expanded_body_rows = [[_expand_table_cell_placeholders(cell) for cell in row] for row in filtered_body_rows]
-    width_rows = [
-        [_escape_table_cell(cell) for cell in row] for row in [expanded_header, *expanded_body_rows]
-    ]
+    width_rows = [[_escape_table_cell(cell) for cell in row] for row in [expanded_header, *expanded_body_rows]]
     column_widths = _table_column_widths(width_rows, width)
     align_row = rows[1] if len(rows) > 1 else ["---"] * width
     lines = [
@@ -237,3 +231,7 @@ def _table_column_widths(rows: list[list[str]], width: int) -> list[int]:
         for index, cell in enumerate(row[:width]):
             column_widths[index] = max(column_widths[index], _table_cell_display_width(cell), 3)
     return column_widths
+
+
+def _table_data_rows(rows: list[list[str]]) -> list[list[str]]:
+    return [row for row in rows if not all(_TABLE_SEPARATOR_CELL_RE.fullmatch(cell or "") for cell in row)]

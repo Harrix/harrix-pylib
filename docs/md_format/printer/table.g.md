@@ -12,15 +12,18 @@ lang: en
 ## Contents
 
 - [🔧 Function `_escape_table_cell`](#-function-_escape_table_cell)
+- [🔧 Function `_expand_table_cell_placeholders`](#-function-_expand_table_cell_placeholders)
 - [🔧 Function `_format_table_row`](#-function-_format_table_row)
 - [🔧 Function `_format_table_separator`](#-function-_format_table_separator)
 - [🔧 Function `_is_spurious_table_row`](#-function-_is_spurious_table_row)
 - [🔧 Function `_parse_table_row_cells`](#-function-_parse_table_row_cells)
 - [🔧 Function `_parse_table_rows`](#-function-_parse_table_rows)
+- [🔧 Function `_parse_table_rows_expanded`](#-function-_parse_table_rows_expanded)
 - [🔧 Function `_prefer_source_table_block`](#-function-_prefer_source_table_block)
 - [🔧 Function `_render_table`](#-function-_render_table)
 - [🔧 Function `_table_cell_display_width`](#-function-_table_cell_display_width)
 - [🔧 Function `_table_column_widths`](#-function-_table_column_widths)
+- [🔧 Function `_table_data_rows`](#-function-_table_data_rows)
 
 </details>
 
@@ -44,6 +47,27 @@ def _escape_table_cell(cell: str) -> str:
     if "<" in cell and ">" in cell:
         return cell.replace("|", "&#124;")
     return cell.replace("|", r"\\|")
+```
+
+</details>
+
+## 🔧 Function `_expand_table_cell_placeholders`
+
+```python
+def _expand_table_cell_placeholders(cell: str) -> str
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _expand_table_cell_placeholders(cell: str) -> str:
+    autolinks = printer_context.ACTIVE_ANGLE_AUTOLINKS
+    if not autolinks:
+        return cell
+    return restore_angle_autolinks(cell, autolinks)
 ```
 
 </details>
@@ -194,6 +218,24 @@ def _parse_table_rows(text: str) -> list[list[str]]:
 
 </details>
 
+## 🔧 Function `_parse_table_rows_expanded`
+
+```python
+def _parse_table_rows_expanded(text: str) -> list[list[str]]
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _parse_table_rows_expanded(text: str) -> list[list[str]]:
+    return [[_expand_table_cell_placeholders(cell) for cell in row] for row in _parse_table_rows(text)]
+```
+
+</details>
+
 ## 🔧 Function `_prefer_source_table_block`
 
 ```python
@@ -207,11 +249,11 @@ _No docstring provided._
 
 ```python
 def _prefer_source_table_block(source_text: str, formatted_text: str) -> str | None:
-    source_rows = _parse_table_rows(source_text)
-    formatted_rows = _parse_table_rows(formatted_text)
+    source_rows = _table_data_rows(_parse_table_rows_expanded(source_text))
+    formatted_rows = _table_data_rows(_parse_table_rows(formatted_text))
     if not source_rows or source_rows != formatted_rows:
         return None
-    if len(source_text) >= len(formatted_text):
+    if len(source_text.rstrip("\n")) >= len(formatted_text.rstrip("\n")):
         return source_text if source_text.endswith("\n") else f"{source_text}\n"
     return None
 ```
@@ -301,13 +343,15 @@ def _render_table(
             trailing_paragraphs.append(padded_row[0].strip())
         else:
             filtered_body_rows.append(padded_row[:width])
-    width_rows = [[_escape_table_cell(cell) for cell in row] for row in [header, *filtered_body_rows]]
+    expanded_header = [_expand_table_cell_placeholders(cell) for cell in header]
+    expanded_body_rows = [[_expand_table_cell_placeholders(cell) for cell in row] for row in filtered_body_rows]
+    width_rows = [[_escape_table_cell(cell) for cell in row] for row in [expanded_header, *expanded_body_rows]]
     column_widths = _table_column_widths(width_rows, width)
     align_row = rows[1] if len(rows) > 1 else ["---"] * width
     lines = [
-        _format_table_row(header, column_widths, align_row),
+        _format_table_row(expanded_header, column_widths, align_row),
         _format_table_separator(column_widths, align_row),
-        *(_format_table_row(row, column_widths, align_row, strip_trailing_empty=True) for row in filtered_body_rows),
+        *(_format_table_row(row, column_widths, align_row) for row in expanded_body_rows),
     ]
     result = "\n".join(lines) + "\n"
     if trailing_paragraphs:
@@ -360,6 +404,24 @@ def _table_column_widths(rows: list[list[str]], width: int) -> list[int]:
         for index, cell in enumerate(row[:width]):
             column_widths[index] = max(column_widths[index], _table_cell_display_width(cell), 3)
     return column_widths
+```
+
+</details>
+
+## 🔧 Function `_table_data_rows`
+
+```python
+def _table_data_rows(rows: list[list[str]]) -> list[list[str]]
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _table_data_rows(rows: list[list[str]]) -> list[list[str]]:
+    return [row for row in rows if not all(_TABLE_SEPARATOR_CELL_RE.fullmatch(cell or "") for cell in row)]
 ```
 
 </details>

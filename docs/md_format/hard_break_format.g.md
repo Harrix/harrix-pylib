@@ -11,8 +11,8 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `HardBreakStyles`](#%EF%B8%8F-class-hardbreakstyles)
-  - [⚙️ Method `next_is_backslash`](#%EF%B8%8F-method-next_is_backslash)
+- [🏛️ Class `HardBreakStyles`](#️-class-hardbreakstyles)
+  - [⚙️ Method `next_is_backslash`](#️-method-next_is_backslash)
 - [🔧 Function `extract_backslash_hard_breaks`](#-function-extract_backslash_hard_breaks)
 - [🔧 Function `_line_has_single_backslash_hard_break`](#-function-_line_has_single_backslash_hard_break)
 - [🔧 Function `_line_has_space_hard_break`](#-function-_line_has_space_hard_break)
@@ -77,9 +77,13 @@ Record hard-break styles and normalize single trailing backslashes for parsing.
 ```python
 def extract_backslash_hard_breaks(body: str) -> tuple[str, HardBreakStyles]:
     lines, trailing = split_lines(body)
+    code_block_info = list(identify_code_blocks(lines))
     styles = HardBreakStyles()
     converted: list[str] = []
     for index, line in enumerate(lines):
+        if code_block_info[index][1]:
+            converted.append(line)
+            continue
         next_line = lines[index + 1] if index + 1 < len(lines) else ""
         if _line_has_single_backslash_hard_break(line, next_line=next_line):
             styles.backslash_breaks.append(True)

@@ -11,7 +11,7 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `IgnoreBlock`](#%EF%B8%8F-class-ignoreblock)
+- [🏛️ Class `IgnoreBlock`](#️-class-ignoreblock)
 - [🔧 Function `extract_ignore_blocks`](#-function-extract_ignore_blocks)
 - [🔧 Function `restore_ignore_blocks`](#-function-restore_ignore_blocks)
 

@@ -14,6 +14,8 @@ lang: en
 - [🔧 Function `extract_ordered_list_marker_groups`](#-function-extract_ordered_list_marker_groups)
 - [🔧 Function `is_git_diff_friendly_ordered_list`](#-function-is_git_diff_friendly_ordered_list)
 - [🔧 Function `ordered_list_item_number`](#-function-ordered_list_item_number)
+- [🔧 Function `parse_ordered_list_marker`](#-function-parse_ordered_list_marker)
+- [🔧 Function `_is_blockquote_list_continuation_line`](#-function-_is_blockquote_list_continuation_line)
 
 </details>
 
@@ -63,6 +65,9 @@ def extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]
             line_indent = len(line) - len(line.lstrip())
             if line_indent > current_indent:
                 # Continuation content — don't close the group.
+                pending_break = False
+                continue
+            if _is_blockquote_list_continuation_line(line):
                 pending_break = False
                 continue
         # Different content at same or lower indent — close the group.
@@ -120,6 +125,45 @@ def ordered_list_item_number(markers: list[int], item_index: int) -> int:
     if is_git_diff_friendly_ordered_list(markers):
         return markers[0] if item_index == 0 else 1
     return markers[0] + item_index
+```
+
+</details>
+
+## 🔧 Function `parse_ordered_list_marker`
+
+```python
+def parse_ordered_list_marker(line: str) -> tuple[int, str] | None
+```
+
+Return marker number and delimiter from an ordered-list source line.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def parse_ordered_list_marker(line: str) -> tuple[int, str] | None:
+    match = _ORDERED_ITEM_RE.match(line)
+    if not match:
+        return None
+    return int(match.group(2)), match.group(3)
+```
+
+</details>
+
+## 🔧 Function `_is_blockquote_list_continuation_line`
+
+```python
+def _is_blockquote_list_continuation_line(line: str) -> bool
+```
+
+Return whether a blockquote line continues the previous list item body.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_blockquote_list_continuation_line(line: str) -> bool:
+    return bool(_BLOCKQUOTE_LIST_CONTINUATION_RE.match(line))
 ```
 
 </details>

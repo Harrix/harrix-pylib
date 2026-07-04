@@ -11,52 +11,53 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `MarkdownChecker`](#%EF%B8%8F-class-markdownchecker)
-  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
-  - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
-  - [⚙️ Method `check`](#%EF%B8%8F-method-check)
-  - [⚙️ Method `check_directory`](#%EF%B8%8F-method-check_directory)
-  - [⚙️ Method `find_markdown_files`](#%EF%B8%8F-method-find_markdown_files)
-  - [⚙️ Method `_check_all_lines_rules`](#%EF%B8%8F-method-_check_all_lines_rules)
-  - [⚙️ Method `_check_all_rules`](#%EF%B8%8F-method-_check_all_rules)
-  - [⚙️ Method `_check_code_rules`](#%EF%B8%8F-method-_check_code_rules)
-  - [⚙️ Method `_check_colon_before_code`](#%EF%B8%8F-method-_check_colon_before_code)
-  - [⚙️ Method `_check_colon_before_image`](#%EF%B8%8F-method-_check_colon_before_image)
-  - [⚙️ Method `_check_consecutive_empty_lines`](#%EF%B8%8F-method-_check_consecutive_empty_lines)
-  - [⚙️ Method `_check_content_rules`](#%EF%B8%8F-method-_check_content_rules)
-  - [⚙️ Method `_check_dash_usage`](#%EF%B8%8F-method-_check_dash_usage)
-  - [⚙️ Method `_check_double_spaces`](#%EF%B8%8F-method-_check_double_spaces)
-  - [⚙️ Method `_check_file_level_rules`](#%EF%B8%8F-method-_check_file_level_rules)
-  - [⚙️ Method `_check_filename_rules`](#%EF%B8%8F-method-_check_filename_rules)
-  - [⚙️ Method `_check_horizontal_bar`](#%EF%B8%8F-method-_check_horizontal_bar)
-  - [⚙️ Method `_check_html_tags`](#%EF%B8%8F-method-_check_html_tags)
-  - [⚙️ Method `_check_image_caption`](#%EF%B8%8F-method-_check_image_caption)
-  - [⚙️ Method `_check_image_not_at_line_start`](#%EF%B8%8F-method-_check_image_not_at_line_start)
-  - [⚙️ Method `_check_incorrect_words`](#%EF%B8%8F-method-_check_incorrect_words)
-  - [⚙️ Method `_check_lowercase_after_punctuation`](#%EF%B8%8F-method-_check_lowercase_after_punctuation)
-  - [⚙️ Method `_check_non_code_line_rules`](#%EF%B8%8F-method-_check_non_code_line_rules)
-  - [⚙️ Method `_check_numero_space`](#%EF%B8%8F-method-_check_numero_space)
-  - [⚙️ Method `_check_question_mark_period`](#%EF%B8%8F-method-_check_question_mark_period)
-  - [⚙️ Method `_check_space_after_emphasis_colon`](#%EF%B8%8F-method-_check_space_after_emphasis_colon)
-  - [⚙️ Method `_check_colon_outside_emphasis`](#%EF%B8%8F-method-_check_colon_outside_emphasis)
-  - [⚙️ Method `_check_quotes`](#%EF%B8%8F-method-_check_quotes)
-  - [⚙️ Method `_check_russian_polite_pronouns`](#%EF%B8%8F-method-_check_russian_polite_pronouns)
-  - [⚙️ Method `_check_space_before_punctuation`](#%EF%B8%8F-method-_check_space_before_punctuation)
-  - [⚙️ Method `_check_x_instead_of_times`](#%EF%B8%8F-method-_check_x_instead_of_times)
-  - [⚙️ Method `_check_yaml_rules`](#%EF%B8%8F-method-_check_yaml_rules)
-  - [⚙️ Method `_determine_active_rules`](#%EF%B8%8F-method-_determine_active_rules)
-  - [⚙️ Method `_determine_project_root`](#%EF%B8%8F-method-_determine_project_root)
-  - [⚙️ Method `_find_yaml_block_end_line`](#%EF%B8%8F-method-_find_yaml_block_end_line)
-  - [⚙️ Method `_find_yaml_end_line`](#%EF%B8%8F-method-_find_yaml_end_line)
-  - [⚙️ Method `_find_yaml_field_column`](#%EF%B8%8F-method-_find_yaml_field_column)
-  - [⚙️ Method `_find_yaml_field_line_in_original`](#%EF%B8%8F-method-_find_yaml_field_line_in_original)
-  - [⚙️ Method `_format_error`](#%EF%B8%8F-method-_format_error)
-  - [⚙️ Method `_get_link_url_ranges`](#%EF%B8%8F-method-_get_link_url_ranges)
-  - [⚙️ Method `_get_relative_path`](#%EF%B8%8F-method-_get_relative_path)
-  - [⚙️ Method `_is_identifier_like_link_label`](#%EF%B8%8F-method-_is_identifier_like_link_label)
-  - [⚙️ Method `_is_table_cell_only_dash`](#%EF%B8%8F-method-_is_table_cell_only_dash)
-  - [⚙️ Method `_remove_inline_code`](#%EF%B8%8F-method-_remove_inline_code)
-  - [⚙️ Method `_should_check_paragraph_end`](#%EF%B8%8F-method-_should_check_paragraph_end)
+- [🏛️ Class `MarkdownChecker`](#️-class-markdownchecker)
+  - [⚙️ Method `__init__`](#️-method-__init__)
+  - [⚙️ Method `__call__`](#️-method-__call__)
+  - [⚙️ Method `check`](#️-method-check)
+  - [⚙️ Method `check_directory`](#️-method-check_directory)
+  - [⚙️ Method `find_markdown_files`](#️-method-find_markdown_files)
+  - [⚙️ Method `_check_all_lines_rules`](#️-method-_check_all_lines_rules)
+  - [⚙️ Method `_check_all_rules`](#️-method-_check_all_rules)
+  - [⚙️ Method `_check_code_rules`](#️-method-_check_code_rules)
+  - [⚙️ Method `_check_colon_before_code`](#️-method-_check_colon_before_code)
+  - [⚙️ Method `_check_colon_before_image`](#️-method-_check_colon_before_image)
+  - [⚙️ Method `_check_colon_outside_emphasis`](#️-method-_check_colon_outside_emphasis)
+  - [⚙️ Method `_check_consecutive_empty_lines`](#️-method-_check_consecutive_empty_lines)
+  - [⚙️ Method `_check_content_rules`](#️-method-_check_content_rules)
+  - [⚙️ Method `_check_dash_usage`](#️-method-_check_dash_usage)
+  - [⚙️ Method `_check_double_spaces`](#️-method-_check_double_spaces)
+  - [⚙️ Method `_check_file_level_rules`](#️-method-_check_file_level_rules)
+  - [⚙️ Method `_check_filename_rules`](#️-method-_check_filename_rules)
+  - [⚙️ Method `_check_horizontal_bar`](#️-method-_check_horizontal_bar)
+  - [⚙️ Method `_check_html_tags`](#️-method-_check_html_tags)
+  - [⚙️ Method `_check_image_caption`](#️-method-_check_image_caption)
+  - [⚙️ Method `_check_image_not_at_line_start`](#️-method-_check_image_not_at_line_start)
+  - [⚙️ Method `_check_incorrect_words`](#️-method-_check_incorrect_words)
+  - [⚙️ Method `_check_lowercase_after_punctuation`](#️-method-_check_lowercase_after_punctuation)
+  - [⚙️ Method `_check_non_code_line_rules`](#️-method-_check_non_code_line_rules)
+  - [⚙️ Method `_check_numero_space`](#️-method-_check_numero_space)
+  - [⚙️ Method `_check_question_mark_period`](#️-method-_check_question_mark_period)
+  - [⚙️ Method `_check_quotes`](#️-method-_check_quotes)
+  - [⚙️ Method `_check_russian_polite_pronouns`](#️-method-_check_russian_polite_pronouns)
+  - [⚙️ Method `_check_space_after_emphasis_colon`](#️-method-_check_space_after_emphasis_colon)
+  - [⚙️ Method `_check_space_before_punctuation`](#️-method-_check_space_before_punctuation)
+  - [⚙️ Method `_check_x_instead_of_times`](#️-method-_check_x_instead_of_times)
+  - [⚙️ Method `_check_yaml_rules`](#️-method-_check_yaml_rules)
+  - [⚙️ Method `_determine_active_rules`](#️-method-_determine_active_rules)
+  - [⚙️ Method `_determine_project_root`](#️-method-_determine_project_root)
+  - [⚙️ Method `_find_yaml_block_end_line`](#️-method-_find_yaml_block_end_line)
+  - [⚙️ Method `_find_yaml_end_line`](#️-method-_find_yaml_end_line)
+  - [⚙️ Method `_find_yaml_field_column`](#️-method-_find_yaml_field_column)
+  - [⚙️ Method `_find_yaml_field_line_in_original`](#️-method-_find_yaml_field_line_in_original)
+  - [⚙️ Method `_format_error`](#️-method-_format_error)
+  - [⚙️ Method `_get_link_url_ranges`](#️-method-_get_link_url_ranges)
+  - [⚙️ Method `_get_relative_path`](#️-method-_get_relative_path)
+  - [⚙️ Method `_is_blockquote_attribution_line`](#️-method-_is_blockquote_attribution_line)
+  - [⚙️ Method `_is_identifier_like_link_label`](#️-method-_is_identifier_like_link_label)
+  - [⚙️ Method `_is_table_cell_only_dash`](#️-method-_is_table_cell_only_dash)
+  - [⚙️ Method `_remove_inline_code`](#️-method-_remove_inline_code)
+  - [⚙️ Method `_should_check_paragraph_end`](#️-method-_should_check_paragraph_end)
 
 </details>
 
@@ -552,6 +553,33 @@ class MarkdownChecker:
             error_msg = f'{self.RULES["H014"]}: last char is "{last_char}"'
             yield self._format_error("H014", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
 
+    def _check_colon_outside_emphasis(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for colon outside inline emphasis (H030).
+
+        Colon after *, **, _, __, ~~ labels should be inside emphasis markers.
+        Uses original line; matches inside inline code are skipped.
+        """
+        code_ranges: list[tuple[int, int]] = []
+        pos = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
+        reported_cols: set[int] = set()
+        for pattern in self._EMPHASIS_COLON_OUTSIDE_PATTERNS:
+            for match in pattern.finditer(line):
+                if _inside_inline_code(match.start()):
+                    continue
+                col = match.end()
+                if col in reported_cols:
+                    continue
+                reported_cols.add(col)
+                yield self._format_error("H030", self.RULES["H030"], filename, line_num=line_num, col=col)
+
     def _check_consecutive_empty_lines(
         self,
         filename: Path,
@@ -614,7 +642,10 @@ class MarkdownChecker:
     def _check_dash_usage(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for incorrect dash/hyphen usage (H016). Applies only to markdown text, not YAML/code."""
+        """Check for incorrect dash/hyphen usage (H016). Applies only to markdown text, not YAML/code.
+
+        Exception: ``--`` at the start of blockquote attribution lines (e.g. ``> -- Author``).
+        """
         # Single pass over segments: check for " - ", " − " (Unicode minus), and " -- "  # noqa: RUF003
         hyphen_found = False
         minus_or_double_found = False
@@ -635,10 +666,11 @@ class MarkdownChecker:
                         yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
                         minus_or_double_found = True
                     elif " -- " in segment:
-                        col = offset + segment.find(" -- ") + 1
-                        error_msg = f'{self.RULES["H016"]}: " -- " should be " — " (em dash)'
-                        yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
-                        minus_or_double_found = True
+                        if not self._is_blockquote_attribution_line(line):
+                            col = offset + segment.find(" -- ") + 1
+                            error_msg = f'{self.RULES["H016"]}: " -- " should be " — " (em dash)'
+                            yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
+                            minus_or_double_found = True
 
             offset += len(segment)
             if hyphen_found and minus_or_double_found:
@@ -917,64 +949,6 @@ class MarkdownChecker:
                 return
             offset += len(segment)
 
-    def _check_space_after_emphasis_colon(
-        self, filename: Path, line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check for missing space after colon in or after inline emphasis (H029).
-
-        Colon inside or after *, **, _, __, ~~ must be followed by a space before text.
-        Uses original line; matches inside inline code are skipped.
-        """
-        code_ranges: list[tuple[int, int]] = []
-        pos = 0
-        for segment, in_code in h.md.identify_code_blocks_line(line):
-            if in_code:
-                code_ranges.append((pos, pos + len(segment)))
-            pos += len(segment)
-
-        def _inside_inline_code(offset: int) -> bool:
-            return any(start <= offset < end for start, end in code_ranges)
-
-        reported_cols: set[int] = set()
-        for pattern in self._EMPHASIS_COLON_NO_SPACE_PATTERNS:
-            for match in pattern.finditer(line):
-                if _inside_inline_code(match.start()):
-                    continue
-                col = match.end() + 1
-                if col in reported_cols:
-                    continue
-                reported_cols.add(col)
-                yield self._format_error("H029", self.RULES["H029"], filename, line_num=line_num, col=col)
-
-    def _check_colon_outside_emphasis(
-        self, filename: Path, line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check for colon outside inline emphasis (H030).
-
-        Colon after *, **, _, __, ~~ labels should be inside emphasis markers.
-        Uses original line; matches inside inline code are skipped.
-        """
-        code_ranges: list[tuple[int, int]] = []
-        pos = 0
-        for segment, in_code in h.md.identify_code_blocks_line(line):
-            if in_code:
-                code_ranges.append((pos, pos + len(segment)))
-            pos += len(segment)
-
-        def _inside_inline_code(offset: int) -> bool:
-            return any(start <= offset < end for start, end in code_ranges)
-
-        reported_cols: set[int] = set()
-        for pattern in self._EMPHASIS_COLON_OUTSIDE_PATTERNS:
-            for match in pattern.finditer(line):
-                if _inside_inline_code(match.start()):
-                    continue
-                col = match.end()
-                if col in reported_cols:
-                    continue
-                reported_cols.add(col)
-                yield self._format_error("H030", self.RULES["H030"], filename, line_num=line_num, col=col)
-
     def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
         """Check for incorrect quote characters (H018).
 
@@ -1067,6 +1041,33 @@ class MarkdownChecker:
                 error_msg = f'{self.RULES["H023"]}: use lowercase "{word.lower()}" when addressing reader'
                 yield self._format_error("H023", error_msg, filename, line_num=line_num, col=match.start() + 1)
                 return
+
+    def _check_space_after_emphasis_colon(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for missing space after colon in or after inline emphasis (H029).
+
+        Colon inside or after *, **, _, __, ~~ must be followed by a space before text.
+        Uses original line; matches inside inline code are skipped.
+        """
+        code_ranges: list[tuple[int, int]] = []
+        pos = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
+        reported_cols: set[int] = set()
+        for pattern in self._EMPHASIS_COLON_NO_SPACE_PATTERNS:
+            for match in pattern.finditer(line):
+                if _inside_inline_code(match.start()):
+                    continue
+                col = match.end() + 1
+                if col in reported_cols:
+                    continue
+                reported_cols.add(col)
+                yield self._format_error("H029", self.RULES["H029"], filename, line_num=line_num, col=col)
 
     def _check_space_before_punctuation(
         self, filename: Path, line: str, _clean_line: str, line_num: int
@@ -1254,6 +1255,17 @@ class MarkdownChecker:
             return str(filename.resolve().relative_to(self.project_root))
         except ValueError:
             return str(filename.resolve())
+
+    @staticmethod
+    def _is_blockquote_attribution_line(line: str) -> bool:
+        """Return True if line is a blockquote attribution (e.g. '> -- Author')."""
+        stripped = line.lstrip()
+        if not stripped.startswith(">"):
+            return False
+        content = stripped
+        while content.lstrip().startswith(">"):
+            content = content.lstrip()[1:].lstrip()
+        return content.startswith("--")
 
     @staticmethod
     def _is_identifier_like_link_label(label: str) -> bool:
@@ -1627,6 +1639,46 @@ def _check_colon_before_image(
 
 </details>
 
+### ⚙️ Method `_check_colon_outside_emphasis`
+
+```python
+def _check_colon_outside_emphasis(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
+```
+
+Check for colon outside inline emphasis (H030).
+
+Colon after \*, \*\*, \_, __, ~~ labels should be inside emphasis markers.
+Uses original line; matches inside inline code are skipped.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _check_colon_outside_emphasis(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        code_ranges: list[tuple[int, int]] = []
+        pos = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
+        reported_cols: set[int] = set()
+        for pattern in self._EMPHASIS_COLON_OUTSIDE_PATTERNS:
+            for match in pattern.finditer(line):
+                if _inside_inline_code(match.start()):
+                    continue
+                col = match.end()
+                if col in reported_cols:
+                    continue
+                reported_cols.add(col)
+                yield self._format_error("H030", self.RULES["H030"], filename, line_num=line_num, col=col)
+```
+
+</details>
+
 ### ⚙️ Method `_check_consecutive_empty_lines`
 
 ```python
@@ -1718,6 +1770,8 @@ def _check_dash_usage(self, filename: Path, line: str, clean_line: str, line_num
 
 Check for incorrect dash/hyphen usage (H016). Applies only to markdown text, not YAML/code.
 
+Exception: `--` at the start of blockquote attribution lines (e.g. `> -- Author`).
+
 <details>
 <summary>Code:</summary>
 
@@ -1745,10 +1799,11 @@ def _check_dash_usage(
                         yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
                         minus_or_double_found = True
                     elif " -- " in segment:
-                        col = offset + segment.find(" -- ") + 1
-                        error_msg = f'{self.RULES["H016"]}: " -- " should be " — " (em dash)'
-                        yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
-                        minus_or_double_found = True
+                        if not self._is_blockquote_attribution_line(line):
+                            col = offset + segment.find(" -- ") + 1
+                            error_msg = f'{self.RULES["H016"]}: " -- " should be " — " (em dash)'
+                            yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
+                            minus_or_double_found = True
 
             offset += len(segment)
             if hyphen_found and minus_or_double_found:
@@ -1987,7 +2042,7 @@ def _check_image_not_at_line_start(self, filename: Path, line: str, line_num: in
 def _check_incorrect_words(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for incorrect word forms (H006). Uses pre-compiled patterns from _INCORRECT_WORD_PATTERNS.
+Check for incorrect word forms (H006). Uses pre-compiled patterns from \_INCORRECT_WORD_PATTERNS.
 
 <details>
 <summary>Code:</summary>
@@ -2191,90 +2246,6 @@ def _check_question_mark_period(self, filename: Path, line: str, line_num: int) 
 
 </details>
 
-### ⚙️ Method `_check_space_after_emphasis_colon`
-
-```python
-def _check_space_after_emphasis_colon(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
-```
-
-Check for missing space after colon in or after inline emphasis (H029).
-
-Colon inside or after *, **, _, __, ~~ must be followed by a space before text.
-Uses original line; matches inside inline code are skipped.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _check_space_after_emphasis_colon(
-        self, filename: Path, line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        code_ranges: list[tuple[int, int]] = []
-        pos = 0
-        for segment, in_code in h.md.identify_code_blocks_line(line):
-            if in_code:
-                code_ranges.append((pos, pos + len(segment)))
-            pos += len(segment)
-
-        def _inside_inline_code(offset: int) -> bool:
-            return any(start <= offset < end for start, end in code_ranges)
-
-        reported_cols: set[int] = set()
-        for pattern in self._EMPHASIS_COLON_NO_SPACE_PATTERNS:
-            for match in pattern.finditer(line):
-                if _inside_inline_code(match.start()):
-                    continue
-                col = match.end() + 1
-                if col in reported_cols:
-                    continue
-                reported_cols.add(col)
-                yield self._format_error("H029", self.RULES["H029"], filename, line_num=line_num, col=col)
-```
-
-</details>
-
-### ⚙️ Method `_check_colon_outside_emphasis`
-
-```python
-def _check_colon_outside_emphasis(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
-```
-
-Check for colon outside inline emphasis (H030).
-
-Colon after *, **, _, __, ~~ labels should be inside emphasis markers.
-Uses original line; matches inside inline code are skipped.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _check_colon_outside_emphasis(
-        self, filename: Path, line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        code_ranges: list[tuple[int, int]] = []
-        pos = 0
-        for segment, in_code in h.md.identify_code_blocks_line(line):
-            if in_code:
-                code_ranges.append((pos, pos + len(segment)))
-            pos += len(segment)
-
-        def _inside_inline_code(offset: int) -> bool:
-            return any(start <= offset < end for start, end in code_ranges)
-
-        reported_cols: set[int] = set()
-        for pattern in self._EMPHASIS_COLON_OUTSIDE_PATTERNS:
-            for match in pattern.finditer(line):
-                if _inside_inline_code(match.start()):
-                    continue
-                col = match.end()
-                if col in reported_cols:
-                    continue
-                reported_cols.add(col)
-                yield self._format_error("H030", self.RULES["H030"], filename, line_num=line_num, col=col)
-```
-
-</details>
-
 ### ⚙️ Method `_check_quotes`
 
 ```python
@@ -2344,10 +2315,11 @@ def _check_russian_polite_pronouns(self, filename: Path, line: str, _clean_line:
 Check for capitalized Russian polite pronouns (H023). Use lowercase when addressing the reader.
 
 Exception: pronoun at sentence start is allowed:
+
 - after line start or after .!?;
-- after opening guillemet « (direct speech, e.g. «Ваша задача);  # ignore: HP001
-- after dash at line start (dialogue, e.g. — Ваша работа хороша).  # ignore: HP001
-Yields at most one error per line.
+- after opening guillemet « (direct speech, e.g. «Ваша задача); # ignore: HP001
+- after dash at line start (dialogue, e.g. — Ваша работа хороша). # ignore: HP001
+  Yields at most one error per line.
 
 <details>
 <summary>Code:</summary>
@@ -2390,6 +2362,46 @@ def _check_russian_polite_pronouns(
                 error_msg = f'{self.RULES["H023"]}: use lowercase "{word.lower()}" when addressing reader'
                 yield self._format_error("H023", error_msg, filename, line_num=line_num, col=match.start() + 1)
                 return
+```
+
+</details>
+
+### ⚙️ Method `_check_space_after_emphasis_colon`
+
+```python
+def _check_space_after_emphasis_colon(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
+```
+
+Check for missing space after colon in or after inline emphasis (H029).
+
+Colon inside or after \*, \*\*, \_, __, ~~ must be followed by a space before text.
+Uses original line; matches inside inline code are skipped.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _check_space_after_emphasis_colon(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        code_ranges: list[tuple[int, int]] = []
+        pos = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
+        reported_cols: set[int] = set()
+        for pattern in self._EMPHASIS_COLON_NO_SPACE_PATTERNS:
+            for match in pattern.finditer(line):
+                if _inside_inline_code(match.start()):
+                    continue
+                col = match.end() + 1
+                if col in reported_cols:
+                    continue
+                reported_cols.add(col)
+                yield self._format_error("H029", self.RULES["H029"], filename, line_num=line_num, col=col)
 ```
 
 </details>
@@ -2458,7 +2470,7 @@ def _check_space_before_punctuation(
 def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
 ```
 
-Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '&ast;' (H024).
+Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '\*' (H024).
 
 Only checks text outside inline code and outside link URLs.
 Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C);
@@ -2739,6 +2751,30 @@ def _get_relative_path(self, filename: Path) -> str:
             return str(filename.resolve().relative_to(self.project_root))
         except ValueError:
             return str(filename.resolve())
+```
+
+</details>
+
+### ⚙️ Method `_is_blockquote_attribution_line`
+
+```python
+def _is_blockquote_attribution_line(line: str) -> bool
+```
+
+Return True if line is a blockquote attribution (e.g. '> -- Author').
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_blockquote_attribution_line(line: str) -> bool:
+        stripped = line.lstrip()
+        if not stripped.startswith(">"):
+            return False
+        content = stripped
+        while content.lstrip().startswith(">"):
+            content = content.lstrip()[1:].lstrip()
+        return content.startswith("--")
 ```
 
 </details>

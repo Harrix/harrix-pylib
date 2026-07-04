@@ -14,8 +14,10 @@ lang: en
 - [🔧 Function `_blockquote_line_content`](#-function-_blockquote_line_content)
 - [🔧 Function `_blockquote_line_depth`](#-function-_blockquote_line_depth)
 - [🔧 Function `_blockquote_needs_blank_line`](#-function-_blockquote_needs_blank_line)
+- [🔧 Function `_empty_math_middle_text`](#-function-_empty_math_middle_text)
 - [🔧 Function `_join_blockquote_blocks`](#-function-_join_blockquote_blocks)
 - [🔧 Function `_join_blocks`](#-function-_join_blocks)
+- [🔧 Function `_normalize_math_block_content`](#-function-_normalize_math_block_content)
 - [🔧 Function `_render_alert`](#-function-_render_alert)
 - [🔧 Function `_render_block`](#-function-_render_block)
 - [🔧 Function `_render_blockquote`](#-function-_render_blockquote)
@@ -103,6 +105,8 @@ def _blockquote_needs_blank_line(previous: str, current: str) -> bool:
     if previous_last.startswith("<!--") and current_first.startswith("<!--"):
         return False
     if current_first.startswith("-"):
+        if current_first.startswith("--"):
+            return True
         if previous_last.startswith(("-", "*", "+")):
             return False
         if previous_last and previous_last[0].isdigit() and ". " in previous_last[:4]:
@@ -112,6 +116,33 @@ def _blockquote_needs_blank_line(previous: str, current: str) -> bool:
         return False
     return True
 ````
+
+</details>
+
+## 🔧 Function `_empty_math_middle_text`
+
+```python
+def _empty_math_middle_text(content: str) -> str
+```
+
+Preserve blank interior lines in empty block math.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _empty_math_middle_text(content: str) -> str:
+    if content.strip():
+        return ""
+    lines = content.split("\n")
+    while lines and lines[-1] == "":
+        lines.pop()
+    while lines and lines[0] == "":
+        lines.pop(0)
+    if not lines or not all(not line.strip() for line in lines):
+        return ""
+    return "\n".join(lines)
+```
 
 </details>
 
@@ -185,6 +216,35 @@ def _join_blocks(
 
 </details>
 
+## 🔧 Function `_normalize_math_block_content`
+
+```python
+def _normalize_math_block_content(content: str) -> str
+```
+
+Strip blockquote continuation markers absorbed into math block content.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _normalize_math_block_content(content: str) -> str:
+    lines: list[str] = []
+    for line in content.strip().splitlines():
+        if line.startswith("> "):
+            line = line[2:]
+        elif line == ">":
+            line = ""
+        elif line.startswith(">"):
+            line = line[1:]
+        lines.append(line)
+    while lines and not lines[-1].strip():
+        lines.pop()
+    return "\n".join(lines)
+```
+
+</details>
+
 ## 🔧 Function `_render_alert`
 
 ```python
@@ -244,13 +304,21 @@ def _render_alert(
             preserve_source_line=False,
         )
         if chunk:
-            body_parts.append(chunk.strip())
-    body = normalize_inline_spaces(" ".join(body_parts))
-    alert_line = f"[!{kind}] {body}".rstrip() if body else f"[!{kind}]"
-    if options.prose_wrap == "always":
-        quoted = _wrap_blockquote_block(alert_line, options=options) + "\n"
-    else:
-        quoted = f"> {alert_line}\n"
+            body_parts.append(chunk.rstrip("\n"))
+    quoted_lines = [f"> [!{kind}]"]
+    if body_parts:
+        body = "\n\n".join(part for part in body_parts if part.strip())
+        if options.prose_wrap == "always":
+            body = normalize_inline_spaces(body.replace("\n", " "))
+            wrapped = _wrap_blockquote_block(body, options=options).rstrip("\n")
+            quoted_lines.extend(wrapped.splitlines())
+        else:
+            for part in body_parts:
+                if not part.strip():
+                    continue
+                for line in part.splitlines():
+                    quoted_lines.append(f"> {line}" if line else ">")
+    quoted = "\n".join(quoted_lines) + "\n"
     return quoted, close_index + 1
 ```
 
@@ -571,7 +639,15 @@ _No docstring provided._
 
 ```python
 def _render_math_block(token: Token, *, label: str | None = None) -> str:
-    content = token.content.strip()
+    raw_content = token.content
+    content = _normalize_math_block_content(raw_content)
+    if not content:
+        middle = _empty_math_middle_text(raw_content)
+        if label:
+            return f"$$\n{middle}$$ ({label})\n" if middle else f"$$\n$$ ({label})\n"
+        if middle:
+            return f"$$\n{middle}\n$$\n"
+        return "$$\n$$\n"
     if label:
         return f"$$\n{content}\n$$ ({label})\n"
     return f"$$\n{content}\n$$\n"

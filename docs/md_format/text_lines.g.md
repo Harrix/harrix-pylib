@@ -60,7 +60,7 @@ def ensure_blank_line_after_active_block(
 def join_lines(lines: list[str]) -> str
 ```
 
-_No docstring provided._
+Join lines and restore a trailing newline when requested.
 
 <details>
 <summary>Code:</summary>
@@ -81,7 +81,7 @@ def join_lines(lines: list[str], *, trailing_newline: bool) -> str:
 def make_placeholder(prefix: str, index: int) -> str
 ```
 
-_No docstring provided._
+Build a stable placeholder token for protected regions.
 
 <details>
 <summary>Code:</summary>

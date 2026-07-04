@@ -17,6 +17,8 @@ lang: en
 - [🔧 Function `_inline_neighbor_text`](#-function-_inline_neighbor_text)
 - [🔧 Function `_inline_text_after`](#-function-_inline_text_after)
 - [🔧 Function `_inline_text_before`](#-function-_inline_text_before)
+- [🔧 Function `_inner_has_url_scheme`](#-function-_inner_has_url_scheme)
+- [🔧 Function `_is_linkify_link`](#-function-_is_linkify_link)
 - [🔧 Function `_max_backtick_run`](#-function-_max_backtick_run)
 - [🔧 Function `_pack_link_parts`](#-function-_pack_link_parts)
 - [🔧 Function `_readable_link_href`](#-function-_readable_link_href)
@@ -27,6 +29,7 @@ lang: en
 - [🔧 Function `_render_wiki_content`](#-function-_render_wiki_content)
 - [🔧 Function `_softbreak_follows_trailing_backslash`](#-function-_softbreak_follows_trailing_backslash)
 - [🔧 Function `_softbreak_should_omit_space`](#-function-_softbreak_should_omit_space)
+- [🔧 Function `_wrap_inline_code_with_edge_spaces`](#-function-_wrap_inline_code_with_edge_spaces)
 
 </details>
 
@@ -51,11 +54,7 @@ def _format_code_inline(
         content = content.replace("|", "\\|")
     max_run = _max_backtick_run(content)
     if max_run == 0:
-        if content and not content.strip():
-            return f"`{content}`"
-        if content.startswith(" ") or content.endswith(" "):
-            return f"` {content} `"
-        return f"`{content}`"
+        return _wrap_inline_code_with_edge_spaces(content, "`")
     if max_run >= 3:
         if content.startswith(" ") or content.endswith(" "):
             fence = "`" * (max_run + 1)
@@ -90,7 +89,7 @@ def _format_self_referential_link(href: str, inner: str) -> str | None:
         return f"<{inner}>"
 
     if inner == href:
-        return href
+        return f"<{href}>"
 
     if href.startswith(("http://", "https://")):
         href_without_scheme = href.removeprefix("https://").removeprefix("http://").rstrip("/")
@@ -203,6 +202,42 @@ def _inline_text_before(children: list[Token], index: int) -> str:
 
 </details>
 
+## 🔧 Function `_inner_has_url_scheme`
+
+```python
+def _inner_has_url_scheme(text: str) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _inner_has_url_scheme(text: str) -> bool:
+    return "://" in text
+```
+
+</details>
+
+## 🔧 Function `_is_linkify_link`
+
+```python
+def _is_linkify_link(token: Token) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_linkify_link(token: Token) -> bool:
+    return token.markup == "autolink"
+```
+
+</details>
+
 ## 🔧 Function `_max_backtick_run`
 
 ```python
@@ -283,16 +318,7 @@ def _readable_link_href(href: str) -> str:
             return formatted
     if not href or href.startswith("HSKMDFMTLD"):
         return href
-    if "%" not in href:
-        return href
-    if href.startswith("#"):
-        return unquote(href, encoding="utf-8")
-    parts = urlsplit(href)
-    if not parts.scheme and not parts.netloc:
-        return unquote(href, encoding="utf-8")
-    decoded_fragment = unquote(parts.fragment, encoding="utf-8") if parts.fragment else parts.fragment
-    decoded_path = unquote(parts.path, encoding="utf-8")
-    return urlunsplit((parts.scheme, parts.netloc, decoded_path, parts.query, decoded_fragment))
+    return decode_percent_encoded_url(href)
 ```
 
 </details>
@@ -422,8 +448,16 @@ def _render_inline_token(
         if not title:
             raw_inner = _link_raw_text(children, index)
             if raw_inner is not None:
+                if raw_inner == href and not _inline_link_is_standalone(children, index):
+                    return href, next_index
+                if (
+                    _is_linkify_link(child)
+                    and not _inner_has_url_scheme(raw_inner)
+                    and _inline_link_is_standalone(children, index)
+                ):
+                    return raw_inner, next_index
                 autolink = _format_self_referential_link(href, raw_inner)
-                if autolink is not None:
+                if autolink is not None and _inline_link_is_standalone(children, index):
                     return autolink, next_index
         inner_parts: list[str] = []
         inner_index = index + 1
@@ -641,6 +675,28 @@ def _softbreak_should_omit_space(children: list[Token], index: int) -> bool:
     if not before or not after:
         return False
     return should_omit_space_between(before, after)
+```
+
+</details>
+
+## 🔧 Function `_wrap_inline_code_with_edge_spaces`
+
+```python
+def _wrap_inline_code_with_edge_spaces(content: str, fence: str) -> str
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _wrap_inline_code_with_edge_spaces(content: str, fence: str) -> str:
+    if content and not content.strip():
+        return f"{fence}{content}{fence}"
+    if content.startswith(" ") and content.endswith(" "):
+        return f"{fence} {content} {fence}"
+    return f"{fence}{content}{fence}"
 ```
 
 </details>

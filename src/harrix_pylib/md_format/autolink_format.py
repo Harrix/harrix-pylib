@@ -17,12 +17,6 @@ _ANGLE_AUTOLINK_RE = re.compile(
 )
 
 
-def _decode_angle_autolink(autolink: str) -> str:
-    if not autolink.startswith("<") or not autolink.endswith(">"):
-        return autolink
-    return f"<{decode_percent_encoded_url(autolink[1:-1])}>"
-
-
 def extract_angle_autolinks(body: str) -> tuple[str, list[str]]:
     """Replace angle-bracket autolinks with placeholders before parsing."""
     autolinks: list[str] = []
@@ -46,3 +40,9 @@ def restore_angle_autolinks(text: str, autolinks: list[str]) -> str:
         return match.group(0)
 
     return _PLACEHOLDER_RE.sub(replace, text)
+
+
+def _decode_angle_autolink(autolink: str) -> str:
+    if not autolink.startswith("<") or not autolink.endswith(">"):
+        return autolink
+    return f"<{decode_percent_encoded_url(autolink[1:-1])}>"

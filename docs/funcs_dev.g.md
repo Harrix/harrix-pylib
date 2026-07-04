@@ -417,8 +417,12 @@ def run_powershell_script(commands: str) -> str:
         msg = "PowerShell executable not found."
         raise RuntimeError(msg)
 
-    process = subprocess.run( [powershell_path, "-Command", ( "[Console]:
-:OutputEncoding = [System.Text.Encoding]::UTF8; "
+    process = subprocess.run(
+        [
+            powershell_path,
+            "-Command",
+            (
+                "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
                 "$OutputEncoding = [System.Text.Encoding]::UTF8; "
                 f"{command}"
             ),

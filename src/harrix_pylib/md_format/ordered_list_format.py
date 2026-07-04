@@ -10,19 +10,6 @@ _ORDERED_ITEM_RE = re.compile(r"^(\s*)(?:>\s*)?(\d+)([.)])\s+")
 _BLOCKQUOTE_LIST_CONTINUATION_RE = re.compile(r"^>\s{2,}\S")
 
 
-def parse_ordered_list_marker(line: str) -> tuple[int, str] | None:
-    """Return marker number and delimiter from an ordered-list source line."""
-    match = _ORDERED_ITEM_RE.match(line)
-    if not match:
-        return None
-    return int(match.group(2)), match.group(3)
-
-
-def _is_blockquote_list_continuation_line(line: str) -> bool:
-    """Return whether a blockquote line continues the previous list item body."""
-    return bool(_BLOCKQUOTE_LIST_CONTINUATION_RE.match(line))
-
-
 def extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]:
     """Collect source marker numbers for each contiguous ordered list."""
     lines, trailing = split_lines(body)
@@ -92,3 +79,16 @@ def ordered_list_item_number(markers: list[int], item_index: int) -> int:
     if is_git_diff_friendly_ordered_list(markers):
         return markers[0] if item_index == 0 else 1
     return markers[0] + item_index
+
+
+def parse_ordered_list_marker(line: str) -> tuple[int, str] | None:
+    """Return marker number and delimiter from an ordered-list source line."""
+    match = _ORDERED_ITEM_RE.match(line)
+    if not match:
+        return None
+    return int(match.group(2)), match.group(3)
+
+
+def _is_blockquote_list_continuation_line(line: str) -> bool:
+    """Return whether a blockquote line continues the previous list item body."""
+    return bool(_BLOCKQUOTE_LIST_CONTINUATION_RE.match(line))

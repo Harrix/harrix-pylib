@@ -134,14 +134,17 @@ def test_format_markdown_content_preserves_linkify_bare_domain_without_protocol(
 
 
 def test_format_markdown_content_preserves_bare_domains_in_list() -> None:
-    source = "\n".join(
-        [
-            "- jsfiddle.net",
-            "- drive.google.com",
-            "- vimeo.com",
-            "- www.youtube.com",
-        ]
-    ) + "\n"
+    source = (
+        "\n".join(
+            [
+                "- jsfiddle.net",
+                "- drive.google.com",
+                "- vimeo.com",
+                "- www.youtube.com",
+            ]
+        )
+        + "\n"
+    )
     result = format_markdown_content(source, end_of_line="lf")
     assert result == source
 
@@ -204,8 +207,7 @@ def test_format_markdown_content_decodes_percent_encoded_unicode_in_link_url() -
     )
     result = format_markdown_content(source, end_of_line="lf")
     assert (
-        "[Видеоуроки по Arduino, 7-я серия - I2C и Processing]"
-        "(http://wiki.amperka.ru/видеоуроки:7-i2c-и-processing)\n"
+        "[Видеоуроки по Arduino, 7-я серия - I2C и Processing](http://wiki.amperka.ru/видеоуроки:7-i2c-и-processing)\n"
     ) == result
     assert "%D0" not in result
 
@@ -393,12 +395,7 @@ def test_format_markdown_content_formats_math() -> None:
 
 
 def test_format_markdown_content_preserves_block_math_inside_blockquote() -> None:
-    source = (
-        "---\n\n"
-        "> $$\n"
-        "> x^{5+y}=\\frac{x+y_6}{\\sqrt{x+\\frac{1}{x}}}\n"
-        "> $$\n"
-    )
+    source = "---\n\n> $$\n> x^{5+y}=\\frac{x+y_6}{\\sqrt{x+\\frac{1}{x}}}\n> $$\n"
     result = format_markdown_content(source, end_of_line="lf")
     assert result == source
     assert "> >" not in result

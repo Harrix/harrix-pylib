@@ -70,29 +70,6 @@ def scan_inline_links(
     return "".join(parts)
 
 
-def _scan_inline_links_in_plain_text(body: str, handler: Callable[[str, str, str], str]) -> str:
-    parts: list[str] = []
-    last = 0
-    while last < len(body):
-        match = _LINK_PREFIX_RE.search(body, last)
-        if match is None:
-            parts.append(body[last:])
-            break
-        parts.append(body[last : match.start()])
-        open_paren = match.end() - 1
-        close_index = _find_link_close_paren(body, open_paren)
-        if close_index is None:
-            parts.append(body[match.start() : match.end()])
-            last = match.end()
-            continue
-        prefix = body[match.start() : match.end()]
-        destination = body[match.end() : close_index]
-        suffix = body[close_index]
-        parts.append(handler(prefix, destination, suffix))
-        last = close_index + 1
-    return "".join(parts)
-
-
 def split_inline_destination(destination: str) -> tuple[str, str | None]:
     destination = destination.strip()
     if destination.endswith(' ""') or destination.endswith(" ''"):
@@ -259,6 +236,29 @@ def _normalize_inline_link_titles_in_text(body: str) -> str:
     return scan_inline_links(
         body, lambda prefix, destination, suffix: _normalize_inline_link(prefix, destination, suffix)
     )
+
+
+def _scan_inline_links_in_plain_text(body: str, handler: Callable[[str, str, str], str]) -> str:
+    parts: list[str] = []
+    last = 0
+    while last < len(body):
+        match = _LINK_PREFIX_RE.search(body, last)
+        if match is None:
+            parts.append(body[last:])
+            break
+        parts.append(body[last : match.start()])
+        open_paren = match.end() - 1
+        close_index = _find_link_close_paren(body, open_paren)
+        if close_index is None:
+            parts.append(body[match.start() : match.end()])
+            last = match.end()
+            continue
+        prefix = body[match.start() : match.end()]
+        destination = body[match.end() : close_index]
+        suffix = body[close_index]
+        parts.append(handler(prefix, destination, suffix))
+        last = close_index + 1
+    return "".join(parts)
 
 
 def _split_trailing_link_title(rest: str) -> tuple[str, str | None]:

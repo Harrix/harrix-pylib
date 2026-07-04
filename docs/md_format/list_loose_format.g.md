@@ -11,7 +11,7 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `ListLayout`](#%EF%B8%8F-class-listlayout)
+- [🏛️ Class `ListLayout`](#️-class-listlayout)
 - [🔧 Function `extract_list_layouts`](#-function-extract_list_layouts)
 - [🔧 Function `_blank_separates_sibling_items`](#-function-_blank_separates_sibling_items)
 - [🔧 Function `_consume_item`](#-function-_consume_item)

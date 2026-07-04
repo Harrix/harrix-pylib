@@ -11,8 +11,8 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `TomlBlock`](#%EF%B8%8F-class-tomlblock)
-- [🏛️ Class `YamlBlock`](#%EF%B8%8F-class-yamlblock)
+- [🏛️ Class `TomlBlock`](#️-class-tomlblock)
+- [🏛️ Class `YamlBlock`](#️-class-yamlblock)
 - [🔧 Function `collapse_extra_blank_lines`](#-function-collapse_extra_blank_lines)
 - [🔧 Function `compact_front_matter`](#-function-compact_front_matter)
 - [🔧 Function `extract_toml_blocks`](#-function-extract_toml_blocks)

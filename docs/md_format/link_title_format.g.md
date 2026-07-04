@@ -28,6 +28,7 @@ lang: en
 - [🔧 Function `_kept_backslashes_before_delimiter`](#-function-_kept_backslashes_before_delimiter)
 - [🔧 Function `_normalize_inline_link`](#-function-_normalize_inline_link)
 - [🔧 Function `_normalize_inline_link_titles_in_text`](#-function-_normalize_inline_link_titles_in_text)
+- [🔧 Function `_scan_inline_links_in_plain_text`](#-function-_scan_inline_links_in_plain_text)
 - [🔧 Function `_split_trailing_link_title`](#-function-_split_trailing_link_title)
 - [🔧 Function `_title_quote_priority`](#-function-_title_quote_priority)
 - [🔧 Function `_unescape_title`](#-function-_unescape_title)
@@ -114,6 +115,8 @@ def scan_inline_links(body: str, handler: Callable[[str, str, str], str]) -> str
 
 Scan inline links and rebuild text with a per-link handler.
 
+Inline code spans are treated as opaque text and are never scanned for links.
+
 <details>
 <summary>Code:</summary>
 
@@ -123,24 +126,11 @@ def scan_inline_links(
     handler: Callable[[str, str, str], str],
 ) -> str:
     parts: list[str] = []
-    last = 0
-    while last < len(body):
-        match = _LINK_PREFIX_RE.search(body, last)
-        if match is None:
-            parts.append(body[last:])
-            break
-        parts.append(body[last : match.start()])
-        open_paren = match.end() - 1
-        close_index = _find_link_close_paren(body, open_paren)
-        if close_index is None:
-            parts.append(body[match.start() : match.end()])
-            last = match.end()
-            continue
-        prefix = body[match.start() : match.end()]
-        destination = body[match.end() : close_index]
-        suffix = body[close_index]
-        parts.append(handler(prefix, destination, suffix))
-        last = close_index + 1
+    for segment, is_code in identify_code_blocks_line(body):
+        if is_code:
+            parts.append(segment)
+        else:
+            parts.append(_scan_inline_links_in_plain_text(segment, handler))
     return "".join(parts)
 ```
 
@@ -490,6 +480,43 @@ def _normalize_inline_link_titles_in_text(body: str) -> str:
     return scan_inline_links(
         body, lambda prefix, destination, suffix: _normalize_inline_link(prefix, destination, suffix)
     )
+```
+
+</details>
+
+## 🔧 Function `_scan_inline_links_in_plain_text`
+
+```python
+def _scan_inline_links_in_plain_text(body: str, handler: Callable[[str, str, str], str]) -> str
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _scan_inline_links_in_plain_text(body: str, handler: Callable[[str, str, str], str]) -> str:
+    parts: list[str] = []
+    last = 0
+    while last < len(body):
+        match = _LINK_PREFIX_RE.search(body, last)
+        if match is None:
+            parts.append(body[last:])
+            break
+        parts.append(body[last : match.start()])
+        open_paren = match.end() - 1
+        close_index = _find_link_close_paren(body, open_paren)
+        if close_index is None:
+            parts.append(body[match.start() : match.end()])
+            last = match.end()
+            continue
+        prefix = body[match.start() : match.end()]
+        destination = body[match.end() : close_index]
+        suffix = body[close_index]
+        parts.append(handler(prefix, destination, suffix))
+        last = close_index + 1
+    return "".join(parts)
 ```
 
 </details>

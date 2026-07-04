@@ -22,9 +22,9 @@ from harrix_pylib.md_format.front_matter import (
 from harrix_pylib.md_format.hard_break_format import extract_backslash_hard_breaks
 from harrix_pylib.md_format.ignore_format import extract_ignore_blocks, restore_ignore_blocks
 from harrix_pylib.md_format.inline_link_format import prepare_inline_links
-from harrix_pylib.md_format.math_guard import extract_empty_math_blocks, restore_empty_math_blocks
 from harrix_pylib.md_format.list_format import ensure_blank_line_after_lists
 from harrix_pylib.md_format.list_loose_format import extract_list_layouts
+from harrix_pylib.md_format.math_guard import extract_empty_math_blocks, restore_empty_math_blocks
 from harrix_pylib.md_format.options import FormatOptions
 from harrix_pylib.md_format.ordered_list_format import extract_ordered_list_marker_groups
 from harrix_pylib.md_format.parser import get_markdown_parser

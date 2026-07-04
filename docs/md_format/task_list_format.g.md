@@ -11,7 +11,7 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `TaskListMarker`](#%EF%B8%8F-class-tasklistmarker)
+- [🏛️ Class `TaskListMarker`](#️-class-tasklistmarker)
 - [🔧 Function `extract_task_list_markers`](#-function-extract_task_list_markers)
 - [🔧 Function `strip_task_placeholder`](#-function-strip_task_placeholder)
 - [🔧 Function `task_list_entry_for_text`](#-function-task_list_entry_for_text)
@@ -129,7 +129,7 @@ def task_list_entry_for_text(text: str, markers: list[TaskListMarker]) -> tuple[
 def task_list_marker_for_text(text: str, markers: list[TaskListMarker]) -> str | None
 ```
 
-Return ` [ ]  ` or ` [x]  ` when paragraph text starts with a task placeholder.
+Return `[ ] ` or `[x] ` when paragraph text starts with a task placeholder.
 
 <details>
 <summary>Code:</summary>

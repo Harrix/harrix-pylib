@@ -76,6 +76,20 @@ def _blockquote_needs_blank_line(previous: str, current: str) -> bool:
     return True
 
 
+def _empty_math_middle_text(content: str) -> str:
+    """Preserve blank interior lines in empty block math."""
+    if content.strip():
+        return ""
+    lines = content.split("\n")
+    while lines and lines[-1] == "":
+        lines.pop()
+    while lines and lines[0] == "":
+        lines.pop(0)
+    if not lines or not all(not line.strip() for line in lines):
+        return ""
+    return "\n".join(lines)
+
+
 def _join_blockquote_blocks(blocks: list[str]) -> str:
     if not blocks:
         return ""
@@ -116,6 +130,22 @@ def _join_blocks(
     if not cleaned:
         return ""
     return "\n\n".join(block.rstrip("\n") for block in cleaned) + "\n"
+
+
+def _normalize_math_block_content(content: str) -> str:
+    """Strip blockquote continuation markers absorbed into math block content."""
+    lines: list[str] = []
+    for line in content.strip().splitlines():
+        if line.startswith("> "):
+            line = line[2:]
+        elif line == ">":
+            line = ""
+        elif line.startswith(">"):
+            line = line[1:]
+        lines.append(line)
+    while lines and not lines[-1].strip():
+        lines.pop()
+    return "\n".join(lines)
 
 
 def _render_alert(
@@ -415,22 +445,6 @@ def _render_indented_code_block(content: str) -> str:
     return "\n".join(f"    {line}" if line.strip() else "" for line in lines) + "\n"
 
 
-def _normalize_math_block_content(content: str) -> str:
-    """Strip blockquote continuation markers absorbed into math block content."""
-    lines: list[str] = []
-    for line in content.strip().splitlines():
-        if line.startswith("> "):
-            line = line[2:]
-        elif line == ">":
-            line = ""
-        elif line.startswith(">"):
-            line = line[1:]
-        lines.append(line)
-    while lines and not lines[-1].strip():
-        lines.pop()
-    return "\n".join(lines)
-
-
 def _render_math_block(token: Token, *, label: str | None = None) -> str:
     raw_content = token.content
     content = _normalize_math_block_content(raw_content)
@@ -444,20 +458,6 @@ def _render_math_block(token: Token, *, label: str | None = None) -> str:
     if label:
         return f"$$\n{content}\n$$ ({label})\n"
     return f"$$\n{content}\n$$\n"
-
-
-def _empty_math_middle_text(content: str) -> str:
-    """Preserve blank interior lines in empty block math."""
-    if content.strip():
-        return ""
-    lines = content.split("\n")
-    while lines and lines[-1] == "":
-        lines.pop()
-    while lines and lines[0] == "":
-        lines.pop(0)
-    if not lines or not all(not line.strip() for line in lines):
-        return ""
-    return "\n".join(lines)
 
 
 def _render_until_close(

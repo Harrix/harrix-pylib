@@ -17,6 +17,7 @@ lang: en
 - [🔧 Function `_find_close`](#-function-_find_close)
 - [🔧 Function `_format_hr_markup`](#-function-_format_hr_markup)
 - [🔧 Function `_has_digit_emphasis_neighbor`](#-function-_has_digit_emphasis_neighbor)
+- [🔧 Function `_inline_link_is_standalone`](#-function-_inline_link_is_standalone)
 - [🔧 Function `_is_block_marker_line`](#-function-_is_block_marker_line)
 - [🔧 Function `_link_raw_text`](#-function-_link_raw_text)
 - [🔧 Function `_normalize_bullet_marker`](#-function-_normalize_bullet_marker)
@@ -158,6 +159,43 @@ _No docstring provided._
 ```python
 def _has_digit_emphasis_neighbor(prev: str, next_text: str) -> bool:
     return bool(prev and prev[-1].isdigit()) or bool(next_text and next_text[0].isdigit())
+```
+
+</details>
+
+## 🔧 Function `_inline_link_is_standalone`
+
+```python
+def _inline_link_is_standalone(children: list[Token], link_open_index: int) -> bool
+```
+
+Return whether the link is the only meaningful inline content in its run.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _inline_link_is_standalone(children: list[Token], link_open_index: int) -> bool:
+    close_index = link_open_index + 1
+    while close_index < len(children) and children[close_index].type != "link_close":
+        close_index += 1
+    if close_index >= len(children):
+        return False
+    after = close_index + 1
+    while after < len(children):
+        token = children[after]
+        if token.type == "text" and not token.content:
+            after += 1
+            continue
+        return False
+    before = link_open_index
+    while before > 0:
+        token = children[before - 1]
+        if token.type == "text" and not token.content:
+            before -= 1
+            continue
+        return False
+    return True
 ```
 
 </details>

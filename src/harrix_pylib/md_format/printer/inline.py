@@ -36,14 +36,6 @@ from harrix_pylib.md_format.printer.tokens import (
 )
 
 
-def _wrap_inline_code_with_edge_spaces(content: str, fence: str) -> str:
-    if content and not content.strip():
-        return f"{fence}{content}{fence}"
-    if content.startswith(" ") and content.endswith(" "):
-        return f"{fence} {content} {fence}"
-    return f"{fence}{content}{fence}"
-
-
 def _format_code_inline(
     content: str,
     *,
@@ -64,14 +56,6 @@ def _format_code_inline(
         return f"{fence} {content} {fence}"
     fence = "`" * (max_run + 1)
     return f"{fence}{content}{fence}"
-
-
-def _inner_has_url_scheme(text: str) -> bool:
-    return "://" in text
-
-
-def _is_linkify_link(token: Token) -> bool:
-    return token.markup == "autolink"
 
 
 def _format_self_referential_link(href: str, inner: str) -> str | None:
@@ -136,6 +120,14 @@ def _inline_text_before(children: list[Token], index: int) -> str:
             return child.content
         prev_index -= 1
     return ""
+
+
+def _inner_has_url_scheme(text: str) -> bool:
+    return "://" in text
+
+
+def _is_linkify_link(token: Token) -> bool:
+    return token.markup == "autolink"
 
 
 def _max_backtick_run(text: str) -> int:
@@ -439,6 +431,14 @@ def _softbreak_should_omit_space(children: list[Token], index: int) -> bool:
     if not before or not after:
         return False
     return should_omit_space_between(before, after)
+
+
+def _wrap_inline_code_with_edge_spaces(content: str, fence: str) -> str:
+    if content and not content.strip():
+        return f"{fence}{content}{fence}"
+    if content.startswith(" ") and content.endswith(" "):
+        return f"{fence} {content} {fence}"
+    return f"{fence}{content}{fence}"
 
 
 _WIKI_TRIPLE_EMPHASIS_RE = re.compile(r"\*\*\*(.+?)\*\*\*")

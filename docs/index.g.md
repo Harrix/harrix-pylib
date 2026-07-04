@@ -42,6 +42,7 @@ lang: en
   - [📄 File `link_title_format.py`](#-file-link_title_formatpy)
   - [📄 File `list_format.py`](#-file-list_formatpy)
   - [📄 File `list_loose_format.py`](#-file-list_loose_formatpy)
+  - [📄 File `math_guard.py`](#-file-math_guardpy)
   - [📄 File `options.py`](#-file-optionspy)
   - [📄 File `ordered_list_format.py`](#-file-ordered_list_formatpy)
   - [📄 File `parser.py`](#-file-parserpy)
@@ -247,7 +248,7 @@ Doc: [funcs_md.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs
 | 🔧 [`sort_sections_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-sort_sections_content)                                           | Sort sections by their `##` headings: top sections first, then dates in descending order,                       |
 | 🔧 [`split_toc_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-split_toc_content)                                                   | Separate the Table of Contents (TOC) from the rest of the Markdown content.                                     |
 | 🔧 [`split_yaml_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-split_yaml_content)                                                 | Split a Markdown note into YAML front matter and the main content.                                              |
-| 🔧 [`_is_toc_details_open`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-_is_toc_details_open)                                             |
+| 🔧 [`_is_toc_details_open`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-_is_toc_details_open)                                             |                                                                                                                 |
 
 ### 📄 File `funcs_py.py`
 
@@ -262,7 +263,7 @@ Doc: [funcs_py.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs
 | 🔧 [`lint_and_fix_python_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-lint_and_fix_python_code)           | Lints and fixes the provided Python code using the `ruff` formatter.                        |
 | 🔧 [`sort_py_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-sort_py_code)                                   | Sorts the Python code in the given file by organizing classes, functions, and statements.   |
 | 🔧 [`_fence_for_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-_fence_for_content)                       | Return opening and closing Markdown fences long enough to contain `content`.                |
-| 🔧 [`_max_backtick_run`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-_max_backtick_run)                         |
+| 🔧 [`_max_backtick_run`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-_max_backtick_run)                         |                                                                                             |
 
 ### 📄 File `img_tools.py`
 
@@ -277,14 +278,14 @@ Doc: [img_tools.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_
 | 🔧 [`optimize_image_with_tools`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-optimize_image_with_tools)           | Optimize a raster image using ffmpeg, avifenc, or avifdec.            |
 | 🔧 [`process_animated_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_animated_avif)                   | Optimize animated AVIF with avifdec and avifenc or ffmpeg.            |
 | 🔧 [`process_static_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_static_avif)                       | Optimize static AVIF with ffmpeg.                                     |
-| 🔧 [`_exe`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_exe)                                                     |
-| 🔧 [`_ffmpeg_output`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_ffmpeg_output)                                 |
-| 🔧 [`_is_avif_animated_with_avifdec`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_is_avif_animated_with_avifdec) |
-| 🔧 [`_reduce_frames`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_reduce_frames)                                 |
-| 🔧 [`_resize_frames`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_resize_frames)                                 |
-| 🔧 [`_run_checked`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_run_checked)                                     |
-| 🔧 [`_scale_vf`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_scale_vf)                                           |
-| 🔧 [`_sequence_pattern`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_sequence_pattern)                           |
+| 🔧 [`_exe`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_exe)                                                     |                                                                       |
+| 🔧 [`_ffmpeg_output`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_ffmpeg_output)                                 |                                                                       |
+| 🔧 [`_is_avif_animated_with_avifdec`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_is_avif_animated_with_avifdec) |                                                                       |
+| 🔧 [`_reduce_frames`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_reduce_frames)                                 |                                                                       |
+| 🔧 [`_resize_frames`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_resize_frames)                                 |                                                                       |
+| 🔧 [`_run_checked`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_run_checked)                                     |                                                                       |
+| 🔧 [`_scale_vf`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_scale_vf)                                           |                                                                       |
+| 🔧 [`_sequence_pattern`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-_sequence_pattern)                           |                                                                       |
 
 ### 📄 File `markdown_checker.py`
 
@@ -310,6 +311,7 @@ Doc: [autolink_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/doc
 | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | 🔧 [`extract_angle_autolinks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/autolink_format.g.md#-function-extract_angle_autolinks) | Replace angle-bracket autolinks with placeholders before parsing. |
 | 🔧 [`restore_angle_autolinks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/autolink_format.g.md#-function-restore_angle_autolinks) | Restore angle-bracket autolinks after rendering.                  |
+| 🔧 [`_decode_angle_autolink`](https://github.com/Harrix/harrix-pylib/blob/main/docs/autolink_format.g.md#-function-_decode_angle_autolink)   |                                                                   |
 
 ### 📄 File `bullet_list_format.py`
 
@@ -332,15 +334,15 @@ Doc: [code_fence.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/cod
 
 Doc: [code_guard.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md)
 
-| Function/Class                                                                                                                                                                          | Description                                                                |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 🏛️ Class [`CodeBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#️-class-codeblock)                                                                          | Stored fenced code block extracted from Markdown body.                     |
-| 🔧 [`extract_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-extract_code_blocks)                                                         | Replace fenced code blocks with placeholders and store originals verbatim. |
-| 🔧 [`restore_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-restore_code_blocks)                                                         | Restore fenced code blocks from placeholders.                              |
-| 🔧 [`_format_markdown_fence_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_format_markdown_fence_block)                                       |
-| 🔧 [`_leading_whitespace`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_leading_whitespace)                                                         |
-| 🔧 [`_reindent_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_reindent_line)                                                                   |
-| 🔧 [`_trim_trailing_blank_lines_before_closing_fence`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_trim_trailing_blank_lines_before_closing_fence) | Drop blank lines immediately before the closing fence line.                |
+| Function/Class                                                                                                                                                                          | Description                                                                 |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 🏛️ Class [`CodeBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#️-class-codeblock)                                                                          | Stored fenced code block extracted from Markdown body.                      |
+| 🔧 [`extract_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-extract_code_blocks)                                                         | Replace fenced code blocks with placeholders and store originals verbatim.  |
+| 🔧 [`restore_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-restore_code_blocks)                                                         | Restore fenced code blocks from placeholders.                               |
+| 🔧 [`_format_markdown_fence_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_format_markdown_fence_block)                                       | Return fenced blocks verbatim; do not recursively format `markdown` fences. |
+| 🔧 [`_leading_whitespace`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_leading_whitespace)                                                         |                                                                             |
+| 🔧 [`_reindent_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_reindent_line)                                                                   |                                                                             |
+| 🔧 [`_trim_trailing_blank_lines_before_closing_fence`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-_trim_trailing_blank_lines_before_closing_fence) | Drop blank lines immediately before the closing fence line.                 |
 
 ### 📄 File `escape_format.py`
 
@@ -350,18 +352,18 @@ Doc: [escape_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | 🔧 [`escape_markdown_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-escape_markdown_text)                                 | Escape emphasis-like `*` and `_` characters in plain text.                |
 | 🔧 [`escape_ordered_list_like_line_starts`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-escape_ordered_list_like_line_starts) | Re-escape `39.`-like line starts so they are not parsed as ordered lists. |
-| 🔧 [`_escape_ordered_list_like_line_start`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_escape_ordered_list_like_line_start) |
-| 🔧 [`_is_alphanumeric`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_alphanumeric)                                         |
+| 🔧 [`_escape_ordered_list_like_line_start`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_escape_ordered_list_like_line_start) |                                                                           |
+| 🔧 [`_is_alphanumeric`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_alphanumeric)                                         |                                                                           |
 | 🔧 [`_is_failed_emphasis_underscore`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_failed_emphasis_underscore)             | Do not escape `_` in `!_1_2`-style literals that are not emphasis.        |
-| 🔧 [`_is_identifier_leading_underscore`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_identifier_leading_underscore)       |
-| 🔧 [`_is_left_flanking`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_left_flanking)                                       |
-| 🔧 [`_is_punctuation`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_punctuation)                                           |
-| 🔧 [`_is_right_flanking`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_right_flanking)                                     |
-| 🔧 [`_is_single_char_emphasis_underscore`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_single_char_emphasis_underscore)   |
-| 🔧 [`_is_whitespace`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_whitespace)                                             |
-| 🔧 [`_should_escape_asterisk`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_asterisk)                           |
+| 🔧 [`_is_identifier_leading_underscore`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_identifier_leading_underscore)       |                                                                           |
+| 🔧 [`_is_left_flanking`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_left_flanking)                                       |                                                                           |
+| 🔧 [`_is_punctuation`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_punctuation)                                           |                                                                           |
+| 🔧 [`_is_right_flanking`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_right_flanking)                                     |                                                                           |
+| 🔧 [`_is_single_char_emphasis_underscore`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_single_char_emphasis_underscore)   |                                                                           |
+| 🔧 [`_is_whitespace`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_is_whitespace)                                             |                                                                           |
+| 🔧 [`_should_escape_asterisk`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_asterisk)                           |                                                                           |
 | 🔧 [`_should_escape_intraword_asterisk`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_intraword_asterisk)       | Escape `*` between letters when at least one side is non-ASCII.           |
-| 🔧 [`_should_escape_underscore`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_underscore)                       |
+| 🔧 [`_should_escape_underscore`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-_should_escape_underscore)                       |                                                                           |
 
 ### 📄 File `formatter.py`
 
@@ -373,8 +375,8 @@ Doc: [formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/form
 | 🔧 [`normalize_line_endings`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-normalize_line_endings)                         | Normalize mixed or corrupted line endings to LF.                        |
 | 🔧 [`read_markdown_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-read_markdown_text)                                 | Read Markdown from disk without universal-newline mangling of `\r\r\n`. |
 | 🔧 [`_ensure_blank_line_in_empty_fences`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-_ensure_blank_line_in_empty_fences) | Ensure empty fenced blocks are parsed as fences, not inline code.       |
-| 🔧 [`_format_with_options`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-_format_with_options)                             |
-| 🔧 [`_normalize_end_of_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-_normalize_end_of_line)                         |
+| 🔧 [`_format_with_options`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-_format_with_options)                             |                                                                         |
+| 🔧 [`_normalize_end_of_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-_normalize_end_of_line)                         |                                                                         |
 
 ### 📄 File `front_matter.py`
 
@@ -394,11 +396,11 @@ Doc: [front_matter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/f
 | 🔧 [`restore_yaml_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-restore_yaml_blocks)                 | Restore YAML body blocks.                                                  |
 | 🔧 [`split_front_matter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-split_front_matter)                   | Split YAML front matter from Markdown body.                                |
 | 🔧 [`trim_trailing_blank_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-trim_trailing_blank_lines)     | Remove trailing blank lines while keeping a single final newline.          |
-| 🔧 [`_extract_delimited_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-_extract_delimited_blocks)     |
-| 🔧 [`_find_delimited_block_close`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-_find_delimited_block_close) |
-| 🔧 [`_format_yaml_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-_format_yaml_block)                   |
-| 🔧 [`_format_yaml_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-_format_yaml_line)                     |
-| 🔧 [`_restore_delimited_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-_restore_delimited_blocks)     |
+| 🔧 [`_extract_delimited_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-_extract_delimited_blocks)     |                                                                            |
+| 🔧 [`_find_delimited_block_close`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-_find_delimited_block_close) |                                                                            |
+| 🔧 [`_format_yaml_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-_format_yaml_block)                   |                                                                            |
+| 🔧 [`_format_yaml_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-_format_yaml_line)                     |                                                                            |
+| 🔧 [`_restore_delimited_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-_restore_delimited_blocks)     |                                                                            |
 
 ### 📄 File `hard_break_format.py`
 
@@ -408,8 +410,8 @@ Doc: [hard_break_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/d
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | 🏛️ Class [`HardBreakStyles`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hard_break_format.g.md#️-class-hardbreakstyles)                                          | Queue of hard-break render styles in document order.                            |
 | 🔧 [`extract_backslash_hard_breaks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hard_break_format.g.md#-function-extract_backslash_hard_breaks)                 | Record hard-break styles and normalize single trailing backslashes for parsing. |
-| 🔧 [`_line_has_single_backslash_hard_break`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hard_break_format.g.md#-function-_line_has_single_backslash_hard_break) |
-| 🔧 [`_line_has_space_hard_break`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hard_break_format.g.md#-function-_line_has_space_hard_break)                       |
+| 🔧 [`_line_has_single_backslash_hard_break`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hard_break_format.g.md#-function-_line_has_single_backslash_hard_break) |                                                                                 |
+| 🔧 [`_line_has_space_hard_break`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hard_break_format.g.md#-function-_line_has_space_hard_break)                       |                                                                                 |
 
 ### 📄 File `ignore_format.py`
 
@@ -428,24 +430,27 @@ Doc: [inline_link_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/
 | Function/Class                                                                                                                                              | Description                                                      |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | 🔧 [`prepare_inline_links`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline_link_format.g.md#-function-prepare_inline_links)                   | Normalize link titles and extract destinations in a single pass. |
-| 🔧 [`_prepare_inline_links_in_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline_link_format.g.md#-function-_prepare_inline_links_in_text) |
-| 🔧 [`_should_skip_link_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline_link_format.g.md#-function-_should_skip_link_line)               |
+| 🔧 [`_prepare_inline_links_in_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline_link_format.g.md#-function-_prepare_inline_links_in_text) |                                                                  |
+| 🔧 [`_should_skip_link_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline_link_format.g.md#-function-_should_skip_link_line)               |                                                                  |
 
 ### 📄 File `link_destination_format.py`
 
 Doc: [link_destination_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md)
 
-| Function/Class                                                                                                                                                                 | Description                                                    |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| 🏛️ Class [`LinkDestination`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#️-class-linkdestination)                                        | Stored original link destination text.                         |
-| 🔧 [`extract_link_destinations`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-extract_link_destinations)                       | Replace link destinations with placeholders before parsing.    |
-| 🔧 [`format_inline_link_destination`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-format_inline_link_destination)             | Return canonical destination text for inline links and images. |
-| 🔧 [`format_link_url`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-format_link_url)                                           | Return canonical URL text for links and reference definitions. |
-| 🔧 [`formatted_href_from_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-formatted_href_from_placeholder)           | Return formatted URL for a placeholder href.                   |
-| 🔧 [`formatted_title_from_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-formatted_title_from_placeholder)         | Return pre-normalized title suffix for a placeholder href.     |
-| 🔧 [`_encode_special_characters`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-_encode_special_characters)                     |
-| 🔧 [`_extract_link_destinations_from_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-_extract_link_destinations_from_text) |
-| 🔧 [`_format_link_url`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-_format_link_url)                                         |
+| Function/Class                                                                                                                                                                 | Description                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| 🏛️ Class [`LinkDestination`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#️-class-linkdestination)                                        | Stored original link destination text.                                           |
+| 🔧 [`decode_percent_encoded_url`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-decode_percent_encoded_url)                     | Decode percent-encoded Unicode in URL paths and fragments for readable Markdown. |
+| 🔧 [`extract_link_destinations`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-extract_link_destinations)                       | Replace link destinations with placeholders before parsing.                      |
+| 🔧 [`format_inline_link_destination`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-format_inline_link_destination)             | Return canonical destination text for inline links and images.                   |
+| 🔧 [`format_link_url`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-format_link_url)                                           | Return canonical URL text for links and reference definitions.                   |
+| 🔧 [`formatted_href_from_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-formatted_href_from_placeholder)           | Return formatted URL for a placeholder href.                                     |
+| 🔧 [`formatted_title_from_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-formatted_title_from_placeholder)         | Return pre-normalized title suffix for a placeholder href.                       |
+| 🔧 [`_decode_unicode_percent_sequences`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-_decode_unicode_percent_sequences)       | Decode percent-encoded UTF-8 text while preserving ASCII encodings like `%3E`.   |
+| 🔧 [`_encode_special_characters`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-_encode_special_characters)                     |                                                                                  |
+| 🔧 [`_extract_link_destinations_from_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-_extract_link_destinations_from_text) |                                                                                  |
+| 🔧 [`_format_link_url`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-_format_link_url)                                         |                                                                                  |
+| 🔧 [`_utf8_char_byte_length`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-_utf8_char_byte_length)                             |                                                                                  |
 
 ### 📄 File `link_title_format.py`
 
@@ -457,22 +462,23 @@ Doc: [link_title_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/d
 | 🔧 [`format_parseable_link_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-format_parseable_link_title)                                   | Return a quoted title that markdown-it can parse before rendering.              |
 | 🔧 [`normalize_inline_link_titles`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-normalize_inline_link_titles)                                 | Normalize quoted titles in inline links before parsing.                         |
 | 🔧 [`scan_inline_links`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-scan_inline_links)                                                       | Scan inline links and rebuild text with a per-link handler.                     |
-| 🔧 [`split_inline_destination`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-split_inline_destination)                                         |
-| 🔧 [`_balanced_paren_title_close`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_balanced_paren_title_close)                                   |
+| 🔧 [`split_inline_destination`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-split_inline_destination)                                         |                                                                                 |
+| 🔧 [`_balanced_paren_title_close`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_balanced_paren_title_close)                                   |                                                                                 |
 | 🔧 [`_canonicalize_link_title_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_canonicalize_link_title_content)                         | Normalize lightly escaped one-character titles from CommonMark parsing.         |
-| 🔧 [`_decode_magical_quote_apostrophe_paren_inner`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_decode_magical_quote_apostrophe_paren_inner) |
-| 🔧 [`_decode_paren_escaped_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_decode_paren_escaped_title)                                   |
-| 🔧 [`_decode_simple_escaped_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_decode_simple_escaped_title)                                 |
-| 🔧 [`_escape_title_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_escape_title_content)                                               |
-| 🔧 [`_find_link_close_paren`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_find_link_close_paren)                                             |
+| 🔧 [`_decode_magical_quote_apostrophe_paren_inner`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_decode_magical_quote_apostrophe_paren_inner) |                                                                                 |
+| 🔧 [`_decode_paren_escaped_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_decode_paren_escaped_title)                                   |                                                                                 |
+| 🔧 [`_decode_simple_escaped_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_decode_simple_escaped_title)                                 |                                                                                 |
+| 🔧 [`_escape_title_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_escape_title_content)                                               |                                                                                 |
+| 🔧 [`_find_link_close_paren`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_find_link_close_paren)                                             |                                                                                 |
 | 🔧 [`_is_closing_quoted_title_delimiter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_is_closing_quoted_title_delimiter)                     | Return whether a quote ends a link title before the link's closing parenthesis. |
-| 🔧 [`_is_escaped_at`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_is_escaped_at)                                                             |
-| 🔧 [`_kept_backslashes_before_delimiter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_kept_backslashes_before_delimiter)                     |
-| 🔧 [`_normalize_inline_link`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_normalize_inline_link)                                             |
-| 🔧 [`_normalize_inline_link_titles_in_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_normalize_inline_link_titles_in_text)               |
-| 🔧 [`_split_trailing_link_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_split_trailing_link_title)                                     |
-| 🔧 [`_title_quote_priority`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_title_quote_priority)                                               |
-| 🔧 [`_unescape_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_unescape_title)                                                           |
+| 🔧 [`_is_escaped_at`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_is_escaped_at)                                                             |                                                                                 |
+| 🔧 [`_kept_backslashes_before_delimiter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_kept_backslashes_before_delimiter)                     |                                                                                 |
+| 🔧 [`_normalize_inline_link`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_normalize_inline_link)                                             |                                                                                 |
+| 🔧 [`_normalize_inline_link_titles_in_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_normalize_inline_link_titles_in_text)               |                                                                                 |
+| 🔧 [`_scan_inline_links_in_plain_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_scan_inline_links_in_plain_text)                         |                                                                                 |
+| 🔧 [`_split_trailing_link_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_split_trailing_link_title)                                     |                                                                                 |
+| 🔧 [`_title_quote_priority`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_title_quote_priority)                                               |                                                                                 |
+| 🔧 [`_unescape_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-_unescape_title)                                                           |                                                                                 |
 
 ### 📄 File `list_format.py`
 
@@ -494,12 +500,24 @@ Doc: [list_loose_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/d
 | 🏛️ Class [`ListLayout`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#️-class-listlayout)                                      | Loose-list spacing for one list in source order.                                      |
 | 🔧 [`extract_list_layouts`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-extract_list_layouts)                     | Collect loose-list layout metadata for each list in the document.                     |
 | 🔧 [`_blank_separates_sibling_items`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-_blank_separates_sibling_items) | True when a blank line in source separates two same-level list markers.               |
-| 🔧 [`_consume_item`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-_consume_item)                                   |
+| 🔧 [`_consume_item`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-_consume_item)                                   |                                                                                       |
 | 🔧 [`_drop_code_placeholder_blanks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-_drop_code_placeholder_blanks)   | Ignore blank lines that were auto-inserted around tightly attached code placeholders. |
 | 🔧 [`_is_ordered_list_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-_is_ordered_list_line)                   | Return True when the line starts an ordered list item (not bullet).                   |
-| 🔧 [`_line_indent`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-_line_indent)                                     |
-| 🔧 [`_parent_list_marker_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-_parent_list_marker_line)             |
-| 🔧 [`_scan_list`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-_scan_list)                                         |
+| 🔧 [`_line_indent`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-_line_indent)                                     |                                                                                       |
+| 🔧 [`_parent_list_marker_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-_parent_list_marker_line)             |                                                                                       |
+| 🔧 [`_scan_list`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-_scan_list)                                         |                                                                                       |
+
+### 📄 File `math_guard.py`
+
+Doc: [math_guard.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md)
+
+| Function/Class                                                                                                                                    | Description                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| 🏛️ Class [`EmptyMathBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md#️-class-emptymathblock)                          | Stored empty `$$` block extracted from Markdown body.              |
+| 🔧 [`extract_empty_math_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md#-function-extract_empty_math_blocks)       | Replace empty block-math regions with placeholders before parsing. |
+| 🔧 [`restore_empty_math_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md#-function-restore_empty_math_blocks)       | Restore empty block-math regions from placeholders.                |
+| 🔧 [`_find_empty_math_block_close`](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md#-function-_find_empty_math_block_close) |                                                                    |
+| 🔧 [`_leading_whitespace`](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md#-function-_leading_whitespace)                   |                                                                    |
 
 ### 📄 File `options.py`
 
@@ -513,11 +531,13 @@ Doc: [options.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/option
 
 Doc: [ordered_list_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md)
 
-| Function/Class                                                                                                                                                         | Description                                                                     |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 🔧 [`extract_ordered_list_marker_groups`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md#-function-extract_ordered_list_marker_groups) | Collect source marker numbers for each contiguous ordered list.                 |
-| 🔧 [`is_git_diff_friendly_ordered_list`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md#-function-is_git_diff_friendly_ordered_list)   | Return whether ordered list markers should use git-diff-friendly `1.` suffixes. |
-| 🔧 [`ordered_list_item_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md#-function-ordered_list_item_number)                     | Compute the rendered marker number for an ordered-list item.                    |
+| Function/Class                                                                                                                                                               | Description                                                                     |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 🔧 [`extract_ordered_list_marker_groups`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md#-function-extract_ordered_list_marker_groups)       | Collect source marker numbers for each contiguous ordered list.                 |
+| 🔧 [`is_git_diff_friendly_ordered_list`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md#-function-is_git_diff_friendly_ordered_list)         | Return whether ordered list markers should use git-diff-friendly `1.` suffixes. |
+| 🔧 [`ordered_list_item_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md#-function-ordered_list_item_number)                           | Compute the rendered marker number for an ordered-list item.                    |
+| 🔧 [`parse_ordered_list_marker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md#-function-parse_ordered_list_marker)                         | Return marker number and delimiter from an ordered-list source line.            |
+| 🔧 [`_is_blockquote_list_continuation_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md#-function-_is_blockquote_list_continuation_line) | Return whether a blockquote line continues the previous list item body.         |
 
 ### 📄 File `parser.py`
 
@@ -536,19 +556,19 @@ Doc: [prose_wrap.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/pro
 | 🔧 [`should_omit_space_between`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-should_omit_space_between)           | Return whether phrasing text on both sides of a break should be joined without a space. |
 | 🔧 [`wrap_paragraph_prose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-wrap_paragraph_prose)                     | Wrap paragraph text, preserving hard breaks and backslash-only lead lines.              |
 | 🔧 [`wrap_prose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-wrap_prose)                                         | Wrap phrasing Markdown text to the given display width.                                 |
-| 🔧 [`_avoid_list_marker_line_starts`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_avoid_list_marker_line_starts) |
-| 🔧 [`_is_cjk`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_is_cjk)                                               |
-| 🔧 [`_is_hangul`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_is_hangul)                                         |
-| 🔧 [`_is_hiragana`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_is_hiragana)                                     |
-| 🔧 [`_is_katakana`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_is_katakana)                                     |
-| 🔧 [`_is_small_kana`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_is_small_kana)                                 |
-| 🔧 [`_kana_continuation_join`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_kana_continuation_join)               |
+| 🔧 [`_avoid_list_marker_line_starts`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_avoid_list_marker_line_starts) |                                                                                         |
+| 🔧 [`_is_cjk`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_is_cjk)                                               |                                                                                         |
+| 🔧 [`_is_hangul`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_is_hangul)                                         |                                                                                         |
+| 🔧 [`_is_hiragana`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_is_hiragana)                                     |                                                                                         |
+| 🔧 [`_is_katakana`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_is_katakana)                                     |                                                                                         |
+| 🔧 [`_is_small_kana`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_is_small_kana)                                 |                                                                                         |
+| 🔧 [`_kana_continuation_join`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_kana_continuation_join)               |                                                                                         |
 | 🔧 [`_prose_display_width`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_prose_display_width)                     | Return display width treating each backslash escape (\X) as 1 column (like Prettier).   |
-| 🔧 [`_segments`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_segments)                                           |
-| 🔧 [`_softbreak_prefers_newline`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_softbreak_prefers_newline)         |
-| 🔧 [`_wrap_plain_words`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_wrap_plain_words)                           |
-| 🔧 [`_wrap_prose_after_hard_break`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_wrap_prose_after_hard_break)     |
-| 🔧 [`_wrap_text_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_wrap_text_lines)                             |
+| 🔧 [`_segments`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_segments)                                           |                                                                                         |
+| 🔧 [`_softbreak_prefers_newline`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_softbreak_prefers_newline)         |                                                                                         |
+| 🔧 [`_wrap_plain_words`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_wrap_plain_words)                           |                                                                                         |
+| 🔧 [`_wrap_prose_after_hard_break`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_wrap_prose_after_hard_break)     |                                                                                         |
+| 🔧 [`_wrap_text_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-_wrap_text_lines)                             |                                                                                         |
 
 ### 📄 File `reference_format.py`
 
@@ -560,22 +580,22 @@ Doc: [reference_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/do
 | 🔧 [`extract_reference_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-extract_reference_blocks)                                     | Replace link/footnote definitions with placeholders.                   |
 | 🔧 [`format_reference_link_url`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-format_reference_link_url)                                   | Return canonical URL text for link-reference definitions.              |
 | 🔧 [`restore_reference_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-restore_reference_blocks)                                     | Restore reference-definition blocks, optionally applying prose wrap.   |
-| 🔧 [`_canonicalize_reference_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_canonicalize_reference_title)                           |
-| 🔧 [`_footnote_blockquote_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_footnote_blockquote_lines)                                 |
-| 🔧 [`_footnote_indented_lines_are_block_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_footnote_indented_lines_are_block_content) |
-| 🔧 [`_format_footnote_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_format_footnote_block)                                         |
-| 🔧 [`_format_footnote_indented_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_format_footnote_indented_block)                       |
-| 🔧 [`_format_inline_reference_part`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_format_inline_reference_part)                           |
-| 🔧 [`_format_link_definition`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_format_link_definition)                                       |
-| 🔧 [`_format_reference_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_format_reference_block)                                       |
-| 🔧 [`_format_reference_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_format_reference_title)                                       |
-| 🔧 [`_line_is_short_link_reference`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_line_is_short_link_reference)                           |
+| 🔧 [`_canonicalize_reference_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_canonicalize_reference_title)                           |                                                                        |
+| 🔧 [`_footnote_blockquote_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_footnote_blockquote_lines)                                 |                                                                        |
+| 🔧 [`_footnote_indented_lines_are_block_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_footnote_indented_lines_are_block_content) |                                                                        |
+| 🔧 [`_format_footnote_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_format_footnote_block)                                         |                                                                        |
+| 🔧 [`_format_footnote_indented_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_format_footnote_indented_block)                       |                                                                        |
+| 🔧 [`_format_inline_reference_part`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_format_inline_reference_part)                           |                                                                        |
+| 🔧 [`_format_link_definition`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_format_link_definition)                                       |                                                                        |
+| 🔧 [`_format_reference_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_format_reference_block)                                       |                                                                        |
+| 🔧 [`_format_reference_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_format_reference_title)                                       |                                                                        |
+| 🔧 [`_line_is_short_link_reference`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_line_is_short_link_reference)                           |                                                                        |
 | 🔧 [`_merge_multiline_link_definition`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_merge_multiline_link_definition)                     | Join a link/footnote definition split across consecutive source lines. |
-| 🔧 [`_normalize_reference_label`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_normalize_reference_label)                                 |
-| 🔧 [`_reference_label_markup`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_reference_label_markup)                                       |
-| 🔧 [`_restore_inline_reference_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_restore_inline_reference_line)                         |
-| 🔧 [`_wrap_inline_reference_body`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_wrap_inline_reference_body)                               |
-| 🔧 [`_wrap_protected_urls`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_wrap_protected_urls)                                             |
+| 🔧 [`_normalize_reference_label`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_normalize_reference_label)                                 |                                                                        |
+| 🔧 [`_reference_label_markup`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_reference_label_markup)                                       |                                                                        |
+| 🔧 [`_restore_inline_reference_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_restore_inline_reference_line)                         |                                                                        |
+| 🔧 [`_wrap_inline_reference_body`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_wrap_inline_reference_body)                               |                                                                        |
+| 🔧 [`_wrap_protected_urls`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-_wrap_protected_urls)                                             |                                                                        |
 
 ### 📄 File `table_format.py`
 
@@ -589,7 +609,7 @@ Doc: [table_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/t
 | 🔧 [`parse_table_cells`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-parse_table_cells)                           | Split a table row into cell values.                                           |
 | 🔧 [`text_display_width`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-text_display_width)                         | Return the terminal display width of text (emoji and CJK count as 2 columns). |
 | 🔧 [`unwrap_spurious_table_rows`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-unwrap_spurious_table_rows)         | Turn ``                                                                       |
-| 🔧 [`_is_emoji_base`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-_is_emoji_base)                                 |
+| 🔧 [`_is_emoji_base`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-_is_emoji_base)                                 |                                                                               |
 
 ### 📄 File `task_list_format.py`
 
@@ -601,7 +621,7 @@ Doc: [task_list_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/do
 | 🔧 [`extract_task_list_markers`](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md#-function-extract_task_list_markers) | Replace task-list markers with placeholders the parser will keep in text.           |
 | 🔧 [`strip_task_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md#-function-strip_task_placeholder)       | Remove the task-list placeholder token from item text.                              |
 | 🔧 [`task_list_entry_for_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md#-function-task_list_entry_for_text)   | Return task marker text and metadata when paragraph text starts with a placeholder. |
-| 🔧 [`task_list_marker_for_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md#-function-task_list_marker_for_text) | Return ` [ ]  ` or ` [x]  ` when paragraph text starts with a task placeholder.     |
+| 🔧 [`task_list_marker_for_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md#-function-task_list_marker_for_text) | Return `[ ] ` or `[x] ` when paragraph text starts with a task placeholder.         |
 
 ### 📄 File `text_format.py`
 
@@ -618,8 +638,8 @@ Doc: [text_lines.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/tex
 | Function/Class                                                                                                                                                    | Description                                                                        |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | 🔧 [`ensure_blank_line_after_active_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_lines.g.md#-function-ensure_blank_line_after_active_block) | Insert a blank line after a block when the next non-empty line starts new content. |
-| 🔧 [`join_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_lines.g.md#-function-join_lines)                                                     |
-| 🔧 [`make_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_lines.g.md#-function-make_placeholder)                                         |
+| 🔧 [`join_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_lines.g.md#-function-join_lines)                                                     | Join lines and restore a trailing newline when requested.                          |
+| 🔧 [`make_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_lines.g.md#-function-make_placeholder)                                         | Build a stable placeholder token for protected regions.                            |
 | 🔧 [`split_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_lines.g.md#-function-split_lines)                                                   | Split text into lines without the trailing split artifact from a final newline.    |
 
 ### 📄 File `wiki_plugin.py`
@@ -645,9 +665,9 @@ Doc: [hidden.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.
 | Function/Class                                                                                                    | Description                                                                     |
 | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | 🔧 [`remove_hidden`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.g.md#-function-remove_hidden)   | Remove elements that are not rendered. Returns True if any element was removed. |
-| 🔧 [`_float`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.g.md#-function-_float)                 |
-| 🔧 [`_is_hidden`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.g.md#-function-_is_hidden)         |
-| 🔧 [`_is_zero_sized`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.g.md#-function-_is_zero_sized) |
+| 🔧 [`_float`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.g.md#-function-_float)                 |                                                                                 |
+| 🔧 [`_is_hidden`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.g.md#-function-_is_hidden)         |                                                                                 |
+| 🔧 [`_is_zero_sized`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.g.md#-function-_is_zero_sized) |                                                                                 |
 
 ### 📄 File `optimizer.py`
 
@@ -667,15 +687,15 @@ Doc: [paths.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.
 | 🔧 [`optimize_path_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-optimize_path_data)         | Optimize a path d attribute string.                           |
 | 🔧 [`optimize_paths`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-optimize_paths)                 | Optimize path d attributes. Returns True if any path changed. |
 | 🔧 [`parse_path_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-parse_path_data)               | Parse SVG path data into command tuples.                      |
-| 🔧 [`_format_args_spaced`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_format_args_spaced)       |
-| 🔧 [`_format_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_format_number)                 |
-| 🔧 [`_is_valid_command_list`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_is_valid_command_list) |
-| 🔧 [`_minimal_path_cleanup`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_minimal_path_cleanup)   |
-| 🔧 [`_optimize_commands`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_optimize_commands)         |
-| 🔧 [`_relative_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_relative_line)                 |
-| 🔧 [`_resolve_point`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_resolve_point)                 |
-| 🔧 [`_trim_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_trim_number)                     |
-| 🔧 [`_update_pos_for_curve`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_update_pos_for_curve)   |
+| 🔧 [`_format_args_spaced`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_format_args_spaced)       |                                                               |
+| 🔧 [`_format_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_format_number)                 |                                                               |
+| 🔧 [`_is_valid_command_list`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_is_valid_command_list) |                                                               |
+| 🔧 [`_minimal_path_cleanup`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_minimal_path_cleanup)   |                                                               |
+| 🔧 [`_optimize_commands`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_optimize_commands)         |                                                               |
+| 🔧 [`_relative_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_relative_line)                 |                                                               |
+| 🔧 [`_resolve_point`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_resolve_point)                 |                                                               |
+| 🔧 [`_trim_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_trim_number)                     |                                                               |
+| 🔧 [`_update_pos_for_curve`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_update_pos_for_curve)   |                                                               |
 
 ### 📄 File `serialize.py`
 
@@ -692,15 +712,15 @@ Doc: [shapes.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.
 | Function/Class                                                                                                          | Description                                                             |
 | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | 🔧 [`convert_shapes`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-convert_shapes)       | Convert basic shapes to paths. Returns True if any conversion happened. |
-| 🔧 [`_circle_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_circle_to_path)     |
-| 🔧 [`_ellipse_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_ellipse_to_path)   |
-| 🔧 [`_line_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_line_to_path)         |
-| 🔧 [`_num`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_num)                           |
-| 🔧 [`_parse_points`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_parse_points)         |
-| 🔧 [`_polygon_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_polygon_to_path)   |
-| 🔧 [`_polyline_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_polyline_to_path) |
-| 🔧 [`_rect_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_rect_to_path)         |
-| 🔧 [`_shape_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_shape_to_path)       |
+| 🔧 [`_circle_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_circle_to_path)     |                                                                         |
+| 🔧 [`_ellipse_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_ellipse_to_path)   |                                                                         |
+| 🔧 [`_line_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_line_to_path)         |                                                                         |
+| 🔧 [`_num`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_num)                           |                                                                         |
+| 🔧 [`_parse_points`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_parse_points)         |                                                                         |
+| 🔧 [`_polygon_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_polygon_to_path)   |                                                                         |
+| 🔧 [`_polyline_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_polyline_to_path) |                                                                         |
+| 🔧 [`_rect_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_rect_to_path)         |                                                                         |
+| 🔧 [`_shape_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_shape_to_path)       |                                                                         |
 
 ### 📄 File `structure.py`
 
@@ -709,16 +729,16 @@ Doc: [structure.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/stru
 | Function/Class                                                                                                                                     | Description                                                                   |
 | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | 🔧 [`optimize_structure`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-optimize_structure)                       | Collapse groups and strip empty attributes. Returns True if anything changed. |
-| 🔧 [`_clean_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_clean_number)                                 |
-| 🔧 [`_cleanup_numeric_values`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_cleanup_numeric_values)             |
-| 🔧 [`_cleanup_root_attrs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_cleanup_root_attrs)                     |
-| 🔧 [`_collapse_single_child_groups`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_collapse_single_child_groups) |
-| 🔧 [`_index_to_short_id`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_index_to_short_id)                       |
-| 🔧 [`_is_id_referenced`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_is_id_referenced)                         |
-| 🔧 [`_merge_element_attrs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_merge_element_attrs)                   |
-| 🔧 [`_remove_empty_containers`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_remove_empty_containers)           |
-| 🔧 [`_shorten_ids`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_shorten_ids)                                   |
-| 🔧 [`_strip_default_attrs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_strip_default_attrs)                   |
+| 🔧 [`_clean_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_clean_number)                                 |                                                                               |
+| 🔧 [`_cleanup_numeric_values`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_cleanup_numeric_values)             |                                                                               |
+| 🔧 [`_cleanup_root_attrs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_cleanup_root_attrs)                     |                                                                               |
+| 🔧 [`_collapse_single_child_groups`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_collapse_single_child_groups) |                                                                               |
+| 🔧 [`_index_to_short_id`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_index_to_short_id)                       |                                                                               |
+| 🔧 [`_is_id_referenced`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_is_id_referenced)                         |                                                                               |
+| 🔧 [`_merge_element_attrs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_merge_element_attrs)                   |                                                                               |
+| 🔧 [`_remove_empty_containers`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_remove_empty_containers)           |                                                                               |
+| 🔧 [`_shorten_ids`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_shorten_ids)                                   |                                                                               |
+| 🔧 [`_strip_default_attrs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_strip_default_attrs)                   |                                                                               |
 
 ### 📄 File `styles.py`
 
@@ -727,7 +747,7 @@ Doc: [styles.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.
 | Function/Class                                                                                                  | Description                                          |
 | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | 🏛️ Class [`StyleSheet`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md#️-class-stylesheet)    | Collected CSS class rules from SVG <style> elements. |
-| 🔧 [`_format_style`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md#-function-_format_style) |
+| 🔧 [`_format_style`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md#-function-_format_style) |                                                      |
 
 ### 📄 File `xml_tags.py`
 
@@ -742,30 +762,32 @@ Doc: [xml_tags.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/xml_t
 
 Doc: [block.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md)
 
-| Function/Class                                                                                                                                     | Description |
-| -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| 🔧 [`_blockquote_line_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_blockquote_line_content)               |
-| 🔧 [`_blockquote_line_depth`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_blockquote_line_depth)                   |
-| 🔧 [`_blockquote_needs_blank_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_blockquote_needs_blank_line)       |
-| 🔧 [`_join_blockquote_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_join_blockquote_blocks)                 |
-| 🔧 [`_join_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_join_blocks)                                       |
-| 🔧 [`_render_alert`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_alert)                                     |
-| 🔧 [`_render_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_block)                                     |
-| 🔧 [`_render_blockquote`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_blockquote)                           |
-| 🔧 [`_render_fence`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_fence)                                     |
-| 🔧 [`_render_heading`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_heading)                                 |
-| 🔧 [`_render_indented_code_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_indented_code_block)         |
-| 🔧 [`_render_math_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_math_block)                           |
-| 🔧 [`_render_until_close`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_until_close)                         |
-| 🔧 [`_should_join_without_blank_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_should_join_without_blank_line) |
-| 🔧 [`_wrap_blockquote_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_wrap_blockquote_block)                   |
+| Function/Class                                                                                                                                     | Description                                                             |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 🔧 [`_blockquote_line_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_blockquote_line_content)               |                                                                         |
+| 🔧 [`_blockquote_line_depth`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_blockquote_line_depth)                   |                                                                         |
+| 🔧 [`_blockquote_needs_blank_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_blockquote_needs_blank_line)       |                                                                         |
+| 🔧 [`_empty_math_middle_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_empty_math_middle_text)                 | Preserve blank interior lines in empty block math.                      |
+| 🔧 [`_join_blockquote_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_join_blockquote_blocks)                 |                                                                         |
+| 🔧 [`_join_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_join_blocks)                                       |                                                                         |
+| 🔧 [`_normalize_math_block_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_normalize_math_block_content)     | Strip blockquote continuation markers absorbed into math block content. |
+| 🔧 [`_render_alert`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_alert)                                     |                                                                         |
+| 🔧 [`_render_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_block)                                     |                                                                         |
+| 🔧 [`_render_blockquote`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_blockquote)                           |                                                                         |
+| 🔧 [`_render_fence`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_fence)                                     |                                                                         |
+| 🔧 [`_render_heading`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_heading)                                 |                                                                         |
+| 🔧 [`_render_indented_code_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_indented_code_block)         |                                                                         |
+| 🔧 [`_render_math_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_math_block)                           |                                                                         |
+| 🔧 [`_render_until_close`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_render_until_close)                         |                                                                         |
+| 🔧 [`_should_join_without_blank_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_should_join_without_blank_line) |                                                                         |
+| 🔧 [`_wrap_blockquote_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/block.g.md#-function-_wrap_blockquote_block)                   |                                                                         |
 
 ### 📄 File `context.py`
 
 Doc: [context.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/context.g.md)
 
 | Function/Class | Description |
-| -------------- | ----------- |
+|----------------|-------------|
 
 ### 📄 File `inline.py`
 
@@ -773,22 +795,25 @@ Doc: [inline.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.
 
 | Function/Class                                                                                                                                                  | Description                                                             |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 🔧 [`_format_code_inline`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_format_code_inline)                                     |
+| 🔧 [`_format_code_inline`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_format_code_inline)                                     |                                                                         |
 | 🔧 [`_format_self_referential_link`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_format_self_referential_link)                 | Return autolink or bare URL syntax for self-referential links.          |
-| 🔧 [`_inline_children_are_link_run`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_inline_children_are_link_run)                 |
-| 🔧 [`_inline_neighbor_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_inline_neighbor_text)                                 |
-| 🔧 [`_inline_text_after`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_inline_text_after)                                       |
-| 🔧 [`_inline_text_before`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_inline_text_before)                                     |
-| 🔧 [`_max_backtick_run`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_max_backtick_run)                                         |
-| 🔧 [`_pack_link_parts`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_pack_link_parts)                                           |
+| 🔧 [`_inline_children_are_link_run`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_inline_children_are_link_run)                 |                                                                         |
+| 🔧 [`_inline_neighbor_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_inline_neighbor_text)                                 |                                                                         |
+| 🔧 [`_inline_text_after`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_inline_text_after)                                       |                                                                         |
+| 🔧 [`_inline_text_before`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_inline_text_before)                                     |                                                                         |
+| 🔧 [`_inner_has_url_scheme`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_inner_has_url_scheme)                                 |                                                                         |
+| 🔧 [`_is_linkify_link`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_is_linkify_link)                                           |                                                                         |
+| 🔧 [`_max_backtick_run`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_max_backtick_run)                                         |                                                                         |
+| 🔧 [`_pack_link_parts`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_pack_link_parts)                                           |                                                                         |
 | 🔧 [`_readable_link_href`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_readable_link_href)                                     | Decode percent-encoded Unicode in URLs for readable Markdown output.    |
-| 🔧 [`_render_inline`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_render_inline)                                               |
-| 🔧 [`_render_inline_token`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_render_inline_token)                                   |
-| 🔧 [`_render_inline_until`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_render_inline_until)                                   |
-| 🔧 [`_render_packed_link_run`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_render_packed_link_run)                             |
+| 🔧 [`_render_inline`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_render_inline)                                               |                                                                         |
+| 🔧 [`_render_inline_token`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_render_inline_token)                                   |                                                                         |
+| 🔧 [`_render_inline_until`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_render_inline_until)                                   |                                                                         |
+| 🔧 [`_render_packed_link_run`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_render_packed_link_run)                             |                                                                         |
 | 🔧 [`_render_wiki_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_render_wiki_content)                                   | Normalize inline emphasis inside wiki-link content without re-escaping. |
-| 🔧 [`_softbreak_follows_trailing_backslash`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_softbreak_follows_trailing_backslash) |
-| 🔧 [`_softbreak_should_omit_space`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_softbreak_should_omit_space)                   |
+| 🔧 [`_softbreak_follows_trailing_backslash`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_softbreak_follows_trailing_backslash) |                                                                         |
+| 🔧 [`_softbreak_should_omit_space`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_softbreak_should_omit_space)                   |                                                                         |
+| 🔧 [`_wrap_inline_code_with_edge_spaces`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline.g.md#-function-_wrap_inline_code_with_edge_spaces)       |                                                                         |
 
 ### 📄 File `list_render.py`
 
@@ -797,35 +822,39 @@ Doc: [list_render.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/li
 | Function/Class                                                                                                                                                               | Description                                                                       |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | 🔧 [`_align_ordered_list_prefix`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_align_ordered_list_prefix)                               | Apply Prettier's alignListPrefix to a raw ordered-list prefix.                    |
-| 🔧 [`_bullet_item_leading_spaces`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_bullet_item_leading_spaces)                             |
-| 🔧 [`_direct_list_item_count`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_direct_list_item_count)                                     |
-| 🔧 [`_is_indented_source_codeblock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_is_indented_source_codeblock)                         |
-| 🔧 [`_is_list_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_is_list_block)                                                       |
-| 🔧 [`_line_has_task_checkbox`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_line_has_task_checkbox)                                     |
-| 🔧 [`_list_followed_by_indented_codeblock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_followed_by_indented_codeblock)           |
-| 🔧 [`_list_has_nested_bullets`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_has_nested_bullets)                                   |
-| 🔧 [`_list_is_loose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_is_loose)                                                       |
-| 🔧 [`_list_item_checkbox`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_checkbox)                                             |
-| 🔧 [`_list_item_followed_by_indented_codeblock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_followed_by_indented_codeblock) |
-| 🔧 [`_list_item_has_extra_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_has_extra_blocks)                             |
-| 🔧 [`_list_item_is_loose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_is_loose)                                             |
-| 🔧 [`_list_item_nested_list_index`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_nested_list_index)                           |
-| 🔧 [`_list_item_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_source_line)                                       |
-| 🔧 [`_list_marker_prefix`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_marker_prefix)                                             |
+| 🔧 [`_blank_line_before_list_item`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_blank_line_before_list_item)                           |                                                                                   |
+| 🔧 [`_bullet_item_leading_spaces`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_bullet_item_leading_spaces)                             |                                                                                   |
+| 🔧 [`_direct_list_item_count`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_direct_list_item_count)                                     |                                                                                   |
+| 🔧 [`_is_indented_source_codeblock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_is_indented_source_codeblock)                         |                                                                                   |
+| 🔧 [`_is_list_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_is_list_block)                                                       |                                                                                   |
+| 🔧 [`_is_prose_list_item_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_is_prose_list_item_block)                                 |                                                                                   |
+| 🔧 [`_line_has_task_checkbox`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_line_has_task_checkbox)                                     |                                                                                   |
+| 🔧 [`_list_followed_by_indented_codeblock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_followed_by_indented_codeblock)           |                                                                                   |
+| 🔧 [`_list_has_nested_bullets`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_has_nested_bullets)                                   |                                                                                   |
+| 🔧 [`_list_is_loose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_is_loose)                                                       |                                                                                   |
+| 🔧 [`_list_item_checkbox`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_checkbox)                                             |                                                                                   |
+| 🔧 [`_list_item_followed_by_indented_codeblock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_followed_by_indented_codeblock) |                                                                                   |
+| 🔧 [`_list_item_has_extra_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_has_extra_blocks)                             |                                                                                   |
+| 🔧 [`_list_item_is_loose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_is_loose)                                             |                                                                                   |
+| 🔧 [`_list_item_last_source_line_index`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_last_source_line_index)                 |                                                                                   |
+| 🔧 [`_list_item_nested_list_index`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_nested_list_index)                           |                                                                                   |
+| 🔧 [`_list_item_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_item_source_line)                                       |                                                                                   |
+| 🔧 [`_list_marker_prefix`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_marker_prefix)                                             |                                                                                   |
 | 🔧 [`_list_source_indent`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_list_source_indent)                                             | Return the leading-space indent of the list as it appears in source.              |
 | 🔧 [`_ordered_item_leading_spaces`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_ordered_item_leading_spaces)                           | Return spaces between ordered marker and content for a single list item.          |
 | 🔧 [`_ordered_list_leading_spaces`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_ordered_list_leading_spaces)                           | Return the number of spaces between the ordered marker and its content in source. |
-| 🔧 [`_ordered_list_marker_target_width`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_ordered_list_marker_target_width)                 |
-| 🔧 [`_ordered_marker_delimiter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_ordered_marker_delimiter)                                 |
-| 🔧 [`_ordered_marker_specs_from_source`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_ordered_marker_specs_from_source)                 |
-| 🔧 [`_ordered_sibling_gap_before_item`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_ordered_sibling_gap_before_item)                   |
-| 🔧 [`_render_list`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_render_list)                                                           |
-| 🔧 [`_render_list_item_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_render_list_item_lines)                                     |
-| 🔧 [`_should_preserve_list_marker_spacing`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_should_preserve_list_marker_spacing)           |
-| 🔧 [`_star_marker_becomes_dash`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_star_marker_becomes_dash)                                 |
-| 🔧 [`_top_level_list_base_indent`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_top_level_list_base_indent)                             |
-| 🔧 [`_top_level_list_single_item_is_simple`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_top_level_list_single_item_is_simple)         |
-| 🔧 [`_wrap_list_item_prose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_wrap_list_item_prose)                                         |
+| 🔧 [`_ordered_list_marker_target_width`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_ordered_list_marker_target_width)                 |                                                                                   |
+| 🔧 [`_ordered_marker_delimiter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_ordered_marker_delimiter)                                 |                                                                                   |
+| 🔧 [`_ordered_marker_specs_from_source`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_ordered_marker_specs_from_source)                 |                                                                                   |
+| 🔧 [`_ordered_sibling_gap_before_item`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_ordered_sibling_gap_before_item)                   |                                                                                   |
+| 🔧 [`_render_list`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_render_list)                                                           |                                                                                   |
+| 🔧 [`_render_list_item_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_render_list_item_lines)                                     |                                                                                   |
+| 🔧 [`_should_preserve_list_marker_spacing`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_should_preserve_list_marker_spacing)           |                                                                                   |
+| 🔧 [`_source_has_blockquote_blank_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_source_has_blockquote_blank_line)                 |                                                                                   |
+| 🔧 [`_star_marker_becomes_dash`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_star_marker_becomes_dash)                                 |                                                                                   |
+| 🔧 [`_top_level_list_base_indent`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_top_level_list_base_indent)                             |                                                                                   |
+| 🔧 [`_top_level_list_single_item_is_simple`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_top_level_list_single_item_is_simple)         |                                                                                   |
+| 🔧 [`_wrap_list_item_prose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_render.g.md#-function-_wrap_list_item_prose)                                         |                                                                                   |
 
 ### 📄 File `paragraph.py`
 
@@ -833,65 +862,69 @@ Doc: [paragraph.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/para
 
 | Function/Class                                                                                                                                                     | Description |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| 🔧 [`_broken_wiki_link_source_paragraph`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_broken_wiki_link_source_paragraph)       |
-| 🔧 [`_join_prose_run_parts`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_join_prose_run_parts)                                 |
-| 🔧 [`_join_without_space`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_join_without_space)                                     |
-| 🔧 [`_merged_run_is_link_only_paragraphs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_merged_run_is_link_only_paragraphs)     |
-| 🔧 [`_merged_run_is_whitespace_inline_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_merged_run_is_whitespace_inline_code) |
-| 🔧 [`_merged_run_should_join_as_prose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_merged_run_should_join_as_prose)           |
-| 🔧 [`_paragraph_contains_hangul`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_paragraph_contains_hangul)                       |
-| 🔧 [`_paragraph_is_cjk_dominant`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_paragraph_is_cjk_dominant)                       |
-| 🔧 [`_paragraph_run_end`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_paragraph_run_end)                                       |
-| 🔧 [`_paragraph_single_text_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_paragraph_single_text_source_line)       |
-| 🔧 [`_paragraph_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_paragraph_source_line)                               |
-| 🔧 [`_plain_heading_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_plain_heading_source_line)                       |
-| 🔧 [`_plain_inline_code_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_plain_inline_code_source_line)               |
-| 🔧 [`_plain_paragraph_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_plain_paragraph_source_line)                   |
-| 🔧 [`_render_joined_prose_run`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_render_joined_prose_run)                           |
-| 🔧 [`_render_merged_whitespace_inline_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_render_merged_whitespace_inline_code) |
-| 🔧 [`_render_paragraph`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_render_paragraph)                                         |
-| 🔧 [`_setext_heading_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_setext_heading_source_line)                     |
-| 🔧 [`_should_wrap_prose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_should_wrap_prose)                                       |
-| 🔧 [`_source_blocks_are_adjacent`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_source_blocks_are_adjacent)                     |
-| 🔧 [`_source_bullet_marker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_source_bullet_marker)                                 |
-| 🔧 [`_source_line_is_more_literal`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_source_line_is_more_literal)                   |
-| 🔧 [`_strip_list_item_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_strip_list_item_content)                           |
-| 🔧 [`_try_render_merged_link_paragraphs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_try_render_merged_link_paragraphs)       |
-| 🔧 [`_try_render_merged_paragraphs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_try_render_merged_paragraphs)                 |
-| 🔧 [`_unparsed_image_reference_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_unparsed_image_reference_source_line) |
+| 🔧 [`_broken_wiki_link_source_paragraph`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_broken_wiki_link_source_paragraph)       |             |
+| 🔧 [`_join_prose_run_parts`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_join_prose_run_parts)                                 |             |
+| 🔧 [`_join_without_space`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_join_without_space)                                     |             |
+| 🔧 [`_merged_run_is_link_only_paragraphs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_merged_run_is_link_only_paragraphs)     |             |
+| 🔧 [`_merged_run_is_whitespace_inline_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_merged_run_is_whitespace_inline_code) |             |
+| 🔧 [`_merged_run_should_join_as_prose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_merged_run_should_join_as_prose)           |             |
+| 🔧 [`_paragraph_contains_hangul`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_paragraph_contains_hangul)                       |             |
+| 🔧 [`_paragraph_is_cjk_dominant`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_paragraph_is_cjk_dominant)                       |             |
+| 🔧 [`_paragraph_run_end`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_paragraph_run_end)                                       |             |
+| 🔧 [`_paragraph_single_text_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_paragraph_single_text_source_line)       |             |
+| 🔧 [`_paragraph_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_paragraph_source_line)                               |             |
+| 🔧 [`_plain_heading_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_plain_heading_source_line)                       |             |
+| 🔧 [`_plain_inline_code_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_plain_inline_code_source_line)               |             |
+| 🔧 [`_plain_paragraph_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_plain_paragraph_source_line)                   |             |
+| 🔧 [`_render_joined_prose_run`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_render_joined_prose_run)                           |             |
+| 🔧 [`_render_merged_whitespace_inline_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_render_merged_whitespace_inline_code) |             |
+| 🔧 [`_render_paragraph`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_render_paragraph)                                         |             |
+| 🔧 [`_setext_heading_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_setext_heading_source_line)                     |             |
+| 🔧 [`_should_wrap_prose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_should_wrap_prose)                                       |             |
+| 🔧 [`_source_blocks_are_adjacent`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_source_blocks_are_adjacent)                     |             |
+| 🔧 [`_source_bullet_marker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_source_bullet_marker)                                 |             |
+| 🔧 [`_source_line_is_more_literal`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_source_line_is_more_literal)                   |             |
+| 🔧 [`_strip_list_item_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_strip_list_item_content)                           |             |
+| 🔧 [`_try_render_merged_link_paragraphs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_try_render_merged_link_paragraphs)       |             |
+| 🔧 [`_try_render_merged_paragraphs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_try_render_merged_paragraphs)                 |             |
+| 🔧 [`_unparsed_image_reference_source_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paragraph.g.md#-function-_unparsed_image_reference_source_line) |             |
 
 ### 📄 File `table.py`
 
 Doc: [table.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md)
 
-| Function/Class                                                                                                                           | Description |
-| ---------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| 🔧 [`_escape_table_cell`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_escape_table_cell)                 |
-| 🔧 [`_format_table_row`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_format_table_row)                   |
-| 🔧 [`_format_table_separator`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_format_table_separator)       |
-| 🔧 [`_is_spurious_table_row`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_is_spurious_table_row)         |
-| 🔧 [`_parse_table_row_cells`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_parse_table_row_cells)         |
-| 🔧 [`_parse_table_rows`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_parse_table_rows)                   |
-| 🔧 [`_prefer_source_table_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_prefer_source_table_block) |
-| 🔧 [`_render_table`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_render_table)                           |
-| 🔧 [`_table_cell_display_width`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_table_cell_display_width)   |
-| 🔧 [`_table_column_widths`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_table_column_widths)             |
+| Function/Class                                                                                                                                     | Description |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| 🔧 [`_escape_table_cell`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_escape_table_cell)                           |             |
+| 🔧 [`_expand_table_cell_placeholders`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_expand_table_cell_placeholders) |             |
+| 🔧 [`_format_table_row`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_format_table_row)                             |             |
+| 🔧 [`_format_table_separator`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_format_table_separator)                 |             |
+| 🔧 [`_is_spurious_table_row`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_is_spurious_table_row)                   |             |
+| 🔧 [`_parse_table_row_cells`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_parse_table_row_cells)                   |             |
+| 🔧 [`_parse_table_rows`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_parse_table_rows)                             |             |
+| 🔧 [`_parse_table_rows_expanded`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_parse_table_rows_expanded)           |             |
+| 🔧 [`_prefer_source_table_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_prefer_source_table_block)           |             |
+| 🔧 [`_render_table`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_render_table)                                     |             |
+| 🔧 [`_table_cell_display_width`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_table_cell_display_width)             |             |
+| 🔧 [`_table_column_widths`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_table_column_widths)                       |             |
+| 🔧 [`_table_data_rows`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table.g.md#-function-_table_data_rows)                               |             |
 
 ### 📄 File `tokens.py`
 
 Doc: [tokens.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md)
 
-| Function/Class                                                                                                                                | Description                                                            |
-| --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| 🔧 [`_alignment_separator`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_alignment_separator)                 |
-| 🔧 [`_choose_emphasis_delimiter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_choose_emphasis_delimiter)     |
-| 🔧 [`_contains_strong`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_contains_strong)                         |
-| 🔧 [`_find_close`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_find_close)                                   |
-| 🔧 [`_format_hr_markup`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_format_hr_markup)                       |
-| 🔧 [`_has_digit_emphasis_neighbor`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_has_digit_emphasis_neighbor) |
-| 🔧 [`_is_block_marker_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_is_block_marker_line)               |
-| 🔧 [`_link_raw_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_link_raw_text)                             | Return raw link label text when it contains only text and soft breaks. |
-| 🔧 [`_normalize_bullet_marker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_normalize_bullet_marker)         |
+| Function/Class                                                                                                                                | Description                                                               |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| 🔧 [`_alignment_separator`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_alignment_separator)                 |                                                                           |
+| 🔧 [`_choose_emphasis_delimiter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_choose_emphasis_delimiter)     |                                                                           |
+| 🔧 [`_contains_strong`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_contains_strong)                         |                                                                           |
+| 🔧 [`_find_close`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_find_close)                                   |                                                                           |
+| 🔧 [`_format_hr_markup`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_format_hr_markup)                       |                                                                           |
+| 🔧 [`_has_digit_emphasis_neighbor`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_has_digit_emphasis_neighbor) |                                                                           |
+| 🔧 [`_inline_link_is_standalone`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_inline_link_is_standalone)     | Return whether the link is the only meaningful inline content in its run. |
+| 🔧 [`_is_block_marker_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_is_block_marker_line)               |                                                                           |
+| 🔧 [`_link_raw_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_link_raw_text)                             | Return raw link label text when it contains only text and soft breaks.    |
+| 🔧 [`_normalize_bullet_marker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/tokens.g.md#-function-_normalize_bullet_marker)         |                                                                           |
 
 ## 📄 License
 

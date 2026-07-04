@@ -493,6 +493,33 @@ class MarkdownChecker:
             error_msg = f'{self.RULES["H014"]}: last char is "{last_char}"'
             yield self._format_error("H014", error_msg, filename, line_num=line_num, col=len(line.rstrip()))
 
+    def _check_colon_outside_emphasis(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for colon outside inline emphasis (H030).
+
+        Colon after *, **, _, __, ~~ labels should be inside emphasis markers.
+        Uses original line; matches inside inline code are skipped.
+        """
+        code_ranges: list[tuple[int, int]] = []
+        pos = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
+        reported_cols: set[int] = set()
+        for pattern in self._EMPHASIS_COLON_OUTSIDE_PATTERNS:
+            for match in pattern.finditer(line):
+                if _inside_inline_code(match.start()):
+                    continue
+                col = match.end()
+                if col in reported_cols:
+                    continue
+                reported_cols.add(col)
+                yield self._format_error("H030", self.RULES["H030"], filename, line_num=line_num, col=col)
+
     def _check_consecutive_empty_lines(
         self,
         filename: Path,
@@ -862,64 +889,6 @@ class MarkdownChecker:
                 return
             offset += len(segment)
 
-    def _check_space_after_emphasis_colon(
-        self, filename: Path, line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check for missing space after colon in or after inline emphasis (H029).
-
-        Colon inside or after *, **, _, __, ~~ must be followed by a space before text.
-        Uses original line; matches inside inline code are skipped.
-        """
-        code_ranges: list[tuple[int, int]] = []
-        pos = 0
-        for segment, in_code in h.md.identify_code_blocks_line(line):
-            if in_code:
-                code_ranges.append((pos, pos + len(segment)))
-            pos += len(segment)
-
-        def _inside_inline_code(offset: int) -> bool:
-            return any(start <= offset < end for start, end in code_ranges)
-
-        reported_cols: set[int] = set()
-        for pattern in self._EMPHASIS_COLON_NO_SPACE_PATTERNS:
-            for match in pattern.finditer(line):
-                if _inside_inline_code(match.start()):
-                    continue
-                col = match.end() + 1
-                if col in reported_cols:
-                    continue
-                reported_cols.add(col)
-                yield self._format_error("H029", self.RULES["H029"], filename, line_num=line_num, col=col)
-
-    def _check_colon_outside_emphasis(
-        self, filename: Path, line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check for colon outside inline emphasis (H030).
-
-        Colon after *, **, _, __, ~~ labels should be inside emphasis markers.
-        Uses original line; matches inside inline code are skipped.
-        """
-        code_ranges: list[tuple[int, int]] = []
-        pos = 0
-        for segment, in_code in h.md.identify_code_blocks_line(line):
-            if in_code:
-                code_ranges.append((pos, pos + len(segment)))
-            pos += len(segment)
-
-        def _inside_inline_code(offset: int) -> bool:
-            return any(start <= offset < end for start, end in code_ranges)
-
-        reported_cols: set[int] = set()
-        for pattern in self._EMPHASIS_COLON_OUTSIDE_PATTERNS:
-            for match in pattern.finditer(line):
-                if _inside_inline_code(match.start()):
-                    continue
-                col = match.end()
-                if col in reported_cols:
-                    continue
-                reported_cols.add(col)
-                yield self._format_error("H030", self.RULES["H030"], filename, line_num=line_num, col=col)
-
     def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
         """Check for incorrect quote characters (H018).
 
@@ -1012,6 +981,33 @@ class MarkdownChecker:
                 error_msg = f'{self.RULES["H023"]}: use lowercase "{word.lower()}" when addressing reader'
                 yield self._format_error("H023", error_msg, filename, line_num=line_num, col=match.start() + 1)
                 return
+
+    def _check_space_after_emphasis_colon(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for missing space after colon in or after inline emphasis (H029).
+
+        Colon inside or after *, **, _, __, ~~ must be followed by a space before text.
+        Uses original line; matches inside inline code are skipped.
+        """
+        code_ranges: list[tuple[int, int]] = []
+        pos = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
+        reported_cols: set[int] = set()
+        for pattern in self._EMPHASIS_COLON_NO_SPACE_PATTERNS:
+            for match in pattern.finditer(line):
+                if _inside_inline_code(match.start()):
+                    continue
+                col = match.end() + 1
+                if col in reported_cols:
+                    continue
+                reported_cols.add(col)
+                yield self._format_error("H029", self.RULES["H029"], filename, line_num=line_num, col=col)
 
     def _check_space_before_punctuation(
         self, filename: Path, line: str, _clean_line: str, line_num: int
@@ -1201,14 +1197,6 @@ class MarkdownChecker:
             return str(filename.resolve())
 
     @staticmethod
-    def _is_identifier_like_link_label(label: str) -> bool:
-        """Return True if link label looks like a package/URL identifier, not prose."""
-        stripped = label.strip()
-        if not stripped or " " in stripped:
-            return False
-        return any(c in stripped for c in "-._")
-
-    @staticmethod
     def _is_blockquote_attribution_line(line: str) -> bool:
         """Return True if line is a blockquote attribution (e.g. '> -- Author')."""
         stripped = line.lstrip()
@@ -1218,6 +1206,14 @@ class MarkdownChecker:
         while content.lstrip().startswith(">"):
             content = content.lstrip()[1:].lstrip()
         return content.startswith("--")
+
+    @staticmethod
+    def _is_identifier_like_link_label(label: str) -> bool:
+        """Return True if link label looks like a package/URL identifier, not prose."""
+        stripped = label.strip()
+        if not stripped or " " in stripped:
+            return False
+        return any(c in stripped for c in "-._")
 
     def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
         """Return True if position pos in line is inside a table cell that contains only a hyphen."""

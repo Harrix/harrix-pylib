@@ -12,10 +12,12 @@ lang: en
 ## Contents
 
 - [🔧 Function `_align_ordered_list_prefix`](#-function-_align_ordered_list_prefix)
+- [🔧 Function `_blank_line_before_list_item`](#-function-_blank_line_before_list_item)
 - [🔧 Function `_bullet_item_leading_spaces`](#-function-_bullet_item_leading_spaces)
 - [🔧 Function `_direct_list_item_count`](#-function-_direct_list_item_count)
 - [🔧 Function `_is_indented_source_codeblock`](#-function-_is_indented_source_codeblock)
 - [🔧 Function `_is_list_block`](#-function-_is_list_block)
+- [🔧 Function `_is_prose_list_item_block`](#-function-_is_prose_list_item_block)
 - [🔧 Function `_line_has_task_checkbox`](#-function-_line_has_task_checkbox)
 - [🔧 Function `_list_followed_by_indented_codeblock`](#-function-_list_followed_by_indented_codeblock)
 - [🔧 Function `_list_has_nested_bullets`](#-function-_list_has_nested_bullets)
@@ -24,6 +26,7 @@ lang: en
 - [🔧 Function `_list_item_followed_by_indented_codeblock`](#-function-_list_item_followed_by_indented_codeblock)
 - [🔧 Function `_list_item_has_extra_blocks`](#-function-_list_item_has_extra_blocks)
 - [🔧 Function `_list_item_is_loose`](#-function-_list_item_is_loose)
+- [🔧 Function `_list_item_last_source_line_index`](#-function-_list_item_last_source_line_index)
 - [🔧 Function `_list_item_nested_list_index`](#-function-_list_item_nested_list_index)
 - [🔧 Function `_list_item_source_line`](#-function-_list_item_source_line)
 - [🔧 Function `_list_marker_prefix`](#-function-_list_marker_prefix)
@@ -37,6 +40,7 @@ lang: en
 - [🔧 Function `_render_list`](#-function-_render_list)
 - [🔧 Function `_render_list_item_lines`](#-function-_render_list_item_lines)
 - [🔧 Function `_should_preserve_list_marker_spacing`](#-function-_should_preserve_list_marker_spacing)
+- [🔧 Function `_source_has_blockquote_blank_line`](#-function-_source_has_blockquote_blank_line)
 - [🔧 Function `_star_marker_becomes_dash`](#-function-_star_marker_becomes_dash)
 - [🔧 Function `_top_level_list_base_indent`](#-function-_top_level_list_base_indent)
 - [🔧 Function `_top_level_list_single_item_is_simple`](#-function-_top_level_list_single_item_is_simple)
@@ -62,6 +66,36 @@ def _align_ordered_list_prefix(raw_prefix: str, tab_width: int = 2) -> str:
     if additional >= 4:
         additional = 0
     return raw_prefix + " " * additional
+```
+
+</details>
+
+## 🔧 Function `_blank_line_before_list_item`
+
+```python
+def _blank_line_before_list_item(tokens: list[Token], item_index: int, prev_item_index: int, source_lines: list[str] | None) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _blank_line_before_list_item(
+    tokens: list[Token],
+    item_index: int,
+    prev_item_index: int,
+    source_lines: list[str] | None,
+) -> bool:
+    if not source_lines:
+        return False
+    prev_close = _find_close(tokens, prev_item_index, "list_item_close")
+    prev_last_line = _list_item_last_source_line_index(tokens, prev_item_index, prev_close)
+    curr_map = tokens[item_index].map
+    if prev_last_line is None or not curr_map:
+        return False
+    return _source_has_blockquote_blank_line(source_lines, prev_last_line + 1, curr_map[0])
 ```
 
 </details>
@@ -166,6 +200,28 @@ def _is_list_block(block: str) -> bool:
             continue
         return is_list_line(line)
     return False
+```
+
+</details>
+
+## 🔧 Function `_is_prose_list_item_block`
+
+```python
+def _is_prose_list_item_block(block: str) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_prose_list_item_block(block: str) -> bool:
+    if not block.strip():
+        return False
+    if _is_list_block(block):
+        return False
+    return not block.lstrip().startswith(">")
 ```
 
 </details>
@@ -425,6 +481,47 @@ def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_in
 
 </details>
 
+## 🔧 Function `_list_item_last_source_line_index`
+
+```python
+def _list_item_last_source_line_index(tokens: list[Token], item_open_index: int, item_close_index: int) -> int | None
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _list_item_last_source_line_index(tokens: list[Token], item_open_index: int, item_close_index: int) -> int | None:
+    item_map = tokens[item_open_index].map
+    if not item_map:
+        return None
+    last_line = item_map[0]
+    child_index = item_open_index + 1
+    while child_index < item_close_index:
+        token = tokens[child_index]
+        if token.map:
+            last_line = max(last_line, token.map[1] - 1)
+        if token.type == "paragraph_open":
+            child_index += 3
+            continue
+        if token.type in {"bullet_list_open", "ordered_list_open"}:
+            nested_close = _find_close(
+                tokens,
+                child_index,
+                "ordered_list_close" if token.type == "ordered_list_open" else "bullet_list_close",
+            )
+            if tokens[nested_close].map:
+                last_line = max(last_line, tokens[nested_close].map[1] - 1)
+            child_index = nested_close + 1
+            continue
+        child_index += 1
+    return last_line
+```
+
+</details>
+
 ## 🔧 Function `_list_item_nested_list_index`
 
 ```python
@@ -664,9 +761,9 @@ def _ordered_marker_specs_from_source(
             continue
         tok_map = tokens[item_index].map
         if tok_map and 0 <= tok_map[0] < len(source_lines):
-            m = re.match(r"^\s*(\d+)([.)])\s+", source_lines[tok_map[0]])
-            if m:
-                markers.append((int(m.group(1)), m.group(2)))
+            parsed = parse_ordered_list_marker(source_lines[tok_map[0]])
+            if parsed is not None:
+                markers.append(parsed)
         item_index = _find_close(tokens, item_index, "list_item_close") + 1
     return markers
 ```
@@ -963,6 +1060,8 @@ def _render_list(
                 )
             ):
                 gap = True
+            if not gap and in_blockquote and source_lines and prev_item_index is not None:
+                gap = _blank_line_before_list_item(tokens, item_index, prev_item_index, source_lines)
             if gap:
                 lines.append("")
         if layout and rendered_item_count < len(layout.loose_items):
@@ -1064,15 +1163,17 @@ def _render_list_item_lines(
                 else:
                     rendered.append(f"{first_continuation}{continuation_line}")
             continue
-        if block_index > 0 and not in_blockquote:
+        if block_index > 0:
             previous_block = item_lines[block_index - 1]
             needs_gap = False
             if loose:
                 if _is_list_block(block) and _is_list_block(previous_block):
                     needs_gap = False
+                elif in_blockquote:
+                    needs_gap = _is_prose_list_item_block(previous_block) and _is_prose_list_item_block(block)
                 else:
                     needs_gap = not (_is_list_block(block) and previous_block.lstrip().startswith(">"))
-            elif _is_list_block(previous_block) and not _is_list_block(block):
+            elif not in_blockquote and _is_list_block(previous_block) and not _is_list_block(block):
                 needs_gap = not previous_block.lstrip().startswith(">")
             if needs_gap:
                 rendered.append("")
@@ -1130,6 +1231,32 @@ def _should_preserve_list_marker_spacing(
     if _list_item_followed_by_indented_codeblock(tokens, item_close, source_lines):
         return True
     return list_followed
+```
+
+</details>
+
+## 🔧 Function `_source_has_blockquote_blank_line`
+
+```python
+def _source_has_blockquote_blank_line(source_lines: list[str], start: int, end: int) -> bool
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _source_has_blockquote_blank_line(source_lines: list[str], start: int, end: int) -> bool:
+    for line_index in range(start, end):
+        if line_index < 0 or line_index >= len(source_lines):
+            continue
+        line = source_lines[line_index]
+        if not line.strip():
+            return True
+        if re.fullmatch(r">\s*", line):
+            return True
+    return False
 ```
 
 </details>

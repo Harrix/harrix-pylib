@@ -11,7 +11,7 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `ReferenceBlock`](#%EF%B8%8F-class-referenceblock)
+- [🏛️ Class `ReferenceBlock`](#️-class-referenceblock)
 - [🔧 Function `extract_reference_blocks`](#-function-extract_reference_blocks)
 - [🔧 Function `format_reference_link_url`](#-function-format_reference_link_url)
 - [🔧 Function `restore_reference_blocks`](#-function-restore_reference_blocks)
@@ -69,11 +69,16 @@ Replace link/footnote definitions with placeholders.
 ```python
 def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
     lines, trailing = split_lines(body)
+    code_block_info = list(identify_code_blocks(lines))
     result: list[str] = []
     blocks: list[ReferenceBlock] = []
     index = 0
     line_index = 0
     while line_index < len(lines):
+        if code_block_info[line_index][1]:
+            result.append(lines[line_index])
+            line_index += 1
+            continue
         line, consumed = _merge_multiline_link_definition(lines, line_index)
         line_index += consumed
         link_match = _LINK_DEF_RE.match(line)

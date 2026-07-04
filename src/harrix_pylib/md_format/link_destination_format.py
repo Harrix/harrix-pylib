@@ -26,6 +26,21 @@ class LinkDestination:
     title: str | None = None
 
 
+def decode_percent_encoded_url(url: str) -> str:
+    """Decode percent-encoded Unicode in URL paths and fragments for readable Markdown."""
+    if not url or "%" not in url:
+        return url
+    if url.startswith("#"):
+        return _decode_unicode_percent_sequences(url)
+    parts = urlsplit(url)
+    if not parts.scheme and not parts.netloc:
+        return _decode_unicode_percent_sequences(url)
+    decoded_path = _decode_unicode_percent_sequences(parts.path) if parts.path else parts.path
+    decoded_query = _decode_unicode_percent_sequences(parts.query) if parts.query else parts.query
+    decoded_fragment = _decode_unicode_percent_sequences(parts.fragment) if parts.fragment else parts.fragment
+    return urlunsplit((parts.scheme, parts.netloc, decoded_path, decoded_query, decoded_fragment))
+
+
 def extract_link_destinations(body: str) -> tuple[str, list[LinkDestination]]:
     """Replace link destinations with placeholders before parsing."""
     from harrix_pylib.md_format.inline_link_format import prepare_inline_links  # noqa: PLC0415
@@ -33,19 +48,47 @@ def extract_link_destinations(body: str) -> tuple[str, list[LinkDestination]]:
     return prepare_inline_links(body)
 
 
-_HEX_BYTE_RE = re.compile(r"^[0-9A-Fa-f]{2}$")
+def format_inline_link_destination(destination: str) -> str:
+    """Return canonical destination text for inline links and images."""
+    url, title = split_inline_destination(destination.strip())
+    formatted_url = _format_link_url(url)
+    if title is None:
+        return formatted_url
+    return f"{formatted_url} {title}"
 
 
-def _utf8_char_byte_length(lead_byte: int) -> int:
-    if lead_byte < 0x80:
-        return 1
-    if lead_byte < 0xE0:
-        return 2
-    if lead_byte < 0xF0:
-        return 3
-    if lead_byte < 0xF8:
-        return 4
-    return 0
+def format_link_url(url: str, *, wrap_parentheses: bool = True) -> str:
+    """Return canonical URL text for links and reference definitions."""
+    return _format_link_url(url, wrap_parentheses=wrap_parentheses)
+
+
+def formatted_href_from_placeholder(href: str, entries_by_index: dict[int, LinkDestination]) -> str | None:
+    """Return formatted URL for a placeholder href."""
+    if not href.startswith(PLACEHOLDER_PREFIX):
+        return None
+    try:
+        index = int(href.removeprefix(PLACEHOLDER_PREFIX))
+    except ValueError:
+        return None
+    entry = entries_by_index.get(index)
+    if entry is None:
+        return None
+    url, _title = split_inline_destination(format_inline_link_destination(entry.destination))
+    return url
+
+
+def formatted_title_from_placeholder(href: str, entries_by_index: dict[int, LinkDestination]) -> str | None:
+    """Return pre-normalized title suffix for a placeholder href."""
+    if not href.startswith(PLACEHOLDER_PREFIX):
+        return None
+    try:
+        index = int(href.removeprefix(PLACEHOLDER_PREFIX))
+    except ValueError:
+        return None
+    entry = entries_by_index.get(index)
+    if entry is None:
+        return None
+    return entry.title
 
 
 def _decode_unicode_percent_sequences(text: str) -> str:
@@ -104,64 +147,6 @@ def _decode_unicode_percent_sequences(text: str) -> str:
     return "".join(result)
 
 
-def decode_percent_encoded_url(url: str) -> str:
-    """Decode percent-encoded Unicode in URL paths and fragments for readable Markdown."""
-    if not url or "%" not in url:
-        return url
-    if url.startswith("#"):
-        return _decode_unicode_percent_sequences(url)
-    parts = urlsplit(url)
-    if not parts.scheme and not parts.netloc:
-        return _decode_unicode_percent_sequences(url)
-    decoded_path = _decode_unicode_percent_sequences(parts.path) if parts.path else parts.path
-    decoded_query = _decode_unicode_percent_sequences(parts.query) if parts.query else parts.query
-    decoded_fragment = _decode_unicode_percent_sequences(parts.fragment) if parts.fragment else parts.fragment
-    return urlunsplit((parts.scheme, parts.netloc, decoded_path, decoded_query, decoded_fragment))
-
-
-def format_inline_link_destination(destination: str) -> str:
-    """Return canonical destination text for inline links and images."""
-    url, title = split_inline_destination(destination.strip())
-    formatted_url = _format_link_url(url)
-    if title is None:
-        return formatted_url
-    return f"{formatted_url} {title}"
-
-
-def format_link_url(url: str, *, wrap_parentheses: bool = True) -> str:
-    """Return canonical URL text for links and reference definitions."""
-    return _format_link_url(url, wrap_parentheses=wrap_parentheses)
-
-
-def formatted_href_from_placeholder(href: str, entries_by_index: dict[int, LinkDestination]) -> str | None:
-    """Return formatted URL for a placeholder href."""
-    if not href.startswith(PLACEHOLDER_PREFIX):
-        return None
-    try:
-        index = int(href.removeprefix(PLACEHOLDER_PREFIX))
-    except ValueError:
-        return None
-    entry = entries_by_index.get(index)
-    if entry is None:
-        return None
-    url, _title = split_inline_destination(format_inline_link_destination(entry.destination))
-    return url
-
-
-def formatted_title_from_placeholder(href: str, entries_by_index: dict[int, LinkDestination]) -> str | None:
-    """Return pre-normalized title suffix for a placeholder href."""
-    if not href.startswith(PLACEHOLDER_PREFIX):
-        return None
-    try:
-        index = int(href.removeprefix(PLACEHOLDER_PREFIX))
-    except ValueError:
-        return None
-    entry = entries_by_index.get(index)
-    if entry is None:
-        return None
-    return entry.title
-
-
 def _encode_special_characters(url: str) -> str:
     result: list[str] = []
     index = 0
@@ -205,3 +190,18 @@ def _format_link_url(url: str, *, wrap_parentheses: bool = True) -> str:
         encoded = _encode_special_characters(url)
         return f"<{encoded}>"
     return url
+
+
+def _utf8_char_byte_length(lead_byte: int) -> int:
+    if lead_byte < 0x80:
+        return 1
+    if lead_byte < 0xE0:
+        return 2
+    if lead_byte < 0xF0:
+        return 3
+    if lead_byte < 0xF8:
+        return 4
+    return 0
+
+
+_HEX_BYTE_RE = re.compile(r"^[0-9A-Fa-f]{2}$")

@@ -11,8 +11,8 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `FormatOptions`](#%EF%B8%8F-class-formatoptions)
-  - [⚙️ Method `__post_init__`](#%EF%B8%8F-method-__post_init__)
+- [🏛️ Class `FormatOptions`](#️-class-formatoptions)
+  - [⚙️ Method `__post_init__`](#️-method-__post_init__)
 
 </details>
 

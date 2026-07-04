@@ -35,6 +35,22 @@ def _align_ordered_list_prefix(raw_prefix: str, tab_width: int = 2) -> str:
     return raw_prefix + " " * additional
 
 
+def _blank_line_before_list_item(
+    tokens: list[Token],
+    item_index: int,
+    prev_item_index: int,
+    source_lines: list[str] | None,
+) -> bool:
+    if not source_lines:
+        return False
+    prev_close = _find_close(tokens, prev_item_index, "list_item_close")
+    prev_last_line = _list_item_last_source_line_index(tokens, prev_item_index, prev_close)
+    curr_map = tokens[item_index].map
+    if prev_last_line is None or not curr_map:
+        return False
+    return _source_has_blockquote_blank_line(source_lines, prev_last_line + 1, curr_map[0])
+
+
 def _bullet_item_leading_spaces(tokens: list[Token], item_index: int, source_lines: list[str] | None) -> int:
     line = _list_item_source_line(tokens, item_index, source_lines)
     if not line:
@@ -81,6 +97,14 @@ def _is_list_block(block: str) -> bool:
             continue
         return is_list_line(line)
     return False
+
+
+def _is_prose_list_item_block(block: str) -> bool:
+    if not block.strip():
+        return False
+    if _is_list_block(block):
+        return False
+    return not block.lstrip().startswith(">")
 
 
 def _line_has_task_checkbox(line: str) -> bool:
@@ -226,6 +250,33 @@ def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_in
     return block_count != paragraph_count + nested_list_count
 
 
+def _list_item_last_source_line_index(tokens: list[Token], item_open_index: int, item_close_index: int) -> int | None:
+    item_map = tokens[item_open_index].map
+    if not item_map:
+        return None
+    last_line = item_map[0]
+    child_index = item_open_index + 1
+    while child_index < item_close_index:
+        token = tokens[child_index]
+        if token.map:
+            last_line = max(last_line, token.map[1] - 1)
+        if token.type == "paragraph_open":
+            child_index += 3
+            continue
+        if token.type in {"bullet_list_open", "ordered_list_open"}:
+            nested_close = _find_close(
+                tokens,
+                child_index,
+                "ordered_list_close" if token.type == "ordered_list_open" else "bullet_list_close",
+            )
+            if tokens[nested_close].map:
+                last_line = max(last_line, tokens[nested_close].map[1] - 1)
+            child_index = nested_close + 1
+            continue
+        child_index += 1
+    return last_line
+
+
 def _list_item_nested_list_index(tokens: list[Token], item_index: int, item_close: int) -> int | None:
     child_index = item_index + 1
     while child_index < item_close:
@@ -349,63 +400,6 @@ def _ordered_marker_specs_from_source(
                 markers.append(parsed)
         item_index = _find_close(tokens, item_index, "list_item_close") + 1
     return markers
-
-
-def _list_item_last_source_line_index(
-    tokens: list[Token], item_open_index: int, item_close_index: int
-) -> int | None:
-    item_map = tokens[item_open_index].map
-    if not item_map:
-        return None
-    last_line = item_map[0]
-    child_index = item_open_index + 1
-    while child_index < item_close_index:
-        token = tokens[child_index]
-        if token.map:
-            last_line = max(last_line, token.map[1] - 1)
-        if token.type == "paragraph_open":
-            child_index += 3
-            continue
-        if token.type in {"bullet_list_open", "ordered_list_open"}:
-            nested_close = _find_close(
-                tokens,
-                child_index,
-                "ordered_list_close" if token.type == "ordered_list_open" else "bullet_list_close",
-            )
-            if tokens[nested_close].map:
-                last_line = max(last_line, tokens[nested_close].map[1] - 1)
-            child_index = nested_close + 1
-            continue
-        child_index += 1
-    return last_line
-
-
-def _source_has_blockquote_blank_line(source_lines: list[str], start: int, end: int) -> bool:
-    for line_index in range(start, end):
-        if line_index < 0 or line_index >= len(source_lines):
-            continue
-        line = source_lines[line_index]
-        if not line.strip():
-            return True
-        if re.fullmatch(r">\s*", line):
-            return True
-    return False
-
-
-def _blank_line_before_list_item(
-    tokens: list[Token],
-    item_index: int,
-    prev_item_index: int,
-    source_lines: list[str] | None,
-) -> bool:
-    if not source_lines:
-        return False
-    prev_close = _find_close(tokens, prev_item_index, "list_item_close")
-    prev_last_line = _list_item_last_source_line_index(tokens, prev_item_index, prev_close)
-    curr_map = tokens[item_index].map
-    if prev_last_line is None or not curr_map:
-        return False
-    return _source_has_blockquote_blank_line(source_lines, prev_last_line + 1, curr_map[0])
 
 
 def _ordered_sibling_gap_before_item(
@@ -698,14 +692,6 @@ def _render_list(
     return "\n".join(lines) + "\n", close_index + 1
 
 
-def _is_prose_list_item_block(block: str) -> bool:
-    if not block.strip():
-        return False
-    if _is_list_block(block):
-        return False
-    return not block.lstrip().startswith(">")
-
-
 def _render_list_item_lines(
     item_lines: list[str],
     *,
@@ -823,6 +809,18 @@ def _should_preserve_list_marker_spacing(
     if _list_item_followed_by_indented_codeblock(tokens, item_close, source_lines):
         return True
     return list_followed
+
+
+def _source_has_blockquote_blank_line(source_lines: list[str], start: int, end: int) -> bool:
+    for line_index in range(start, end):
+        if line_index < 0 or line_index >= len(source_lines):
+            continue
+        line = source_lines[line_index]
+        if not line.strip():
+            return True
+        if re.fullmatch(r">\s*", line):
+            return True
+    return False
 
 
 def _star_marker_becomes_dash(

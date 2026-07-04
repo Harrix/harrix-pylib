@@ -63,27 +63,6 @@ def _has_digit_emphasis_neighbor(prev: str, next_text: str) -> bool:
     return bool(prev and prev[-1].isdigit()) or bool(next_text and next_text[0].isdigit())
 
 
-def _is_block_marker_line(text: str) -> bool:
-    stripped = text.lstrip()
-    return stripped.startswith(("-", ">", "|", "#", "```", "~"))
-
-
-def _link_raw_text(children: list[Token], link_open_index: int) -> str | None:
-    """Return raw link label text when it contains only text and soft breaks."""
-    parts: list[str] = []
-    inner_index = link_open_index + 1
-    while inner_index < len(children) and children[inner_index].type != "link_close":
-        token = children[inner_index]
-        if token.type == "text":
-            parts.append(token.content)
-        elif token.type == "softbreak":
-            parts.append("\n")
-        else:
-            return None
-        inner_index += 1
-    return "".join(parts)
-
-
 def _inline_link_is_standalone(children: list[Token], link_open_index: int) -> bool:
     """Return whether the link is the only meaningful inline content in its run."""
     close_index = link_open_index + 1
@@ -106,6 +85,27 @@ def _inline_link_is_standalone(children: list[Token], link_open_index: int) -> b
             continue
         return False
     return True
+
+
+def _is_block_marker_line(text: str) -> bool:
+    stripped = text.lstrip()
+    return stripped.startswith(("-", ">", "|", "#", "```", "~"))
+
+
+def _link_raw_text(children: list[Token], link_open_index: int) -> str | None:
+    """Return raw link label text when it contains only text and soft breaks."""
+    parts: list[str] = []
+    inner_index = link_open_index + 1
+    while inner_index < len(children) and children[inner_index].type != "link_close":
+        token = children[inner_index]
+        if token.type == "text":
+            parts.append(token.content)
+        elif token.type == "softbreak":
+            parts.append("\n")
+        else:
+            return None
+        inner_index += 1
+    return "".join(parts)
 
 
 def _normalize_bullet_marker(marker: str, *, normalize_star_to_dash: bool = False) -> str:

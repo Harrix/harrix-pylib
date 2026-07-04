@@ -128,6 +128,7 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
     if front_matter:
         front_matter = compact_front_matter(front_matter)
     body = _ensure_blank_line_in_empty_fences(body)
+    body, empty_math_blocks = extract_empty_math_blocks(body)
     body, ignore_blocks = extract_ignore_blocks(body)
     body, hard_break_styles = extract_backslash_hard_breaks(body)
     body, angle_autolinks = extract_angle_autolinks(body)
@@ -163,8 +164,10 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
             list_layouts=list_layouts,
             source_lines=source_lines,
             link_destinations=link_destinations,
+            angle_autolinks=angle_autolinks,
         )
         rendered_body = restore_code_blocks(rendered_body, code_blocks, options=options)
+        rendered_body = restore_empty_math_blocks(rendered_body, empty_math_blocks)
         rendered_body = restore_angle_autolinks(rendered_body, angle_autolinks)
         rendered_body = restore_reference_blocks(rendered_body, reference_blocks, options=options)
         rendered_body = restore_toml_blocks(rendered_body, toml_blocks)
