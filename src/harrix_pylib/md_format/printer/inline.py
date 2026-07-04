@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import re
 from typing import TYPE_CHECKING
-from urllib.parse import unquote, urlsplit, urlunsplit
 
 from harrix_pylib.md_format.escape_format import escape_markdown_text
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles
 from harrix_pylib.md_format.link_destination_format import (
+    decode_percent_encoded_url,
     formatted_href_from_placeholder,
     formatted_title_from_placeholder,
 )
@@ -179,16 +179,7 @@ def _readable_link_href(href: str) -> str:
             return formatted
     if not href or href.startswith("HSKMDFMTLD"):
         return href
-    if "%" not in href:
-        return href
-    if href.startswith("#"):
-        return unquote(href, encoding="utf-8")
-    parts = urlsplit(href)
-    if not parts.scheme and not parts.netloc:
-        return unquote(href, encoding="utf-8")
-    decoded_fragment = unquote(parts.fragment, encoding="utf-8") if parts.fragment else parts.fragment
-    decoded_path = unquote(parts.path, encoding="utf-8")
-    return urlunsplit((parts.scheme, parts.netloc, decoded_path, parts.query, decoded_fragment))
+    return decode_percent_encoded_url(href)
 
 
 def _render_inline(

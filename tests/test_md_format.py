@@ -197,6 +197,25 @@ def test_format_markdown_content_preserves_cyrillic_urls_without_encoding(source
     assert "%D0" not in result
 
 
+def test_format_markdown_content_decodes_percent_encoded_unicode_in_link_url() -> None:
+    source = (
+        "[Видеоуроки по Arduino, 7-я серия - I2C и Processing]"
+        "(http://wiki.amperka.ru/%D0%B2%D0%B8%D0%B4%D0%B5%D0%BE%D1%83%D1%80%D0%BE%D0%BA%D0%B8:7-i2c-%D0%B8-processing)\n"
+    )
+    result = format_markdown_content(source, end_of_line="lf")
+    assert (
+        "[Видеоуроки по Arduino, 7-я серия - I2C и Processing]"
+        "(http://wiki.amperka.ru/видеоуроки:7-i2c-и-processing)\n"
+    ) == result
+    assert "%D0" not in result
+
+
+def test_format_markdown_content_decodes_percent_encoded_unicode_in_angle_autolink() -> None:
+    source = "<http://wiki.amperka.ru/%D0%B2%D0%B8%D0%B4%D0%B5%D0%BE%D1%83%D1%80%D0%BE%D0%BA%D0%B8>\n"
+    result = format_markdown_content(source, end_of_line="lf")
+    assert result == "<http://wiki.amperka.ru/видеоуроки>\n"
+
+
 def test_format_markdown_content_preserves_inline_code_with_backticks() -> None:
     source = "`` `\\n`$1`:` ``\n"
     result = format_markdown_content(source)

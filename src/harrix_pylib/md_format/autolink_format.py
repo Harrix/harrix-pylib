@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 
+from harrix_pylib.md_format.link_destination_format import decode_percent_encoded_url
+
 PLACEHOLDER_PREFIX = "HSKMDFMTAL"
 _PLACEHOLDER_RE = re.compile(rf"{re.escape(PLACEHOLDER_PREFIX)}(\d+)")
 _ANGLE_AUTOLINK_RE = re.compile(
@@ -15,12 +17,18 @@ _ANGLE_AUTOLINK_RE = re.compile(
 )
 
 
+def _decode_angle_autolink(autolink: str) -> str:
+    if not autolink.startswith("<") or not autolink.endswith(">"):
+        return autolink
+    return f"<{decode_percent_encoded_url(autolink[1:-1])}>"
+
+
 def extract_angle_autolinks(body: str) -> tuple[str, list[str]]:
     """Replace angle-bracket autolinks with placeholders before parsing."""
     autolinks: list[str] = []
 
     def replace(match: re.Match[str]) -> str:
-        autolinks.append(match.group(0))
+        autolinks.append(_decode_angle_autolink(match.group(0)))
         return f"{PLACEHOLDER_PREFIX}{len(autolinks) - 1}"
 
     return _ANGLE_AUTOLINK_RE.sub(replace, body), autolinks
