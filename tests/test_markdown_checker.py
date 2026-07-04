@@ -937,6 +937,39 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
+        # H031: Invalid image alt text format
+        # =====================================================================
+        invalid_alt_file = temp_path / "invalid_alt.md"
+        invalid_alt_file.write_text(
+            "---\nlang: en\n---\n\n![GitHub repo](img/image.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(invalid_alt_file, select={"H031"})
+        assert any("H031" in e for e in errors)
+
+        valid_alt_cases = [
+            "![](img/image.png)\n",
+            "![alt text](img/image.png)\n",
+            "![Alt Text](img/image.png)\n",
+            "![Alt text](img/image.png)\n",
+            "![Alt text 2](img/image2.png)\n",
+            "![alt text 2](img/image2.png)\n",
+        ]
+        for index, body in enumerate(valid_alt_cases):
+            valid_alt_file = temp_path / f"valid_alt_{index}.md"
+            valid_alt_file.write_text(f"---\nlang: en\n---\n\n{body}", encoding="utf-8")
+            errors = checker.check(valid_alt_file, select={"H031"})
+            assert not errors, f"H031 must not fire for valid alt text: {body.strip()}"
+
+        badge_alt_file = temp_path / "badge_alt.md"
+        badge_alt_file.write_text(
+            "---\nlang: en\n---\n\n![GitHub](https://img.shields.io/badge/GitHub-repo-blue)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(badge_alt_file, select={"H031"})
+        assert not errors
+
+        # =====================================================================
         # H026: Horizontal bar ―
         # =====================================================================
         horizontal_bar_file = temp_path / "horizontal_bar.md"

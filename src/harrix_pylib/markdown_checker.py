@@ -45,6 +45,7 @@ class MarkdownChecker:
     - **H028** - Question mark followed by period (?.).
     - **H029** - Space required after colon in inline emphasis.
     - **H030** - Colon outside inline emphasis (should be inside).
+    - **H031** - Invalid image alt text format (must be empty, all-lowercase, or title/sentence case).
 
     """
 
@@ -106,7 +107,10 @@ class MarkdownChecker:
         "H028": "Question mark followed by period (?.)",
         "H029": "Space required after colon in inline emphasis",
         "H030": "Colon outside inline emphasis (should be inside)",
+        "H031": "Invalid image alt text format",
     }
+
+    _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
 
     # Patterns for H029: colon inside or after inline emphasis without following space
     _EMPHASIS_COLON_NO_SPACE_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
@@ -729,6 +733,31 @@ class MarkdownChecker:
                     yield self._format_error("H019", error_msg, filename, line_num=line_num, col=offset + pos + 1)
             offset += len(segment)
 
+    def _check_image_alt_text(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check that image alt text uses an allowed format (H031).
+
+        Allowed alt text:
+
+        - empty;
+        - all-lowercase words, e.g. ``alt text``, ``alt text 2``;
+        - title case words, e.g. ``Alt Text``, ``Alt Text 2``;
+        - sentence case, e.g. ``Alt text``, ``Alt text 2``.
+        """
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                for match in self._IMAGE_ALT_PATTERN.finditer(segment):
+                    image_markdown = match.group(0)
+                    if any(sub in image_markdown for sub in self._IMAGE_H014_SKIP_SUBSTRINGS):
+                        continue
+                    alt_text = match.group(1)
+                    if self._is_valid_image_alt_text(alt_text):
+                        continue
+                    col = offset + match.start(1) + 1
+                    error_msg = f'{self.RULES["H031"]}: "{alt_text}"'
+                    yield self._format_error("H031", error_msg, filename, line_num=line_num, col=col)
+            offset += len(segment)
+
     def _check_image_caption(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that image captions start with uppercase (H020)."""
         if not line.strip().startswith("!["):
@@ -886,6 +915,9 @@ class MarkdownChecker:
 
         if "H030" in rules:
             yield from self._check_colon_outside_emphasis(filename, line, line_num)
+
+        if "H031" in rules:
+            yield from self._check_image_alt_text(filename, line, line_num)
 
     def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that '№' is followed by a space (H027).
@@ -1256,6 +1288,33 @@ class MarkdownChecker:
     # =========================================================================
     # Helper Methods
     # =========================================================================
+
+    def _is_valid_image_alt_text(self, alt: str) -> bool:
+        """Return True if image alt text is empty or uses an allowed word casing."""
+        if not alt:
+            return True
+
+        tokens = alt.split()
+        if not tokens:
+            return True
+
+        def is_lower_word(token: str) -> bool:
+            return token.isalpha() and token.islower()
+
+        def is_title_word(token: str) -> bool:
+            return token.isalpha() and token[0].isupper() and (len(token) == 1 or token[1:].islower())
+
+        def is_digit_token(token: str) -> bool:
+            return token.isdigit()
+
+        if all(is_digit_token(token) or is_lower_word(token) for token in tokens):
+            return True
+        if all(is_digit_token(token) or is_title_word(token) for token in tokens):
+            return True
+        first, *rest = tokens
+        return (is_digit_token(first) or is_title_word(first)) and all(
+            is_digit_token(token) or is_lower_word(token) for token in rest
+        )
 
     def _paragraph_last_char(self, line: str) -> tuple[str, int]:
         """Return last meaningful character and its 1-based column for colon checks.

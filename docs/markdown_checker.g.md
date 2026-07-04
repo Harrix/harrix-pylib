@@ -31,6 +31,7 @@ lang: en
   - [⚙️ Method `_check_filename_rules`](#️-method-_check_filename_rules)
   - [⚙️ Method `_check_horizontal_bar`](#️-method-_check_horizontal_bar)
   - [⚙️ Method `_check_html_tags`](#️-method-_check_html_tags)
+  - [⚙️ Method `_check_image_alt_text`](#️-method-_check_image_alt_text)
   - [⚙️ Method `_check_image_caption`](#️-method-_check_image_caption)
   - [⚙️ Method `_check_image_not_at_line_start`](#️-method-_check_image_not_at_line_start)
   - [⚙️ Method `_check_incorrect_words`](#️-method-_check_incorrect_words)
@@ -57,6 +58,7 @@ lang: en
   - [⚙️ Method `_is_hyphenated_identifier_fragment`](#️-method-_is_hyphenated_identifier_fragment)
   - [⚙️ Method `_is_identifier_like_link_label`](#️-method-_is_identifier_like_link_label)
   - [⚙️ Method `_is_table_cell_only_dash`](#️-method-_is_table_cell_only_dash)
+  - [⚙️ Method `_is_valid_image_alt_text`](#️-method-_is_valid_image_alt_text)
   - [⚙️ Method `_paragraph_last_char`](#️-method-_paragraph_last_char)
   - [⚙️ Method `_remove_inline_code`](#️-method-_remove_inline_code)
   - [⚙️ Method `_should_check_paragraph_end`](#️-method-_should_check_paragraph_end)
@@ -103,6 +105,7 @@ Rules:
 - **H028** - Question mark followed by period (?.).
 - **H029** - Space required after colon in inline emphasis.
 - **H030** - Colon outside inline emphasis (should be inside).
+- **H031** - Invalid image alt text format (must be empty, all-lowercase, or title/sentence case).
 
 <details>
 <summary>Code:</summary>
@@ -168,7 +171,10 @@ class MarkdownChecker:
         "H028": "Question mark followed by period (?.)",
         "H029": "Space required after colon in inline emphasis",
         "H030": "Colon outside inline emphasis (should be inside)",
+        "H031": "Invalid image alt text format",
     }
+
+    _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
 
     # Patterns for H029: colon inside or after inline emphasis without following space
     _EMPHASIS_COLON_NO_SPACE_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
@@ -791,6 +797,31 @@ class MarkdownChecker:
                     yield self._format_error("H019", error_msg, filename, line_num=line_num, col=offset + pos + 1)
             offset += len(segment)
 
+    def _check_image_alt_text(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check that image alt text uses an allowed format (H031).
+
+        Allowed alt text:
+
+        - empty;
+        - all-lowercase words, e.g. ``alt text``, ``alt text 2``;
+        - title case words, e.g. ``Alt Text``, ``Alt Text 2``;
+        - sentence case, e.g. ``Alt text``, ``Alt text 2``.
+        """
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                for match in self._IMAGE_ALT_PATTERN.finditer(segment):
+                    image_markdown = match.group(0)
+                    if any(sub in image_markdown for sub in self._IMAGE_H014_SKIP_SUBSTRINGS):
+                        continue
+                    alt_text = match.group(1)
+                    if self._is_valid_image_alt_text(alt_text):
+                        continue
+                    col = offset + match.start(1) + 1
+                    error_msg = f'{self.RULES["H031"]}: "{alt_text}"'
+                    yield self._format_error("H031", error_msg, filename, line_num=line_num, col=col)
+            offset += len(segment)
+
     def _check_image_caption(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that image captions start with uppercase (H020)."""
         if not line.strip().startswith("!["):
@@ -948,6 +979,9 @@ class MarkdownChecker:
 
         if "H030" in rules:
             yield from self._check_colon_outside_emphasis(filename, line, line_num)
+
+        if "H031" in rules:
+            yield from self._check_image_alt_text(filename, line, line_num)
 
     def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that '№' is followed by a space (H027).
@@ -1318,6 +1352,33 @@ class MarkdownChecker:
     # =========================================================================
     # Helper Methods
     # =========================================================================
+
+    def _is_valid_image_alt_text(self, alt: str) -> bool:
+        """Return True if image alt text is empty or uses an allowed word casing."""
+        if not alt:
+            return True
+
+        tokens = alt.split()
+        if not tokens:
+            return True
+
+        def is_lower_word(token: str) -> bool:
+            return token.isalpha() and token.islower()
+
+        def is_title_word(token: str) -> bool:
+            return token.isalpha() and token[0].isupper() and (len(token) == 1 or token[1:].islower())
+
+        def is_digit_token(token: str) -> bool:
+            return token.isdigit()
+
+        if all(is_digit_token(token) or is_lower_word(token) for token in tokens):
+            return True
+        if all(is_digit_token(token) or is_title_word(token) for token in tokens):
+            return True
+        first, *rest = tokens
+        return (is_digit_token(first) or is_title_word(first)) and all(
+            is_digit_token(token) or is_lower_word(token) for token in rest
+        )
 
     def _paragraph_last_char(self, line: str) -> tuple[str, int]:
         """Return last meaningful character and its 1-based column for colon checks.
@@ -2029,6 +2090,44 @@ def _check_html_tags(
 
 </details>
 
+### ⚙️ Method `_check_image_alt_text`
+
+```python
+def _check_image_alt_text(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]
+```
+
+Check that image alt text uses an allowed format (H031).
+
+Allowed alt text:
+
+- empty;
+- all-lowercase words, e.g. `alt text`, `alt text 2`;
+- title case words, e.g. `Alt Text`, `Alt Text 2`;
+- sentence case, e.g. `Alt text`, `Alt text 2`.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _check_image_alt_text(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                for match in self._IMAGE_ALT_PATTERN.finditer(segment):
+                    image_markdown = match.group(0)
+                    if any(sub in image_markdown for sub in self._IMAGE_H014_SKIP_SUBSTRINGS):
+                        continue
+                    alt_text = match.group(1)
+                    if self._is_valid_image_alt_text(alt_text):
+                        continue
+                    col = offset + match.start(1) + 1
+                    error_msg = f'{self.RULES["H031"]}: "{alt_text}"'
+                    yield self._format_error("H031", error_msg, filename, line_num=line_num, col=col)
+            offset += len(segment)
+```
+
+</details>
+
 ### ⚙️ Method `_check_image_caption`
 
 ```python
@@ -2252,6 +2351,9 @@ def _check_non_code_line_rules(
 
         if "H030" in rules:
             yield from self._check_colon_outside_emphasis(filename, line, line_num)
+
+        if "H031" in rules:
+            yield from self._check_image_alt_text(filename, line, line_num)
 ```
 
 </details>
@@ -2900,6 +3002,47 @@ def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
                 return part.strip() == "-"
             start = end + 1  # +1 for the | separator
         return False
+```
+
+</details>
+
+### ⚙️ Method `_is_valid_image_alt_text`
+
+```python
+def _is_valid_image_alt_text(self, alt: str) -> bool
+```
+
+Return True if image alt text is empty or uses an allowed word casing.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _is_valid_image_alt_text(self, alt: str) -> bool:
+        if not alt:
+            return True
+
+        tokens = alt.split()
+        if not tokens:
+            return True
+
+        def is_lower_word(token: str) -> bool:
+            return token.isalpha() and token.islower()
+
+        def is_title_word(token: str) -> bool:
+            return token.isalpha() and token[0].isupper() and (len(token) == 1 or token[1:].islower())
+
+        def is_digit_token(token: str) -> bool:
+            return token.isdigit()
+
+        if all(is_digit_token(token) or is_lower_word(token) for token in tokens):
+            return True
+        if all(is_digit_token(token) or is_title_word(token) for token in tokens):
+            return True
+        first, *rest = tokens
+        return (is_digit_token(first) or is_title_word(first)) and all(
+            is_digit_token(token) or is_lower_word(token) for token in rest
+        )
 ```
 
 </details>
