@@ -260,7 +260,7 @@ def _render_inline_token(
         src = _readable_link_href(str(child.attrGet("src") or ""))
         title = child.attrGet("title")
         if title:
-            return f"![{alt}]({src} {format_link_title(title)})", index + 1
+            return f"![{alt}]({src} {format_link_title(str(title))})", index + 1
         return f"![{alt}]({src})", index + 1
     if child.type == "link_open":
         raw_href = str(child.attrGet("href") or "")
@@ -304,7 +304,7 @@ def _render_inline_token(
         if stored_title:
             return f"[{inner}]({href} {stored_title})", next_index
         if title:
-            return f"[{inner}]({href} {format_link_title(title)})", next_index
+            return f"[{inner}]({href} {format_link_title(str(title))})", next_index
         return f"[{inner}]({href})", next_index
     if child.type == "link_close":
         return "", index + 1

@@ -146,6 +146,9 @@ Doc: [funcs_dev.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/func
 | 🔧 [`run_powershell_script`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-run_powershell_script)                   | Run a PowerShell script with the given commands.                                   |
 | 🔧 [`run_powershell_script_as_admin`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-run_powershell_script_as_admin) | Execute a PowerShell script with administrator privileges and captures the output. |
 | 🔧 [`write_in_output_txt`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-write_in_output_txt)                       | Decorate to write function output to a temporary file and optionally display it.   |
+| 🔧 [`_config_load_raw`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-_config_load_raw)                             |                                                                                    |
+| 🔧 [`_resolve_config_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-_resolve_config_path)                     |                                                                                    |
+| 🔧 [`_resolve_config_snippets`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-_resolve_config_snippets)             |                                                                                    |
 
 ### 📄 File `funcs_file.py`
 

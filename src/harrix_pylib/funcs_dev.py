@@ -14,7 +14,7 @@ from typing import Any
 import harrix_pylib as h
 
 
-def config_load(filename: str, *, is_temp: bool = False) -> dict:
+def config_load(filename: str, *, is_temp: bool = False, resolve_snippets: bool = True) -> dict:
     """Load configuration from a JSON file.
 
     Args:
@@ -22,6 +22,8 @@ def config_load(filename: str, *, is_temp: bool = False) -> dict:
     - `filename` (`str`): Path to the JSON configuration file. Defaults to `None`.
     - `is_temp` (`bool`): If `True`, load the temporary config file (`config-temp.json`)
     instead of the main config file. Defaults to `False`.
+    - `resolve_snippets` (`bool`): If `True`, replace ``snippet:path`` string values with
+    file contents. Defaults to `True`. Use `False` when you need the on-disk JSON as stored.
 
     Returns:
 
@@ -54,31 +56,10 @@ def config_load(filename: str, *, is_temp: bool = False) -> dict:
     ```
 
     """
-    if is_temp:
-        path_obj = Path(filename)
-        temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
-        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path() else temp_filename
-
-    config_file = Path(get_project_root()) / filename
-    with config_file.open("r", encoding="utf-8") as file:
-        config = json.load(file)
-
-    def process_snippet(value: object) -> object:
-        if isinstance(value, str) and value.startswith("snippet:"):
-            snippet_path = Path(get_project_root()) / value.split("snippet:", 1)[1].strip()
-            if not snippet_path.exists():
-                return ""
-            with snippet_path.open("r", encoding="utf-8") as snippet_file:
-                return snippet_file.read()
-        return value
-
-    for key, value in config.items():
-        if isinstance(value, dict):
-            config[key] = {k: process_snippet(v) for k, v in value.items()}
-        else:
-            config[key] = process_snippet(value)
-
-    return config
+    config = _config_load_raw(filename, is_temp=is_temp)
+    if not resolve_snippets:
+        return config
+    return _resolve_config_snippets(config)
 
 
 def config_save(config: dict, filename: str, *, is_temp: bool = False) -> None:
@@ -117,12 +98,7 @@ def config_save(config: dict, filename: str, *, is_temp: bool = False) -> None:
     ```
 
     """
-    if is_temp:
-        path_obj = Path(filename)
-        temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
-        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path() else temp_filename
-
-    config_file = Path(get_project_root()) / filename
+    config_file = _resolve_config_path(filename, is_temp=is_temp)
     with config_file.open("w", encoding="utf-8") as file:
         json.dump(config, file, indent=2, ensure_ascii=False)
 
@@ -170,7 +146,7 @@ def config_update_value(key: str, value: object, filename: str, *, is_temp: bool
     ```
 
     """
-    config = config_load(filename, is_temp=is_temp)
+    config = _config_load_raw(filename, is_temp=is_temp)
 
     # Handle nested keys (e.g., "section.key")
     keys = key.split(".")
@@ -574,3 +550,36 @@ def write_in_output_txt(*, is_show_output: bool = True) -> Callable:
         return Wrapper()
 
     return decorator
+
+
+def _config_load_raw(filename: str, *, is_temp: bool = False) -> dict:
+    config_file = _resolve_config_path(filename, is_temp=is_temp)
+    with config_file.open("r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+def _resolve_config_path(filename: str, *, is_temp: bool) -> Path:
+    if is_temp:
+        path_obj = Path(filename)
+        temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
+        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path() else temp_filename
+    return Path(get_project_root()) / filename
+
+
+def _resolve_config_snippets(config: dict) -> dict:
+    def process_snippet(value: object) -> object:
+        if isinstance(value, str) and value.startswith("snippet:"):
+            snippet_path = Path(get_project_root()) / value.split("snippet:", 1)[1].strip()
+            if not snippet_path.exists():
+                return ""
+            with snippet_path.open("r", encoding="utf-8") as snippet_file:
+                return snippet_file.read()
+        return value
+
+    resolved = dict(config)
+    for key, value in resolved.items():
+        if isinstance(value, dict):
+            resolved[key] = {k: process_snippet(v) for k, v in value.items()}
+        else:
+            resolved[key] = process_snippet(value)
+    return resolved

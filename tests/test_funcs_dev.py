@@ -117,6 +117,32 @@ def test_config_update_value() -> None:
         config_temp_path.unlink(missing_ok=True)
 
 
+def test_config_update_value_preserves_snippet_references() -> None:
+    """Updating one key must not inline snippet: references in the saved JSON file."""
+    config_path = Path(h.dev.get_project_root() / "tests/data/config-snippet-update.json")
+    snippet_path = Path(h.dev.get_project_root() / "tests/data/snippet-body.txt")
+
+    try:
+        snippet_path.write_text("INLINE_ME", encoding="utf-8")
+        h.dev.config_save(
+            {"path_github": "C:/GitHub", "template": "snippet:tests/data/snippet-body.txt"},
+            str(config_path),
+        )
+
+        h.dev.config_update_value("path_github", "C:/GitHub/Updated", str(config_path))
+
+        raw_text = config_path.read_text(encoding="utf-8")
+        assert "snippet:tests/data/snippet-body.txt" in raw_text
+        assert "INLINE_ME" not in raw_text
+
+        resolved = h.dev.config_load(str(config_path))
+        assert resolved["path_github"] == "C:/GitHub/Updated"
+        assert resolved["template"] == "INLINE_ME"
+    finally:
+        config_path.unlink(missing_ok=True)
+        snippet_path.unlink(missing_ok=True)
+
+
 @pytest.mark.skipif(
     (
         subprocess.run(

@@ -438,8 +438,9 @@ def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_in
         if token.type == "paragraph_open":
             paragraph_count += 1
             paragraph_close = child_index + 2
-            if tokens[paragraph_close].map:
-                previous_block_end = tokens[paragraph_close].map[1]
+            paragraph_map = tokens[paragraph_close].map
+            if paragraph_map:
+                previous_block_end = paragraph_map[1]
             child_index += 3
             continue
         if token.type in {"bullet_list_open", "ordered_list_open"}:
@@ -449,8 +450,9 @@ def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_in
                 child_index,
                 "ordered_list_close" if token.type == "ordered_list_open" else "bullet_list_close",
             )
-            if tokens[nested_close].map:
-                previous_block_end = tokens[nested_close].map[1]
+            nested_map = tokens[nested_close].map
+            if nested_map:
+                previous_block_end = nested_map[1]
             child_index = nested_close + 1
             continue
         if token.type == "html_block":
@@ -469,7 +471,6 @@ def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_in
             "math_block_label",
         }:
             return True
-        _, child_index = _render_block(tokens, child_index)
         return True
     if paragraph_count > 1:
         return True
@@ -512,8 +513,9 @@ def _list_item_last_source_line_index(tokens: list[Token], item_open_index: int,
                 child_index,
                 "ordered_list_close" if token.type == "ordered_list_open" else "bullet_list_close",
             )
-            if tokens[nested_close].map:
-                last_line = max(last_line, tokens[nested_close].map[1] - 1)
+            nested_map = tokens[nested_close].map
+            if nested_map:
+                last_line = max(last_line, nested_map[1] - 1)
             child_index = nested_close + 1
             continue
         child_index += 1
@@ -879,7 +881,7 @@ def _render_list(
     has_nested_bullets = _list_has_nested_bullets(tokens, index + 1, close_index)
     has_following_nested_dashes = _star_marker_becomes_dash(
         bullet_markers,
-        bullet_list_marker_groups,
+        bullet_list_marker_groups or [],
         has_nested_bullets=has_nested_bullets,
     )
     ordered_marker_target_width = None

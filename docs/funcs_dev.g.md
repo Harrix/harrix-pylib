@@ -19,6 +19,9 @@ lang: en
 - [🔧 Function `run_powershell_script`](#-function-run_powershell_script)
 - [🔧 Function `run_powershell_script_as_admin`](#-function-run_powershell_script_as_admin)
 - [🔧 Function `write_in_output_txt`](#-function-write_in_output_txt)
+- [🔧 Function `_config_load_raw`](#-function-_config_load_raw)
+- [🔧 Function `_resolve_config_path`](#-function-_resolve_config_path)
+- [🔧 Function `_resolve_config_snippets`](#-function-_resolve_config_snippets)
 
 </details>
 
@@ -35,6 +38,8 @@ Args:
 - `filename` (`str`): Path to the JSON configuration file. Defaults to `None`.
 - `is_temp` (`bool`): If `True`, load the temporary config file (`config-temp.json`)
   instead of the main config file. Defaults to `False`.
+- `resolve_snippets` (`bool`): If `True`, replace `snippet:path` string values with
+  file contents. Defaults to `True`. Use `False` when you need the on-disk JSON as stored.
 
 Returns:
 
@@ -70,32 +75,11 @@ config = h.dev.config_load("config.json", is_temp=True)
 <summary>Code:</summary>
 
 ```python
-def config_load(filename: str, *, is_temp: bool = False) -> dict:
-    if is_temp:
-        path_obj = Path(filename)
-        temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
-        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path() else temp_filename
-
-    config_file = Path(get_project_root()) / filename
-    with config_file.open("r", encoding="utf-8") as file:
-        config = json.load(file)
-
-    def process_snippet(value: object) -> object:
-        if isinstance(value, str) and value.startswith("snippet:"):
-            snippet_path = Path(get_project_root()) / value.split("snippet:", 1)[1].strip()
-            if not snippet_path.exists():
-                return ""
-            with snippet_path.open("r", encoding="utf-8") as snippet_file:
-                return snippet_file.read()
-        return value
-
-    for key, value in config.items():
-        if isinstance(value, dict):
-            config[key] = {k: process_snippet(v) for k, v in value.items()}
-        else:
-            config[key] = process_snippet(value)
-
-    return config
+def config_load(filename: str, *, is_temp: bool = False, resolve_snippets: bool = True) -> dict:
+    config = _config_load_raw(filename, is_temp=is_temp)
+    if not resolve_snippets:
+        return config
+    return _resolve_config_snippets(config)
 ```
 
 </details>
@@ -145,12 +129,7 @@ h.dev.config_save(config, "config.json", is_temp=True)
 
 ```python
 def config_save(config: dict, filename: str, *, is_temp: bool = False) -> None:
-    if is_temp:
-        path_obj = Path(filename)
-        temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
-        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path() else temp_filename
-
-    config_file = Path(get_project_root()) / filename
+    config_file = _resolve_config_path(filename, is_temp=is_temp)
     with config_file.open("w", encoding="utf-8") as file:
         json.dump(config, file, indent=2, ensure_ascii=False)
 ```
@@ -209,7 +188,7 @@ h.dev.config_update_value("path_github", "C:/GitHub/Temp", "config.json", is_tem
 
 ```python
 def config_update_value(key: str, value: object, filename: str, *, is_temp: bool = False) -> None:
-    config = config_load(filename, is_temp=is_temp)
+    config = _config_load_raw(filename, is_temp=is_temp)
 
     # Handle nested keys (e.g., "section.key")
     keys = key.split(".")
@@ -668,6 +647,81 @@ def write_in_output_txt(*, is_show_output: bool = True) -> Callable:
         return Wrapper()
 
     return decorator
+```
+
+</details>
+
+## 🔧 Function `_config_load_raw`
+
+```python
+def _config_load_raw(filename: str) -> dict
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _config_load_raw(filename: str, *, is_temp: bool = False) -> dict:
+    config_file = _resolve_config_path(filename, is_temp=is_temp)
+    with config_file.open("r", encoding="utf-8") as file:
+        return json.load(file)
+```
+
+</details>
+
+## 🔧 Function `_resolve_config_path`
+
+```python
+def _resolve_config_path(filename: str) -> Path
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _resolve_config_path(filename: str, *, is_temp: bool) -> Path:
+    if is_temp:
+        path_obj = Path(filename)
+        temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
+        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path() else temp_filename
+    return Path(get_project_root()) / filename
+```
+
+</details>
+
+## 🔧 Function `_resolve_config_snippets`
+
+```python
+def _resolve_config_snippets(config: dict) -> dict
+```
+
+_No docstring provided._
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _resolve_config_snippets(config: dict) -> dict:
+    def process_snippet(value: object) -> object:
+        if isinstance(value, str) and value.startswith("snippet:"):
+            snippet_path = Path(get_project_root()) / value.split("snippet:", 1)[1].strip()
+            if not snippet_path.exists():
+                return ""
+            with snippet_path.open("r", encoding="utf-8") as snippet_file:
+                return snippet_file.read()
+        return value
+
+    resolved = dict(config)
+    for key, value in resolved.items():
+        if isinstance(value, dict):
+            resolved[key] = {k: process_snippet(v) for k, v in value.items()}
+        else:
+            resolved[key] = process_snippet(value)
+    return resolved
 ```
 
 </details>

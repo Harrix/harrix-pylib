@@ -286,10 +286,11 @@ _No docstring provided._
 
 ```python
 def _paragraph_run_end(tokens: list[Token], start: int) -> int | None:
-    if tokens[start].type != "paragraph_open" or not tokens[start].map:
+    start_map = tokens[start].map
+    if tokens[start].type != "paragraph_open" or not start_map:
         return None
     run_end = start
-    last_line_end = tokens[start].map[1]
+    last_line_end = start_map[1]
     while run_end + 3 < len(tokens) and tokens[run_end + 3].type == "paragraph_open":
         next_map = tokens[run_end + 3].map
         if not next_map or next_map[0] != last_line_end:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -30,8 +31,19 @@ def _fixture_pairs() -> list[tuple[str, str]]:
 
 _FIXTURE_PAIRS = _fixture_pairs()
 
+
 # Upstream fixtures were extracted with Prettier proseWrap: always, printWidth: 80.
-_FIXTURE_FORMAT_KWARGS = {"end_of_line": "lf", "prose_wrap": "always", "print_width": 80}
+class _FixtureFormatKwargs(TypedDict):
+    end_of_line: str
+    prose_wrap: str
+    print_width: int
+
+
+_FIXTURE_FORMAT_KWARGS: _FixtureFormatKwargs = {
+    "end_of_line": "lf",
+    "prose_wrap": "always",
+    "print_width": 80,
+}
 
 
 @pytest.mark.parametrize(
