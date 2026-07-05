@@ -7,5 +7,6 @@ from harrix_pylib import funcs_md as md
 from harrix_pylib import funcs_py as py
 from harrix_pylib import markdown_checker as md_check
 from harrix_pylib import python_checker as py_check
+from harrix_pylib import svg_optimize as svg_opt
 
-__all__ = ["dev", "file", "img", "md", "md_check", "py", "py_check"]
+__all__ = ["dev", "file", "img", "md", "md_check", "py", "py_check", "svg_opt"]

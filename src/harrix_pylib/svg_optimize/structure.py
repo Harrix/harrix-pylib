@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from harrix_pylib.svg_optimize.xml_tags import tag_endswith
+from harrix_pylib.svg_optimize.xml_tags import _tag_endswith
 
 if TYPE_CHECKING:
     from lxml import etree
@@ -19,18 +19,6 @@ DEFAULT_ATTRS = {
     "opacity": "1",
 }
 URL_REF_RE = re.compile(r"url\(#([^)]+)\)")
-
-
-def optimize_structure(root: etree._Element) -> bool:
-    """Collapse groups and strip empty attributes. Returns True if anything changed."""
-    changed = False
-    changed |= _shorten_ids(root)
-    changed |= _collapse_single_child_groups(root)
-    changed |= _remove_empty_containers(root)
-    changed |= _strip_default_attrs(root)
-    changed |= _cleanup_numeric_values(root)
-    changed |= _cleanup_root_attrs(root)
-    return changed
 
 
 def _clean_number(value: str) -> str:
@@ -61,7 +49,7 @@ def _cleanup_numeric_values(root: etree._Element) -> bool:
 
 def _cleanup_root_attrs(root: etree._Element) -> bool:
     changed = False
-    svg = root if tag_endswith(root.tag, "svg") else root.find(f"{{{SVG_NS}}}svg")
+    svg = root if _tag_endswith(root.tag, "svg") else root.find(f"{{{SVG_NS}}}svg")
     if svg is None:
         return False
 
@@ -125,6 +113,18 @@ def _merge_element_attrs(source: etree._Element, target: etree._Element) -> None
             target.set("style", f"{value};{existing}" if existing else value)
         elif attr not in target.attrib:
             target.set(attr, value)
+
+
+def _optimize_structure(root: etree._Element) -> bool:
+    """Collapse groups and strip empty attributes. Returns True if anything changed."""
+    changed = False
+    changed |= _shorten_ids(root)
+    changed |= _collapse_single_child_groups(root)
+    changed |= _remove_empty_containers(root)
+    changed |= _strip_default_attrs(root)
+    changed |= _cleanup_numeric_values(root)
+    changed |= _cleanup_root_attrs(root)
+    return changed
 
 
 def _remove_empty_containers(root: etree._Element) -> bool:

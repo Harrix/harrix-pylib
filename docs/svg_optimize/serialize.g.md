@@ -6,10 +6,10 @@ lang: en
 
 # 📄 File `serialize.py`
 
-## 🔧 Function `serialize`
+## 🔧 Function `_serialize`
 
 ```python
-def serialize(root: etree._Element) -> str
+def _serialize(root: etree._Element) -> str
 ```
 
 Serialize SVG element tree to a minified single-line string.
@@ -18,7 +18,7 @@ Serialize SVG element tree to a minified single-line string.
 <summary>Code:</summary>
 
 ```python
-def serialize(root: etree._Element) -> str:
+def _serialize(root: etree._Element) -> str:
     xlink_key = "{http://www.w3.org/1999/xlink}href"
     uses_xlink = any(elem.get(xlink_key) for elem in root.iter())
     data = cast(

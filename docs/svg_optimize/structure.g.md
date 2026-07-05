@@ -11,7 +11,6 @@ lang: en
 
 ## Contents
 
-- [🔧 Function `optimize_structure`](#-function-optimize_structure)
 - [🔧 Function `_clean_number`](#-function-_clean_number)
 - [🔧 Function `_cleanup_numeric_values`](#-function-_cleanup_numeric_values)
 - [🔧 Function `_cleanup_root_attrs`](#-function-_cleanup_root_attrs)
@@ -19,34 +18,10 @@ lang: en
 - [🔧 Function `_index_to_short_id`](#-function-_index_to_short_id)
 - [🔧 Function `_is_id_referenced`](#-function-_is_id_referenced)
 - [🔧 Function `_merge_element_attrs`](#-function-_merge_element_attrs)
+- [🔧 Function `_optimize_structure`](#-function-_optimize_structure)
 - [🔧 Function `_remove_empty_containers`](#-function-_remove_empty_containers)
 - [🔧 Function `_shorten_ids`](#-function-_shorten_ids)
 - [🔧 Function `_strip_default_attrs`](#-function-_strip_default_attrs)
-
-</details>
-
-## 🔧 Function `optimize_structure`
-
-```python
-def optimize_structure(root: etree._Element) -> bool
-```
-
-Collapse groups and strip empty attributes. Returns True if anything changed.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def optimize_structure(root: etree._Element) -> bool:
-    changed = False
-    changed |= _shorten_ids(root)
-    changed |= _collapse_single_child_groups(root)
-    changed |= _remove_empty_containers(root)
-    changed |= _strip_default_attrs(root)
-    changed |= _cleanup_numeric_values(root)
-    changed |= _cleanup_root_attrs(root)
-    return changed
-```
 
 </details>
 
@@ -118,7 +93,7 @@ _No docstring provided._
 ```python
 def _cleanup_root_attrs(root: etree._Element) -> bool:
     changed = False
-    svg = root if tag_endswith(root.tag, "svg") else root.find(f"{{{SVG_NS}}}svg")
+    svg = root if _tag_endswith(root.tag, "svg") else root.find(f"{{{SVG_NS}}}svg")
     if svg is None:
         return False
 
@@ -238,6 +213,31 @@ def _merge_element_attrs(source: etree._Element, target: etree._Element) -> None
             target.set("style", f"{value};{existing}" if existing else value)
         elif attr not in target.attrib:
             target.set(attr, value)
+```
+
+</details>
+
+## 🔧 Function `_optimize_structure`
+
+```python
+def _optimize_structure(root: etree._Element) -> bool
+```
+
+Collapse groups and strip empty attributes. Returns True if anything changed.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _optimize_structure(root: etree._Element) -> bool:
+    changed = False
+    changed |= _shorten_ids(root)
+    changed |= _collapse_single_child_groups(root)
+    changed |= _remove_empty_containers(root)
+    changed |= _strip_default_attrs(root)
+    changed |= _cleanup_numeric_values(root)
+    changed |= _cleanup_root_attrs(root)
+    return changed
 ```
 
 </details>

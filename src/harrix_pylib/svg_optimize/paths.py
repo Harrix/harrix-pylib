@@ -35,7 +35,19 @@ COMMAND_ARGS = {
 }
 
 
-def format_path_data(commands: list[tuple[str, list[float]]]) -> str:
+def _format_args_spaced(args: list[float]) -> str:
+    return " ".join(_format_number(value) for value in args)
+
+
+def _format_number(value: float) -> str:
+    value = _trim_number(value)
+    if value == int(value):
+        return str(int(value))
+    text = f"{value:.4f}".rstrip("0").rstrip(".")
+    return "0" if text == "-0" else text
+
+
+def _format_path_data(commands: list[tuple[str, list[float]]]) -> str:
     """Format path commands into a compact d attribute."""
     parts: list[str] = []
     for index, (cmd, args) in enumerate(commands):
@@ -54,72 +66,6 @@ def format_path_data(commands: list[tuple[str, list[float]]]) -> str:
         else:
             parts.append(f"{cmd}{formatted_args}")
     return "".join(parts)
-
-
-def optimize_path_data(path_data: str) -> str:
-    """Optimize a path d attribute string."""
-    commands = parse_path_data(path_data)
-    if not _is_valid_command_list(commands):
-        return _minimal_path_cleanup(path_data)
-    commands = _optimize_commands(commands)
-    return format_path_data(commands)
-
-
-def optimize_paths(root: etree._Element) -> bool:
-    """Optimize path d attributes. Returns True if any path changed."""
-    changed = False
-    for elem in root.iter(f"{{{SVG_NS}}}path"):
-        d = elem.get("d")
-        if not d:
-            continue
-        optimized = optimize_path_data(d)
-        if optimized != d:
-            elem.set("d", optimized)
-            changed = True
-    return changed
-
-
-def parse_path_data(path_data: str) -> list[tuple[str, list[float]]]:
-    """Parse SVG path data into command tuples."""
-    tokens = re.findall(
-        r"[MmZzLlHhVvCcSsQqTtAa]|[-+]?(?:\d*\.\d+|\d+)(?:[eE][+-]?\d+)?",
-        path_data.replace(",", " "),
-    )
-    commands: list[tuple[str, list[float]]] = []
-    index = 0
-    command = "M"
-    while index < len(tokens):
-        token = tokens[index]
-        if token.isalpha():
-            command = token
-            index += 1
-            if command in {"Z", "z"}:
-                commands.append((command, []))
-            continue
-
-        arg_count = COMMAND_ARGS[command]
-        args: list[float] = []
-        while len(args) < arg_count and index < len(tokens) and not tokens[index].isalpha():
-            args.append(float(tokens[index]))
-            index += 1
-        if not args:
-            break
-        commands.append((command, args))
-        if command in {"M", "m"}:
-            command = "l" if command == "m" else "L"
-    return commands
-
-
-def _format_args_spaced(args: list[float]) -> str:
-    return " ".join(_format_number(value) for value in args)
-
-
-def _format_number(value: float) -> str:
-    value = _trim_number(value)
-    if value == int(value):
-        return str(int(value))
-    text = f"{value:.4f}".rstrip("0").rstrip(".")
-    return "0" if text == "-0" else text
 
 
 def _is_valid_command_list(commands: list[tuple[str, list[float]]]) -> bool:
@@ -203,6 +149,60 @@ def _optimize_commands(commands: list[tuple[str, list[float]]]) -> list[tuple[st
             continue
         result.append((cmd, args))
     return result
+
+
+def _optimize_path_data(path_data: str) -> str:
+    """Optimize a path d attribute string."""
+    commands = _parse_path_data(path_data)
+    if not _is_valid_command_list(commands):
+        return _minimal_path_cleanup(path_data)
+    commands = _optimize_commands(commands)
+    return _format_path_data(commands)
+
+
+def _optimize_paths(root: etree._Element) -> bool:
+    """Optimize path d attributes. Returns True if any path changed."""
+    changed = False
+    for elem in root.iter(f"{{{SVG_NS}}}path"):
+        d = elem.get("d")
+        if not d:
+            continue
+        optimized = _optimize_path_data(d)
+        if optimized != d:
+            elem.set("d", optimized)
+            changed = True
+    return changed
+
+
+def _parse_path_data(path_data: str) -> list[tuple[str, list[float]]]:
+    """Parse SVG path data into command tuples."""
+    tokens = re.findall(
+        r"[MmZzLlHhVvCcSsQqTtAa]|[-+]?(?:\d*\.\d+|\d+)(?:[eE][+-]?\d+)?",
+        path_data.replace(",", " "),
+    )
+    commands: list[tuple[str, list[float]]] = []
+    index = 0
+    command = "M"
+    while index < len(tokens):
+        token = tokens[index]
+        if token.isalpha():
+            command = token
+            index += 1
+            if command in {"Z", "z"}:
+                commands.append((command, []))
+            continue
+
+        arg_count = COMMAND_ARGS[command]
+        args: list[float] = []
+        while len(args) < arg_count and index < len(tokens) and not tokens[index].isalpha():
+            args.append(float(tokens[index]))
+            index += 1
+        if not args:
+            break
+        commands.append((command, args))
+        if command in {"M", "m"}:
+            command = "l" if command == "m" else "L"
+    return commands
 
 
 def _relative_line(pos: list[float], target: list[float]) -> tuple[str, list[float]]:

@@ -6,10 +6,10 @@ lang: en
 
 # 📄 File `cleanup.py`
 
-## 🔧 Function `cleanup`
+## 🔧 Function `_cleanup`
 
 ```python
-def cleanup(root: etree._Element) -> None
+def _cleanup(root: etree._Element) -> None
 ```
 
 Remove metadata elements and deprecated attributes from the SVG tree.
@@ -18,7 +18,7 @@ Remove metadata elements and deprecated attributes from the SVG tree.
 <summary>Code:</summary>
 
 ```python
-def cleanup(root: etree._Element) -> None:
+def _cleanup(root: etree._Element) -> None:
     for tag in REMOVE_TAGS:
         for elem in root.iter(tag):
             parent = elem.getparent()
@@ -33,7 +33,7 @@ def cleanup(root: etree._Element) -> None:
             ):
                 del elem.attrib[attr]
 
-    svg = root if tag_endswith(root.tag, "svg") else root.find(f"{{{SVG_NS}}}svg")
+    svg = root if _tag_endswith(root.tag, "svg") else root.find(f"{{{SVG_NS}}}svg")
     if svg is not None and "version" in svg.attrib:
         del svg.attrib["version"]
 ```

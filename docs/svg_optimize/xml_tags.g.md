@@ -11,15 +11,15 @@ lang: en
 
 ## Contents
 
-- [🔧 Function `tag_endswith`](#-function-tag_endswith)
-- [🔧 Function `tag_local_name`](#-function-tag_local_name)
+- [🔧 Function `_tag_endswith`](#-function-_tag_endswith)
+- [🔧 Function `_tag_local_name`](#-function-_tag_local_name)
 
 </details>
 
-## 🔧 Function `tag_endswith`
+## 🔧 Function `_tag_endswith`
 
 ```python
-def tag_endswith(tag: str | bytes | bytearray | etree.QName, suffix: str) -> bool
+def _tag_endswith(tag: str | bytes | bytearray | etree.QName, suffix: str) -> bool
 ```
 
 Return whether the tag's local name ends with suffix.
@@ -28,16 +28,16 @@ Return whether the tag's local name ends with suffix.
 <summary>Code:</summary>
 
 ```python
-def tag_endswith(tag: str | bytes | bytearray | etree.QName, suffix: str) -> bool:
-    return tag_local_name(tag).endswith(suffix)
+def _tag_endswith(tag: str | bytes | bytearray | etree.QName, suffix: str) -> bool:
+    return _tag_local_name(tag).endswith(suffix)
 ```
 
 </details>
 
-## 🔧 Function `tag_local_name`
+## 🔧 Function `_tag_local_name`
 
 ```python
-def tag_local_name(tag: str | bytes | bytearray | etree.QName) -> str
+def _tag_local_name(tag: str | bytes | bytearray | etree.QName) -> str
 ```
 
 Return the local part of an element tag.
@@ -46,7 +46,7 @@ Return the local part of an element tag.
 <summary>Code:</summary>
 
 ```python
-def tag_local_name(tag: str | bytes | bytearray | etree.QName) -> str:
+def _tag_local_name(tag: str | bytes | bytearray | etree.QName) -> str:
     if isinstance(tag, etree.QName):
         return tag.localname
     if isinstance(tag, bytes) or isinstance(tag, bytearray):  # noqa: SIM101, SIM108

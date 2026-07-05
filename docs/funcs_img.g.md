@@ -106,7 +106,7 @@ def optimize_svg(filename: Path | str, output_filename: Path | str | None = None
     source = Path(filename)
     target = Path(output_filename) if output_filename is not None else source
     content = source.read_text(encoding="utf-8")
-    optimized = _optimize_svg_content(content)
+    optimized = SvgOptimizer().optimize(content)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(optimized, encoding="utf-8")
     return f"✅ File {source.name} successfully optimized."

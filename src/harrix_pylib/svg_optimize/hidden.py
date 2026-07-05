@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from harrix_pylib.svg_optimize.xml_tags import tag_endswith, tag_local_name
+from harrix_pylib.svg_optimize.xml_tags import _tag_endswith, _tag_local_name
 
 if TYPE_CHECKING:
     from lxml import etree
@@ -24,27 +24,6 @@ SHAPE_TAGS = frozenset(
         f"{{{SVG_NS}}}g",
     }
 )
-
-
-def remove_hidden(root: etree._Element, stylesheet: StyleSheet) -> bool:
-    """Remove elements that are not rendered. Returns True if any element was removed."""
-    removed = False
-    for elem in list(root.iter()):
-        if elem.tag not in SHAPE_TAGS and not tag_endswith(elem.tag, "g"):
-            continue
-        style = stylesheet.compute_style(elem)
-        if _is_hidden(style, elem):
-            parent = elem.getparent()
-            if parent is not None:
-                parent.remove(elem)
-                removed = True
-                continue
-        if _is_zero_sized(elem):
-            parent = elem.getparent()
-            if parent is not None:
-                parent.remove(elem)
-                removed = True
-    return removed
 
 
 def _float(value: str | None) -> float:
@@ -68,7 +47,7 @@ def _is_hidden(style: dict[str, str], elem: etree._Element) -> bool:
 
 
 def _is_zero_sized(elem: etree._Element) -> bool:
-    tag = tag_local_name(elem.tag)
+    tag = _tag_local_name(elem.tag)
     if tag == "rect":
         width = _float(elem.get("width"))
         height = _float(elem.get("height"))
@@ -82,3 +61,24 @@ def _is_zero_sized(elem: etree._Element) -> bool:
     if tag in {"polygon", "polyline"}:
         return elem.get("points", "").strip() == ""
     return False
+
+
+def _remove_hidden(root: etree._Element, stylesheet: StyleSheet) -> bool:
+    """Remove elements that are not rendered. Returns True if any element was removed."""
+    removed = False
+    for elem in list(root.iter()):
+        if elem.tag not in SHAPE_TAGS and not _tag_endswith(elem.tag, "g"):
+            continue
+        style = stylesheet.compute_style(elem)
+        if _is_hidden(style, elem):
+            parent = elem.getparent()
+            if parent is not None:
+                parent.remove(elem)
+                removed = True
+                continue
+        if _is_zero_sized(elem):
+            parent = elem.getparent()
+            if parent is not None:
+                parent.remove(elem)
+                removed = True
+    return removed

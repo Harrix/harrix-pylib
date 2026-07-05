@@ -11,146 +11,19 @@ lang: en
 
 ## Contents
 
-- [🔧 Function `format_path_data`](#-function-format_path_data)
-- [🔧 Function `optimize_path_data`](#-function-optimize_path_data)
-- [🔧 Function `optimize_paths`](#-function-optimize_paths)
-- [🔧 Function `parse_path_data`](#-function-parse_path_data)
 - [🔧 Function `_format_args_spaced`](#-function-_format_args_spaced)
 - [🔧 Function `_format_number`](#-function-_format_number)
+- [🔧 Function `_format_path_data`](#-function-_format_path_data)
 - [🔧 Function `_is_valid_command_list`](#-function-_is_valid_command_list)
 - [🔧 Function `_minimal_path_cleanup`](#-function-_minimal_path_cleanup)
 - [🔧 Function `_optimize_commands`](#-function-_optimize_commands)
+- [🔧 Function `_optimize_path_data`](#-function-_optimize_path_data)
+- [🔧 Function `_optimize_paths`](#-function-_optimize_paths)
+- [🔧 Function `_parse_path_data`](#-function-_parse_path_data)
 - [🔧 Function `_relative_line`](#-function-_relative_line)
 - [🔧 Function `_resolve_point`](#-function-_resolve_point)
 - [🔧 Function `_trim_number`](#-function-_trim_number)
 - [🔧 Function `_update_pos_for_curve`](#-function-_update_pos_for_curve)
-
-</details>
-
-## 🔧 Function `format_path_data`
-
-```python
-def format_path_data(commands: list[tuple[str, list[float]]]) -> str
-```
-
-Format path commands into a compact d attribute.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def format_path_data(commands: list[tuple[str, list[float]]]) -> str:
-    parts: list[str] = []
-    for index, (cmd, args) in enumerate(commands):
-        if cmd in {"Z", "z"}:
-            parts.append("z")
-            continue
-        formatted_args = _format_args_spaced(args)
-        if index == 0 and cmd == "M":
-            parts.append(f"M{formatted_args}")
-        elif parts and parts[-1] == "z" and cmd == "m":
-            parts.append(f"m{formatted_args}")
-        elif cmd in {"h", "v"}:
-            parts.append(f"{cmd}{_format_args_spaced(args).replace(' ', '')}")
-        elif cmd == "l":
-            parts.append(f"l{_format_args_spaced(args)}")
-        else:
-            parts.append(f"{cmd}{formatted_args}")
-    return "".join(parts)
-```
-
-</details>
-
-## 🔧 Function `optimize_path_data`
-
-```python
-def optimize_path_data(path_data: str) -> str
-```
-
-Optimize a path d attribute string.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def optimize_path_data(path_data: str) -> str:
-    commands = parse_path_data(path_data)
-    if not _is_valid_command_list(commands):
-        return _minimal_path_cleanup(path_data)
-    commands = _optimize_commands(commands)
-    return format_path_data(commands)
-```
-
-</details>
-
-## 🔧 Function `optimize_paths`
-
-```python
-def optimize_paths(root: etree._Element) -> bool
-```
-
-Optimize path d attributes. Returns True if any path changed.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def optimize_paths(root: etree._Element) -> bool:
-    changed = False
-    for elem in root.iter(f"{{{SVG_NS}}}path"):
-        d = elem.get("d")
-        if not d:
-            continue
-        optimized = optimize_path_data(d)
-        if optimized != d:
-            elem.set("d", optimized)
-            changed = True
-    return changed
-```
-
-</details>
-
-## 🔧 Function `parse_path_data`
-
-```python
-def parse_path_data(path_data: str) -> list[tuple[str, list[float]]]
-```
-
-Parse SVG path data into command tuples.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def parse_path_data(path_data: str) -> list[tuple[str, list[float]]]:
-    tokens = re.findall(
-        r"[MmZzLlHhVvCcSsQqTtAa]|[-+]?(?:\d*\.\d+|\d+)(?:[eE][+-]?\d+)?",
-        path_data.replace(",", " "),
-    )
-    commands: list[tuple[str, list[float]]] = []
-    index = 0
-    command = "M"
-    while index < len(tokens):
-        token = tokens[index]
-        if token.isalpha():
-            command = token
-            index += 1
-            if command in {"Z", "z"}:
-                commands.append((command, []))
-            continue
-
-        arg_count = COMMAND_ARGS[command]
-        args: list[float] = []
-        while len(args) < arg_count and index < len(tokens) and not tokens[index].isalpha():
-            args.append(float(tokens[index]))
-            index += 1
-        if not args:
-            break
-        commands.append((command, args))
-        if command in {"M", "m"}:
-            command = "l" if command == "m" else "L"
-    return commands
-```
 
 </details>
 
@@ -190,6 +63,40 @@ def _format_number(value: float) -> str:
         return str(int(value))
     text = f"{value:.4f}".rstrip("0").rstrip(".")
     return "0" if text == "-0" else text
+```
+
+</details>
+
+## 🔧 Function `_format_path_data`
+
+```python
+def _format_path_data(commands: list[tuple[str, list[float]]]) -> str
+```
+
+Format path commands into a compact d attribute.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _format_path_data(commands: list[tuple[str, list[float]]]) -> str:
+    parts: list[str] = []
+    for index, (cmd, args) in enumerate(commands):
+        if cmd in {"Z", "z"}:
+            parts.append("z")
+            continue
+        formatted_args = _format_args_spaced(args)
+        if index == 0 and cmd == "M":
+            parts.append(f"M{formatted_args}")
+        elif parts and parts[-1] == "z" and cmd == "m":
+            parts.append(f"m{formatted_args}")
+        elif cmd in {"h", "v"}:
+            parts.append(f"{cmd}{_format_args_spaced(args).replace(' ', '')}")
+        elif cmd == "l":
+            parts.append(f"l{_format_args_spaced(args)}")
+        else:
+            parts.append(f"{cmd}{formatted_args}")
+    return "".join(parts)
 ```
 
 </details>
@@ -315,6 +222,99 @@ def _optimize_commands(commands: list[tuple[str, list[float]]]) -> list[tuple[st
             continue
         result.append((cmd, args))
     return result
+```
+
+</details>
+
+## 🔧 Function `_optimize_path_data`
+
+```python
+def _optimize_path_data(path_data: str) -> str
+```
+
+Optimize a path d attribute string.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _optimize_path_data(path_data: str) -> str:
+    commands = _parse_path_data(path_data)
+    if not _is_valid_command_list(commands):
+        return _minimal_path_cleanup(path_data)
+    commands = _optimize_commands(commands)
+    return _format_path_data(commands)
+```
+
+</details>
+
+## 🔧 Function `_optimize_paths`
+
+```python
+def _optimize_paths(root: etree._Element) -> bool
+```
+
+Optimize path d attributes. Returns True if any path changed.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _optimize_paths(root: etree._Element) -> bool:
+    changed = False
+    for elem in root.iter(f"{{{SVG_NS}}}path"):
+        d = elem.get("d")
+        if not d:
+            continue
+        optimized = _optimize_path_data(d)
+        if optimized != d:
+            elem.set("d", optimized)
+            changed = True
+    return changed
+```
+
+</details>
+
+## 🔧 Function `_parse_path_data`
+
+```python
+def _parse_path_data(path_data: str) -> list[tuple[str, list[float]]]
+```
+
+Parse SVG path data into command tuples.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _parse_path_data(path_data: str) -> list[tuple[str, list[float]]]:
+    tokens = re.findall(
+        r"[MmZzLlHhVvCcSsQqTtAa]|[-+]?(?:\d*\.\d+|\d+)(?:[eE][+-]?\d+)?",
+        path_data.replace(",", " "),
+    )
+    commands: list[tuple[str, list[float]]] = []
+    index = 0
+    command = "M"
+    while index < len(tokens):
+        token = tokens[index]
+        if token.isalpha():
+            command = token
+            index += 1
+            if command in {"Z", "z"}:
+                commands.append((command, []))
+            continue
+
+        arg_count = COMMAND_ARGS[command]
+        args: list[float] = []
+        while len(args) < arg_count and index < len(tokens) and not tokens[index].isalpha():
+            args.append(float(tokens[index]))
+            index += 1
+        if not args:
+            break
+        commands.append((command, args))
+        if command in {"M", "m"}:
+            command = "l" if command == "m" else "L"
+    return commands
 ```
 
 </details>

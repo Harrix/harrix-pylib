@@ -6,7 +6,7 @@ import re
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-from harrix_pylib.svg_optimize.xml_tags import tag_endswith
+from harrix_pylib.svg_optimize.xml_tags import _tag_endswith
 
 if TYPE_CHECKING:
     from lxml import etree
@@ -66,7 +66,7 @@ class StyleSheet:
                     class_usage[class_name] = class_usage.get(class_name, 0) + 1
 
         for elem in root.iter():
-            if tag_endswith(elem.tag, "style"):
+            if _tag_endswith(elem.tag, "style"):
                 continue
             class_attr = elem.get("class")
             if not class_attr:

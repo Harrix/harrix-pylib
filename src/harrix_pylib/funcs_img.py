@@ -5,7 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from harrix_pylib import img_tools
-from harrix_pylib.svg_optimize.optimizer import optimize_svg_content as _optimize_svg_content
+from harrix_pylib.svg_optimize import SvgOptimizer
+from harrix_pylib.svg_optimize import optimize_svg_content as _optimize_svg_content
 
 EXE_RASTER_EXTENSIONS = img_tools.EXE_RASTER_EXTENSIONS
 
@@ -78,7 +79,7 @@ def optimize_svg(filename: Path | str, output_filename: Path | str | None = None
     source = Path(filename)
     target = Path(output_filename) if output_filename is not None else source
     content = source.read_text(encoding="utf-8")
-    optimized = _optimize_svg_content(content)
+    optimized = SvgOptimizer().optimize(content)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(optimized, encoding="utf-8")
     return f"✅ File {source.name} successfully optimized."

@@ -79,7 +79,7 @@ class StyleSheet:
                     class_usage[class_name] = class_usage.get(class_name, 0) + 1
 
         for elem in root.iter():
-            if tag_endswith(elem.tag, "style"):
+            if _tag_endswith(elem.tag, "style"):
                 continue
             class_attr = elem.get("class")
             if not class_attr:
@@ -239,7 +239,7 @@ def inline_styles(self, root: etree._Element) -> None:
                     class_usage[class_name] = class_usage.get(class_name, 0) + 1
 
         for elem in root.iter():
-            if tag_endswith(elem.tag, "style"):
+            if _tag_endswith(elem.tag, "style"):
                 continue
             class_attr = elem.get("class")
             if not class_attr:

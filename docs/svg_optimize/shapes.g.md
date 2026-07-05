@@ -11,8 +11,8 @@ lang: en
 
 ## Contents
 
-- [🔧 Function `convert_shapes`](#-function-convert_shapes)
 - [🔧 Function `_circle_to_path`](#-function-_circle_to_path)
+- [🔧 Function `_convert_shapes`](#-function-_convert_shapes)
 - [🔧 Function `_ellipse_to_path`](#-function-_ellipse_to_path)
 - [🔧 Function `_line_to_path`](#-function-_line_to_path)
 - [🔧 Function `_num`](#-function-_num)
@@ -21,37 +21,6 @@ lang: en
 - [🔧 Function `_polyline_to_path`](#-function-_polyline_to_path)
 - [🔧 Function `_rect_to_path`](#-function-_rect_to_path)
 - [🔧 Function `_shape_to_path`](#-function-_shape_to_path)
-
-</details>
-
-## 🔧 Function `convert_shapes`
-
-```python
-def convert_shapes(root: etree._Element) -> bool
-```
-
-Convert basic shapes to paths. Returns True if any conversion happened.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def convert_shapes(root: etree._Element) -> bool:
-    changed = False
-    for elem in list(root.iter()):
-        if elem.tag not in CONVERTIBLE:
-            continue
-        path_d = _shape_to_path(elem)
-        if path_d is None:
-            continue
-        elem.tag = f"{{{SVG_NS}}}path"
-        elem.set("d", path_d)
-        for attr in ("x", "y", "width", "height", "rx", "ry", "cx", "cy", "r", "points", "x1", "y1", "x2", "y2"):
-            if attr in elem.attrib:
-                del elem.attrib[attr]
-        changed = True
-    return changed
-```
 
 </details>
 
@@ -73,7 +42,7 @@ def _circle_to_path(elem: etree._Element) -> str | None:
     r = _num(elem.get("r", "0"))
     if r == 0:
         return None
-    return format_path_data(
+    return _format_path_data(
         [
             ("M", [cx - r, cy]),
             ("A", [r, r, 0, 1, 0, cx + r, cy]),
@@ -81,6 +50,37 @@ def _circle_to_path(elem: etree._Element) -> str | None:
             ("Z", []),
         ]
     )
+```
+
+</details>
+
+## 🔧 Function `_convert_shapes`
+
+```python
+def _convert_shapes(root: etree._Element) -> bool
+```
+
+Convert basic shapes to paths. Returns True if any conversion happened.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _convert_shapes(root: etree._Element) -> bool:
+    changed = False
+    for elem in list(root.iter()):
+        if elem.tag not in CONVERTIBLE:
+            continue
+        path_d = _shape_to_path(elem)
+        if path_d is None:
+            continue
+        elem.tag = f"{{{SVG_NS}}}path"
+        elem.set("d", path_d)
+        for attr in ("x", "y", "width", "height", "rx", "ry", "cx", "cy", "r", "points", "x1", "y1", "x2", "y2"):
+            if attr in elem.attrib:
+                del elem.attrib[attr]
+        changed = True
+    return changed
 ```
 
 </details>
@@ -104,7 +104,7 @@ def _ellipse_to_path(elem: etree._Element) -> str | None:
     ry = _num(elem.get("ry", "0"))
     if rx == 0 or ry == 0:
         return None
-    return format_path_data(
+    return _format_path_data(
         [
             ("M", [cx - rx, cy]),
             ("A", [rx, ry, 0, 1, 0, cx + rx, cy]),
@@ -133,7 +133,7 @@ def _line_to_path(elem: etree._Element) -> str | None:
     y1 = _num(elem.get("y1", "0"))
     x2 = _num(elem.get("x2", "0"))
     y2 = _num(elem.get("y2", "0"))
-    return format_path_data([("M", [x1, y1]), ("L", [x2, y2])])
+    return _format_path_data([("M", [x1, y1]), ("L", [x2, y2])])
 ```
 
 </details>
@@ -194,7 +194,7 @@ def _polygon_to_path(elem: etree._Element) -> str | None:
     commands: list[tuple[str, list[float]]] = [("M", list(points[0]))]
     commands.extend(("L", list(point)) for point in points[1:])
     commands.append(("Z", []))
-    return format_path_data(commands)
+    return _format_path_data(commands)
 ```
 
 </details>
@@ -217,7 +217,7 @@ def _polyline_to_path(elem: etree._Element) -> str | None:
         return None
     commands: list[tuple[str, list[float]]] = [("M", list(points[0]))]
     commands.extend(("L", list(point)) for point in points[1:])
-    return format_path_data(commands)
+    return _format_path_data(commands)
 ```
 
 </details>
@@ -243,7 +243,7 @@ def _rect_to_path(elem: etree._Element) -> str | None:
     height = _num(elem.get("height") or "0")
     if width == 0 or height == 0:
         return None
-    return format_path_data(
+    return _format_path_data(
         [
             ("M", [x, y]),
             ("H", [x + width]),
@@ -269,7 +269,7 @@ _No docstring provided._
 
 ```python
 def _shape_to_path(elem: etree._Element) -> str | None:
-    tag = tag_local_name(elem.tag)
+    tag = _tag_local_name(elem.tag)
     if tag == "rect":
         return _rect_to_path(elem)
     if tag == "polygon":

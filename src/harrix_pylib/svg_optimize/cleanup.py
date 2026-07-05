@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from harrix_pylib.svg_optimize.xml_tags import tag_endswith
+from harrix_pylib.svg_optimize.xml_tags import _tag_endswith
 
 if TYPE_CHECKING:
     from lxml import etree
@@ -16,7 +16,7 @@ DEPRECATED_ATTRS = frozenset({"version", "enable-background"})
 EDITOR_NS_PREFIXES = ("adobe", "illustrator", "sodipodi", "inkscape", "sketch", "figma")
 
 
-def cleanup(root: etree._Element) -> None:
+def _cleanup(root: etree._Element) -> None:
     """Remove metadata elements and deprecated attributes from the SVG tree."""
     for tag in REMOVE_TAGS:
         for elem in root.iter(tag):
@@ -32,6 +32,6 @@ def cleanup(root: etree._Element) -> None:
             ):
                 del elem.attrib[attr]
 
-    svg = root if tag_endswith(root.tag, "svg") else root.find(f"{{{SVG_NS}}}svg")
+    svg = root if _tag_endswith(root.tag, "svg") else root.find(f"{{{SVG_NS}}}svg")
     if svg is not None and "version" in svg.attrib:
         del svg.attrib["version"]

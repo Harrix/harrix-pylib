@@ -11,44 +11,10 @@ lang: en
 
 ## Contents
 
-- [🔧 Function `remove_hidden`](#-function-remove_hidden)
 - [🔧 Function `_float`](#-function-_float)
 - [🔧 Function `_is_hidden`](#-function-_is_hidden)
 - [🔧 Function `_is_zero_sized`](#-function-_is_zero_sized)
-
-</details>
-
-## 🔧 Function `remove_hidden`
-
-```python
-def remove_hidden(root: etree._Element, stylesheet: StyleSheet) -> bool
-```
-
-Remove elements that are not rendered. Returns True if any element was removed.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def remove_hidden(root: etree._Element, stylesheet: StyleSheet) -> bool:
-    removed = False
-    for elem in list(root.iter()):
-        if elem.tag not in SHAPE_TAGS and not tag_endswith(elem.tag, "g"):
-            continue
-        style = stylesheet.compute_style(elem)
-        if _is_hidden(style, elem):
-            parent = elem.getparent()
-            if parent is not None:
-                parent.remove(elem)
-                removed = True
-                continue
-        if _is_zero_sized(elem):
-            parent = elem.getparent()
-            if parent is not None:
-                parent.remove(elem)
-                removed = True
-    return removed
-```
+- [🔧 Function `_remove_hidden`](#-function-_remove_hidden)
 
 </details>
 
@@ -113,7 +79,7 @@ _No docstring provided._
 
 ```python
 def _is_zero_sized(elem: etree._Element) -> bool:
-    tag = tag_local_name(elem.tag)
+    tag = _tag_local_name(elem.tag)
     if tag == "rect":
         width = _float(elem.get("width"))
         height = _float(elem.get("height"))
@@ -127,6 +93,40 @@ def _is_zero_sized(elem: etree._Element) -> bool:
     if tag in {"polygon", "polyline"}:
         return elem.get("points", "").strip() == ""
     return False
+```
+
+</details>
+
+## 🔧 Function `_remove_hidden`
+
+```python
+def _remove_hidden(root: etree._Element, stylesheet: StyleSheet) -> bool
+```
+
+Remove elements that are not rendered. Returns True if any element was removed.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def _remove_hidden(root: etree._Element, stylesheet: StyleSheet) -> bool:
+    removed = False
+    for elem in list(root.iter()):
+        if elem.tag not in SHAPE_TAGS and not _tag_endswith(elem.tag, "g"):
+            continue
+        style = stylesheet.compute_style(elem)
+        if _is_hidden(style, elem):
+            parent = elem.getparent()
+            if parent is not None:
+                parent.remove(elem)
+                removed = True
+                continue
+        if _is_zero_sized(elem):
+            parent = elem.getparent()
+            if parent is not None:
+                parent.remove(elem)
+                removed = True
+    return removed
 ```
 
 </details>

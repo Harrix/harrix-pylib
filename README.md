@@ -651,9 +651,9 @@ Doc: [wiki_plugin.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/wi
 
 Doc: [cleanup.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/cleanup.g.md)
 
-| Function/Class                                                                                       | Description                                                           |
-| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| 🔧 [`cleanup`](https://github.com/Harrix/harrix-pylib/blob/main/docs/cleanup.g.md#-function-cleanup) | Remove metadata elements and deprecated attributes from the SVG tree. |
+| Function/Class                                                                                         | Description                                                           |
+| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| 🔧 [`_cleanup`](https://github.com/Harrix/harrix-pylib/blob/main/docs/cleanup.g.md#-function-_cleanup) | Remove metadata elements and deprecated attributes from the SVG tree. |
 
 ### 📄 File `hidden.py`
 
@@ -661,10 +661,10 @@ Doc: [hidden.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.
 
 | Function/Class                                                                                                    | Description                                                                     |
 | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 🔧 [`remove_hidden`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.g.md#-function-remove_hidden)   | Remove elements that are not rendered. Returns True if any element was removed. |
 | 🔧 [`_float`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.g.md#-function-_float)                 |                                                                                 |
 | 🔧 [`_is_hidden`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.g.md#-function-_is_hidden)         |                                                                                 |
 | 🔧 [`_is_zero_sized`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.g.md#-function-_is_zero_sized) |                                                                                 |
+| 🔧 [`_remove_hidden`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.g.md#-function-_remove_hidden) | Remove elements that are not rendered. Returns True if any element was removed. |
 
 ### 📄 File `optimizer.py`
 
@@ -672,6 +672,7 @@ Doc: [optimizer.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/opti
 
 | Function/Class                                                                                                                   | Description                                                           |
 | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 🏛️ Class [`SvgOptimizer`](https://github.com/Harrix/harrix-pylib/blob/main/docs/optimizer.g.md#️-class-svgoptimizer)              | Optimize SVG markup to a compact form similar to SVGO preset-default. |
 | 🔧 [`optimize_svg_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/optimizer.g.md#-function-optimize_svg_content) | Optimize SVG markup to a compact form similar to SVGO preset-default. |
 
 ### 📄 File `paths.py`
@@ -680,15 +681,15 @@ Doc: [paths.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.
 
 | Function/Class                                                                                                                   | Description                                                   |
 | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| 🔧 [`format_path_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-format_path_data)             | Format path commands into a compact d attribute.              |
-| 🔧 [`optimize_path_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-optimize_path_data)         | Optimize a path d attribute string.                           |
-| 🔧 [`optimize_paths`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-optimize_paths)                 | Optimize path d attributes. Returns True if any path changed. |
-| 🔧 [`parse_path_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-parse_path_data)               | Parse SVG path data into command tuples.                      |
 | 🔧 [`_format_args_spaced`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_format_args_spaced)       |                                                               |
 | 🔧 [`_format_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_format_number)                 |                                                               |
+| 🔧 [`_format_path_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_format_path_data)           | Format path commands into a compact d attribute.              |
 | 🔧 [`_is_valid_command_list`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_is_valid_command_list) |                                                               |
 | 🔧 [`_minimal_path_cleanup`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_minimal_path_cleanup)   |                                                               |
 | 🔧 [`_optimize_commands`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_optimize_commands)         |                                                               |
+| 🔧 [`_optimize_path_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_optimize_path_data)       | Optimize a path d attribute string.                           |
+| 🔧 [`_optimize_paths`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_optimize_paths)               | Optimize path d attributes. Returns True if any path changed. |
+| 🔧 [`_parse_path_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_parse_path_data)             | Parse SVG path data into command tuples.                      |
 | 🔧 [`_relative_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_relative_line)                 |                                                               |
 | 🔧 [`_resolve_point`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_resolve_point)                 |                                                               |
 | 🔧 [`_trim_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.md#-function-_trim_number)                     |                                                               |
@@ -698,9 +699,9 @@ Doc: [paths.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/paths.g.
 
 Doc: [serialize.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/serialize.g.md)
 
-| Function/Class                                                                                             | Description                                                  |
-| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| 🔧 [`serialize`](https://github.com/Harrix/harrix-pylib/blob/main/docs/serialize.g.md#-function-serialize) | Serialize SVG element tree to a minified single-line string. |
+| Function/Class                                                                                               | Description                                                  |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| 🔧 [`_serialize`](https://github.com/Harrix/harrix-pylib/blob/main/docs/serialize.g.md#-function-_serialize) | Serialize SVG element tree to a minified single-line string. |
 
 ### 📄 File `shapes.py`
 
@@ -708,8 +709,8 @@ Doc: [shapes.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.
 
 | Function/Class                                                                                                          | Description                                                             |
 | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 🔧 [`convert_shapes`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-convert_shapes)       | Convert basic shapes to paths. Returns True if any conversion happened. |
 | 🔧 [`_circle_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_circle_to_path)     |                                                                         |
+| 🔧 [`_convert_shapes`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_convert_shapes)     | Convert basic shapes to paths. Returns True if any conversion happened. |
 | 🔧 [`_ellipse_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_ellipse_to_path)   |                                                                         |
 | 🔧 [`_line_to_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_line_to_path)         |                                                                         |
 | 🔧 [`_num`](https://github.com/Harrix/harrix-pylib/blob/main/docs/shapes.g.md#-function-_num)                           |                                                                         |
@@ -725,7 +726,6 @@ Doc: [structure.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/stru
 
 | Function/Class                                                                                                                                     | Description                                                                   |
 | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 🔧 [`optimize_structure`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-optimize_structure)                       | Collapse groups and strip empty attributes. Returns True if anything changed. |
 | 🔧 [`_clean_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_clean_number)                                 |                                                                               |
 | 🔧 [`_cleanup_numeric_values`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_cleanup_numeric_values)             |                                                                               |
 | 🔧 [`_cleanup_root_attrs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_cleanup_root_attrs)                     |                                                                               |
@@ -733,6 +733,7 @@ Doc: [structure.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/stru
 | 🔧 [`_index_to_short_id`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_index_to_short_id)                       |                                                                               |
 | 🔧 [`_is_id_referenced`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_is_id_referenced)                         |                                                                               |
 | 🔧 [`_merge_element_attrs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_merge_element_attrs)                   |                                                                               |
+| 🔧 [`_optimize_structure`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_optimize_structure)                     | Collapse groups and strip empty attributes. Returns True if anything changed. |
 | 🔧 [`_remove_empty_containers`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_remove_empty_containers)           |                                                                               |
 | 🔧 [`_shorten_ids`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_shorten_ids)                                   |                                                                               |
 | 🔧 [`_strip_default_attrs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/structure.g.md#-function-_strip_default_attrs)                   |                                                                               |
@@ -750,10 +751,10 @@ Doc: [styles.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.
 
 Doc: [xml_tags.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/xml_tags.g.md)
 
-| Function/Class                                                                                                      | Description                                           |
-| ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| 🔧 [`tag_endswith`](https://github.com/Harrix/harrix-pylib/blob/main/docs/xml_tags.g.md#-function-tag_endswith)     | Return whether the tag's local name ends with suffix. |
-| 🔧 [`tag_local_name`](https://github.com/Harrix/harrix-pylib/blob/main/docs/xml_tags.g.md#-function-tag_local_name) | Return the local part of an element tag.              |
+| Function/Class                                                                                                        | Description                                           |
+| --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| 🔧 [`_tag_endswith`](https://github.com/Harrix/harrix-pylib/blob/main/docs/xml_tags.g.md#-function-_tag_endswith)     | Return whether the tag's local name ends with suffix. |
+| 🔧 [`_tag_local_name`](https://github.com/Harrix/harrix-pylib/blob/main/docs/xml_tags.g.md#-function-_tag_local_name) | Return the local part of an element tag.              |
 
 ### 📄 File `block.py`
 
