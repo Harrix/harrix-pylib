@@ -9,7 +9,7 @@ from harrix_pylib.svg_optimize.xml_tags import _tag_endswith, _tag_local_name
 if TYPE_CHECKING:
     from lxml import etree
 
-    from harrix_pylib.svg_optimize.styles import StyleSheet
+    from harrix_pylib.svg_optimize.styles import _StyleSheet
 
 SVG_NS = "http://www.w3.org/2000/svg"
 SHAPE_TAGS = frozenset(
@@ -63,7 +63,7 @@ def _is_zero_sized(elem: etree._Element) -> bool:
     return False
 
 
-def _remove_hidden(root: etree._Element, stylesheet: StyleSheet) -> bool:
+def _remove_hidden(root: etree._Element, stylesheet: _StyleSheet) -> bool:
     """Remove elements that are not rendered. Returns True if any element was removed."""
     removed = False
     for elem in list(root.iter()):

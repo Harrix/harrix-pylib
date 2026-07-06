@@ -144,7 +144,7 @@ optimized = h.img.optimize_svg_content(svg_text)
 
 ```python
 def optimize_svg_content(svg_text: str, *, multipass: bool = True) -> str:
-    return _optimize_svg_content(svg_text, multipass=multipass)
+    return SvgOptimizer(multipass=multipass).optimize(svg_text)
 ```
 
 </details>

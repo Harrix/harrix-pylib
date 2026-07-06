@@ -20,7 +20,7 @@ RULE_RE = re.compile(
 DECL_RE = re.compile(r"([\w-]+)\s*:\s*([^;]+);?")
 
 
-class StyleSheet:
+class _StyleSheet:
     """Collected CSS class rules from SVG <style> elements."""
 
     def __init__(self) -> None:

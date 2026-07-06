@@ -6,7 +6,6 @@ from pathlib import Path
 
 from harrix_pylib import img_tools
 from harrix_pylib.svg_optimize import SvgOptimizer
-from harrix_pylib.svg_optimize import optimize_svg_content as _optimize_svg_content
 
 EXE_RASTER_EXTENSIONS = img_tools.EXE_RASTER_EXTENSIONS
 
@@ -106,7 +105,7 @@ def optimize_svg_content(svg_text: str, *, multipass: bool = True) -> str:
     ```
 
     """
-    return _optimize_svg_content(svg_text, multipass=multipass)
+    return SvgOptimizer(multipass=multipass).optimize(svg_text)
 
 
 def optimize_svg_folder(input_folder: Path | str, output_folder: Path | str) -> str:

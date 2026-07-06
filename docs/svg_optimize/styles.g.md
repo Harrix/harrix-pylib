@@ -11,7 +11,7 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `StyleSheet`](#️-class-stylesheet)
+- [🏛️ Class `_StyleSheet`](#️-class-_stylesheet)
   - [⚙️ Method `__init__`](#️-method-__init__)
   - [⚙️ Method `collect`](#️-method-collect)
   - [⚙️ Method `compute_style`](#️-method-compute_style)
@@ -22,10 +22,10 @@ lang: en
 
 </details>
 
-## 🏛️ Class `StyleSheet`
+## 🏛️ Class `_StyleSheet`
 
 ```python
-class StyleSheet
+class _StyleSheet
 ```
 
 Collected CSS class rules from SVG <style> elements.
@@ -34,7 +34,7 @@ Collected CSS class rules from SVG <style> elements.
 <summary>Code:</summary>
 
 ```python
-class StyleSheet:
+class _StyleSheet:
 
     def __init__(self) -> None:
         """Initialize an empty stylesheet."""

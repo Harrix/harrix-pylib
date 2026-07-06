@@ -676,10 +676,9 @@ Doc: [hidden.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/hidden.
 
 Doc: [optimizer.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/optimizer.g.md)
 
-| Function/Class                                                                                                                   | Description                                                           |
-| -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| 🏛️ Class [`SvgOptimizer`](https://github.com/Harrix/harrix-pylib/blob/main/docs/optimizer.g.md#️-class-svgoptimizer)              | Optimize SVG markup to a compact form similar to SVGO preset-default. |
-| 🔧 [`optimize_svg_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/optimizer.g.md#-function-optimize_svg_content) | Optimize SVG markup to a compact form similar to SVGO preset-default. |
+| Function/Class                                                                                                      | Description                                                           |
+| ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 🏛️ Class [`SvgOptimizer`](https://github.com/Harrix/harrix-pylib/blob/main/docs/optimizer.g.md#️-class-svgoptimizer) | Optimize SVG markup to a compact form similar to SVGO preset-default. |
 
 ### 📄 File `paths.py`
 
@@ -750,7 +749,7 @@ Doc: [styles.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.
 
 | Function/Class                                                                                                  | Description                                          |
 | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| 🏛️ Class [`StyleSheet`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md#️-class-stylesheet)    | Collected CSS class rules from SVG <style> elements. |
+| 🏛️ Class [`_StyleSheet`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md#️-class-_stylesheet)  | Collected CSS class rules from SVG <style> elements. |
 | 🔧 [`_format_style`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md#-function-_format_style) |                                                      |
 
 ### 📄 File `xml_tags.py`

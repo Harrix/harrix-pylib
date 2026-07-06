@@ -15,7 +15,6 @@ lang: en
   - [⚙️ Method `__init__`](#️-method-__init__)
   - [⚙️ Method `__call__`](#️-method-__call__)
   - [⚙️ Method `optimize`](#️-method-optimize)
-- [🔧 Function `optimize_svg_content`](#-function-optimize_svg_content)
 
 </details>
 
@@ -78,7 +77,7 @@ class SvgOptimizer:
         root = etree.fromstring(svg_text.encode("utf-8"), parser=parser)
         _cleanup(root)
 
-        stylesheet = StyleSheet()
+        stylesheet = _StyleSheet()
         stylesheet.collect(root)
 
         passes = self.MAX_MULTIPASS if use_multipass else 1
@@ -175,7 +174,7 @@ def optimize(self, svg_text: str, *, multipass: bool | None = None) -> str:
         root = etree.fromstring(svg_text.encode("utf-8"), parser=parser)
         _cleanup(root)
 
-        stylesheet = StyleSheet()
+        stylesheet = _StyleSheet()
         stylesheet.collect(root)
 
         passes = self.MAX_MULTIPASS if use_multipass else 1
@@ -192,33 +191,6 @@ def optimize(self, svg_text: str, *, multipass: bool | None = None) -> str:
             stylesheet.collect(root)
 
         return _serialize(root)
-```
-
-</details>
-
-## 🔧 Function `optimize_svg_content`
-
-```python
-def optimize_svg_content(svg_text: str) -> str
-```
-
-Optimize SVG markup to a compact form similar to SVGO preset-default.
-
-Args:
-
-- `svg_text` (`str`): Raw SVG content.
-- `multipass` (`bool`): Run multiple optimization passes. Defaults to `True`.
-
-Returns:
-
-- `str`: Optimized SVG content.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def optimize_svg_content(svg_text: str, *, multipass: bool = True) -> str:
-    return SvgOptimizer(multipass=multipass).optimize(svg_text)
 ```
 
 </details>

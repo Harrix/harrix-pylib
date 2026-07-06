@@ -12,7 +12,7 @@ from harrix_pylib.svg_optimize.paths import _optimize_paths
 from harrix_pylib.svg_optimize.serialize import _serialize
 from harrix_pylib.svg_optimize.shapes import _convert_shapes
 from harrix_pylib.svg_optimize.structure import _optimize_structure
-from harrix_pylib.svg_optimize.styles import StyleSheet
+from harrix_pylib.svg_optimize.styles import _StyleSheet
 
 
 class SvgOptimizer:
@@ -63,7 +63,7 @@ class SvgOptimizer:
         root = etree.fromstring(svg_text.encode("utf-8"), parser=parser)
         _cleanup(root)
 
-        stylesheet = StyleSheet()
+        stylesheet = _StyleSheet()
         stylesheet.collect(root)
 
         passes = self.MAX_MULTIPASS if use_multipass else 1
@@ -80,19 +80,3 @@ class SvgOptimizer:
             stylesheet.collect(root)
 
         return _serialize(root)
-
-
-def optimize_svg_content(svg_text: str, *, multipass: bool = True) -> str:
-    """Optimize SVG markup to a compact form similar to SVGO preset-default.
-
-    Args:
-
-    - `svg_text` (`str`): Raw SVG content.
-    - `multipass` (`bool`): Run multiple optimization passes. Defaults to `True`.
-
-    Returns:
-
-    - `str`: Optimized SVG content.
-
-    """
-    return SvgOptimizer(multipass=multipass).optimize(svg_text)
