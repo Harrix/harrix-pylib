@@ -6,7 +6,7 @@ import re
 from typing import TYPE_CHECKING
 
 from harrix_pylib.md_format.escape_format import _escape_markdown_text
-from harrix_pylib.md_format.hard_break_format import HardBreakStyles
+from harrix_pylib.md_format.hard_break_format import _HardBreakStyles
 from harrix_pylib.md_format.link_destination_format import (
     _decode_percent_encoded_url,
     _formatted_href_from_placeholder,
@@ -27,7 +27,7 @@ from harrix_pylib.md_format.text_format import _normalize_inline_spaces
 if TYPE_CHECKING:
     from markdown_it.token import Token
 
-    from harrix_pylib.md_format.options import FormatOptions
+    from harrix_pylib.md_format.options import _FormatOptions
 
 from harrix_pylib.md_format.printer.tokens import (
     _choose_emphasis_delimiter,
@@ -179,12 +179,12 @@ def _render_inline(
     children: list[Token],
     *,
     in_table: bool = False,
-    options: FormatOptions | None = None,
-    hard_break_styles: HardBreakStyles | None = None,
+    options: _FormatOptions | None = None,
+    hard_break_styles: _HardBreakStyles | None = None,
     softbreak_as_space: bool = False,
 ) -> str:
     fmt_options = options or DEFAULT_OPTIONS
-    break_styles = hard_break_styles or HardBreakStyles()
+    break_styles = hard_break_styles or _HardBreakStyles()
     parts: list[str] = []
     index = 0
     while index < len(children):
@@ -205,12 +205,12 @@ def _render_inline_token(
     index: int,
     *,
     in_table: bool = False,
-    options: FormatOptions | None = None,
-    hard_break_styles: HardBreakStyles | None = None,
+    options: _FormatOptions | None = None,
+    hard_break_styles: _HardBreakStyles | None = None,
     softbreak_as_space: bool = False,
 ) -> tuple[str, int]:
     fmt_options = options or DEFAULT_OPTIONS
-    break_styles = hard_break_styles or HardBreakStyles()
+    break_styles = hard_break_styles or _HardBreakStyles()
     child = children[index]
     if child.type == "text":
         content = child.content
@@ -368,11 +368,11 @@ def _render_inline_until(
     close_type: str,
     *,
     in_table: bool = False,
-    options: FormatOptions | None = None,
-    hard_break_styles: HardBreakStyles | None = None,
+    options: _FormatOptions | None = None,
+    hard_break_styles: _HardBreakStyles | None = None,
 ) -> tuple[str, int]:
     fmt_options = options or DEFAULT_OPTIONS
-    break_styles = hard_break_styles or HardBreakStyles()
+    break_styles = hard_break_styles or _HardBreakStyles()
     parts: list[str] = []
     while index < len(children) and children[index].type != close_type:
         chunk, index = _render_inline_token(
@@ -389,8 +389,8 @@ def _render_inline_until(
 def _render_packed_link_run(
     children: list[Token],
     *,
-    options: FormatOptions,
-    hard_break_styles: HardBreakStyles | None = None,
+    options: _FormatOptions,
+    hard_break_styles: _HardBreakStyles | None = None,
 ) -> str:
     parts: list[str] = []
     index = 0

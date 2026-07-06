@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from harrix_pylib.md_format.hard_break_format import HardBreakStyles
+from harrix_pylib.md_format.hard_break_format import _HardBreakStyles
 from harrix_pylib.md_format.printer import context as printer_context
 from harrix_pylib.md_format.printer.block import _join_blocks, _render_block
 from harrix_pylib.md_format.printer.paragraph import (
@@ -15,23 +15,23 @@ from harrix_pylib.md_format.printer.paragraph import (
 if TYPE_CHECKING:
     from markdown_it.token import Token
 
-    from harrix_pylib.md_format.link_destination_format import LinkDestination
-    from harrix_pylib.md_format.list_loose_format import ListLayout
-    from harrix_pylib.md_format.options import FormatOptions
-    from harrix_pylib.md_format.task_list_format import TaskListMarker
+    from harrix_pylib.md_format.link_destination_format import _LinkDestination
+    from harrix_pylib.md_format.list_loose_format import _ListLayout
+    from harrix_pylib.md_format.options import _FormatOptions
+    from harrix_pylib.md_format.task_list_format import _TaskListMarker
 
 
 def _render_tokens(
     tokens: list[Token],
     *,
-    options: FormatOptions | None = None,
-    task_list_markers: list[TaskListMarker] | None = None,
+    options: _FormatOptions | None = None,
+    task_list_markers: list[_TaskListMarker] | None = None,
     ordered_list_marker_groups: list[list[int]] | None = None,
     bullet_list_marker_groups: list[list[str]] | None = None,
-    hard_break_styles: HardBreakStyles | None = None,
-    list_layouts: list[ListLayout] | None = None,
+    hard_break_styles: _HardBreakStyles | None = None,
+    list_layouts: list[_ListLayout] | None = None,
     source_lines: list[str] | None = None,
-    link_destinations: list[LinkDestination] | None = None,
+    link_destinations: list[_LinkDestination] | None = None,
     angle_autolinks: list[str] | None = None,
 ) -> str:
     """Render top-level block tokens to Markdown."""
@@ -60,12 +60,12 @@ def _render_tokens(
 def _render_tokens_impl(
     tokens: list[Token],
     *,
-    options: FormatOptions | None = None,
-    task_list_markers: list[TaskListMarker] | None = None,
+    options: _FormatOptions | None = None,
+    task_list_markers: list[_TaskListMarker] | None = None,
     ordered_list_marker_groups: list[list[int]] | None = None,
     bullet_list_marker_groups: list[list[str]] | None = None,
-    hard_break_styles: HardBreakStyles | None = None,
-    list_layouts: list[ListLayout] | None = None,
+    hard_break_styles: _HardBreakStyles | None = None,
+    list_layouts: list[_ListLayout] | None = None,
     source_lines: list[str] | None = None,
 ) -> str:
     fmt_options = options or printer_context.DEFAULT_OPTIONS
@@ -75,7 +75,7 @@ def _render_tokens_impl(
     distinct_bullet_markers = {marker for group in bullet_groups for marker in group}
     canonicalize_bullets = len(distinct_bullet_markers) <= 1
     normalize_star_to_dash = "+" in distinct_bullet_markers
-    break_styles = hard_break_styles or HardBreakStyles()
+    break_styles = hard_break_styles or _HardBreakStyles()
     layouts = list(list_layouts or [])
     parts: list[str] = []
     part_indices: list[int] = []

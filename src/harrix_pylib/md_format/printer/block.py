@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from harrix_pylib.md_format.hard_break_format import HardBreakStyles
+from harrix_pylib.md_format.hard_break_format import _HardBreakStyles
 from harrix_pylib.md_format.prose_wrap import (
     _wrap_prose,
 )
@@ -13,10 +13,10 @@ from harrix_pylib.md_format.text_format import _normalize_inline_spaces
 if TYPE_CHECKING:
     from markdown_it.token import Token
 
-    from harrix_pylib.md_format.list_loose_format import ListLayout
-    from harrix_pylib.md_format.options import FormatOptions
+    from harrix_pylib.md_format.list_loose_format import _ListLayout
+    from harrix_pylib.md_format.options import _FormatOptions
     from harrix_pylib.md_format.task_list_format import (
-        TaskListMarker,
+        _TaskListMarker,
     )
 
 from harrix_pylib.md_format.printer.inline import _render_inline
@@ -150,18 +150,18 @@ def _render_alert(
     tokens: list[Token],
     index: int,
     *,
-    options: FormatOptions,
-    task_list_markers: list[TaskListMarker] | None = None,
+    options: _FormatOptions,
+    task_list_markers: list[_TaskListMarker] | None = None,
     ordered_list_marker_groups: list[list[int]] | None = None,
     bullet_list_marker_groups: list[list[str]] | None = None,
-    hard_break_styles: HardBreakStyles | None = None,
-    list_layouts: list[ListLayout] | None = None,
+    hard_break_styles: _HardBreakStyles | None = None,
+    list_layouts: list[_ListLayout] | None = None,
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
     normalize_star_to_dash: bool = False,
 ) -> tuple[str, int]:
     markers = task_list_markers or []
-    break_styles = hard_break_styles or HardBreakStyles()
+    break_styles = hard_break_styles or _HardBreakStyles()
     layouts = list_layouts or []
     close_index = _find_close(tokens, index, "alert_close")
     alert_token = tokens[index]
@@ -214,13 +214,13 @@ def _render_block(
     tokens: list[Token],
     index: int,
     *,
-    options: FormatOptions,
+    options: _FormatOptions,
     wrap_paragraph: bool = True,
-    task_list_markers: list[TaskListMarker] | None = None,
+    task_list_markers: list[_TaskListMarker] | None = None,
     ordered_list_marker_groups: list[list[int]] | None = None,
     bullet_list_marker_groups: list[list[str]] | None = None,
-    hard_break_styles: HardBreakStyles | None = None,
-    list_layouts: list[ListLayout] | None = None,
+    hard_break_styles: _HardBreakStyles | None = None,
+    list_layouts: list[_ListLayout] | None = None,
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
     normalize_star_to_dash: bool = False,
@@ -228,7 +228,7 @@ def _render_block(
     in_list_item: bool = False,
     in_blockquote: bool = False,
 ) -> tuple[str, int]:
-    break_styles = hard_break_styles or HardBreakStyles()
+    break_styles = hard_break_styles or _HardBreakStyles()
     layouts = list_layouts or []
     token = tokens[index]
     if token.type == "heading_open":
@@ -351,18 +351,18 @@ def _render_blockquote(
     tokens: list[Token],
     index: int,
     *,
-    options: FormatOptions,
-    task_list_markers: list[TaskListMarker] | None = None,
+    options: _FormatOptions,
+    task_list_markers: list[_TaskListMarker] | None = None,
     ordered_list_marker_groups: list[list[int]] | None = None,
     bullet_list_marker_groups: list[list[str]] | None = None,
-    hard_break_styles: HardBreakStyles | None = None,
-    list_layouts: list[ListLayout] | None = None,
+    hard_break_styles: _HardBreakStyles | None = None,
+    list_layouts: list[_ListLayout] | None = None,
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
     normalize_star_to_dash: bool = False,
 ) -> tuple[str, int]:
     markers = task_list_markers or []
-    break_styles = hard_break_styles or HardBreakStyles()
+    break_styles = hard_break_styles or _HardBreakStyles()
     layouts = list_layouts or []
     close_index = _find_close(tokens, index, "blockquote_close")
     inner_parts: list[str] = []
@@ -419,8 +419,8 @@ def _render_heading(
     tokens: list[Token],
     index: int,
     *,
-    options: FormatOptions,
-    hard_break_styles: HardBreakStyles | None = None,
+    options: _FormatOptions,
+    hard_break_styles: _HardBreakStyles | None = None,
     source_lines: list[str] | None = None,
 ) -> tuple[str, int]:
     source_line = _plain_heading_source_line(tokens, index, source_lines)
@@ -462,18 +462,18 @@ def _render_until_close(
     index: int,
     close_type: str,
     *,
-    options: FormatOptions,
-    task_list_markers: list[TaskListMarker] | None = None,
+    options: _FormatOptions,
+    task_list_markers: list[_TaskListMarker] | None = None,
     ordered_list_marker_groups: list[list[int]] | None = None,
     bullet_list_marker_groups: list[list[str]] | None = None,
-    hard_break_styles: HardBreakStyles | None = None,
-    list_layouts: list[ListLayout] | None = None,
+    hard_break_styles: _HardBreakStyles | None = None,
+    list_layouts: list[_ListLayout] | None = None,
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
     normalize_star_to_dash: bool = False,
 ) -> str:
     markers = task_list_markers or []
-    break_styles = hard_break_styles or HardBreakStyles()
+    break_styles = hard_break_styles or _HardBreakStyles()
     layouts = list_layouts or []
     close_index = _find_close(tokens, index, close_type)
     parts: list[str] = []
@@ -508,7 +508,7 @@ def _should_join_without_blank_line(previous: str, current: str) -> bool:
     return bool(current.lstrip().startswith("<!-- prettier-ignore"))
 
 
-def _wrap_blockquote_block(block: str, *, options: FormatOptions) -> str:
+def _wrap_blockquote_block(block: str, *, options: _FormatOptions) -> str:
     lines = block.rstrip().splitlines()
     wrapped_lines: list[str] = []
     for line in lines:

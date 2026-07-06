@@ -11,7 +11,7 @@ from harrix_pylib.md_format.text_lines import _join_lines, _split_lines
 
 
 @dataclass(frozen=True)
-class ListLayout:
+class _ListLayout:
     """Loose-list spacing for one list in source order."""
 
     gaps_before_item: list[bool]
@@ -28,7 +28,9 @@ def _blank_separates_sibling_items(lines: list[str], item_index: int, base_inden
     return "](" not in parent_marker
 
 
-def _consume_item(lines: list[str], start: int, base_indent: int, nested_layouts: list[ListLayout]) -> tuple[int, bool]:
+def _consume_item(
+    lines: list[str], start: int, base_indent: int, nested_layouts: list[_ListLayout]
+) -> tuple[int, bool]:
     index = start + 1
     loose = False
     pending_blank = False
@@ -85,11 +87,11 @@ def _drop_code_placeholder_blanks(lines: list[str], tight_code_indices: set[int]
     return result
 
 
-def _extract_list_layouts(body: str, tight_code_indices: set[int] | None = None) -> tuple[str, list[ListLayout]]:
+def _extract_list_layouts(body: str, tight_code_indices: set[int] | None = None) -> tuple[str, list[_ListLayout]]:
     """Collect loose-list layout metadata for each list in the document."""
     lines, trailing = _split_lines(body)
     scan_lines = _drop_code_placeholder_blanks(lines, tight_code_indices or set())
-    layouts: list[ListLayout] = []
+    layouts: list[_ListLayout] = []
     index = 0
     while index < len(scan_lines):
         if not _is_list_line(scan_lines[index]):
@@ -118,12 +120,12 @@ def _parent_list_marker_line(lines: list[str], from_index: int, base_indent: int
     return None
 
 
-def _scan_list(lines: list[str], start: int, layouts: list[ListLayout]) -> int:
+def _scan_list(lines: list[str], start: int, layouts: list[_ListLayout]) -> int:
     base_indent = _line_indent(lines[start])
     start_is_ordered = _is_ordered_list_line(lines[start])
     gaps_before_item = [False]
     loose_items: list[bool] = []
-    nested_layouts: list[ListLayout] = []
+    nested_layouts: list[_ListLayout] = []
     index = start
     while index < len(lines):
         current_line = lines[index]
@@ -139,7 +141,7 @@ def _scan_list(lines: list[str], start: int, layouts: list[ListLayout]) -> int:
         loose_items.append(item_loose)
         index = item_end
     layouts.append(
-        ListLayout(
+        _ListLayout(
             gaps_before_item=gaps_before_item,
             loose_items=loose_items or [False],
         )

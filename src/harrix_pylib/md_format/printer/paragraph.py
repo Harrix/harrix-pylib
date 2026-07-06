@@ -6,7 +6,7 @@ import re
 from typing import TYPE_CHECKING
 
 from harrix_pylib.md_format.escape_format import _escape_ordered_list_like_line_starts
-from harrix_pylib.md_format.hard_break_format import HardBreakStyles
+from harrix_pylib.md_format.hard_break_format import _HardBreakStyles
 from harrix_pylib.md_format.list_format import LIST_MARKER_LINE_RE
 from harrix_pylib.md_format.printer.context import (
     EMPTY_IMAGE_REFERENCE_RE,
@@ -27,7 +27,7 @@ from harrix_pylib.md_format.text_format import _normalize_inline_spaces
 if TYPE_CHECKING:
     from markdown_it.token import Token
 
-    from harrix_pylib.md_format.options import FormatOptions
+    from harrix_pylib.md_format.options import _FormatOptions
 
 from harrix_pylib.md_format.printer.inline import (
     _format_code_inline,
@@ -245,7 +245,7 @@ def _plain_paragraph_source_line(
     index: int,
     source_lines: list[str] | None,
     *,
-    options: FormatOptions,
+    options: _FormatOptions,
     rendered_line: str,
 ) -> str | None:
     source_line = _paragraph_single_text_source_line(tokens, index, source_lines)
@@ -277,10 +277,10 @@ def _render_joined_prose_run(
     start: int,
     run_end: int,
     *,
-    options: FormatOptions,
-    hard_break_styles: HardBreakStyles | None = None,
+    options: _FormatOptions,
+    hard_break_styles: _HardBreakStyles | None = None,
 ) -> str:
-    break_styles = hard_break_styles or HardBreakStyles()
+    break_styles = hard_break_styles or _HardBreakStyles()
     parts: list[str] = []
     paragraph_index = start
     while paragraph_index < run_end:
@@ -314,9 +314,9 @@ def _render_paragraph(
     tokens: list[Token],
     index: int,
     *,
-    options: FormatOptions,
+    options: _FormatOptions,
     wrap: bool = True,
-    hard_break_styles: HardBreakStyles | None = None,
+    hard_break_styles: _HardBreakStyles | None = None,
     source_lines: list[str] | None = None,
     preserve_source_line: bool = True,
 ) -> tuple[str, int]:
@@ -456,15 +456,15 @@ def _try_render_merged_link_paragraphs(
     tokens: list[Token],
     index: int,
     *,
-    options: FormatOptions,
-    hard_break_styles: HardBreakStyles | None = None,
+    options: _FormatOptions,
+    hard_break_styles: _HardBreakStyles | None = None,
 ) -> tuple[str | None, int]:
     run_end = _paragraph_run_end(tokens, index)
     if run_end is None:
         return None, index
     if not _merged_run_is_link_only_paragraphs(tokens, index, run_end):
         return None, index
-    break_styles = hard_break_styles or HardBreakStyles()
+    break_styles = hard_break_styles or _HardBreakStyles()
     parts: list[str] = []
     paragraph_index = index
     while paragraph_index < run_end:
@@ -484,8 +484,8 @@ def _try_render_merged_paragraphs(
     tokens: list[Token],
     index: int,
     *,
-    options: FormatOptions,
-    hard_break_styles: HardBreakStyles | None = None,
+    options: _FormatOptions,
+    hard_break_styles: _HardBreakStyles | None = None,
 ) -> tuple[str | None, int]:
     if options.prose_wrap != "always":
         return None, index

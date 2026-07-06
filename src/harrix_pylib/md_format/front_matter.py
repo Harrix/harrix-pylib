@@ -19,7 +19,7 @@ _TOML_BLOCK_RE = re.compile(rf"{_TOML_BLOCK_PREFIX}\d+")
 
 
 @dataclass(frozen=True)
-class TomlBlock:
+class _TomlBlock:
     """Stored TOML front matter style block from the Markdown body."""
 
     index: int
@@ -27,7 +27,7 @@ class TomlBlock:
 
 
 @dataclass(frozen=True)
-class YamlBlock:
+class _YamlBlock:
     """Stored YAML block from the Markdown body."""
 
     index: int
@@ -93,14 +93,14 @@ def _extract_delimited_blocks(
     return _join_lines(result, trailing_newline=trailing), blocks
 
 
-def _extract_toml_blocks(body: str) -> tuple[str, list[TomlBlock]]:
+def _extract_toml_blocks(body: str) -> tuple[str, list[_TomlBlock]]:
     """Replace standalone TOML blocks in the Markdown body with placeholders."""
-    return _extract_delimited_blocks(body, delimiter="+++", prefix=_TOML_BLOCK_PREFIX, block_class=TomlBlock)
+    return _extract_delimited_blocks(body, delimiter="+++", prefix=_TOML_BLOCK_PREFIX, block_class=_TomlBlock)
 
 
-def _extract_yaml_blocks(body: str) -> tuple[str, list[YamlBlock]]:
+def _extract_yaml_blocks(body: str) -> tuple[str, list[_YamlBlock]]:
     """Replace standalone YAML blocks in the Markdown body with placeholders."""
-    return _extract_delimited_blocks(body, delimiter="---", prefix=_YAML_BLOCK_PREFIX, block_class=YamlBlock)
+    return _extract_delimited_blocks(body, delimiter="---", prefix=_YAML_BLOCK_PREFIX, block_class=_YamlBlock)
 
 
 def _find_delimited_block_close(lines: list[str], start_index: int, *, delimiter: str) -> int | None:
@@ -112,7 +112,7 @@ def _find_delimited_block_close(lines: list[str], start_index: int, *, delimiter
     return None
 
 
-def _format_yaml_block(block: YamlBlock) -> str:
+def _format_yaml_block(block: _YamlBlock) -> str:
     inner = [_format_yaml_line(line) for line in block.lines[1:-1] if line.strip()]
     if not inner:
         return "---\n---"
@@ -169,7 +169,7 @@ def _restore_delimited_blocks(
     return pattern.sub(replace, text)
 
 
-def _restore_toml_blocks(text: str, blocks: list[TomlBlock]) -> str:
+def _restore_toml_blocks(text: str, blocks: list[_TomlBlock]) -> str:
     """Restore TOML body blocks."""
     return _restore_delimited_blocks(
         text,
@@ -180,7 +180,7 @@ def _restore_toml_blocks(text: str, blocks: list[TomlBlock]) -> str:
     )
 
 
-def _restore_yaml_blocks(text: str, blocks: list[YamlBlock]) -> str:
+def _restore_yaml_blocks(text: str, blocks: list[_YamlBlock]) -> str:
     """Restore YAML body blocks."""
     return _restore_delimited_blocks(
         text, blocks, prefix=_YAML_BLOCK_PREFIX, pattern=_YAML_BLOCK_RE, formatter=_format_yaml_block
@@ -214,4 +214,4 @@ def _trim_trailing_blank_lines(text: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-BlockT = TypeVar("BlockT", YamlBlock, TomlBlock)
+BlockT = TypeVar("BlockT", _YamlBlock, _TomlBlock)

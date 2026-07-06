@@ -12,8 +12,8 @@ from harrix_pylib.md_format.table_format import _looks_like_prose_table_row, _te
 if TYPE_CHECKING:
     from markdown_it.token import Token
 
-    from harrix_pylib.md_format.hard_break_format import HardBreakStyles
-    from harrix_pylib.md_format.options import FormatOptions
+    from harrix_pylib.md_format.hard_break_format import _HardBreakStyles
+    from harrix_pylib.md_format.options import _FormatOptions
 
 from harrix_pylib.md_format.printer.inline import _render_inline
 from harrix_pylib.md_format.printer.tokens import _alignment_separator, _find_close
@@ -132,8 +132,8 @@ def _render_table(
     tokens: list[Token],
     index: int,
     *,
-    options: FormatOptions,
-    hard_break_styles: HardBreakStyles | None = None,
+    options: _FormatOptions,
+    hard_break_styles: _HardBreakStyles | None = None,
     source_lines: list[str] | None = None,
 ) -> tuple[str, int]:
     close_index = _find_close(tokens, index, "table_close")

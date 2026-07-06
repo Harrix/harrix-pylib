@@ -5,23 +5,23 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from harrix_pylib.md_format.hard_break_format import HardBreakStyles
+from harrix_pylib.md_format.hard_break_format import _HardBreakStyles
 from harrix_pylib.md_format.list_format import LIST_MARKER_LINE_RE, _is_list_line
 from harrix_pylib.md_format.ordered_list_format import _ordered_list_item_number, _parse_ordered_list_marker
 from harrix_pylib.md_format.prose_wrap import (
     _wrap_prose,
 )
 from harrix_pylib.md_format.task_list_format import (
-    TaskListMarker,
     _strip_task_placeholder,
     _task_list_entry_for_text,
+    _TaskListMarker,
 )
 
 if TYPE_CHECKING:
     from markdown_it.token import Token
 
-    from harrix_pylib.md_format.list_loose_format import ListLayout
-    from harrix_pylib.md_format.options import FormatOptions
+    from harrix_pylib.md_format.list_loose_format import _ListLayout
+    from harrix_pylib.md_format.options import _FormatOptions
 
 from harrix_pylib.md_format.printer.paragraph import _should_wrap_prose
 from harrix_pylib.md_format.printer.tokens import _find_close, _is_block_marker_line, _normalize_bullet_marker
@@ -429,12 +429,12 @@ def _render_list(
     index: int,
     *,
     ordered: bool,
-    options: FormatOptions,
-    task_list_markers: list[TaskListMarker],
+    options: _FormatOptions,
+    task_list_markers: list[_TaskListMarker],
     ordered_list_marker_groups: list[list[int]] | None = None,
     bullet_list_marker_groups: list[list[str]] | None = None,
-    hard_break_styles: HardBreakStyles | None = None,
-    list_layouts: list[ListLayout] | None = None,
+    hard_break_styles: _HardBreakStyles | None = None,
+    list_layouts: list[_ListLayout] | None = None,
     source_lines: list[str] | None = None,
     canonicalize_bullets: bool = False,
     normalize_star_to_dash: bool = False,
@@ -444,7 +444,7 @@ def _render_list(
     parent_is_aligned: bool = False,
     forced_base_indent: int | None = None,
 ) -> tuple[str, int]:
-    break_styles = hard_break_styles or HardBreakStyles()
+    break_styles = hard_break_styles or _HardBreakStyles()
     layouts = list_layouts or []
     close_type = "ordered_list_close" if ordered else "bullet_list_close"
     close_index = _find_close(tokens, index, close_type)
@@ -697,7 +697,7 @@ def _render_list_item_lines(
     *,
     marker: str,
     loose: bool,
-    options: FormatOptions,
+    options: _FormatOptions,
     base_indent: int = 0,
     in_blockquote: bool = False,
     align_prefix: bool = False,

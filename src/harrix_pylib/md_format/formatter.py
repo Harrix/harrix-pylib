@@ -25,7 +25,7 @@ from harrix_pylib.md_format.inline_link_format import _prepare_inline_links
 from harrix_pylib.md_format.list_format import _ensure_blank_line_after_lists
 from harrix_pylib.md_format.list_loose_format import _extract_list_layouts
 from harrix_pylib.md_format.math_guard import _extract_empty_math_blocks, _restore_empty_math_blocks
-from harrix_pylib.md_format.options import FormatOptions
+from harrix_pylib.md_format.options import _FormatOptions
 from harrix_pylib.md_format.ordered_list_format import _extract_ordered_list_marker_groups
 from harrix_pylib.md_format.parser import _get_markdown_parser
 from harrix_pylib.md_format.printer import _render_tokens
@@ -59,7 +59,7 @@ class MarkdownFormatter:
         - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
 
         """
-        self.options = FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
+        self.options = _FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
 
     def format(self, text: str) -> str:
         """Format Markdown text.
@@ -158,7 +158,7 @@ def _ensure_blank_line_in_empty_fences(body: str) -> str:
     return _EMPTY_FENCE_RE.sub(r"\g<indent>\g<fence>\n\n\g<indent>\g<fence>", body)
 
 
-def _format_with_options(text: str, options: FormatOptions) -> str:
+def _format_with_options(text: str, options: _FormatOptions) -> str:
     normalized = MarkdownFormatter.normalize_line_endings(text)
     front_matter, body = _split_front_matter(normalized)
     if front_matter:

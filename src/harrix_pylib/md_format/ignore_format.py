@@ -15,18 +15,18 @@ _IGNORE_END_RE = re.compile(r"<!--\s*prettier-ignore-end\s*-->")
 
 
 @dataclass(frozen=True)
-class IgnoreBlock:
+class _IgnoreBlock:
     """Stored ignored Markdown region."""
 
     index: int
     text: str
 
 
-def _extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
+def _extract_ignore_blocks(body: str) -> tuple[str, list[_IgnoreBlock]]:
     """Replace ignored regions with placeholders."""
     lines, trailing = _split_lines(body)
     result: list[str] = []
-    blocks: list[IgnoreBlock] = []
+    blocks: list[_IgnoreBlock] = []
     index = 0
     line_index = 0
     while line_index < len(lines):
@@ -44,7 +44,7 @@ def _extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
             if any(block_line.lstrip().startswith(">") for block_line in block_lines):
                 result.extend(block_lines)
                 continue
-            blocks.append(IgnoreBlock(index=index, text=_join_lines(block_lines, trailing_newline=False)))
+            blocks.append(_IgnoreBlock(index=index, text=_join_lines(block_lines, trailing_newline=False)))
             result.append(_make_placeholder(PLACEHOLDER_PREFIX, index))
             index += 1
             continue
@@ -59,7 +59,7 @@ def _extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
                     break
                 block_lines.append(lines[line_index])
                 line_index += 1
-            blocks.append(IgnoreBlock(index=index, text=_join_lines(block_lines, trailing_newline=False)))
+            blocks.append(_IgnoreBlock(index=index, text=_join_lines(block_lines, trailing_newline=False)))
             result.append(_make_placeholder(PLACEHOLDER_PREFIX, index))
             index += 1
             continue
@@ -70,7 +70,7 @@ def _extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
     return _join_lines(result, trailing_newline=trailing), blocks
 
 
-def _restore_ignore_blocks(text: str, blocks: list[IgnoreBlock]) -> str:
+def _restore_ignore_blocks(text: str, blocks: list[_IgnoreBlock]) -> str:
     """Restore ignored regions verbatim."""
     if not blocks:
         return text

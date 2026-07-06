@@ -9,7 +9,7 @@ DEFAULT_PRINT_WIDTH = 80
 
 
 @dataclass(frozen=True, slots=True)
-class FormatOptions:
+class _FormatOptions:
     """Markdown formatting options."""
 
     end_of_line: str = "crlf"

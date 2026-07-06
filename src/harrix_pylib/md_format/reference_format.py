@@ -13,7 +13,7 @@ from harrix_pylib.md_format.link_title_format import (
     _split_inline_destination,
     _unescape_title,
 )
-from harrix_pylib.md_format.options import DEFAULT_PRINT_WIDTH, FormatOptions
+from harrix_pylib.md_format.options import DEFAULT_PRINT_WIDTH, _FormatOptions
 from harrix_pylib.md_format.prose_wrap import _wrap_prose
 from harrix_pylib.md_format.table_format import _text_display_width
 from harrix_pylib.md_format.text_lines import _join_lines, _make_placeholder, _split_lines
@@ -26,7 +26,7 @@ _FOOTNOTE_DEF_RE = re.compile(r"^(\s*)\[\^([^\]]+)\]:\s*(.*)$")
 
 
 @dataclass(frozen=True)
-class ReferenceBlock:
+class _ReferenceBlock:
     """Stored reference-definition block."""
 
     index: int
@@ -38,12 +38,12 @@ def _canonicalize_reference_title(title: str) -> str:
     return _canonicalize_link_title_content(_unescape_title(title))
 
 
-def _extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
+def _extract_reference_blocks(body: str) -> tuple[str, list[_ReferenceBlock]]:
     """Replace link/footnote definitions with placeholders."""
     lines, trailing = _split_lines(body)
     code_block_info = list(_identify_code_blocks(lines))
     result: list[str] = []
-    blocks: list[ReferenceBlock] = []
+    blocks: list[_ReferenceBlock] = []
     index = 0
     line_index = 0
     while line_index < len(lines):
@@ -81,7 +81,7 @@ def _extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
                 continue
             break
 
-        blocks.append(ReferenceBlock(index=index, lines=block_lines, kind=kind))
+        blocks.append(_ReferenceBlock(index=index, lines=block_lines, kind=kind))
         placeholder = _make_placeholder(PLACEHOLDER_PREFIX, index)
         previous_line = result[-1] if result else ""
         if (
@@ -240,7 +240,7 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
 
 
 def _format_reference_block(
-    block: ReferenceBlock, *, options: FormatOptions, print_width: int = DEFAULT_PRINT_WIDTH
+    block: _ReferenceBlock, *, options: _FormatOptions, print_width: int = DEFAULT_PRINT_WIDTH
 ) -> list[str]:
     if options.prose_wrap != "always":
         return list(block.lines)
@@ -310,7 +310,7 @@ def _reference_label_markup(label: str) -> str:
 
 
 def _restore_inline_reference_line(
-    line: str, blocks_by_index: dict[int, ReferenceBlock], *, print_width: int
+    line: str, blocks_by_index: dict[int, _ReferenceBlock], *, print_width: int
 ) -> list[str]:
     ref_parts: list[str] = []
     first_match = _PLACEHOLDER_RE.search(line)
@@ -329,13 +329,13 @@ def _restore_inline_reference_line(
 
 def _restore_reference_blocks(
     text: str,
-    blocks: list[ReferenceBlock],
+    blocks: list[_ReferenceBlock],
     *,
-    options: FormatOptions | None = None,
+    options: _FormatOptions | None = None,
     print_width: int | None = None,
 ) -> str:
     """Restore reference-definition blocks, optionally applying prose wrap."""
-    fmt_options = options or FormatOptions()
+    fmt_options = options or _FormatOptions()
     width = print_width if print_width is not None else fmt_options.print_width
     if not blocks:
         return text

@@ -56,7 +56,7 @@ class MarkdownFormatter:
         - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
 
         """
-        self.options = FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
+        self.options = _FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
 
     def format(self, text: str) -> str:
         """Format Markdown text.
@@ -195,7 +195,7 @@ def __init__(
         prose_wrap: str = "preserve",
         print_width: int = 80,
     ) -> None:
-        self.options = FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
+        self.options = _FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
 ```
 
 </details>

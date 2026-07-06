@@ -9,14 +9,14 @@ from harrix_pylib.md_format.code_fence import _identify_code_blocks
 from harrix_pylib.md_format.text_lines import _join_lines, _make_placeholder, _split_lines
 
 if TYPE_CHECKING:
-    from harrix_pylib.md_format.options import FormatOptions
+    from harrix_pylib.md_format.options import _FormatOptions
 
 PLACEHOLDER_PREFIX = "HSKMDFMTCODE"
 _MIN_FENCED_BLOCK_LINES = 2
 
 
 @dataclass(frozen=True)
-class CodeBlock:
+class _CodeBlock:
     """Stored fenced code block extracted from Markdown body."""
 
     index: int
@@ -25,12 +25,12 @@ class CodeBlock:
     tight: bool = False
 
 
-def _extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
+def _extract_code_blocks(body: str) -> tuple[str, list[_CodeBlock]]:
     """Replace fenced code blocks with placeholders and store originals verbatim."""
     lines, has_trailing_newline = _split_lines(body)
     code_block_info = list(_identify_code_blocks(lines))
     result: list[str] = []
-    blocks: list[CodeBlock] = []
+    blocks: list[_CodeBlock] = []
     index = 0
     line_index = 0
     while line_index < len(lines):
@@ -58,13 +58,13 @@ def _extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
             result.append("")
             inserted_blank = True
 
-        blocks.append(CodeBlock(index=index, lines=block_lines, base_indent=base_indent, tight=inserted_blank))
+        blocks.append(_CodeBlock(index=index, lines=block_lines, base_indent=base_indent, tight=inserted_blank))
         index += 1
 
     return _join_lines(result, trailing_newline=has_trailing_newline), blocks
 
 
-def _format_markdown_fence_block(block_lines: list[str], *, _options: FormatOptions | None) -> list[str]:
+def _format_markdown_fence_block(block_lines: list[str], *, _options: _FormatOptions | None) -> list[str]:
     """Return fenced blocks verbatim; do not recursively format ``markdown`` fences."""
     return block_lines
 
@@ -83,7 +83,7 @@ def _reindent_line(line: str, base_indent: str, current_indent: str) -> str:
     return line
 
 
-def _restore_code_blocks(text: str, blocks: list[CodeBlock], *, options: FormatOptions | None = None) -> str:
+def _restore_code_blocks(text: str, blocks: list[_CodeBlock], *, options: _FormatOptions | None = None) -> str:
     """Restore fenced code blocks from placeholders."""
     if not blocks:
         return text

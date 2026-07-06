@@ -28,17 +28,7 @@ lang: en
   - [📄 File `img_tools.py`](#-file-img_toolspy)
   - [📄 File `markdown_checker.py`](#-file-markdown_checkerpy)
   - [📄 File `python_checker.py`](#-file-python_checkerpy)
-  - [📄 File `code_guard.py`](#-file-code_guardpy)
   - [📄 File `formatter.py`](#-file-formatterpy)
-  - [📄 File `front_matter.py`](#-file-front_matterpy)
-  - [📄 File `hard_break_format.py`](#-file-hard_break_formatpy)
-  - [📄 File `ignore_format.py`](#-file-ignore_formatpy)
-  - [📄 File `link_destination_format.py`](#-file-link_destination_formatpy)
-  - [📄 File `list_loose_format.py`](#-file-list_loose_formatpy)
-  - [📄 File `math_guard.py`](#-file-math_guardpy)
-  - [📄 File `options.py`](#-file-optionspy)
-  - [📄 File `reference_format.py`](#-file-reference_formatpy)
-  - [📄 File `task_list_format.py`](#-file-task_list_formatpy)
   - [📄 File `optimizer.py`](#-file-optimizerpy)
 - [📄 License](#-license)
 - [👤 Author](#-author)
@@ -259,14 +249,6 @@ Doc: [python_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs
 | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | 🏛️ Class [`PythonChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/python_checker.g.md#️-class-pythonchecker) | Class for checking Python files for compliance with specified rules. |
 
-### 📄 File `code_guard.py`
-
-Doc: [code_guard.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md)
-
-| Function/Class                                                                                                 | Description                                            |
-| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| 🏛️ Class [`CodeBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#️-class-codeblock) | Stored fenced code block extracted from Markdown body. |
-
 ### 📄 File `formatter.py`
 
 Doc: [formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md)
@@ -274,79 +256,6 @@ Doc: [formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/form
 | Function/Class                                                                                                                | Description                                                |
 | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | 🏛️ Class [`MarkdownFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#️-class-markdownformatter) | Format Markdown text inspired by Prettier markdown parser. |
-
-### 📄 File `front_matter.py`
-
-Doc: [front_matter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md)
-
-| Function/Class                                                                                                   | Description                                                  |
-| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| 🏛️ Class [`TomlBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#️-class-tomlblock) | Stored TOML front matter style block from the Markdown body. |
-| 🏛️ Class [`YamlBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#️-class-yamlblock) | Stored YAML block from the Markdown body.                    |
-
-### 📄 File `hard_break_format.py`
-
-Doc: [hard_break_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/hard_break_format.g.md)
-
-| Function/Class                                                                                                                    | Description                                          |
-| --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| 🏛️ Class [`HardBreakStyles`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hard_break_format.g.md#️-class-hardbreakstyles) | Queue of hard-break render styles in document order. |
-
-### 📄 File `ignore_format.py`
-
-Doc: [ignore_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/ignore_format.g.md)
-
-| Function/Class                                                                                                        | Description                     |
-| --------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| 🏛️ Class [`IgnoreBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ignore_format.g.md#️-class-ignoreblock) | Stored ignored Markdown region. |
-
-### 📄 File `link_destination_format.py`
-
-Doc: [link_destination_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md)
-
-| Function/Class                                                                                                                          | Description                            |
-| --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| 🏛️ Class [`LinkDestination`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#️-class-linkdestination) | Stored original link destination text. |
-
-### 📄 File `list_loose_format.py`
-
-Doc: [list_loose_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md)
-
-| Function/Class                                                                                                          | Description                                      |
-| ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| 🏛️ Class [`ListLayout`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#️-class-listlayout) | Loose-list spacing for one list in source order. |
-
-### 📄 File `math_guard.py`
-
-Doc: [math_guard.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md)
-
-| Function/Class                                                                                                           | Description                                           |
-| ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
-| 🏛️ Class [`EmptyMathBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md#️-class-emptymathblock) | Stored empty `$$` block extracted from Markdown body. |
-
-### 📄 File `options.py`
-
-Doc: [options.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/options.g.md)
-
-| Function/Class                                                                                                      | Description                  |
-| ------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| 🏛️ Class [`FormatOptions`](https://github.com/Harrix/harrix-pylib/blob/main/docs/options.g.md#️-class-formatoptions) | Markdown formatting options. |
-
-### 📄 File `reference_format.py`
-
-Doc: [reference_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md)
-
-| Function/Class                                                                                                                 | Description                        |
-| ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
-| 🏛️ Class [`ReferenceBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#️-class-referenceblock) | Stored reference-definition block. |
-
-### 📄 File `task_list_format.py`
-
-Doc: [task_list_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md)
-
-| Function/Class                                                                                                                 | Description                                  |
-| ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- |
-| 🏛️ Class [`TaskListMarker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md#️-class-tasklistmarker) | Stored checkbox marker for a task list item. |
 
 ### 📄 File `optimizer.py`
 

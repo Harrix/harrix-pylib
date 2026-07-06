@@ -13,19 +13,19 @@ _MATH_DELIMITER_RE = re.compile(r"^(\s*)\$\$\s*$")
 
 
 @dataclass(frozen=True)
-class EmptyMathBlock:
+class _EmptyMathBlock:
     """Stored empty ``$$`` block extracted from Markdown body."""
 
     index: int
     lines: list[str]
 
 
-def _extract_empty_math_blocks(body: str) -> tuple[str, list[EmptyMathBlock]]:
+def _extract_empty_math_blocks(body: str) -> tuple[str, list[_EmptyMathBlock]]:
     """Replace empty block-math regions with placeholders before parsing."""
     lines, has_trailing_newline = _split_lines(body)
     in_code = [inside for _line, inside in _identify_code_blocks(lines)]
     result: list[str] = []
-    blocks: list[EmptyMathBlock] = []
+    blocks: list[_EmptyMathBlock] = []
     index = 0
     line_index = 0
     while line_index < len(lines):
@@ -44,7 +44,7 @@ def _extract_empty_math_blocks(body: str) -> tuple[str, list[EmptyMathBlock]]:
         base_indent = _leading_whitespace(block_lines[0])
         placeholder_line = f"{base_indent}{_make_placeholder(PLACEHOLDER_PREFIX, index)}"
         result.append(placeholder_line)
-        blocks.append(EmptyMathBlock(index=index, lines=block_lines))
+        blocks.append(_EmptyMathBlock(index=index, lines=block_lines))
         index += 1
         line_index = close_index + 1
 
@@ -76,7 +76,7 @@ def _leading_whitespace(line: str) -> str:
     return match.group(0) if match else ""
 
 
-def _restore_empty_math_blocks(text: str, blocks: list[EmptyMathBlock]) -> str:
+def _restore_empty_math_blocks(text: str, blocks: list[_EmptyMathBlock]) -> str:
     """Restore empty block-math regions from placeholders."""
     if not blocks:
         return text

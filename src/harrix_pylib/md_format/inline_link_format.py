@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from harrix_pylib.md_format.link_destination_format import PLACEHOLDER_PREFIX, LinkDestination
+from harrix_pylib.md_format.link_destination_format import PLACEHOLDER_PREFIX, _LinkDestination
 from harrix_pylib.md_format.link_title_format import (
     _format_link_title,
     _format_parseable_link_title,
@@ -13,11 +13,11 @@ from harrix_pylib.md_format.link_title_format import (
 from harrix_pylib.md_format.text_lines import _join_lines, _make_placeholder, _split_lines
 
 
-def _prepare_inline_links(body: str) -> tuple[str, list[LinkDestination]]:
+def _prepare_inline_links(body: str) -> tuple[str, list[_LinkDestination]]:
     """Normalize link titles and extract destinations in a single pass."""
     lines, trailing = _split_lines(body)
     result_lines: list[str] = []
-    entries: list[LinkDestination] = []
+    entries: list[_LinkDestination] = []
     index = 0
     for line in lines:
         if _should_skip_link_line(line):
@@ -29,8 +29,8 @@ def _prepare_inline_links(body: str) -> tuple[str, list[LinkDestination]]:
     return _join_lines(result_lines, trailing_newline=trailing), entries
 
 
-def _prepare_inline_links_in_text(body: str, *, start_index: int) -> tuple[str, list[LinkDestination], int]:
-    entries: list[LinkDestination] = []
+def _prepare_inline_links_in_text(body: str, *, start_index: int) -> tuple[str, list[_LinkDestination], int]:
+    entries: list[_LinkDestination] = []
     index = start_index
 
     def handler(prefix: str, destination: str, suffix: str) -> str:
@@ -42,7 +42,7 @@ def _prepare_inline_links_in_text(body: str, *, start_index: int) -> tuple[str, 
             normalized_destination = destination
         url, title = _split_inline_destination(normalized_destination.strip())
         display_title = _format_link_title(_unescape_title(title)) if title is not None else None
-        entries.append(LinkDestination(index=index, destination=url, title=display_title))
+        entries.append(_LinkDestination(index=index, destination=url, title=display_title))
         title_suffix = f" {title}" if title is not None else ""
         replacement = f"{prefix}{_make_placeholder(PLACEHOLDER_PREFIX, index)}{title_suffix}{suffix}"
         index += 1

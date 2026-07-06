@@ -18,7 +18,7 @@ PLACEHOLDER_PREFIX = "HSKMDFMTLD"
 
 
 @dataclass(frozen=True)
-class LinkDestination:
+class _LinkDestination:
     """Stored original link destination text."""
 
     index: int
@@ -115,22 +115,22 @@ def _encode_special_characters(url: str) -> str:
     return "".join(result)
 
 
-def _extract_link_destinations(body: str) -> tuple[str, list[LinkDestination]]:
+def _extract_link_destinations(body: str) -> tuple[str, list[_LinkDestination]]:
     """Replace link destinations with placeholders before parsing."""
     from harrix_pylib.md_format.inline_link_format import _prepare_inline_links  # noqa: PLC0415
 
     return _prepare_inline_links(body)
 
 
-def _extract_link_destinations_from_text(body: str, *, start_index: int) -> tuple[str, list[LinkDestination]]:
-    entries: list[LinkDestination] = []
+def _extract_link_destinations_from_text(body: str, *, start_index: int) -> tuple[str, list[_LinkDestination]]:
+    entries: list[_LinkDestination] = []
     index = start_index
 
     def handler(prefix: str, destination: str, suffix: str) -> str:
         nonlocal index
         url, title = _split_inline_destination(destination)
         display_title = _format_link_title(_unescape_title(title)) if title is not None else None
-        entries.append(LinkDestination(index=index, destination=url, title=display_title))
+        entries.append(_LinkDestination(index=index, destination=url, title=display_title))
         title_suffix = f" {title}" if title is not None else ""
         replacement = f"{prefix}{_make_placeholder(PLACEHOLDER_PREFIX, index)}{title_suffix}{suffix}"
         index += 1
@@ -163,7 +163,7 @@ def _format_link_url(url: str, *, wrap_parentheses: bool = True) -> str:
     return url
 
 
-def _formatted_href_from_placeholder(href: str, entries_by_index: dict[int, LinkDestination]) -> str | None:
+def _formatted_href_from_placeholder(href: str, entries_by_index: dict[int, _LinkDestination]) -> str | None:
     """Return formatted URL for a placeholder href."""
     if not href.startswith(PLACEHOLDER_PREFIX):
         return None
@@ -178,7 +178,7 @@ def _formatted_href_from_placeholder(href: str, entries_by_index: dict[int, Link
     return url
 
 
-def _formatted_title_from_placeholder(href: str, entries_by_index: dict[int, LinkDestination]) -> str | None:
+def _formatted_title_from_placeholder(href: str, entries_by_index: dict[int, _LinkDestination]) -> str | None:
     """Return pre-normalized title suffix for a placeholder href."""
     if not href.startswith(PLACEHOLDER_PREFIX):
         return None

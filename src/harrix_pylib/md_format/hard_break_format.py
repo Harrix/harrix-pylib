@@ -9,7 +9,7 @@ from harrix_pylib.md_format.text_lines import _join_lines, _split_lines
 
 
 @dataclass
-class HardBreakStyles:
+class _HardBreakStyles:
     """Queue of hard-break render styles in document order."""
 
     backslash_breaks: list[bool] = field(default_factory=list)
@@ -21,11 +21,11 @@ class HardBreakStyles:
         return self.backslash_breaks.pop(0)
 
 
-def _extract_backslash_hard_breaks(body: str) -> tuple[str, HardBreakStyles]:
+def _extract_backslash_hard_breaks(body: str) -> tuple[str, _HardBreakStyles]:
     """Record hard-break styles and normalize single trailing backslashes for parsing."""
     lines, trailing = _split_lines(body)
     code_block_info = list(_identify_code_blocks(lines))
-    styles = HardBreakStyles()
+    styles = _HardBreakStyles()
     converted: list[str] = []
     for index, line in enumerate(lines):
         if code_block_info[index][1]:
