@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
 
-def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
+def _identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
     """Yield each line with a flag indicating fenced code-block membership."""
     code_block_delimiter = None
     for line in lines:
@@ -28,7 +28,7 @@ def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
             yield line, False
 
 
-def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
+def _identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
     """Parse a single Markdown line into text and inline-code segments."""
     current_text = ""
     in_code = False

@@ -77,7 +77,7 @@ Structure "C:/projects/TestProject":
 ├─ src
 │  └─ testproject
 │     ├─ main.py
-│     └─ __init__.py
+│     └─ _init__.py
 └─ uv.lock
 ```
 
@@ -96,7 +96,7 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
         uv add --dev ruff
         uv add --dev pytest
         New-Item -ItemType File -Path src/{project_name_under}/main.py -Force
-        New-Item -ItemType File -Path src/{project_name_under}/__init__.py -Force
+        New-Item -ItemType File -Path src/{project_name_under}/_init__.py -Force
         Add-Content -Path pyproject.toml -Value "`n[tool.ruff]"
         Add-Content -Path pyproject.toml -Value "line-length = 120"
         {editor} {folder}/{project_name}"""
@@ -139,7 +139,7 @@ Returns:
 Example output:
 
 ```text
-### 📄 File `extract_functions_and_classes__before.py`
+### 📄 File `extract_functions_and_classes_before.py`
 
 | Function/Class | Description |
 |----------------|-------------|
@@ -343,7 +343,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
         # Create parent directories if they don't exist
         filename_docs.parent.mkdir(parents=True, exist_ok=True)
 
-        final_content = prepend_markdown_header(beginning_of_md, docs)
+        final_content = _prepend_markdown_header(beginning_of_md, docs)
         final_content = h.md.generate_toc_with_links_content(final_content)
         final_content = h.md.generate_image_captions_content(final_content)
         filename_docs.write_text(final_content, encoding="utf-8")
@@ -369,7 +369,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
             # Special handling for README.md - create index.g.md
             if md_file.name.upper() == "README.MD":
                 original_content = md_file.read_text(encoding="utf-8")
-                final_content = prepend_markdown_header(beginning_of_md, original_content)
+                final_content = _prepend_markdown_header(beginning_of_md, original_content)
                 final_content = h.md.generate_toc_with_links_content(final_content)
                 final_content = h.md.generate_image_captions_content(final_content)
 
@@ -382,7 +382,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
 
                 # Read original content and add beginning_of_md
                 original_content = md_file.read_text(encoding="utf-8")
-                final_content = prepend_markdown_header(beginning_of_md, original_content)
+                final_content = _prepend_markdown_header(beginning_of_md, original_content)
 
                 # Apply additional processing
                 final_content = h.md.generate_toc_with_links_content(final_content)
@@ -675,7 +675,7 @@ Note:
 - This function uses `libcst` for parsing and manipulating Python ASTs.
 - Sorting prioritizes initial non-class, non-function statements, followed by sorted classes,
   then sorted functions, and finally any trailing statements.
-- Within classes, `__init__` method is placed first among methods, followed by other methods
+- Within classes, `_init__` method is placed first among methods, followed by other methods
   sorted alphabetically, with single underscore methods at the end.
 - Functions and methods starting with single underscore are placed after regular ones.
 
@@ -712,7 +712,7 @@ class Point:
         self.x += dx
         self.y += dy
 
-    def __init__(self, x=0, y=0):
+    def _init__(self, x=0, y=0):
         """Initializes a point with coordinates (x, y)."""
         self.x = x
         self.y = y
@@ -726,7 +726,7 @@ After sorting:
 
 ```python
 class Point:
-    def __init__(self, x=0, y=0):
+    def _init__(self, x=0, y=0):
         """Initializes a point with coordinates (x, y)."""
         self.x = x
         self.y = y
@@ -767,15 +767,15 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         """Return a sort key for function/method names.
 
         Priority:
-        0. __init__ method - highest priority
+        0. _init__ method - highest priority
         1. Other special methods (double underscore)
         2. Regular methods/functions
         3. Private methods/functions (single underscore)
         """
-        if name == "__init__":
-            return (0, name)  # __init__ always first
+        if name == "_init__":
+            return (0, name)  # _init__ always first
         if name.startswith("__") and name.endswith("__"):
-            return (1, name)  # Other special methods like __str__, __repr__
+            return (1, name)  # Other special methods like _str__, _repr__
         if name.startswith("_") and not name.startswith("__"):
             return (3, name)  # Private methods/functions with single underscore
         return (2, name)  # Regular methods/functions

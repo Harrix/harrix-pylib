@@ -5,24 +5,24 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from harrix_pylib.md_format.escape_format import escape_markdown_text
+from harrix_pylib.md_format.escape_format import _escape_markdown_text
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles
 from harrix_pylib.md_format.link_destination_format import (
-    decode_percent_encoded_url,
-    formatted_href_from_placeholder,
-    formatted_title_from_placeholder,
+    _decode_percent_encoded_url,
+    _formatted_href_from_placeholder,
+    _formatted_title_from_placeholder,
 )
-from harrix_pylib.md_format.link_title_format import format_link_title
+from harrix_pylib.md_format.link_title_format import _format_link_title
 from harrix_pylib.md_format.printer import context as printer_context
 from harrix_pylib.md_format.printer.context import (
     DEFAULT_OPTIONS,
 )
 from harrix_pylib.md_format.prose_wrap import (
+    _should_omit_space_between,
     _softbreak_prefers_newline,
-    should_omit_space_between,
 )
-from harrix_pylib.md_format.table_format import text_display_width
-from harrix_pylib.md_format.text_format import normalize_inline_spaces
+from harrix_pylib.md_format.table_format import _text_display_width
+from harrix_pylib.md_format.text_format import _normalize_inline_spaces
 
 if TYPE_CHECKING:
     from markdown_it.token import Token
@@ -148,7 +148,7 @@ def _pack_link_parts(parts: list[str], *, width: int) -> list[str]:
     current: list[str] = []
     current_width = 0
     for part in parts:
-        part_width = text_display_width(part)
+        part_width = _text_display_width(part)
         sep_width = 1 if current else 0
         if current and current_width + sep_width + part_width > width:
             lines.append(" ".join(current))
@@ -167,12 +167,12 @@ def _pack_link_parts(parts: list[str], *, width: int) -> list[str]:
 def _readable_link_href(href: str) -> str:
     """Decode percent-encoded Unicode in URLs for readable Markdown output."""
     if printer_context.ACTIVE_LINK_DESTINATIONS is not None:
-        formatted = formatted_href_from_placeholder(href, printer_context.ACTIVE_LINK_DESTINATIONS)
+        formatted = _formatted_href_from_placeholder(href, printer_context.ACTIVE_LINK_DESTINATIONS)
         if formatted is not None:
             return formatted
     if not href or href.startswith("HSKMDFMTLD"):
         return href
-    return decode_percent_encoded_url(href)
+    return _decode_percent_encoded_url(href)
 
 
 def _render_inline(
@@ -215,15 +215,15 @@ def _render_inline_token(
     if child.type == "text":
         content = child.content
         if not in_table:
-            content = normalize_inline_spaces(content)
+            content = _normalize_inline_spaces(content)
         if (
             content.endswith("_")
             and index + 1 < len(children)
             and children[index + 1].type == "html_inline"
             and (children[index + 1].content or "").startswith("<")
         ):
-            return escape_markdown_text(content[:-1]) + "\\_", index + 1
-        rendered = escape_markdown_text(content)
+            return _escape_markdown_text(content[:-1]) + "\\_", index + 1
+        rendered = _escape_markdown_text(content)
         if content.endswith("\\") and index + 1 < len(children) and children[index + 1].type == "softbreak":
             rendered += "\\"
         return rendered, index + 1
@@ -261,7 +261,7 @@ def _render_inline_token(
         src = _readable_link_href(str(child.attrGet("src") or ""))
         title = child.attrGet("title")
         if title:
-            return f"![{alt}]({src} {format_link_title(str(title))})", index + 1
+            return f"![{alt}]({src} {_format_link_title(str(title))})", index + 1
         return f"![{alt}]({src})", index + 1
     if child.type == "link_open":
         raw_href = str(child.attrGet("href") or "")
@@ -298,14 +298,14 @@ def _render_inline_token(
             inner_parts.append(chunk)
         inner = "".join(inner_parts)
         stored_title = (
-            formatted_title_from_placeholder(raw_href, printer_context.ACTIVE_LINK_DESTINATIONS)
+            _formatted_title_from_placeholder(raw_href, printer_context.ACTIVE_LINK_DESTINATIONS)
             if printer_context.ACTIVE_LINK_DESTINATIONS is not None
             else None
         )
         if stored_title:
             return f"[{inner}]({href} {stored_title})", next_index
         if title:
-            return f"[{inner}]({href} {format_link_title(str(title))})", next_index
+            return f"[{inner}]({href} {_format_link_title(str(title))})", next_index
         return f"[{inner}]({href})", next_index
     if child.type == "link_close":
         return "", index + 1
@@ -431,7 +431,7 @@ def _softbreak_should_omit_space(children: list[Token], index: int) -> bool:
     after = _inline_text_after(children, index)
     if not before or not after:
         return False
-    return should_omit_space_between(before, after)
+    return _should_omit_space_between(before, after)
 
 
 def _wrap_inline_code_with_edge_spaces(content: str, fence: str) -> str:

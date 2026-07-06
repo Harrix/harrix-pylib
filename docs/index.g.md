@@ -28,31 +28,17 @@ lang: en
   - [📄 File `img_tools.py`](#-file-img_toolspy)
   - [📄 File `markdown_checker.py`](#-file-markdown_checkerpy)
   - [📄 File `python_checker.py`](#-file-python_checkerpy)
-  - [📄 File `autolink_format.py`](#-file-autolink_formatpy)
-  - [📄 File `bullet_list_format.py`](#-file-bullet_list_formatpy)
-  - [📄 File `code_fence.py`](#-file-code_fencepy)
   - [📄 File `code_guard.py`](#-file-code_guardpy)
-  - [📄 File `escape_format.py`](#-file-escape_formatpy)
   - [📄 File `formatter.py`](#-file-formatterpy)
   - [📄 File `front_matter.py`](#-file-front_matterpy)
   - [📄 File `hard_break_format.py`](#-file-hard_break_formatpy)
   - [📄 File `ignore_format.py`](#-file-ignore_formatpy)
-  - [📄 File `inline_link_format.py`](#-file-inline_link_formatpy)
   - [📄 File `link_destination_format.py`](#-file-link_destination_formatpy)
-  - [📄 File `link_title_format.py`](#-file-link_title_formatpy)
-  - [📄 File `list_format.py`](#-file-list_formatpy)
   - [📄 File `list_loose_format.py`](#-file-list_loose_formatpy)
   - [📄 File `math_guard.py`](#-file-math_guardpy)
   - [📄 File `options.py`](#-file-optionspy)
-  - [📄 File `ordered_list_format.py`](#-file-ordered_list_formatpy)
-  - [📄 File `parser.py`](#-file-parserpy)
-  - [📄 File `prose_wrap.py`](#-file-prose_wrappy)
   - [📄 File `reference_format.py`](#-file-reference_formatpy)
-  - [📄 File `table_format.py`](#-file-table_formatpy)
   - [📄 File `task_list_format.py`](#-file-task_list_formatpy)
-  - [📄 File `text_format.py`](#-file-text_formatpy)
-  - [📄 File `text_lines.py`](#-file-text_linespy)
-  - [📄 File `wiki_plugin.py`](#-file-wiki_pluginpy)
   - [📄 File `optimizer.py`](#-file-optimizerpy)
 - [📄 License](#-license)
 - [👤 Author](#-author)
@@ -273,162 +259,71 @@ Doc: [python_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs
 | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | 🏛️ Class [`PythonChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/python_checker.g.md#️-class-pythonchecker) | Class for checking Python files for compliance with specified rules. |
 
-### 📄 File `autolink_format.py`
-
-Doc: [autolink_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/autolink_format.g.md)
-
-| Function/Class                                                                                                                               | Description                                                       |
-| -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| 🔧 [`extract_angle_autolinks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/autolink_format.g.md#-function-extract_angle_autolinks) | Replace angle-bracket autolinks with placeholders before parsing. |
-| 🔧 [`restore_angle_autolinks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/autolink_format.g.md#-function-restore_angle_autolinks) | Restore angle-bracket autolinks after rendering.                  |
-
-### 📄 File `bullet_list_format.py`
-
-Doc: [bullet_list_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/bullet_list_format.g.md)
-
-| Function/Class                                                                                                                                                      | Description                                                           |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| 🔧 [`extract_bullet_list_marker_groups`](https://github.com/Harrix/harrix-pylib/blob/main/docs/bullet_list_format.g.md#-function-extract_bullet_list_marker_groups) | Collect source bullet markers for each bullet list in document order. |
-
-### 📄 File `code_fence.py`
-
-Doc: [code_fence.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_fence.g.md)
-
-| Function/Class                                                                                                                              | Description                                                          |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 🔧 [`identify_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_fence.g.md#-function-identify_code_blocks)           | Yield each line with a flag indicating fenced code-block membership. |
-| 🔧 [`identify_code_blocks_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_fence.g.md#-function-identify_code_blocks_line) | Parse a single Markdown line into text and inline-code segments.     |
-
 ### 📄 File `code_guard.py`
 
 Doc: [code_guard.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md)
 
-| Function/Class                                                                                                                  | Description                                                                |
-| ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 🏛️ Class [`CodeBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#️-class-codeblock)                  | Stored fenced code block extracted from Markdown body.                     |
-| 🔧 [`extract_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-extract_code_blocks) | Replace fenced code blocks with placeholders and store originals verbatim. |
-| 🔧 [`restore_code_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#-function-restore_code_blocks) | Restore fenced code blocks from placeholders.                              |
-
-### 📄 File `escape_format.py`
-
-Doc: [escape_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md)
-
-| Function/Class                                                                                                                                                       | Description                                                               |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| 🔧 [`escape_markdown_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-escape_markdown_text)                                 | Escape emphasis-like `*` and `_` characters in plain text.                |
-| 🔧 [`escape_ordered_list_like_line_starts`](https://github.com/Harrix/harrix-pylib/blob/main/docs/escape_format.g.md#-function-escape_ordered_list_like_line_starts) | Re-escape `39.`-like line starts so they are not parsed as ordered lists. |
+| Function/Class                                                                                                 | Description                                            |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 🏛️ Class [`CodeBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/code_guard.g.md#️-class-codeblock) | Stored fenced code block extracted from Markdown body. |
 
 ### 📄 File `formatter.py`
 
 Doc: [formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md)
 
-| Function/Class                                                                                                                         | Description                                                             |
-| -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 🔧 [`format_markdown_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-format_markdown_content) | Format Markdown text.                                                   |
-| 🔧 [`normalize_line_endings`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-normalize_line_endings)   | Normalize mixed or corrupted line endings to LF.                        |
-| 🔧 [`read_markdown_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-read_markdown_text)           | Read Markdown from disk without universal-newline mangling of `\r\r\n`. |
+| Function/Class                                                                                                                         | Description                                                |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 🏛️ Class [`MarkdownFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#️-class-markdownformatter)          | Format Markdown text inspired by Prettier markdown parser. |
+| 🔧 [`format_markdown_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-format_markdown_content) | Format Markdown text.                                      |
 
 ### 📄 File `front_matter.py`
 
 Doc: [front_matter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md)
 
-| Function/Class                                                                                                                                  | Description                                                                |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 🏛️ Class [`TomlBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#️-class-tomlblock)                                | Stored TOML front matter style block from the Markdown body.               |
-| 🏛️ Class [`YamlBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#️-class-yamlblock)                                | Stored YAML block from the Markdown body.                                  |
-| 🔧 [`collapse_extra_blank_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-collapse_extra_blank_lines) | Collapse consecutive blank lines to a single blank line.                   |
-| 🔧 [`compact_front_matter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-compact_front_matter)             | Remove blank lines inside YAML front matter while keeping delimiters.      |
-| 🔧 [`extract_toml_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-extract_toml_blocks)               | Replace standalone TOML blocks in the Markdown body with placeholders.     |
-| 🔧 [`extract_yaml_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-extract_yaml_blocks)               | Replace standalone YAML blocks in the Markdown body with placeholders.     |
-| 🔧 [`join_front_matter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-join_front_matter)                   | Join front matter and formatted body.                                      |
-| 🔧 [`prepend_markdown_header`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-prepend_markdown_header)       | Prepend YAML or Markdown prefix without duplicating existing front matter. |
-| 🔧 [`restore_toml_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-restore_toml_blocks)               | Restore TOML body blocks.                                                  |
-| 🔧 [`restore_yaml_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-restore_yaml_blocks)               | Restore YAML body blocks.                                                  |
-| 🔧 [`split_front_matter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-split_front_matter)                 | Split YAML front matter from Markdown body.                                |
-| 🔧 [`trim_trailing_blank_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#-function-trim_trailing_blank_lines)   | Remove trailing blank lines while keeping a single final newline.          |
+| Function/Class                                                                                                   | Description                                                  |
+| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 🏛️ Class [`TomlBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#️-class-tomlblock) | Stored TOML front matter style block from the Markdown body. |
+| 🏛️ Class [`YamlBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/front_matter.g.md#️-class-yamlblock) | Stored YAML block from the Markdown body.                    |
 
 ### 📄 File `hard_break_format.py`
 
 Doc: [hard_break_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/hard_break_format.g.md)
 
-| Function/Class                                                                                                                                             | Description                                                                     |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 🏛️ Class [`HardBreakStyles`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hard_break_format.g.md#️-class-hardbreakstyles)                          | Queue of hard-break render styles in document order.                            |
-| 🔧 [`extract_backslash_hard_breaks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hard_break_format.g.md#-function-extract_backslash_hard_breaks) | Record hard-break styles and normalize single trailing backslashes for parsing. |
+| Function/Class                                                                                                                    | Description                                          |
+| --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| 🏛️ Class [`HardBreakStyles`](https://github.com/Harrix/harrix-pylib/blob/main/docs/hard_break_format.g.md#️-class-hardbreakstyles) | Queue of hard-break render styles in document order. |
 
 ### 📄 File `ignore_format.py`
 
 Doc: [ignore_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/ignore_format.g.md)
 
-| Function/Class                                                                                                                         | Description                                |
-| -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| 🏛️ Class [`IgnoreBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ignore_format.g.md#️-class-ignoreblock)                  | Stored ignored Markdown region.            |
-| 🔧 [`extract_ignore_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ignore_format.g.md#-function-extract_ignore_blocks) | Replace ignored regions with placeholders. |
-| 🔧 [`restore_ignore_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ignore_format.g.md#-function-restore_ignore_blocks) | Restore ignored regions verbatim.          |
-
-### 📄 File `inline_link_format.py`
-
-Doc: [inline_link_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline_link_format.g.md)
-
-| Function/Class                                                                                                                            | Description                                                      |
-| ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| 🔧 [`prepare_inline_links`](https://github.com/Harrix/harrix-pylib/blob/main/docs/inline_link_format.g.md#-function-prepare_inline_links) | Normalize link titles and extract destinations in a single pass. |
+| Function/Class                                                                                                        | Description                     |
+| --------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| 🏛️ Class [`IgnoreBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ignore_format.g.md#️-class-ignoreblock) | Stored ignored Markdown region. |
 
 ### 📄 File `link_destination_format.py`
 
 Doc: [link_destination_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md)
 
-| Function/Class                                                                                                                                                         | Description                                                                      |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 🏛️ Class [`LinkDestination`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#️-class-linkdestination)                                | Stored original link destination text.                                           |
-| 🔧 [`decode_percent_encoded_url`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-decode_percent_encoded_url)             | Decode percent-encoded Unicode in URL paths and fragments for readable Markdown. |
-| 🔧 [`extract_link_destinations`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-extract_link_destinations)               | Replace link destinations with placeholders before parsing.                      |
-| 🔧 [`format_inline_link_destination`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-format_inline_link_destination)     | Return canonical destination text for inline links and images.                   |
-| 🔧 [`format_link_url`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-format_link_url)                                   | Return canonical URL text for links and reference definitions.                   |
-| 🔧 [`formatted_href_from_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-formatted_href_from_placeholder)   | Return formatted URL for a placeholder href.                                     |
-| 🔧 [`formatted_title_from_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#-function-formatted_title_from_placeholder) | Return pre-normalized title suffix for a placeholder href.                       |
-
-### 📄 File `link_title_format.py`
-
-Doc: [link_title_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md)
-
-| Function/Class                                                                                                                                           | Description                                                        |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| 🔧 [`format_link_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-format_link_title)                       | Return a canonical quoted title for inline links and images.       |
-| 🔧 [`format_parseable_link_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-format_parseable_link_title)   | Return a quoted title that markdown-it can parse before rendering. |
-| 🔧 [`normalize_inline_link_titles`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-normalize_inline_link_titles) | Normalize quoted titles in inline links before parsing.            |
-| 🔧 [`scan_inline_links`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-scan_inline_links)                       | Scan inline links and rebuild text with a per-link handler.        |
-| 🔧 [`split_inline_destination`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_title_format.g.md#-function-split_inline_destination)         | Split an inline link destination into URL and optional title.      |
-
-### 📄 File `list_format.py`
-
-Doc: [list_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_format.g.md)
-
-| Function/Class                                                                                                                                         | Description                                                              |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| 🔧 [`ensure_blank_line_after_lists`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_format.g.md#-function-ensure_blank_line_after_lists)   | Insert a blank line after a list when the next line starts a new block.  |
-| 🔧 [`is_list_continuation`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_format.g.md#-function-is_list_continuation)                     | Return whether the line continues the previous list item paragraph.      |
-| 🔧 [`is_list_item_continuation_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_format.g.md#-function-is_list_item_continuation_line) | Return whether an unindented line continues the previous list item text. |
-| 🔧 [`is_list_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_format.g.md#-function-is_list_line)                                     | Return whether the line is a bullet or ordered list item.                |
+| Function/Class                                                                                                                          | Description                            |
+| --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| 🏛️ Class [`LinkDestination`](https://github.com/Harrix/harrix-pylib/blob/main/docs/link_destination_format.g.md#️-class-linkdestination) | Stored original link destination text. |
 
 ### 📄 File `list_loose_format.py`
 
 Doc: [list_loose_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md)
 
-| Function/Class                                                                                                                           | Description                                                       |
-| ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| 🏛️ Class [`ListLayout`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#️-class-listlayout)                  | Loose-list spacing for one list in source order.                  |
-| 🔧 [`extract_list_layouts`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#-function-extract_list_layouts) | Collect loose-list layout metadata for each list in the document. |
+| Function/Class                                                                                                          | Description                                      |
+| ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 🏛️ Class [`ListLayout`](https://github.com/Harrix/harrix-pylib/blob/main/docs/list_loose_format.g.md#️-class-listlayout) | Loose-list spacing for one list in source order. |
 
 ### 📄 File `math_guard.py`
 
 Doc: [math_guard.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md)
 
-| Function/Class                                                                                                                              | Description                                                        |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| 🏛️ Class [`EmptyMathBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md#️-class-emptymathblock)                    | Stored empty `$$` block extracted from Markdown body.              |
-| 🔧 [`extract_empty_math_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md#-function-extract_empty_math_blocks) | Replace empty block-math regions with placeholders before parsing. |
-| 🔧 [`restore_empty_math_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md#-function-restore_empty_math_blocks) | Restore empty block-math regions from placeholders.                |
+| Function/Class                                                                                                           | Description                                           |
+| ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| 🏛️ Class [`EmptyMathBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/math_guard.g.md#️-class-emptymathblock) | Stored empty `$$` block extracted from Markdown body. |
 
 ### 📄 File `options.py`
 
@@ -438,97 +333,21 @@ Doc: [options.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/option
 | ------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
 | 🏛️ Class [`FormatOptions`](https://github.com/Harrix/harrix-pylib/blob/main/docs/options.g.md#️-class-formatoptions) | Markdown formatting options. |
 
-### 📄 File `ordered_list_format.py`
-
-Doc: [ordered_list_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md)
-
-| Function/Class                                                                                                                                                         | Description                                                                     |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 🔧 [`extract_ordered_list_marker_groups`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md#-function-extract_ordered_list_marker_groups) | Collect source marker numbers for each contiguous ordered list.                 |
-| 🔧 [`is_git_diff_friendly_ordered_list`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md#-function-is_git_diff_friendly_ordered_list)   | Return whether ordered list markers should use git-diff-friendly `1.` suffixes. |
-| 🔧 [`ordered_list_item_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md#-function-ordered_list_item_number)                     | Compute the rendered marker number for an ordered-list item.                    |
-| 🔧 [`parse_ordered_list_marker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/ordered_list_format.g.md#-function-parse_ordered_list_marker)                   | Return marker number and delimiter from an ordered-list source line.            |
-
-### 📄 File `parser.py`
-
-Doc: [parser.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/parser.g.md)
-
-| Function/Class                                                                                                              | Description                                                              |
-| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 🔧 [`get_markdown_parser`](https://github.com/Harrix/harrix-pylib/blob/main/docs/parser.g.md#-function-get_markdown_parser) | Return a configured `markdown-it` parser with GFM, math, and wiki-links. |
-
-### 📄 File `prose_wrap.py`
-
-Doc: [prose_wrap.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md)
-
-| Function/Class                                                                                                                              | Description                                                                             |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| 🔧 [`should_omit_space_between`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-should_omit_space_between) | Return whether phrasing text on both sides of a break should be joined without a space. |
-| 🔧 [`wrap_paragraph_prose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-wrap_paragraph_prose)           | Wrap paragraph text, preserving hard breaks and backslash-only lead lines.              |
-| 🔧 [`wrap_prose`](https://github.com/Harrix/harrix-pylib/blob/main/docs/prose_wrap.g.md#-function-wrap_prose)                               | Wrap phrasing Markdown text to the given display width.                                 |
-
 ### 📄 File `reference_format.py`
 
 Doc: [reference_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md)
 
-| Function/Class                                                                                                                                    | Description                                                          |
-| ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 🏛️ Class [`ReferenceBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#️-class-referenceblock)                    | Stored reference-definition block.                                   |
-| 🔧 [`extract_reference_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-extract_reference_blocks)   | Replace link/footnote definitions with placeholders.                 |
-| 🔧 [`format_reference_link_url`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-format_reference_link_url) | Return canonical URL text for link-reference definitions.            |
-| 🔧 [`restore_reference_blocks`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#-function-restore_reference_blocks)   | Restore reference-definition blocks, optionally applying prose wrap. |
-
-### 📄 File `table_format.py`
-
-Doc: [table_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md)
-
-| Function/Class                                                                                                                                          | Description                                                                   |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 🔧 [`ensure_blank_line_after_tables`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-ensure_blank_line_after_tables) | Insert a blank line after a GFM table when the next line is not a table row.  |
-| 🔧 [`is_table_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-is_table_line)                                   | Return whether the line is a GFM table row.                                   |
-| 🔧 [`looks_like_prose_table_row`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-looks_like_prose_table_row)         | Return whether a single table cell looks like a misparsed paragraph.          |
-| 🔧 [`parse_table_cells`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-parse_table_cells)                           | Split a table row into cell values.                                           |
-| 🔧 [`text_display_width`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-text_display_width)                         | Return the terminal display width of text (emoji and CJK count as 2 columns). |
-| 🔧 [`unwrap_spurious_table_rows`](https://github.com/Harrix/harrix-pylib/blob/main/docs/table_format.g.md#-function-unwrap_spurious_table_rows)         | Turn ``                                                                       |
+| Function/Class                                                                                                                 | Description                        |
+| ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
+| 🏛️ Class [`ReferenceBlock`](https://github.com/Harrix/harrix-pylib/blob/main/docs/reference_format.g.md#️-class-referenceblock) | Stored reference-definition block. |
 
 ### 📄 File `task_list_format.py`
 
 Doc: [task_list_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md)
 
-| Function/Class                                                                                                                                    | Description                                                                         |
-| ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| 🏛️ Class [`TaskListMarker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md#️-class-tasklistmarker)                    | Stored checkbox marker for a task list item.                                        |
-| 🔧 [`extract_task_list_markers`](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md#-function-extract_task_list_markers) | Replace task-list markers with placeholders the parser will keep in text.           |
-| 🔧 [`strip_task_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md#-function-strip_task_placeholder)       | Remove the task-list placeholder token from item text.                              |
-| 🔧 [`task_list_entry_for_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md#-function-task_list_entry_for_text)   | Return task marker text and metadata when paragraph text starts with a placeholder. |
-| 🔧 [`task_list_marker_for_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md#-function-task_list_marker_for_text) | Return `[ ] ` or `[x] ` when paragraph text starts with a task placeholder.         |
-
-### 📄 File `text_format.py`
-
-Doc: [text_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_format.g.md)
-
-| Function/Class                                                                                                                           | Description                                                              |
-| ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 🔧 [`normalize_inline_spaces`](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_format.g.md#-function-normalize_inline_spaces) | Collapse consecutive spaces and tabs in phrasing text to a single space. |
-
-### 📄 File `text_lines.py`
-
-Doc: [text_lines.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_lines.g.md)
-
-| Function/Class                                                                                                                                                    | Description                                                                        |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| 🔧 [`ensure_blank_line_after_active_block`](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_lines.g.md#-function-ensure_blank_line_after_active_block) | Insert a blank line after a block when the next non-empty line starts new content. |
-| 🔧 [`join_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_lines.g.md#-function-join_lines)                                                     | Join lines and restore a trailing newline when requested.                          |
-| 🔧 [`make_placeholder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_lines.g.md#-function-make_placeholder)                                         | Build a stable placeholder token for protected regions.                            |
-| 🔧 [`split_lines`](https://github.com/Harrix/harrix-pylib/blob/main/docs/text_lines.g.md#-function-split_lines)                                                   | Split text into lines without the trailing split artifact from a final newline.    |
-
-### 📄 File `wiki_plugin.py`
-
-Doc: [wiki_plugin.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/wiki_plugin.g.md)
-
-| Function/Class                                                                                                             | Description                                       |
-| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| 🔧 [`wiki_link_plugin`](https://github.com/Harrix/harrix-pylib/blob/main/docs/wiki_plugin.g.md#-function-wiki_link_plugin) | Register wiki-link parsing before standard links. |
+| Function/Class                                                                                                                 | Description                                  |
+| ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- |
+| 🏛️ Class [`TaskListMarker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/task_list_format.g.md#️-class-tasklistmarker) | Stored checkbox marker for a task list item. |
 
 ### 📄 File `optimizer.py`
 

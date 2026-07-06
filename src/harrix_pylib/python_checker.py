@@ -39,18 +39,6 @@ class PythonChecker:
     # Comment pattern for ignoring checks for entire file
     FILE_IGNORE_PATTERN: ClassVar[re.Pattern] = re.compile(r"#\s*file-ignore:\s*([A-Z0-9,\s]+)", re.IGNORECASE)
 
-    def __init__(self, project_root: Path | str | None = None) -> None:
-        """Initialize the PythonChecker with all available rules.
-
-        Args:
-
-        - `project_root` (`Path | str | None`): Root directory of the project for relative path calculation.
-        If `None`, will try to find git root or use current working directory. Defaults to `None`.
-
-        """
-        self.all_rules = set(self.RULES.keys())
-        self.project_root = self._determine_project_root(project_root)
-
     def __call__(
         self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
     ) -> list[str]:
@@ -68,6 +56,18 @@ class PythonChecker:
 
         """
         return self.check(filename, select=select, exclude_rules=exclude_rules)
+
+    def __init__(self, project_root: Path | str | None = None) -> None:
+        """Initialize the PythonChecker with all available rules.
+
+        Args:
+
+        - `project_root` (`Path | str | None`): Root directory of the project for relative path calculation.
+        If `None`, will try to find git root or use current working directory. Defaults to `None`.
+
+        """
+        self.all_rules = set(self.RULES.keys())
+        self.project_root = self._determine_project_root(project_root)
 
     def check(
         self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None

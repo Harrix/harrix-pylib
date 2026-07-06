@@ -299,16 +299,16 @@ class MarkdownChecker:
         "</",
     ]
 
-    def __init__(self, project_root: Path | str | None = None) -> None:
-        """Initialize the MarkdownChecker with all available rules."""
-        self.all_rules = set(self.RULES.keys())
-        self.project_root = self._determine_project_root(project_root)
-
     def __call__(
         self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
     ) -> list[str]:
         """Check Markdown file for compliance with specified rules."""
         return self.check(filename, select=select, exclude_rules=exclude_rules)
+
+    def __init__(self, project_root: Path | str | None = None) -> None:
+        """Initialize the MarkdownChecker with all available rules."""
+        self.all_rules = set(self.RULES.keys())
+        self.project_root = self._determine_project_root(project_root)
 
     def check(
         self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None

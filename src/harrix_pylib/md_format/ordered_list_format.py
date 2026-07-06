@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import re
 
-from harrix_pylib.md_format.text_lines import join_lines, split_lines
+from harrix_pylib.md_format.text_lines import _join_lines, _split_lines
 
 _ORDERED_ITEM_RE = re.compile(r"^(\s*)(?:>\s*)?(\d+)([.)])\s+")
 _BLOCKQUOTE_LIST_CONTINUATION_RE = re.compile(r"^>\s{2,}\S")
 
 
-def extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]:
+def _extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]:
     """Collect source marker numbers for each contiguous ordered list."""
-    lines, trailing = split_lines(body)
+    lines, trailing = _split_lines(body)
     groups: list[list[int]] = []
     current: list[int] = []
     current_indent: int | None = None
@@ -51,10 +51,15 @@ def extract_ordered_list_marker_groups(body: str) -> tuple[str, list[list[int]]]
             current_indent = None
     if current:
         groups.append(current)
-    return join_lines(lines, trailing_newline=trailing), groups
+    return _join_lines(lines, trailing_newline=trailing), groups
 
 
-def is_git_diff_friendly_ordered_list(markers: list[int]) -> bool:
+def _is_blockquote_list_continuation_line(line: str) -> bool:
+    """Return whether a blockquote line continues the previous list item body."""
+    return bool(_BLOCKQUOTE_LIST_CONTINUATION_RE.match(line))
+
+
+def _is_git_diff_friendly_ordered_list(markers: list[int]) -> bool:
     """Return whether ordered list markers should use git-diff-friendly ``1.`` suffixes."""
     if len(markers) < 2:
         return False
@@ -65,23 +70,18 @@ def is_git_diff_friendly_ordered_list(markers: list[int]) -> bool:
     return len(markers) > 2 and markers[2] == 1
 
 
-def ordered_list_item_number(markers: list[int], item_index: int) -> int:
+def _ordered_list_item_number(markers: list[int], item_index: int) -> int:
     """Compute the rendered marker number for an ordered-list item."""
     if not markers:
         return item_index + 1
-    if is_git_diff_friendly_ordered_list(markers):
+    if _is_git_diff_friendly_ordered_list(markers):
         return markers[0] if item_index == 0 else 1
     return markers[0] + item_index
 
 
-def parse_ordered_list_marker(line: str) -> tuple[int, str] | None:
+def _parse_ordered_list_marker(line: str) -> tuple[int, str] | None:
     """Return marker number and delimiter from an ordered-list source line."""
     match = _ORDERED_ITEM_RE.match(line)
     if not match:
         return None
     return int(match.group(2)), match.group(3)
-
-
-def _is_blockquote_list_continuation_line(line: str) -> bool:
-    """Return whether a blockquote line continues the previous list item body."""
-    return bool(_BLOCKQUOTE_LIST_CONTINUATION_RE.match(line))

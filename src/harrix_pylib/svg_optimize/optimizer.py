@@ -20,16 +20,6 @@ class SvgOptimizer:
 
     MAX_MULTIPASS: ClassVar[int] = 3
 
-    def __init__(self, *, multipass: bool = True) -> None:
-        """Initialize the SvgOptimizer.
-
-        Args:
-
-        - `multipass` (`bool`): Run multiple optimization passes by default. Defaults to `True`.
-
-        """
-        self.multipass = multipass
-
     def __call__(self, svg_text: str, *, multipass: bool | None = None) -> str:
         """Optimize SVG markup.
 
@@ -44,6 +34,16 @@ class SvgOptimizer:
 
         """
         return self.optimize(svg_text, multipass=multipass)
+
+    def __init__(self, *, multipass: bool = True) -> None:
+        """Initialize the SvgOptimizer.
+
+        Args:
+
+        - `multipass` (`bool`): Run multiple optimization passes by default. Defaults to `True`.
+
+        """
+        self.multipass = multipass
 
     def optimize(self, svg_text: str, *, multipass: bool | None = None) -> str:
         """Optimize SVG markup to a compact form similar to SVGO preset-default.

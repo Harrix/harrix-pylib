@@ -5,35 +5,116 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from harrix_pylib.md_format.autolink_format import extract_angle_autolinks, restore_angle_autolinks
-from harrix_pylib.md_format.bullet_list_format import extract_bullet_list_marker_groups
-from harrix_pylib.md_format.code_guard import extract_code_blocks, restore_code_blocks
+from harrix_pylib.md_format.autolink_format import _extract_angle_autolinks, _restore_angle_autolinks
+from harrix_pylib.md_format.bullet_list_format import _extract_bullet_list_marker_groups
+from harrix_pylib.md_format.code_guard import _extract_code_blocks, _restore_code_blocks
 from harrix_pylib.md_format.front_matter import (
-    collapse_extra_blank_lines,
-    compact_front_matter,
-    extract_toml_blocks,
-    extract_yaml_blocks,
-    join_front_matter,
-    restore_toml_blocks,
-    restore_yaml_blocks,
-    split_front_matter,
-    trim_trailing_blank_lines,
+    _collapse_extra_blank_lines,
+    _compact_front_matter,
+    _extract_toml_blocks,
+    _extract_yaml_blocks,
+    _join_front_matter,
+    _restore_toml_blocks,
+    _restore_yaml_blocks,
+    _split_front_matter,
+    _trim_trailing_blank_lines,
 )
-from harrix_pylib.md_format.hard_break_format import extract_backslash_hard_breaks
-from harrix_pylib.md_format.ignore_format import extract_ignore_blocks, restore_ignore_blocks
-from harrix_pylib.md_format.inline_link_format import prepare_inline_links
-from harrix_pylib.md_format.list_format import ensure_blank_line_after_lists
-from harrix_pylib.md_format.list_loose_format import extract_list_layouts
-from harrix_pylib.md_format.math_guard import extract_empty_math_blocks, restore_empty_math_blocks
+from harrix_pylib.md_format.hard_break_format import _extract_backslash_hard_breaks
+from harrix_pylib.md_format.ignore_format import _extract_ignore_blocks, _restore_ignore_blocks
+from harrix_pylib.md_format.inline_link_format import _prepare_inline_links
+from harrix_pylib.md_format.list_format import _ensure_blank_line_after_lists
+from harrix_pylib.md_format.list_loose_format import _extract_list_layouts
+from harrix_pylib.md_format.math_guard import _extract_empty_math_blocks, _restore_empty_math_blocks
 from harrix_pylib.md_format.options import FormatOptions
-from harrix_pylib.md_format.ordered_list_format import extract_ordered_list_marker_groups
-from harrix_pylib.md_format.parser import get_markdown_parser
-from harrix_pylib.md_format.printer import render_tokens
-from harrix_pylib.md_format.reference_format import extract_reference_blocks, restore_reference_blocks
-from harrix_pylib.md_format.table_format import ensure_blank_line_after_tables, unwrap_spurious_table_rows
-from harrix_pylib.md_format.task_list_format import extract_task_list_markers
+from harrix_pylib.md_format.ordered_list_format import _extract_ordered_list_marker_groups
+from harrix_pylib.md_format.parser import _get_markdown_parser
+from harrix_pylib.md_format.printer import _render_tokens
+from harrix_pylib.md_format.reference_format import _extract_reference_blocks, _restore_reference_blocks
+from harrix_pylib.md_format.table_format import _ensure_blank_line_after_tables, _unwrap_spurious_table_rows
+from harrix_pylib.md_format.task_list_format import _extract_task_list_markers
 
 _EMPTY_FENCE_RE = re.compile(r"(?m)^(?P<indent>[ \t]*)(?P<fence>`{3,}|~{3,})[ \t]*\n(?P=indent)(?P=fence)[ \t]*$")
+
+
+class MarkdownFormatter:
+    """Format Markdown text inspired by Prettier markdown parser."""
+
+    def __call__(self, text: str) -> str:
+        """Format Markdown text."""
+        return self.format(text)
+
+    def __init__(
+        self,
+        *,
+        end_of_line: str = "crlf",
+        prose_wrap: str = "preserve",
+        print_width: int = 80,
+    ) -> None:
+        """Initialize the MarkdownFormatter.
+
+        Args:
+
+        - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
+        - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
+        - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
+
+        """
+        self.options = FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
+
+    def format(self, text: str) -> str:
+        """Format Markdown text.
+
+        ``prose_wrap`` matches Prettier: ``preserve`` (default), ``always``, or ``never``.
+        Line wrapping uses ``print_width`` only when ``prose_wrap`` is ``always``.
+
+        Args:
+
+        - `text` (`str`): Markdown source text.
+
+        Returns:
+
+        - `str`: Formatted Markdown text.
+
+        """
+        return _format_with_options(text, self.options)
+
+    @staticmethod
+    def normalize_line_endings(text: str) -> str:
+        r"""Normalize mixed or corrupted line endings to LF.
+
+        Handles CRLF applied twice (``\r\r\n``), which otherwise becomes a blank
+        line between every source line after the legacy two-step ``\r`` cleanup or
+        after :func:`pathlib.Path.read_text` universal-newline translation.
+
+        Args:
+
+        - `text` (`str`): Text with mixed line endings.
+
+        Returns:
+
+        - `str`: Text normalized to LF line endings.
+
+        """
+        return re.sub(r"\r+\n", "\n", text).replace("\r", "\n")
+
+    @staticmethod
+    def read_markdown_text(filename: Path | str) -> str:
+        r"""Read Markdown from disk without universal-newline mangling of ``\r\r\n``.
+
+        Args:
+
+        - `filename` (`Path | str`): Path to the Markdown file.
+
+        Returns:
+
+        - `str`: File contents with normalized line endings.
+
+        """
+        path = Path(filename)
+        data = path.read_bytes()
+        if data.startswith(b"\xef\xbb\xbf"):
+            data = data[3:]
+        return MarkdownFormatter.normalize_line_endings(data.decode("utf-8"))
 
 
 def format_markdown_content(
@@ -45,30 +126,16 @@ def format_markdown_content(
 ) -> str:
     """Format Markdown text.
 
+    Deprecated: prefer :class:`MarkdownFormatter`.
+
     ``prose_wrap`` matches Prettier: ``preserve`` (default), ``always``, or ``never``.
     Line wrapping uses ``print_width`` only when ``prose_wrap`` is ``always``.
     """
-    options = FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
-    return _format_with_options(text, options)
-
-
-def normalize_line_endings(text: str) -> str:
-    r"""Normalize mixed or corrupted line endings to LF.
-
-    Handles CRLF applied twice (``\r\r\n``), which otherwise becomes a blank
-    line between every source line after the legacy two-step ``\r`` cleanup or
-    after :func:`pathlib.Path.read_text` universal-newline translation.
-    """
-    return re.sub(r"\r+\n", "\n", text).replace("\r", "\n")
-
-
-def read_markdown_text(filename: Path | str) -> str:
-    r"""Read Markdown from disk without universal-newline mangling of ``\r\r\n``."""
-    path = Path(filename)
-    data = path.read_bytes()
-    if data.startswith(b"\xef\xbb\xbf"):
-        data = data[3:]
-    return normalize_line_endings(data.decode("utf-8"))
+    return MarkdownFormatter(
+        end_of_line=end_of_line,
+        prose_wrap=prose_wrap,
+        print_width=print_width,
+    ).format(text)
 
 
 def _ensure_blank_line_in_empty_fences(body: str) -> str:
@@ -77,38 +144,38 @@ def _ensure_blank_line_in_empty_fences(body: str) -> str:
 
 
 def _format_with_options(text: str, options: FormatOptions) -> str:
-    normalized = normalize_line_endings(text)
-    front_matter, body = split_front_matter(normalized)
+    normalized = MarkdownFormatter.normalize_line_endings(text)
+    front_matter, body = _split_front_matter(normalized)
     if front_matter:
-        front_matter = compact_front_matter(front_matter)
+        front_matter = _compact_front_matter(front_matter)
     body = _ensure_blank_line_in_empty_fences(body)
-    body, empty_math_blocks = extract_empty_math_blocks(body)
-    body, ignore_blocks = extract_ignore_blocks(body)
-    body, hard_break_styles = extract_backslash_hard_breaks(body)
-    body, angle_autolinks = extract_angle_autolinks(body)
-    body, reference_blocks = extract_reference_blocks(body)
-    body, code_blocks = extract_code_blocks(body)
-    body, yaml_blocks = extract_yaml_blocks(body)
-    body, toml_blocks = extract_toml_blocks(body)
-    body, ordered_list_marker_groups = extract_ordered_list_marker_groups(body)
-    body, bullet_list_marker_groups = extract_bullet_list_marker_groups(body)
+    body, empty_math_blocks = _extract_empty_math_blocks(body)
+    body, ignore_blocks = _extract_ignore_blocks(body)
+    body, hard_break_styles = _extract_backslash_hard_breaks(body)
+    body, angle_autolinks = _extract_angle_autolinks(body)
+    body, reference_blocks = _extract_reference_blocks(body)
+    body, code_blocks = _extract_code_blocks(body)
+    body, yaml_blocks = _extract_yaml_blocks(body)
+    body, toml_blocks = _extract_toml_blocks(body)
+    body, ordered_list_marker_groups = _extract_ordered_list_marker_groups(body)
+    body, bullet_list_marker_groups = _extract_bullet_list_marker_groups(body)
     tight_code_indices = {block.index for block in code_blocks if block.tight}
-    body, list_layouts = extract_list_layouts(body, tight_code_indices)
-    body, task_list_markers = extract_task_list_markers(body)
-    body = collapse_extra_blank_lines(body)
-    body = unwrap_spurious_table_rows(ensure_blank_line_after_tables(body))
-    body = ensure_blank_line_after_lists(body)
-    body, link_destinations = prepare_inline_links(body)
+    body, list_layouts = _extract_list_layouts(body, tight_code_indices)
+    body, task_list_markers = _extract_task_list_markers(body)
+    body = _collapse_extra_blank_lines(body)
+    body = _unwrap_spurious_table_rows(_ensure_blank_line_after_tables(body))
+    body = _ensure_blank_line_after_lists(body)
+    body, link_destinations = _prepare_inline_links(body)
     if not body.strip() and front_matter and not reference_blocks:
         result = front_matter.rstrip() + "\n"
     elif not body.strip() and not front_matter and reference_blocks:
-        rendered_body = restore_reference_blocks("", reference_blocks, options=options)
+        rendered_body = _restore_reference_blocks("", reference_blocks, options=options)
         result = rendered_body
     else:
         source_lines = body.split("\n")
-        parser = get_markdown_parser()
+        parser = _get_markdown_parser()
         tokens = parser.parse(body)
-        rendered_body = render_tokens(
+        rendered_body = _render_tokens(
             tokens,
             options=options,
             task_list_markers=task_list_markers,
@@ -120,20 +187,20 @@ def _format_with_options(text: str, options: FormatOptions) -> str:
             link_destinations=link_destinations,
             angle_autolinks=angle_autolinks,
         )
-        rendered_body = restore_code_blocks(rendered_body, code_blocks, options=options)
-        rendered_body = restore_empty_math_blocks(rendered_body, empty_math_blocks)
-        rendered_body = restore_angle_autolinks(rendered_body, angle_autolinks)
-        rendered_body = restore_reference_blocks(rendered_body, reference_blocks, options=options)
-        rendered_body = restore_toml_blocks(rendered_body, toml_blocks)
-        rendered_body = restore_yaml_blocks(rendered_body, yaml_blocks)
-        rendered_body = restore_ignore_blocks(rendered_body, ignore_blocks)
-        result = join_front_matter(front_matter, rendered_body) if front_matter else rendered_body
-    result = trim_trailing_blank_lines(result)
+        rendered_body = _restore_code_blocks(rendered_body, code_blocks, options=options)
+        rendered_body = _restore_empty_math_blocks(rendered_body, empty_math_blocks)
+        rendered_body = _restore_angle_autolinks(rendered_body, angle_autolinks)
+        rendered_body = _restore_reference_blocks(rendered_body, reference_blocks, options=options)
+        rendered_body = _restore_toml_blocks(rendered_body, toml_blocks)
+        rendered_body = _restore_yaml_blocks(rendered_body, yaml_blocks)
+        rendered_body = _restore_ignore_blocks(rendered_body, ignore_blocks)
+        result = _join_front_matter(front_matter, rendered_body) if front_matter else rendered_body
+    result = _trim_trailing_blank_lines(result)
     return _normalize_end_of_line(result, options.end_of_line)
 
 
 def _normalize_end_of_line(text: str, end_of_line: str) -> str:
-    normalized = normalize_line_endings(text)
+    normalized = MarkdownFormatter.normalize_line_endings(text)
     if end_of_line == "lf":
         return normalized
     if end_of_line == "crlf":

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from harrix_pylib.md_format.code_fence import identify_code_blocks
-from harrix_pylib.md_format.text_lines import join_lines, split_lines
+from harrix_pylib.md_format.code_fence import _identify_code_blocks
+from harrix_pylib.md_format.text_lines import _join_lines, _split_lines
 
 
 @dataclass
@@ -21,10 +21,10 @@ class HardBreakStyles:
         return self.backslash_breaks.pop(0)
 
 
-def extract_backslash_hard_breaks(body: str) -> tuple[str, HardBreakStyles]:
+def _extract_backslash_hard_breaks(body: str) -> tuple[str, HardBreakStyles]:
     """Record hard-break styles and normalize single trailing backslashes for parsing."""
-    lines, trailing = split_lines(body)
-    code_block_info = list(identify_code_blocks(lines))
+    lines, trailing = _split_lines(body)
+    code_block_info = list(_identify_code_blocks(lines))
     styles = HardBreakStyles()
     converted: list[str] = []
     for index, line in enumerate(lines):
@@ -39,7 +39,7 @@ def extract_backslash_hard_breaks(body: str) -> tuple[str, HardBreakStyles]:
         if _line_has_space_hard_break(line, next_line=next_line):
             styles.backslash_breaks.append(False)
         converted.append(line)
-    return join_lines(converted, trailing_newline=trailing), styles
+    return _join_lines(converted, trailing_newline=trailing), styles
 
 
 def _line_has_single_backslash_hard_break(line: str, *, next_line: str) -> bool:

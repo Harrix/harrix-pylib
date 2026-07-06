@@ -5,9 +5,9 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from harrix_pylib.md_format.autolink_format import restore_angle_autolinks
+from harrix_pylib.md_format.autolink_format import _restore_angle_autolinks
 from harrix_pylib.md_format.printer import context as printer_context
-from harrix_pylib.md_format.table_format import looks_like_prose_table_row, text_display_width
+from harrix_pylib.md_format.table_format import _looks_like_prose_table_row, _text_display_width
 
 if TYPE_CHECKING:
     from markdown_it.token import Token
@@ -35,7 +35,7 @@ def _expand_table_cell_placeholders(cell: str) -> str:
     autolinks = printer_context.ACTIVE_ANGLE_AUTOLINKS
     if not autolinks:
         return cell
-    return restore_angle_autolinks(cell, autolinks)
+    return _restore_angle_autolinks(cell, autolinks)
 
 
 def _format_table_row(
@@ -95,7 +95,7 @@ def _is_spurious_table_row(cells: list[str], width: int) -> bool:
         return False
     if any(cells[index].strip() for index in range(1, width)):
         return False
-    return looks_like_prose_table_row(cells[0].strip())
+    return _looks_like_prose_table_row(cells[0].strip())
 
 
 def _parse_table_row_cells(line: str) -> list[str] | None:
@@ -223,7 +223,7 @@ def _render_table(
 
 def _table_cell_display_width(cell: str) -> int:
     escaped_pipe_width = sum(len(match.group(1)) // 2 for match in re.finditer(r"(\\+)\|", cell))
-    return text_display_width(cell) - escaped_pipe_width
+    return _text_display_width(cell) - escaped_pipe_width
 
 
 def _table_column_widths(rows: list[list[str]], width: int) -> list[int]:

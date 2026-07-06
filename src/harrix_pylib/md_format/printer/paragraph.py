@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from harrix_pylib.md_format.escape_format import escape_ordered_list_like_line_starts
+from harrix_pylib.md_format.escape_format import _escape_ordered_list_like_line_starts
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles
 from harrix_pylib.md_format.list_format import LIST_MARKER_LINE_RE
 from harrix_pylib.md_format.printer.context import (
@@ -17,12 +17,12 @@ from harrix_pylib.md_format.prose_wrap import (
     _is_cjk,
     _is_hangul,
     _prose_display_width,
-    should_omit_space_between,
-    wrap_paragraph_prose,
-    wrap_prose,
+    _should_omit_space_between,
+    _wrap_paragraph_prose,
+    _wrap_prose,
 )
-from harrix_pylib.md_format.table_format import text_display_width
-from harrix_pylib.md_format.text_format import normalize_inline_spaces
+from harrix_pylib.md_format.table_format import _text_display_width
+from harrix_pylib.md_format.text_format import _normalize_inline_spaces
 
 if TYPE_CHECKING:
     from markdown_it.token import Token
@@ -95,15 +95,15 @@ def _join_prose_run_parts(parts: list[str]) -> str:
         if not merged:
             merged = part
             continue
-        if should_omit_space_between(merged, part):
+        if _should_omit_space_between(merged, part):
             merged += part
         else:
             merged += f" {part}"
-    return normalize_inline_spaces(escape_ordered_list_like_line_starts(merged))
+    return _normalize_inline_spaces(_escape_ordered_list_like_line_starts(merged))
 
 
 def _join_without_space(left: str, right: str) -> bool:
-    return should_omit_space_between(left, right)
+    return _should_omit_space_between(left, right)
 
 
 def _merged_run_is_link_only_paragraphs(tokens: list[Token], start: int, run_end: int) -> bool:
@@ -257,7 +257,7 @@ def _plain_paragraph_source_line(
         return source_line.rstrip("\n")
     if (
         _paragraph_is_cjk_dominant(source_line.rstrip("\n"))
-        and text_display_width(source_line.rstrip("\n")) > options.print_width
+        and _text_display_width(source_line.rstrip("\n")) > options.print_width
         and not (options.prose_wrap == "always" and _paragraph_contains_hangul(source_line.rstrip("\n")))
     ):
         return source_line.rstrip("\n")
@@ -296,7 +296,7 @@ def _render_joined_prose_run(
         paragraph_index += 3
     merged = _join_prose_run_parts(parts)
     if "\\_" not in merged and _should_wrap_prose(merged, prefix="", width=options.print_width):
-        merged = wrap_prose(merged, width=options.print_width)
+        merged = _wrap_prose(merged, width=options.print_width)
     return merged
 
 
@@ -340,7 +340,7 @@ def _render_paragraph(
         )
         return f"{text}\n", index + 3
     use_space_breaks = options.prose_wrap == "always"
-    text = escape_ordered_list_like_line_starts(
+    text = _escape_ordered_list_like_line_starts(
         _render_inline(
             inline.children or [],
             options=options,
@@ -356,9 +356,11 @@ def _render_paragraph(
     ):
         body = text.rstrip("\n")
         if "\n" in body and "  \n" not in body:
-            body = "\n".join(wrap_prose(part, width=options.print_width) if part else part for part in body.split("\n"))
+            body = "\n".join(
+                _wrap_prose(part, width=options.print_width) if part else part for part in body.split("\n")
+            )
         else:
-            body = wrap_paragraph_prose(body, width=options.print_width)
+            body = _wrap_paragraph_prose(body, width=options.print_width)
         text = body
     source_line = (
         _plain_paragraph_source_line(tokens, index, source_lines, options=options, rendered_line=text.rstrip("\n"))

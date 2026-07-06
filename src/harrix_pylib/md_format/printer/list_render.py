@@ -6,15 +6,15 @@ import re
 from typing import TYPE_CHECKING
 
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles
-from harrix_pylib.md_format.list_format import LIST_MARKER_LINE_RE, is_list_line
-from harrix_pylib.md_format.ordered_list_format import ordered_list_item_number, parse_ordered_list_marker
+from harrix_pylib.md_format.list_format import LIST_MARKER_LINE_RE, _is_list_line
+from harrix_pylib.md_format.ordered_list_format import _ordered_list_item_number, _parse_ordered_list_marker
 from harrix_pylib.md_format.prose_wrap import (
-    wrap_prose,
+    _wrap_prose,
 )
 from harrix_pylib.md_format.task_list_format import (
     TaskListMarker,
-    strip_task_placeholder,
-    task_list_entry_for_text,
+    _strip_task_placeholder,
+    _task_list_entry_for_text,
 )
 
 if TYPE_CHECKING:
@@ -96,7 +96,7 @@ def _is_list_block(block: str) -> bool:
     for line in block.splitlines():
         if not line.strip():
             continue
-        return is_list_line(line)
+        return _is_list_line(line)
     return False
 
 
@@ -398,7 +398,7 @@ def _ordered_marker_specs_from_source(
             continue
         tok_map = tokens[item_index].map
         if tok_map and 0 <= tok_map[0] < len(source_lines):
-            parsed = parse_ordered_list_marker(source_lines[tok_map[0]])
+            parsed = _parse_ordered_list_marker(source_lines[tok_map[0]])
             if parsed is not None:
                 markers.append(parsed)
         item_index = _find_close(tokens, item_index, "list_item_close") + 1
@@ -511,7 +511,7 @@ def _render_list(
                 if rendered_item_count < len(source_marker_delimiters)
                 else "."
             )
-            marker = f"{ordered_list_item_number(source_markers, rendered_item_count)}{delimiter}"
+            marker = f"{_ordered_list_item_number(source_markers, rendered_item_count)}{delimiter}"
         elif list_depth > 0:
             marker = "-"
         elif rendered_item_count < len(bullet_markers):
@@ -610,7 +610,7 @@ def _render_list(
                 )
                 if chunk:
                     item_lines.append(chunk.rstrip("\n"))
-        task_entry = task_list_entry_for_text(item_lines[0], task_list_markers) if item_lines else None
+        task_entry = _task_list_entry_for_text(item_lines[0], task_list_markers) if item_lines else None
         if task_entry:
             task_marker, task_meta = task_entry
             if task_meta.marker_spaces > item_leading_spaces:
@@ -624,7 +624,7 @@ def _render_list(
                     list_close_index=close_index,
                 )
                 marker_content_spaces = item_leading_spaces if preserve_marker_spacing else None
-            item_lines[0] = f"{task_marker}{strip_task_placeholder(item_lines[0])}".rstrip()
+            item_lines[0] = f"{task_marker}{_strip_task_placeholder(item_lines[0])}".rstrip()
         if rendered_item_count > 0:
             gap = False
             if ordered and source_lines and prev_item_index is not None:
@@ -778,7 +778,7 @@ def _render_list_item_lines(
             and _should_wrap_prose(block, prefix=continuation_indent, width=options.print_width)
         ):
             rendered.extend(
-                wrap_prose(
+                _wrap_prose(
                     block,
                     width=options.print_width,
                     prefix=continuation_indent,
@@ -877,11 +877,11 @@ def _top_level_list_single_item_is_simple(tokens: list[Token], list_index: int, 
 def _wrap_list_item_prose(block: str, *, prefix: str, continuation: str, width: int) -> list[str]:
     split_at = block.find(") - ")
     if split_at < 0:
-        return wrap_prose(block, width=width, prefix=prefix, continuation=continuation).split("\n")
+        return _wrap_prose(block, width=width, prefix=prefix, continuation=continuation).split("\n")
     head = block[: split_at + 1]
     tail = block[split_at + 4 :]
     lines = [prefix + f"{head} -"]
-    lines.extend(wrap_prose(tail, width=width, prefix=continuation, continuation=continuation).split("\n"))
+    lines.extend(_wrap_prose(tail, width=width, prefix=continuation, continuation=continuation).split("\n"))
     return lines
 
 

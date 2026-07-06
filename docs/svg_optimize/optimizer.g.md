@@ -12,8 +12,8 @@ lang: en
 ## Contents
 
 - [🏛️ Class `SvgOptimizer`](#️-class-svgoptimizer)
-  - [⚙️ Method `__init__`](#️-method-__init__)
   - [⚙️ Method `__call__`](#️-method-__call__)
+  - [⚙️ Method `__init__`](#️-method-__init__)
   - [⚙️ Method `optimize`](#️-method-optimize)
 
 </details>
@@ -34,16 +34,6 @@ class SvgOptimizer:
 
     MAX_MULTIPASS: ClassVar[int] = 3
 
-    def __init__(self, *, multipass: bool = True) -> None:
-        """Initialize the SvgOptimizer.
-
-        Args:
-
-        - `multipass` (`bool`): Run multiple optimization passes by default. Defaults to `True`.
-
-        """
-        self.multipass = multipass
-
     def __call__(self, svg_text: str, *, multipass: bool | None = None) -> str:
         """Optimize SVG markup.
 
@@ -58,6 +48,16 @@ class SvgOptimizer:
 
         """
         return self.optimize(svg_text, multipass=multipass)
+
+    def __init__(self, *, multipass: bool = True) -> None:
+        """Initialize the SvgOptimizer.
+
+        Args:
+
+        - `multipass` (`bool`): Run multiple optimization passes by default. Defaults to `True`.
+
+        """
+        self.multipass = multipass
 
     def optimize(self, svg_text: str, *, multipass: bool | None = None) -> str:
         """Optimize SVG markup to a compact form similar to SVGO preset-default.
@@ -98,28 +98,6 @@ class SvgOptimizer:
 
 </details>
 
-### ⚙️ Method `__init__`
-
-```python
-def __init__(self) -> None
-```
-
-Initialize the SvgOptimizer.
-
-Args:
-
-- `multipass` (`bool`): Run multiple optimization passes by default. Defaults to `True`.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def __init__(self, *, multipass: bool = True) -> None:
-        self.multipass = multipass
-```
-
-</details>
-
 ### ⚙️ Method `__call__`
 
 ```python
@@ -143,6 +121,28 @@ Returns:
 ```python
 def __call__(self, svg_text: str, *, multipass: bool | None = None) -> str:
         return self.optimize(svg_text, multipass=multipass)
+```
+
+</details>
+
+### ⚙️ Method `__init__`
+
+```python
+def __init__(self) -> None
+```
+
+Initialize the SvgOptimizer.
+
+Args:
+
+- `multipass` (`bool`): Run multiple optimization passes by default. Defaults to `True`.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def __init__(self, *, multipass: bool = True) -> None:
+        self.multipass = multipass
 ```
 
 </details>

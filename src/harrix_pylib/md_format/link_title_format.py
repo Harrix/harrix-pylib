@@ -5,9 +5,9 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from harrix_pylib.md_format.code_fence import identify_code_blocks_line
+from harrix_pylib.md_format.code_fence import _identify_code_blocks_line
 from harrix_pylib.md_format.escape_format import ASCII_PUNCTUATION as _MARKDOWN_ESCAPABLE
-from harrix_pylib.md_format.text_lines import join_lines, split_lines
+from harrix_pylib.md_format.text_lines import _join_lines, _split_lines
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -21,71 +21,6 @@ _MAGICAL_TITLE_INNERS = frozenset(
         '"' + "'" + "\\" * 2 + ")",
     }
 )
-
-
-def format_link_title(title: str) -> str:
-    """Return a canonical quoted title for inline links and images."""
-    title = _canonicalize_link_title_content(title)
-    if title == _QUOTE_APOSTROPHE_PAREN:
-        escaped = _escape_title_content(title, '"')
-        return f'"{escaped}"'
-    candidates: list[str] = []
-    for delimiter in ('"', "'"):
-        escaped = _escape_title_content(title, delimiter)
-        candidates.append(f"{delimiter}{escaped}{delimiter}")
-    return min(candidates, key=lambda candidate: _title_quote_priority(title, candidate))
-
-
-def format_parseable_link_title(title: str) -> str:
-    """Return a quoted title that markdown-it can parse before rendering."""
-    title = _canonicalize_link_title_content(title)
-    if title == _QUOTE_APOSTROPHE_PAREN:
-        return '"' + "\\" + title + '"'
-    return format_link_title(title)
-
-
-def normalize_inline_link_titles(body: str) -> str:
-    """Normalize quoted titles in inline links before parsing."""
-    lines, trailing = split_lines(body)
-    result_lines: list[str] = []
-    for line in lines:
-        if line.lstrip().startswith("|"):
-            result_lines.append(line)
-        else:
-            result_lines.append(_normalize_inline_link_titles_in_text(line))
-    return join_lines(result_lines, trailing_newline=trailing)
-
-
-def scan_inline_links(
-    body: str,
-    handler: Callable[[str, str, str], str],
-) -> str:
-    """Scan inline links and rebuild text with a per-link handler.
-
-    Inline code spans are treated as opaque text and are never scanned for links.
-    """
-    parts: list[str] = []
-    for segment, is_code in identify_code_blocks_line(body):
-        if is_code:
-            parts.append(segment)
-        else:
-            parts.append(_scan_inline_links_in_plain_text(segment, handler))
-    return "".join(parts)
-
-
-def split_inline_destination(destination: str) -> tuple[str, str | None]:
-    """Split an inline link destination into URL and optional title."""
-    destination = destination.strip()
-    if destination.endswith((' ""', " ''")):
-        return destination[:-3].rstrip(), None
-    if destination.startswith("<") and destination.endswith(">"):
-        return destination, None
-    url, title = _split_trailing_link_title(destination)
-    if title is not None:
-        if title in {'""', "''"}:
-            return url, None
-        return url, title
-    return destination, None
 
 
 def _balanced_paren_title_close(text: str, open_index: int) -> int | None:
@@ -207,6 +142,27 @@ def _find_link_close_paren(text: str, open_paren: int) -> int | None:
     return None
 
 
+def _format_link_title(title: str) -> str:
+    """Return a canonical quoted title for inline links and images."""
+    title = _canonicalize_link_title_content(title)
+    if title == _QUOTE_APOSTROPHE_PAREN:
+        escaped = _escape_title_content(title, '"')
+        return f'"{escaped}"'
+    candidates: list[str] = []
+    for delimiter in ('"', "'"):
+        escaped = _escape_title_content(title, delimiter)
+        candidates.append(f"{delimiter}{escaped}{delimiter}")
+    return min(candidates, key=lambda candidate: _title_quote_priority(title, candidate))
+
+
+def _format_parseable_link_title(title: str) -> str:
+    """Return a quoted title that markdown-it can parse before rendering."""
+    title = _canonicalize_link_title_content(title)
+    if title == _QUOTE_APOSTROPHE_PAREN:
+        return '"' + "\\" + title + '"'
+    return _format_link_title(title)
+
+
 def _is_closing_quoted_title_delimiter(text: str, index: int) -> bool:
     """Return whether a quote ends a link title before the link's closing parenthesis."""
     return bool(re.fullmatch(r"\s*\)\s*$", text[index + 1 :]))
@@ -230,14 +186,43 @@ def _kept_backslashes_before_delimiter(slash_count: int) -> int:
 
 
 def _normalize_inline_link(prefix: str, destination: str, suffix: str) -> str:
-    url, title = split_inline_destination(destination)
+    url, title = _split_inline_destination(destination)
     if title is None:
         return f"{prefix}{destination}{suffix}"
-    return f"{prefix}{url} {format_parseable_link_title(_unescape_title(title))}{suffix}"
+    return f"{prefix}{url} {_format_parseable_link_title(_unescape_title(title))}{suffix}"
+
+
+def _normalize_inline_link_titles(body: str) -> str:
+    """Normalize quoted titles in inline links before parsing."""
+    lines, trailing = _split_lines(body)
+    result_lines: list[str] = []
+    for line in lines:
+        if line.lstrip().startswith("|"):
+            result_lines.append(line)
+        else:
+            result_lines.append(_normalize_inline_link_titles_in_text(line))
+    return _join_lines(result_lines, trailing_newline=trailing)
 
 
 def _normalize_inline_link_titles_in_text(body: str) -> str:
-    return scan_inline_links(body, _normalize_inline_link)
+    return _scan_inline_links(body, _normalize_inline_link)
+
+
+def _scan_inline_links(
+    body: str,
+    handler: Callable[[str, str, str], str],
+) -> str:
+    """Scan inline links and rebuild text with a per-link handler.
+
+    Inline code spans are treated as opaque text and are never scanned for links.
+    """
+    parts: list[str] = []
+    for segment, is_code in _identify_code_blocks_line(body):
+        if is_code:
+            parts.append(segment)
+        else:
+            parts.append(_scan_inline_links_in_plain_text(segment, handler))
+    return "".join(parts)
 
 
 def _scan_inline_links_in_plain_text(body: str, handler: Callable[[str, str, str], str]) -> str:
@@ -261,6 +246,21 @@ def _scan_inline_links_in_plain_text(body: str, handler: Callable[[str, str, str
         parts.append(handler(prefix, destination, suffix))
         last = close_index + 1
     return "".join(parts)
+
+
+def _split_inline_destination(destination: str) -> tuple[str, str | None]:
+    """Split an inline link destination into URL and optional title."""
+    destination = destination.strip()
+    if destination.endswith((' ""', " ''")):
+        return destination[:-3].rstrip(), None
+    if destination.startswith("<") and destination.endswith(">"):
+        return destination, None
+    url, title = _split_trailing_link_title(destination)
+    if title is not None:
+        if title in {'""', "''"}:
+            return url, None
+        return url, title
+    return destination, None
 
 
 def _split_trailing_link_title(rest: str) -> tuple[str, str | None]:

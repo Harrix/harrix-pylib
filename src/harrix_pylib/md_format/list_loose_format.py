@@ -6,8 +6,8 @@ import re
 from dataclasses import dataclass
 
 from harrix_pylib.md_format.code_guard import PLACEHOLDER_PREFIX as CODE_PLACEHOLDER_PREFIX
-from harrix_pylib.md_format.list_format import is_list_line
-from harrix_pylib.md_format.text_lines import join_lines, split_lines
+from harrix_pylib.md_format.list_format import _is_list_line
+from harrix_pylib.md_format.text_lines import _join_lines, _split_lines
 
 
 @dataclass(frozen=True)
@@ -16,20 +16,6 @@ class ListLayout:
 
     gaps_before_item: list[bool]
     loose_items: list[bool]
-
-
-def extract_list_layouts(body: str, tight_code_indices: set[int] | None = None) -> tuple[str, list[ListLayout]]:
-    """Collect loose-list layout metadata for each list in the document."""
-    lines, trailing = split_lines(body)
-    scan_lines = _drop_code_placeholder_blanks(lines, tight_code_indices or set())
-    layouts: list[ListLayout] = []
-    index = 0
-    while index < len(scan_lines):
-        if not is_list_line(scan_lines[index]):
-            index += 1
-            continue
-        index = _scan_list(scan_lines, index, layouts)
-    return join_lines(lines, trailing_newline=trailing), layouts
 
 
 def _blank_separates_sibling_items(lines: list[str], item_index: int, base_indent: int) -> bool:
@@ -53,9 +39,9 @@ def _consume_item(lines: list[str], start: int, base_indent: int, nested_layouts
             index += 1
             continue
         indent = _line_indent(line)
-        if is_list_line(line) and indent == base_indent:
+        if _is_list_line(line) and indent == base_indent:
             break
-        if is_list_line(line) and indent > base_indent:
+        if _is_list_line(line) and indent > base_indent:
             if pending_blank:
                 parent_marker = lines[start]
                 if "](" not in parent_marker:
@@ -99,6 +85,20 @@ def _drop_code_placeholder_blanks(lines: list[str], tight_code_indices: set[int]
     return result
 
 
+def _extract_list_layouts(body: str, tight_code_indices: set[int] | None = None) -> tuple[str, list[ListLayout]]:
+    """Collect loose-list layout metadata for each list in the document."""
+    lines, trailing = _split_lines(body)
+    scan_lines = _drop_code_placeholder_blanks(lines, tight_code_indices or set())
+    layouts: list[ListLayout] = []
+    index = 0
+    while index < len(scan_lines):
+        if not _is_list_line(scan_lines[index]):
+            index += 1
+            continue
+        index = _scan_list(scan_lines, index, layouts)
+    return _join_lines(lines, trailing_newline=trailing), layouts
+
+
 def _is_ordered_list_line(line: str) -> bool:
     """Return True when the line starts an ordered list item (not bullet)."""
     return bool(re.match(r"^\s*\d+[.)]\s", line))
@@ -112,7 +112,7 @@ def _parent_list_marker_line(lines: list[str], from_index: int, base_indent: int
     index = from_index
     while index >= 0:
         line = lines[index]
-        if is_list_line(line) and _line_indent(line) == base_indent:
+        if _is_list_line(line) and _line_indent(line) == base_indent:
             return line
         index -= 1
     return None
@@ -128,7 +128,7 @@ def _scan_list(lines: list[str], start: int, layouts: list[ListLayout]) -> int:
     while index < len(lines):
         current_line = lines[index]
         if not (
-            is_list_line(current_line)
+            _is_list_line(current_line)
             and _line_indent(current_line) == base_indent
             and _is_ordered_list_line(current_line) == start_is_ordered
         ):

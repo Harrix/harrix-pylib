@@ -4,18 +4,18 @@ from __future__ import annotations
 
 from harrix_pylib.md_format.link_destination_format import PLACEHOLDER_PREFIX, LinkDestination
 from harrix_pylib.md_format.link_title_format import (
+    _format_link_title,
+    _format_parseable_link_title,
+    _scan_inline_links,
+    _split_inline_destination,
     _unescape_title,
-    format_link_title,
-    format_parseable_link_title,
-    scan_inline_links,
-    split_inline_destination,
 )
-from harrix_pylib.md_format.text_lines import join_lines, make_placeholder, split_lines
+from harrix_pylib.md_format.text_lines import _join_lines, _make_placeholder, _split_lines
 
 
-def prepare_inline_links(body: str) -> tuple[str, list[LinkDestination]]:
+def _prepare_inline_links(body: str) -> tuple[str, list[LinkDestination]]:
     """Normalize link titles and extract destinations in a single pass."""
-    lines, trailing = split_lines(body)
+    lines, trailing = _split_lines(body)
     result_lines: list[str] = []
     entries: list[LinkDestination] = []
     index = 0
@@ -26,7 +26,7 @@ def prepare_inline_links(body: str) -> tuple[str, list[LinkDestination]]:
         processed, line_entries, index = _prepare_inline_links_in_text(line, start_index=index)
         result_lines.append(processed)
         entries.extend(line_entries)
-    return join_lines(result_lines, trailing_newline=trailing), entries
+    return _join_lines(result_lines, trailing_newline=trailing), entries
 
 
 def _prepare_inline_links_in_text(body: str, *, start_index: int) -> tuple[str, list[LinkDestination], int]:
@@ -35,20 +35,20 @@ def _prepare_inline_links_in_text(body: str, *, start_index: int) -> tuple[str, 
 
     def handler(prefix: str, destination: str, suffix: str) -> str:
         nonlocal index
-        url, title = split_inline_destination(destination)
+        url, title = _split_inline_destination(destination)
         if title is not None:
-            normalized_destination = f"{url} {format_parseable_link_title(_unescape_title(title))}"
+            normalized_destination = f"{url} {_format_parseable_link_title(_unescape_title(title))}"
         else:
             normalized_destination = destination
-        url, title = split_inline_destination(normalized_destination.strip())
-        display_title = format_link_title(_unescape_title(title)) if title is not None else None
+        url, title = _split_inline_destination(normalized_destination.strip())
+        display_title = _format_link_title(_unescape_title(title)) if title is not None else None
         entries.append(LinkDestination(index=index, destination=url, title=display_title))
         title_suffix = f" {title}" if title is not None else ""
-        replacement = f"{prefix}{make_placeholder(PLACEHOLDER_PREFIX, index)}{title_suffix}{suffix}"
+        replacement = f"{prefix}{_make_placeholder(PLACEHOLDER_PREFIX, index)}{title_suffix}{suffix}"
         index += 1
         return replacement
 
-    return scan_inline_links(body, handler), entries, index
+    return _scan_inline_links(body, handler), entries, index
 
 
 def _should_skip_link_line(line: str) -> bool:

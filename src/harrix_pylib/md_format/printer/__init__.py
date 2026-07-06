@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from harrix_pylib.md_format.task_list_format import TaskListMarker
 
 
-def render_tokens(
+def _render_tokens(
     tokens: list[Token],
     *,
     options: FormatOptions | None = None,

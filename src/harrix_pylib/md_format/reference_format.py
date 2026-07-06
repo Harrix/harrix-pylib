@@ -5,18 +5,18 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from harrix_pylib.md_format.code_fence import identify_code_blocks
-from harrix_pylib.md_format.link_destination_format import format_link_url
+from harrix_pylib.md_format.code_fence import _identify_code_blocks
+from harrix_pylib.md_format.link_destination_format import _format_link_url
 from harrix_pylib.md_format.link_title_format import (
     _canonicalize_link_title_content,
+    _format_link_title,
+    _split_inline_destination,
     _unescape_title,
-    format_link_title,
-    split_inline_destination,
 )
 from harrix_pylib.md_format.options import DEFAULT_PRINT_WIDTH, FormatOptions
-from harrix_pylib.md_format.prose_wrap import wrap_prose
-from harrix_pylib.md_format.table_format import text_display_width
-from harrix_pylib.md_format.text_lines import join_lines, make_placeholder, split_lines
+from harrix_pylib.md_format.prose_wrap import _wrap_prose
+from harrix_pylib.md_format.table_format import _text_display_width
+from harrix_pylib.md_format.text_lines import _join_lines, _make_placeholder, _split_lines
 
 PLACEHOLDER_PREFIX = "HSKMDFMTREF"
 _PLACEHOLDER_RE = re.compile(r"HSKMDFMTREF\d+")
@@ -34,10 +34,14 @@ class ReferenceBlock:
     kind: str  # "link" or "footnote"
 
 
-def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
+def _canonicalize_reference_title(title: str) -> str:
+    return _canonicalize_link_title_content(_unescape_title(title))
+
+
+def _extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
     """Replace link/footnote definitions with placeholders."""
-    lines, trailing = split_lines(body)
-    code_block_info = list(identify_code_blocks(lines))
+    lines, trailing = _split_lines(body)
+    code_block_info = list(_identify_code_blocks(lines))
     result: list[str] = []
     blocks: list[ReferenceBlock] = []
     index = 0
@@ -78,7 +82,7 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
             break
 
         blocks.append(ReferenceBlock(index=index, lines=block_lines, kind=kind))
-        placeholder = make_placeholder(PLACEHOLDER_PREFIX, index)
+        placeholder = _make_placeholder(PLACEHOLDER_PREFIX, index)
         previous_line = result[-1] if result else ""
         if (
             result
@@ -101,73 +105,7 @@ def extract_reference_blocks(body: str) -> tuple[str, list[ReferenceBlock]]:
                 if _LINK_DEF_RE.match(next_line) or _FOOTNOTE_DEF_RE.match(next_line):
                     line_index += 1
 
-    return join_lines(result, trailing_newline=trailing), blocks
-
-
-def format_reference_link_url(url: str) -> str:
-    """Return canonical URL text for link-reference definitions."""
-    return format_link_url(url, wrap_parentheses=False)
-
-
-def restore_reference_blocks(
-    text: str,
-    blocks: list[ReferenceBlock],
-    *,
-    options: FormatOptions | None = None,
-    print_width: int | None = None,
-) -> str:
-    """Restore reference-definition blocks, optionally applying prose wrap."""
-    fmt_options = options or FormatOptions()
-    width = print_width if print_width is not None else fmt_options.print_width
-    if not blocks:
-        return text
-    blocks_by_index = {block.index: block for block in blocks}
-    lines, trailing = split_lines(text)
-    restored: list[str] = []
-    line_index = 0
-    while line_index < len(lines):
-        line = lines[line_index]
-        if not _PLACEHOLDER_RE.search(line):
-            restored.append(line)
-            line_index += 1
-            continue
-
-        merged_line = line
-        while line_index + 1 < len(lines):
-            next_line = lines[line_index + 1]
-            if not _PLACEHOLDER_RE.search(next_line):
-                break
-            next_match = _PLACEHOLDER_RE.search(next_line)
-            if next_match is None or next_match.start() > 0:
-                break
-            if _PLACEHOLDER_RE.sub("", next_line).strip():
-                break
-            merged_line = f"{merged_line} {next_line.strip()}"
-            line_index += 1
-
-        first_match = _PLACEHOLDER_RE.search(merged_line)
-        if first_match and first_match.start() > 0:
-            restored.extend(_restore_inline_reference_line(merged_line, blocks_by_index, print_width=width))
-            line_index += 1
-            continue
-
-        emitted_block = False
-        for match in _PLACEHOLDER_RE.finditer(merged_line):
-            block_index = int(match.group().removeprefix(PLACEHOLDER_PREFIX))
-            block = blocks_by_index.get(block_index)
-            if block is None:
-                restored.append(match.group())
-            else:
-                if emitted_block and block.kind == "footnote":
-                    restored.append("")
-                restored.extend(_format_reference_block(block, options=fmt_options, print_width=width))
-                emitted_block = True
-        line_index += 1
-    return join_lines(restored, trailing_newline=trailing)
-
-
-def _canonicalize_reference_title(title: str) -> str:
-    return _canonicalize_link_title_content(_unescape_title(title))
+    return _join_lines(result, trailing_newline=trailing), blocks
 
 
 def _footnote_blockquote_lines(first_text: str, indented_lines: list[str]) -> list[str] | None:
@@ -205,10 +143,10 @@ def _format_footnote_block(lines: list[str], *, print_width: int) -> list[str]:
     if indented_lines and not _footnote_indented_lines_are_block_content(indented_lines):
         body_parts = [first_text, *[line.removeprefix("    ") for line in lines[1:]]]
         body = " ".join(part.strip() for part in body_parts if part.strip())
-        wrapped_inline = wrap_prose(body, width=print_width, prefix=prefix, continuation=continuation).split("\n")
+        wrapped_inline = _wrap_prose(body, width=print_width, prefix=prefix, continuation=continuation).split("\n")
         if len(wrapped_inline) == 1:
             return wrapped_inline
-        wrapped_body = wrap_prose(body, width=print_width, prefix=continuation, continuation=continuation)
+        wrapped_body = _wrap_prose(body, width=print_width, prefix=continuation, continuation=continuation)
         return [prefix.rstrip(), *wrapped_body.split("\n")]
     if indented_lines and _footnote_indented_lines_are_block_content(indented_lines):
         return _format_footnote_indented_block(
@@ -221,10 +159,10 @@ def _format_footnote_block(lines: list[str], *, print_width: int) -> list[str]:
             print_width=print_width,
         )
     body = first_text.strip()
-    wrapped_inline = wrap_prose(body, width=print_width, prefix=prefix, continuation=continuation).split("\n")
+    wrapped_inline = _wrap_prose(body, width=print_width, prefix=prefix, continuation=continuation).split("\n")
     if len(wrapped_inline) == 1:
         return wrapped_inline
-    wrapped_body = wrap_prose(body, width=print_width, prefix=continuation, continuation=continuation)
+    wrapped_body = _wrap_prose(body, width=print_width, prefix=continuation, continuation=continuation)
     return [prefix.rstrip(), *wrapped_body.split("\n")]
 
 
@@ -246,12 +184,12 @@ def _format_footnote_indented_block(
         return result
     if not first_stripped:
         result = [f"{indent}[^{label}]:"]
-    elif text_display_width(prefix + first_stripped) <= print_width:
+    elif _text_display_width(prefix + first_stripped) <= print_width:
         result = [f"{indent}[^{label}]: {first_stripped}"]
     else:
         result = [f"{indent}[^{label}]:"]
         result.extend(
-            wrap_prose(first_stripped, width=print_width, prefix=continuation, continuation=continuation).split("\n")
+            _wrap_prose(first_stripped, width=print_width, prefix=continuation, continuation=continuation).split("\n")
         )
     if indented_lines:
         if result and not result[-1].rstrip().endswith(":"):
@@ -265,8 +203,8 @@ def _format_inline_reference_part(line: str) -> str:
     if not match:
         return line
     label = _normalize_reference_label(match.group(2))
-    url, title = split_inline_destination(match.group(3).rstrip())
-    url = format_reference_link_url(url)
+    url, title = _split_inline_destination(match.group(3).rstrip())
+    url = _format_reference_link_url(url)
     if title is None:
         return f"[{label}]: {url}"
     return f"[{label}]: {url} {_format_reference_title(title)}"
@@ -277,21 +215,21 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
     if not match:
         return [line]
     indent, label, rest = match.group(1), match.group(2), match.group(3).rstrip()
-    url, title = split_inline_destination(rest)
-    url = format_reference_link_url(url)
+    url, title = _split_inline_destination(rest)
+    url = _format_reference_link_url(url)
     label_markup = _reference_label_markup(label)
     label_prefix = f"{indent}{label_markup}: "
     continuation = indent + "  "
     body = url if title is None else f"{url} {_format_reference_title(title)}"
-    if text_display_width(label_prefix + body) <= print_width:
+    if _text_display_width(label_prefix + body) <= print_width:
         if title is None:
             return [f"{label_prefix}{url}"]
         return [f"{label_prefix}{url} {_format_reference_title(title)}"]
     lines = [f"{indent}{label_markup}:"]
-    lines.extend(wrap_prose(url, width=print_width, prefix=continuation, continuation=continuation).split("\n"))
+    lines.extend(_wrap_prose(url, width=print_width, prefix=continuation, continuation=continuation).split("\n"))
     if title is not None:
         lines.extend(
-            wrap_prose(
+            _wrap_prose(
                 _format_reference_title(title),
                 width=print_width,
                 prefix=continuation,
@@ -314,13 +252,18 @@ def _format_reference_block(
     return formatted
 
 
+def _format_reference_link_url(url: str) -> str:
+    """Return canonical URL text for link-reference definitions."""
+    return _format_link_url(url, wrap_parentheses=False)
+
+
 def _format_reference_title(title: str) -> str:
     unescaped = _unescape_title(title)
     if title.startswith("(") and title.endswith(")"):
         if " " in unescaped:
             return f"({unescaped})"
-        return format_link_title(unescaped)
-    return format_link_title(unescaped)
+        return _format_link_title(unescaped)
+    return _format_link_title(unescaped)
 
 
 def _line_is_short_link_reference(line: str) -> bool:
@@ -384,6 +327,63 @@ def _restore_inline_reference_line(
     return _wrap_inline_reference_body(f"{prefix} {body}", width=print_width)
 
 
+def _restore_reference_blocks(
+    text: str,
+    blocks: list[ReferenceBlock],
+    *,
+    options: FormatOptions | None = None,
+    print_width: int | None = None,
+) -> str:
+    """Restore reference-definition blocks, optionally applying prose wrap."""
+    fmt_options = options or FormatOptions()
+    width = print_width if print_width is not None else fmt_options.print_width
+    if not blocks:
+        return text
+    blocks_by_index = {block.index: block for block in blocks}
+    lines, trailing = _split_lines(text)
+    restored: list[str] = []
+    line_index = 0
+    while line_index < len(lines):
+        line = lines[line_index]
+        if not _PLACEHOLDER_RE.search(line):
+            restored.append(line)
+            line_index += 1
+            continue
+
+        merged_line = line
+        while line_index + 1 < len(lines):
+            next_line = lines[line_index + 1]
+            if not _PLACEHOLDER_RE.search(next_line):
+                break
+            next_match = _PLACEHOLDER_RE.search(next_line)
+            if next_match is None or next_match.start() > 0:
+                break
+            if _PLACEHOLDER_RE.sub("", next_line).strip():
+                break
+            merged_line = f"{merged_line} {next_line.strip()}"
+            line_index += 1
+
+        first_match = _PLACEHOLDER_RE.search(merged_line)
+        if first_match and first_match.start() > 0:
+            restored.extend(_restore_inline_reference_line(merged_line, blocks_by_index, print_width=width))
+            line_index += 1
+            continue
+
+        emitted_block = False
+        for match in _PLACEHOLDER_RE.finditer(merged_line):
+            block_index = int(match.group().removeprefix(PLACEHOLDER_PREFIX))
+            block = blocks_by_index.get(block_index)
+            if block is None:
+                restored.append(match.group())
+            else:
+                if emitted_block and block.kind == "footnote":
+                    restored.append("")
+                restored.extend(_format_reference_block(block, options=fmt_options, print_width=width))
+                emitted_block = True
+        line_index += 1
+    return _join_lines(restored, trailing_newline=trailing)
+
+
 def _wrap_inline_reference_body(text: str, *, width: int) -> list[str]:
     match = re.match(r"^(?P<prefix>.*?)(?P<refs>(?:\[[^\]]+\]: https?://\S+\s*)+)$", text)
     if match is None:
@@ -406,14 +406,14 @@ def _wrap_inline_reference_body(text: str, *, width: int) -> list[str]:
         next_label_index = url_index + 1
         while next_label_index < len(urls):
             trial = f"{current} {labels[next_label_index]} {urls[next_label_index]}"
-            if text_display_width(trial) <= width:
+            if _text_display_width(trial) <= width:
                 current = trial
                 next_label_index += 1
             else:
                 break
         if next_label_index < len(urls):
             trial = f"{current} {labels[next_label_index]}"
-            if text_display_width(trial) <= width:
+            if _text_display_width(trial) <= width:
                 lines.append(trial)
                 url_index = next_label_index
                 continue
@@ -430,7 +430,7 @@ def _wrap_protected_urls(text: str, *, width: int) -> list[str]:
         return f"\x00URL{len(protected_urls) - 1}\x00"
 
     protected = _URL_RE.sub(protect_url, text)
-    wrapped = wrap_prose(protected, width=width)
+    wrapped = _wrap_prose(protected, width=width)
     for index, url in enumerate(protected_urls):
         wrapped = wrapped.replace(f"\x00URL{index}\x00", url)
     return wrapped.split("\n")

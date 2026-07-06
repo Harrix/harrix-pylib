@@ -5,63 +5,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
-from harrix_pylib.md_format.table_format import text_display_width
-
-
-def should_omit_space_between(left: str, right: str) -> bool:
-    """Return whether phrasing text on both sides of a break should be joined without a space."""
-    if not left or not right:
-        return False
-    if _is_hangul(left[-1]) or _is_hangul(right[0]):
-        return False
-    last, first = left[-1], right[0]
-    if last == "・" or first == "・":
-        return True
-    if _kana_continuation_join(left, right):
-        return True
-    if _is_katakana(last) or _is_katakana(first):
-        return False
-    if last in "」』）】" and first == "(":
-        return True
-    if _is_cjk(last) and _is_cjk(first):
-        return True
-    if _is_cjk(last) and first.isascii() and first.isalnum():
-        return True
-    if first in "、。，．！？）】」〉》〕〗〙〛":
-        return True
-    if last in "（【「〈《〔〖〘〚":
-        return True
-    if last in ",.!?:;":
-        return False
-    if first in ",.!?:;":
-        return False
-    return False
-
-
-def wrap_paragraph_prose(text: str, *, width: int) -> str:
-    """Wrap paragraph text, preserving hard breaks and backslash-only lead lines."""
-    if not text or width <= 0:
-        return text
-    if text.startswith("\\") and "\n" in text:
-        lead, _, rest = text.partition("\n")
-        if lead and set(lead) <= {"\\"}:
-            wrapped_rest = wrap_prose(rest.lstrip(), width=width) if rest.strip() else rest
-            return f"{lead}\n{wrapped_rest}" if wrapped_rest else lead
-    hard_break = "  \n"
-    if hard_break not in text:
-        return wrap_prose(text, width=width)
-    head, tail = text.split(hard_break, 1)
-    wrapped_tail = _wrap_prose_after_hard_break(tail.lstrip(), width=width)
-    return f"{head}{hard_break}{wrapped_tail}"
-
-
-def wrap_prose(text: str, *, width: int, prefix: str = "", continuation: str | None = None) -> str:
-    """Wrap phrasing Markdown text to the given display width."""
-    if not text or width <= 0:
-        return text
-    continuation = continuation if continuation is not None else prefix
-    lines = _wrap_text_lines(text, width=width, first_prefix=prefix, next_prefix=continuation)
-    return "\n".join(_avoid_list_marker_line_starts(lines))
+from harrix_pylib.md_format.table_format import _text_display_width
 
 
 def _avoid_list_marker_line_starts(lines: list[str]) -> list[str]:
@@ -170,7 +114,7 @@ def _kana_continuation_join(left: str, right: str) -> bool:
 def _prose_display_width(text: str) -> int:
     r"""Return display width treating each backslash escape (\\X) as 1 column (like Prettier)."""
     collapsed = re.sub(r"\\.", lambda m: m.group(0)[1], text)
-    return text_display_width(collapsed)
+    return _text_display_width(collapsed)
 
 
 def _segments(text: str) -> list[str]:
@@ -192,6 +136,36 @@ def _segments(text: str) -> list[str]:
     return segments
 
 
+def _should_omit_space_between(left: str, right: str) -> bool:
+    """Return whether phrasing text on both sides of a break should be joined without a space."""
+    if not left or not right:
+        return False
+    if _is_hangul(left[-1]) or _is_hangul(right[0]):
+        return False
+    last, first = left[-1], right[0]
+    if last == "・" or first == "・":
+        return True
+    if _kana_continuation_join(left, right):
+        return True
+    if _is_katakana(last) or _is_katakana(first):
+        return False
+    if last in "」』）】" and first == "(":
+        return True
+    if _is_cjk(last) and _is_cjk(first):
+        return True
+    if _is_cjk(last) and first.isascii() and first.isalnum():
+        return True
+    if first in "、。，．！？）】」〉》〕〗〙〛":
+        return True
+    if last in "（【「〈《〔〖〘〚":
+        return True
+    if last in ",.!?:;":
+        return False
+    if first in ",.!?:;":
+        return False
+    return False
+
+
 def _softbreak_prefers_newline(before: str, after: str) -> bool:
     if not before or not after or not after[0].isalpha():
         return False
@@ -201,16 +175,33 @@ def _softbreak_prefers_newline(before: str, after: str) -> bool:
     return len(match.group()) >= 4
 
 
+def _wrap_paragraph_prose(text: str, *, width: int) -> str:
+    """Wrap paragraph text, preserving hard breaks and backslash-only lead lines."""
+    if not text or width <= 0:
+        return text
+    if text.startswith("\\") and "\n" in text:
+        lead, _, rest = text.partition("\n")
+        if lead and set(lead) <= {"\\"}:
+            wrapped_rest = _wrap_prose(rest.lstrip(), width=width) if rest.strip() else rest
+            return f"{lead}\n{wrapped_rest}" if wrapped_rest else lead
+    hard_break = "  \n"
+    if hard_break not in text:
+        return _wrap_prose(text, width=width)
+    head, tail = text.split(hard_break, 1)
+    wrapped_tail = _wrap_prose_after_hard_break(tail.lstrip(), width=width)
+    return f"{head}{hard_break}{wrapped_tail}"
+
+
 def _wrap_plain_words(text: str, *, width: int, first_prefix: str, next_prefix: str) -> list[str]:
     words = re.split(r"(\s+)", text)
     lines: list[str] = []
     current = first_prefix
-    current_width = text_display_width(first_prefix)
+    current_width = _text_display_width(first_prefix)
 
     for part in words:
         if not part:
             continue
-        part_width = text_display_width(part)
+        part_width = _text_display_width(part)
         if part.isspace():
             if current_width + part_width <= width:
                 current += part
@@ -219,17 +210,26 @@ def _wrap_plain_words(text: str, *, width: int, first_prefix: str, next_prefix: 
         if current not in {first_prefix, next_prefix} and current_width + part_width > width:
             lines.append(current.rstrip())
             current = next_prefix + part
-            current_width = text_display_width(current)
+            current_width = _text_display_width(current)
             continue
         if current in {first_prefix, next_prefix}:
             current += part
         else:
             current += part if current.endswith((" ", "\t")) or current == first_prefix else f" {part}"
-        current_width = text_display_width(current)
+        current_width = _text_display_width(current)
 
     if current.strip() or current in {first_prefix, next_prefix}:
         lines.append(current.rstrip())
     return lines or [first_prefix.rstrip()]
+
+
+def _wrap_prose(text: str, *, width: int, prefix: str = "", continuation: str | None = None) -> str:
+    """Wrap phrasing Markdown text to the given display width."""
+    if not text or width <= 0:
+        return text
+    continuation = continuation if continuation is not None else prefix
+    lines = _wrap_text_lines(text, width=width, first_prefix=prefix, next_prefix=continuation)
+    return "\n".join(_avoid_list_marker_line_starts(lines))
 
 
 def _wrap_prose_after_hard_break(text: str, *, width: int) -> str:
@@ -242,7 +242,7 @@ def _wrap_prose_after_hard_break(text: str, *, width: int) -> str:
     first_line = True
 
     for word in words:
-        word_width = text_display_width(word)
+        word_width = _text_display_width(word)
         gap = 1 if current else 0
         if current and current_width + gap + word_width > width and first_line and word_width <= width:
             current.append(word)
@@ -335,7 +335,7 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
                 current_width = _prose_display_width(current)
                 continue
             for char in segment:
-                char_width = text_display_width(char)
+                char_width = _text_display_width(char)
                 if (
                     current_width + char_width > width
                     and current.strip()
@@ -343,7 +343,7 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
                 ):
                     lines.append(current.rstrip())
                     current = next_prefix
-                    current_width = text_display_width(next_prefix)
+                    current_width = _text_display_width(next_prefix)
                 if (
                     current_width + char_width > width
                     and current.endswith(segment[: segment.index(char)])
@@ -353,7 +353,7 @@ def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: s
                 ):
                     lines.append(current.rstrip())
                     current = next_prefix + char
-                    current_width = text_display_width(next_prefix) + char_width
+                    current_width = _text_display_width(next_prefix) + char_width
                     continue
                 current += char
                 current_width += char_width

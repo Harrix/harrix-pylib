@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from harrix_pylib.md_format.text_lines import join_lines, make_placeholder, split_lines
+from harrix_pylib.md_format.text_lines import _join_lines, _make_placeholder, _split_lines
 
 PLACEHOLDER_PREFIX = "HSKMDFMTIGN"
 _PLACEHOLDER_RE = re.compile(r"HSKMDFMTIGN\d+")
@@ -22,9 +22,9 @@ class IgnoreBlock:
     text: str
 
 
-def extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
+def _extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
     """Replace ignored regions with placeholders."""
-    lines, trailing = split_lines(body)
+    lines, trailing = _split_lines(body)
     result: list[str] = []
     blocks: list[IgnoreBlock] = []
     index = 0
@@ -44,8 +44,8 @@ def extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
             if any(block_line.lstrip().startswith(">") for block_line in block_lines):
                 result.extend(block_lines)
                 continue
-            blocks.append(IgnoreBlock(index=index, text=join_lines(block_lines, trailing_newline=False)))
-            result.append(make_placeholder(PLACEHOLDER_PREFIX, index))
+            blocks.append(IgnoreBlock(index=index, text=_join_lines(block_lines, trailing_newline=False)))
+            result.append(_make_placeholder(PLACEHOLDER_PREFIX, index))
             index += 1
             continue
 
@@ -59,23 +59,23 @@ def extract_ignore_blocks(body: str) -> tuple[str, list[IgnoreBlock]]:
                     break
                 block_lines.append(lines[line_index])
                 line_index += 1
-            blocks.append(IgnoreBlock(index=index, text=join_lines(block_lines, trailing_newline=False)))
-            result.append(make_placeholder(PLACEHOLDER_PREFIX, index))
+            blocks.append(IgnoreBlock(index=index, text=_join_lines(block_lines, trailing_newline=False)))
+            result.append(_make_placeholder(PLACEHOLDER_PREFIX, index))
             index += 1
             continue
 
         result.append(line)
         line_index += 1
 
-    return join_lines(result, trailing_newline=trailing), blocks
+    return _join_lines(result, trailing_newline=trailing), blocks
 
 
-def restore_ignore_blocks(text: str, blocks: list[IgnoreBlock]) -> str:
+def _restore_ignore_blocks(text: str, blocks: list[IgnoreBlock]) -> str:
     """Restore ignored regions verbatim."""
     if not blocks:
         return text
     blocks_by_index = {block.index: block for block in blocks}
-    lines, trailing = split_lines(text)
+    lines, trailing = _split_lines(text)
     restored: list[str] = []
     for line in lines:
         stripped = line.strip()
@@ -102,4 +102,4 @@ def restore_ignore_blocks(text: str, blocks: list[IgnoreBlock]) -> str:
             restored.extend(block.text.split("\n"))
             continue
         restored.append(line)
-    return join_lines(restored, trailing_newline=trailing)
+    return _join_lines(restored, trailing_newline=trailing)

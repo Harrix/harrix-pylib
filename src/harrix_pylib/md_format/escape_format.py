@@ -27,7 +27,7 @@ PLACEHOLDER_PREFIXES = (
 )
 
 
-def escape_markdown_text(text: str) -> str:
+def _escape_markdown_text(text: str) -> str:
     """Escape emphasis-like ``*`` and ``_`` characters in plain text."""
     if any(text.startswith(prefix) for prefix in PLACEHOLDER_PREFIXES):
         return text
@@ -57,13 +57,6 @@ def escape_markdown_text(text: str) -> str:
     return "".join(parts)
 
 
-def escape_ordered_list_like_line_starts(text: str) -> str:
-    """Re-escape ``39.``-like line starts so they are not parsed as ordered lists."""
-    if not text:
-        return text
-    return "\n".join(_escape_ordered_list_like_line_start(line) for line in text.split("\n"))
-
-
 def _escape_ordered_list_like_line_start(line: str) -> str:
     match = _ORDERED_LIST_LINE_START_RE.match(line)
     if not match:
@@ -74,6 +67,13 @@ def _escape_ordered_list_like_line_start(line: str) -> str:
     if after_period and after_period[0].isalpha():
         return line
     return f"{match.group(1)}\\.{after_period}"
+
+
+def _escape_ordered_list_like_line_starts(text: str) -> str:
+    """Re-escape ``39.``-like line starts so they are not parsed as ordered lists."""
+    if not text:
+        return text
+    return "\n".join(_escape_ordered_list_like_line_start(line) for line in text.split("\n"))
 
 
 def _is_alphanumeric(char: str) -> bool:

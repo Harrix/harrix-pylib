@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 _WIKI_PATTERN = re.compile(r"^\[\[(.+?)\]\]", re.DOTALL)
 
 
-def wiki_link_plugin(md: MarkdownIt) -> None:
+def _wiki_link_plugin(md: MarkdownIt) -> None:
     """Register wiki-link parsing before standard links."""
 
     def wiki_rule(state: StateInline, silent: bool) -> bool:  # noqa: FBT001

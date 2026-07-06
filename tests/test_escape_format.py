@@ -2,65 +2,65 @@
 
 from __future__ import annotations
 
-from harrix_pylib.md_format.escape_format import escape_markdown_text, escape_ordered_list_like_line_starts
+from harrix_pylib.md_format.escape_format import _escape_markdown_text, _escape_ordered_list_like_line_starts
 
 
 def test_escape_markdown_text_escapes_user_examples() -> None:
-    assert escape_markdown_text("Strelets A* center") == "Strelets A\\* center"
-    assert escape_markdown_text("string type char* with") == "string type char\\* with"
-    assert escape_markdown_text("prefix «t_»") == "prefix «t\\_»"
+    assert _escape_markdown_text("Strelets A* center") == "Strelets A\\* center"
+    assert _escape_markdown_text("string type char* with") == "string type char\\* with"
+    assert _escape_markdown_text("prefix «t_»") == "prefix «t\\_»"
 
 
 def test_escape_markdown_text_keeps_non_emphasis_like_characters() -> None:
-    assert escape_markdown_text("5 * 2") == "5 * 2"
-    assert escape_markdown_text("foo_bar_baz") == "foo_bar_baz"
-    assert escape_markdown_text("a * b * c") == "a * b * c"
-    assert escape_markdown_text("read:user") == "read:user"
-    assert escape_markdown_text("foo*bar") == "foo*bar"
+    assert _escape_markdown_text("5 * 2") == "5 * 2"
+    assert _escape_markdown_text("foo_bar_baz") == "foo_bar_baz"
+    assert _escape_markdown_text("a * b * c") == "a * b * c"
+    assert _escape_markdown_text("read:user") == "read:user"
+    assert _escape_markdown_text("foo*bar") == "foo*bar"
 
 
 def test_escape_markdown_text_escapes_intraword_asterisk_with_non_ascii_letters() -> None:
-    assert escape_markdown_text("Двигатель. Его мощность ток*напражение") == "Двигатель. Его мощность ток\\*напражение"
-    assert escape_markdown_text("ток*напражение") == "ток\\*напражение"
+    assert _escape_markdown_text("Двигатель. Его мощность ток*напражение") == "Двигатель. Его мощность ток\\*напражение"
+    assert _escape_markdown_text("ток*напражение") == "ток\\*напражение"
 
 
 def test_escape_markdown_text_keeps_prettier_literal_cases() -> None:
-    assert escape_markdown_text(r"Oculus\Software\hyperbolic") == r"Oculus\Software\hyperbolic"
-    assert escape_markdown_text("t._id, t.amount") == "t.\\_id, t.amount"
-    assert escape_markdown_text("2. _[directory_name].short.g.md") == "2. _[directory_name].short.g.md"
-    assert escape_markdown_text("[_id, habit_name]") == r"[\_id, habit_name]"
+    assert _escape_markdown_text(r"Oculus\Software\hyperbolic") == r"Oculus\Software\hyperbolic"
+    assert _escape_markdown_text("t._id, t.amount") == "t.\\_id, t.amount"
+    assert _escape_markdown_text("2. _[directory_name].short.g.md") == "2. _[directory_name].short.g.md"
+    assert _escape_markdown_text("[_id, habit_name]") == r"[\_id, habit_name]"
 
 
 def test_escape_markdown_text_escapes_identifier_underscores() -> None:
     assert (
-        escape_markdown_text("Table save handlers are provided by _get_save_handlers(); _auto_save_row")
+        _escape_markdown_text("Table save handlers are provided by _get_save_handlers(); _auto_save_row")
         == "Table save handlers are provided by \\_get_save_handlers(); \\_auto_save_row"
     )
-    assert escape_markdown_text("Must be in _SAFE_TABLES.") == "Must be in \\_SAFE_TABLES."
+    assert _escape_markdown_text("Must be in _SAFE_TABLES.") == "Must be in \\_SAFE_TABLES."
     assert (
-        escape_markdown_text("Monthly data from _get_monthly_data_for_exercise.")
+        _escape_markdown_text("Monthly data from _get_monthly_data_for_exercise.")
         == "Monthly data from \\_get_monthly_data_for_exercise."
     )
-    assert escape_markdown_text("suffix with _1, _2 if needed.") == "suffix with \\_1, \\_2 if needed."
+    assert _escape_markdown_text("suffix with _1, _2 if needed.") == "suffix with \\_1, \\_2 if needed."
     assert (
-        escape_markdown_text("aggregated file _<FolderName>.g.md (e.g. Fiction -> _Fiction.g.md),")
+        _escape_markdown_text("aggregated file _<FolderName>.g.md (e.g. Fiction -> _Fiction.g.md),")
         == "aggregated file \\_<FolderName>.g.md (e.g. Fiction -> \\_Fiction.g.md),"
     )
-    assert escape_markdown_text("from _INCORRECT_WORD_PATTERNS.") == "from \\_INCORRECT_WORD_PATTERNS."
-    assert escape_markdown_text("определяют макрос _WIN32.") == "определяют макрос \\_WIN32."
+    assert _escape_markdown_text("from _INCORRECT_WORD_PATTERNS.") == "from \\_INCORRECT_WORD_PATTERNS."
+    assert _escape_markdown_text("определяют макрос _WIN32.") == "определяют макрос \\_WIN32."
 
 
 def test_escape_markdown_text_skips_code_block_placeholder() -> None:
-    assert escape_markdown_text("HSKMDFMTCODE0") == "HSKMDFMTCODE0"
+    assert _escape_markdown_text("HSKMDFMTCODE0") == "HSKMDFMTCODE0"
 
 
 def test_escape_ordered_list_like_line_starts() -> None:
-    assert escape_ordered_list_like_line_starts("39. Первый фрагмент текста.") == "39\\. Первый фрагмент текста."
+    assert _escape_ordered_list_like_line_starts("39. Первый фрагмент текста.") == "39\\. Первый фрагмент текста."
     assert (
-        escape_ordered_list_like_line_starts("Здесь 39. означает номер пункта.") == "Здесь 39. означает номер пункта."
+        _escape_ordered_list_like_line_starts("Здесь 39. означает номер пункта.") == "Здесь 39. означает номер пункта."
     )
     assert (
-        escape_ordered_list_like_line_starts("39. Первая строка\n40. Вторая строка")
+        _escape_ordered_list_like_line_starts("39. Первая строка\n40. Вторая строка")
         == "39\\. Первая строка\n40\\. Вторая строка"
     )
-    assert escape_ordered_list_like_line_starts("9.5 - Тихоокеанский рубеж") == "9.5 - Тихоокеанский рубеж"
+    assert _escape_ordered_list_like_line_starts("9.5 - Тихоокеанский рубеж") == "9.5 - Тихоокеанский рубеж"

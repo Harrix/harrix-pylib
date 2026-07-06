@@ -1000,7 +1000,7 @@ Note:
   before processing (if `is_delete_g_md_files` is `True`).
 - Files with `*.include.g.md` extension will be included in processing.
 - Hidden folders (starting with `.`) will be skipped.
-- Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
+- Files and folders that match common ignore patterns (like `.git`, `_pycache__`, `node_modules`, etc.)
   are ignored during processing.
 - Files will be combined in a folder if either:
   1. The folder directly contains at least 2 Markdown files, or
@@ -1426,9 +1426,9 @@ def format_markdown(
     filename: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80
 ) -> str:
     path = Path(filename)
-    document = read_markdown_text(path)
-    document_new = format_markdown_content(
-        document, end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
+    document = MarkdownFormatter.read_markdown_text(path)
+    document_new = MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format(
+        document
     )
     if document != document_new:
         path.write_text(document_new, encoding="utf-8", newline="")
@@ -1468,8 +1468,8 @@ def format_markdown_content(
     prose_wrap: str = "preserve",
     print_width: int = 80,
 ) -> str:
-    return _format_markdown_content(
-        markdown_text, end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
+    return MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format(
+        markdown_text
     )
 ```
 
@@ -1628,7 +1628,7 @@ print(h.md.format_yaml(path))
 ```python
 def format_yaml(filename: Path | str) -> str:
     filename = Path(filename)
-    document = read_markdown_text(filename)
+    document = MarkdownFormatter.read_markdown_text(filename)
     document_new = format_yaml_content(document)
 
     if document != document_new:
@@ -1677,7 +1677,7 @@ print(h.md.format_yaml_content(text))
 
 ```python
 def format_yaml_content(markdown_text: str) -> str:
-    markdown_text = normalize_line_endings(markdown_text.lstrip("\ufeff"))
+    markdown_text = MarkdownFormatter.normalize_line_endings(markdown_text.lstrip("\ufeff"))
     yaml_md, content_md = split_yaml_content(markdown_text)
 
     # If no YAML front matter exists, return original text
@@ -2846,7 +2846,7 @@ Returns:
 
 Note:
 
-- Files and folders that match common ignore patterns (like `.git`, `__pycache__`, `node_modules`, etc.)
+- Files and folders that match common ignore patterns (like `.git`, `_pycache__`, `node_modules`, etc.)
   are ignored during processing.
 - Hidden files and folders (those with names starting with a dot) are ignored during processing.
 - The function recursively searches all subfolders.
@@ -3020,7 +3020,7 @@ for _, state in h.md.identify_code_blocks(content.splitlines()):
 
 ```python
 def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
-    yield from _identify_code_blocks(lines)
+    yield from _md_identify_code_blocks(lines)
 ```
 
 </details>
@@ -3060,7 +3060,7 @@ for segment, in_code in h.md.identify_code_blocks_line(line):
 
 ```python
 def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
-    yield from _identify_code_blocks_line(markdown_line)
+    yield from _md_identify_code_blocks_line(markdown_line)
 ```
 
 </details>
@@ -4258,7 +4258,7 @@ yaml, content = h.md.split_yaml_content(md)
 
 ```python
 def split_yaml_content(markdown_text: str) -> tuple[str, str]:
-    return split_front_matter(markdown_text)
+    return _split_front_matter(markdown_text)
 ```
 
 </details>

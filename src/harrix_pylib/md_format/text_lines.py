@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-def ensure_blank_line_after_active_block(
+def _ensure_blank_line_after_active_block(
     body: str,
     *,
     is_block_line: Callable[[str], bool],
@@ -31,7 +31,7 @@ def ensure_blank_line_after_active_block(
     return "\n".join(result)
 
 
-def join_lines(lines: list[str], *, trailing_newline: bool) -> str:
+def _join_lines(lines: list[str], *, trailing_newline: bool) -> str:
     """Join lines and restore a trailing newline when requested."""
     text = "\n".join(lines)
     if trailing_newline:
@@ -39,12 +39,12 @@ def join_lines(lines: list[str], *, trailing_newline: bool) -> str:
     return text
 
 
-def make_placeholder(prefix: str, index: int) -> str:
+def _make_placeholder(prefix: str, index: int) -> str:
     """Build a stable placeholder token for protected regions."""
     return f"{prefix}{index}"
 
 
-def split_lines(text: str) -> tuple[list[str], bool]:
+def _split_lines(text: str) -> tuple[list[str], bool]:
     """Split text into lines without the trailing split artifact from a final newline."""
     has_trailing_newline = text.endswith("\n")
     lines = text.split("\n")

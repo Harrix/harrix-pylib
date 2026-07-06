@@ -8,9 +8,10 @@ from typing import TypedDict
 import pytest
 
 import harrix_pylib as h
-from harrix_pylib.md_format.formatter import format_markdown_content, read_markdown_text
-from harrix_pylib.md_format.front_matter import prepend_markdown_header
-from harrix_pylib.md_format.table_format import text_display_width
+from harrix_pylib.md_format import MarkdownFormatter
+from harrix_pylib.md_format.formatter import format_markdown_content
+from harrix_pylib.md_format.front_matter import _prepend_markdown_header
+from harrix_pylib.md_format.table_format import _text_display_width
 
 
 def _read_fixture(name: str) -> str:
@@ -21,9 +22,9 @@ def _read_fixture(name: str) -> str:
 def _fixture_pairs() -> list[tuple[str, str]]:
     root = Path(__file__).parent / "data" / "md_format"
     pairs: list[tuple[str, str]] = []
-    for before_path in sorted(root.glob("*__before.md")):
-        stem = before_path.name[: -len("__before.md")]
-        after_name = f"{stem}__after.md"
+    for before_path in sorted(root.glob("*_before.md")):
+        stem = before_path.name[: -len("_before.md")]
+        after_name = f"{stem}_after.md"
         if (root / after_name).is_file():
             pairs.append((before_path.name, after_name))
     return pairs
@@ -49,7 +50,7 @@ _FIXTURE_FORMAT_KWARGS: _FixtureFormatKwargs = {
 @pytest.mark.parametrize(
     ("before_name", "after_name"),
     _FIXTURE_PAIRS,
-    ids=[before_name[: -len("__before.md")] for before_name, _ in _FIXTURE_PAIRS],
+    ids=[before_name[: -len("_before.md")] for before_name, _ in _FIXTURE_PAIRS],
 )
 def test_format_markdown_content_matches_fixture(before_name: str, after_name: str) -> None:
     before = _read_fixture(before_name)
@@ -168,7 +169,7 @@ def test_format_markdown_content_preserves_front_matter() -> None:
 def test_prepend_markdown_header_strips_existing_front_matter() -> None:
     header = "---\nlang: en\n---"
     source = "---\nlang: ru\n---\n\n# Title\n"
-    result = prepend_markdown_header(header, source)
+    result = _prepend_markdown_header(header, source)
     assert result.startswith("---\nlang: en\n---\n\n# Title")
     assert result.count("---") == 2  # noqa: PLR2004
 
@@ -369,7 +370,7 @@ def test_format_markdown_content_keeps_table_row_with_empty_cell() -> None:
     table_lines = [line for line in result.splitlines() if line.strip().startswith("|")]
     assert len(table_lines) == 4  # noqa: PLR2004
     assert any("_format_style" in line and line.strip().endswith("|") for line in table_lines)
-    col1_widths = [text_display_width(line.split("|")[1]) for line in table_lines]
+    col1_widths = [_text_display_width(line.split("|")[1]) for line in table_lines]
     assert len(set(col1_widths)) == 1
 
 
@@ -485,9 +486,16 @@ def test_read_markdown_text_handles_r_double_crlf_on_disk(tmp_path: Path) -> Non
     source = "# Title\n\n## Sub\n"
     path = tmp_path / "note.md"
     path.write_bytes(source.replace("\n", "\r\r\n").encode("utf-8"))
-    result = format_markdown_content(read_markdown_text(path))
+    result = format_markdown_content(MarkdownFormatter.read_markdown_text(path))
     assert result.count("\r\r\n") == 0
     assert "# Title\r\n\r\n## Sub" in result
+
+
+def test_markdown_formatter_callable_reuses_options() -> None:
+    formatter = MarkdownFormatter(end_of_line="lf")
+    assert formatter("# One\n") == "# One\n"
+    assert formatter("# Two\n") == "# Two\n"
+    assert formatter("# Three\n") == formatter.format("# Three\n")
 
 
 def test_format_markdown_file(tmp_path: Path) -> None:
@@ -686,12 +694,12 @@ def test_format_markdown_content_escapes_identifier_underscores() -> None:
 def test_format_markdown_content_keeps_tight_list_with_nested_sublist() -> None:
     source = (
         "- [Class `StyleSheet`](#class)\n\n"
-        "  - [Method `__init__`](#init)\n"
+        "  - [Method `_init__`](#init)\n"
         "  - [Method `collect`](#collect)\n\n"
         "- [Function `_format_style`](#func)\n"
     )
     result = format_markdown_content(source)
-    assert "- [Class `StyleSheet`](#class)\r\n  - [Method `__init__`]" in result
+    assert "- [Class `StyleSheet`](#class)\r\n  - [Method `_init__`]" in result
     assert "collect`](#collect)\r\n- [Function `_format_style`]" in result
     assert "StyleSheet`](#class)\r\n\r\n  - [Method" not in result
     assert "collect]\r\n\r\n- [Function" not in result

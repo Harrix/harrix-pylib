@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from harrix_pylib.md_format.text_lines import join_lines, make_placeholder, split_lines
+from harrix_pylib.md_format.text_lines import _join_lines, _make_placeholder, _split_lines
 
 PLACEHOLDER_PREFIX = "HSKMDFMTTASK"
 _TASK_ITEM_RE = re.compile(r"^(\s*)((?:[-*+])|(?:\d+[.)]))( +)\[([xX ])\]\s+(.*)$")
@@ -20,9 +20,9 @@ class TaskListMarker:
     marker_spaces: int = 1
 
 
-def extract_task_list_markers(body: str) -> tuple[str, list[TaskListMarker]]:
+def _extract_task_list_markers(body: str) -> tuple[str, list[TaskListMarker]]:
     """Replace task-list markers with placeholders the parser will keep in text."""
-    lines, trailing = split_lines(body)
+    lines, trailing = _split_lines(body)
     result: list[str] = []
     markers: list[TaskListMarker] = []
     index = 0
@@ -34,12 +34,12 @@ def extract_task_list_markers(body: str) -> tuple[str, list[TaskListMarker]]:
         indent, marker, marker_spaces, checked_char, rest = match.groups()
         checked = checked_char.lower() == "x"
         markers.append(TaskListMarker(index=index, checked=checked, marker_spaces=len(marker_spaces)))
-        result.append(f"{indent}{marker}{marker_spaces}{make_placeholder(PLACEHOLDER_PREFIX, index)} {rest}")
+        result.append(f"{indent}{marker}{marker_spaces}{_make_placeholder(PLACEHOLDER_PREFIX, index)} {rest}")
         index += 1
-    return join_lines(result, trailing_newline=trailing), markers
+    return _join_lines(result, trailing_newline=trailing), markers
 
 
-def strip_task_placeholder(text: str) -> str:
+def _strip_task_placeholder(text: str) -> str:
     """Remove the task-list placeholder token from item text."""
     stripped = text.lstrip()
     if not stripped.startswith(PLACEHOLDER_PREFIX):
@@ -48,7 +48,7 @@ def strip_task_placeholder(text: str) -> str:
     return rest.lstrip()
 
 
-def task_list_entry_for_text(text: str, markers: list[TaskListMarker]) -> tuple[str, TaskListMarker] | None:
+def _task_list_entry_for_text(text: str, markers: list[TaskListMarker]) -> tuple[str, TaskListMarker] | None:
     """Return task marker text and metadata when paragraph text starts with a placeholder."""
     stripped = text.lstrip()
     if not stripped.startswith(PLACEHOLDER_PREFIX):
@@ -64,7 +64,7 @@ def task_list_entry_for_text(text: str, markers: list[TaskListMarker]) -> tuple[
     return None
 
 
-def task_list_marker_for_text(text: str, markers: list[TaskListMarker]) -> str | None:
+def _task_list_marker_for_text(text: str, markers: list[TaskListMarker]) -> str | None:
     """Return ``[ ] `` or ``[x] `` when paragraph text starts with a task placeholder."""
-    entry = task_list_entry_for_text(text, markers)
+    entry = _task_list_entry_for_text(text, markers)
     return entry[0] if entry else None

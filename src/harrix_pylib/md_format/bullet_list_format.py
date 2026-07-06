@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import re
 
-from harrix_pylib.md_format.text_lines import join_lines, split_lines
+from harrix_pylib.md_format.text_lines import _join_lines, _split_lines
 
 _BULLET_ITEM_RE = re.compile(r"^(\s*)([-*+])\s+")
 
 
-def extract_bullet_list_marker_groups(body: str) -> tuple[str, list[list[str]]]:
+def _extract_bullet_list_marker_groups(body: str) -> tuple[str, list[list[str]]]:
     """Collect source bullet markers for each bullet list in document order."""
-    lines, trailing = split_lines(body)
+    lines, trailing = _split_lines(body)
     groups: list[list[str]] = []
     stack: list[tuple[int, int]] = []
     line_index = 0
@@ -49,4 +49,4 @@ def extract_bullet_list_marker_groups(body: str) -> tuple[str, list[list[str]]]:
             groups.append([marker])
             stack.append((indent, len(groups) - 1))
         line_index += 1
-    return join_lines(lines, trailing_newline=trailing), groups
+    return _join_lines(lines, trailing_newline=trailing), groups

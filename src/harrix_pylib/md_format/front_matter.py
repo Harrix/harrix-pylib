@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, TypeVar
 
-from harrix_pylib.md_format.text_lines import join_lines, split_lines
+from harrix_pylib.md_format.text_lines import _join_lines, _split_lines
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -34,7 +34,7 @@ class YamlBlock:
     lines: list[str]
 
 
-def collapse_extra_blank_lines(text: str) -> str:
+def _collapse_extra_blank_lines(text: str) -> str:
     """Collapse consecutive blank lines to a single blank line."""
     lines = text.split("\n")
     collapsed: list[str] = []
@@ -47,7 +47,7 @@ def collapse_extra_blank_lines(text: str) -> str:
     return "\n".join(collapsed)
 
 
-def compact_front_matter(front_matter: str) -> str:
+def _compact_front_matter(front_matter: str) -> str:
     """Remove blank lines inside YAML front matter while keeping delimiters."""
     parts = front_matter.split("---", 2)
     if len(parts) < _MIN_FRONT_MATTER_PARTS:
@@ -59,82 +59,6 @@ def compact_front_matter(front_matter: str) -> str:
     return f"---\n{yaml_body}\n---"
 
 
-def extract_toml_blocks(body: str) -> tuple[str, list[TomlBlock]]:
-    """Replace standalone TOML blocks in the Markdown body with placeholders."""
-    return _extract_delimited_blocks(body, delimiter="+++", prefix=_TOML_BLOCK_PREFIX, block_class=TomlBlock)
-
-
-def extract_yaml_blocks(body: str) -> tuple[str, list[YamlBlock]]:
-    """Replace standalone YAML blocks in the Markdown body with placeholders."""
-    return _extract_delimited_blocks(body, delimiter="---", prefix=_YAML_BLOCK_PREFIX, block_class=YamlBlock)
-
-
-def join_front_matter(front_matter: str, body: str) -> str:
-    """Join front matter and formatted body."""
-    if not front_matter:
-        return body
-    body = body.lstrip("\n")
-    if body:
-        return f"{front_matter.rstrip()}\n\n{body}"
-    return f"{front_matter.rstrip()}\n"
-
-
-def prepend_markdown_header(header: str, markdown_text: str) -> str:
-    """Prepend YAML or Markdown prefix without duplicating existing front matter."""
-    _, body = split_front_matter(markdown_text)
-    header = header.rstrip("\n")
-    if not header:
-        return body or markdown_text
-    if not body:
-        return f"{header}\n"
-    return f"{header}\n\n{body}"
-
-
-def restore_toml_blocks(text: str, blocks: list[TomlBlock]) -> str:
-    """Restore TOML body blocks."""
-    return _restore_delimited_blocks(
-        text,
-        blocks,
-        prefix=_TOML_BLOCK_PREFIX,
-        pattern=_TOML_BLOCK_RE,
-        formatter=lambda block: "\n".join(line.rstrip() for line in block.lines),
-    )
-
-
-def restore_yaml_blocks(text: str, blocks: list[YamlBlock]) -> str:
-    """Restore YAML body blocks."""
-    return _restore_delimited_blocks(
-        text, blocks, prefix=_YAML_BLOCK_PREFIX, pattern=_YAML_BLOCK_RE, formatter=_format_yaml_block
-    )
-
-
-def split_front_matter(markdown_text: str) -> tuple[str, str]:
-    """Split YAML front matter from Markdown body.
-
-    Returns front matter including `---` delimiters and the remaining body.
-    """
-    markdown_text = markdown_text.lstrip("\ufeff")
-    if not markdown_text.startswith("---"):
-        return "", markdown_text
-    parts = markdown_text.split("---", 2)
-    if len(parts) < _MIN_FRONT_MATTER_PARTS:
-        return "", markdown_text
-    return f"---{parts[1]}---", parts[2].lstrip()
-
-
-def trim_trailing_blank_lines(text: str) -> str:
-    """Remove trailing blank lines while keeping a single final newline."""
-    lines = text.split("\n")
-    has_trailing_newline = text.endswith("\n")
-    if has_trailing_newline and lines:
-        lines.pop()
-    while lines and lines[-1] == "":
-        lines.pop()
-    if not lines:
-        return "\n"
-    return "\n".join(lines) + "\n"
-
-
 def _extract_delimited_blocks(
     body: str,
     *,
@@ -142,7 +66,7 @@ def _extract_delimited_blocks(
     prefix: str,
     block_class: type[BlockT],
 ) -> tuple[str, list[BlockT]]:
-    lines, trailing = split_lines(body)
+    lines, trailing = _split_lines(body)
     result: list[str] = []
     blocks: list[BlockT] = []
     index = 0
@@ -166,7 +90,17 @@ def _extract_delimited_blocks(
         index += 1
         line_index = close_index + 1
 
-    return join_lines(result, trailing_newline=trailing), blocks
+    return _join_lines(result, trailing_newline=trailing), blocks
+
+
+def _extract_toml_blocks(body: str) -> tuple[str, list[TomlBlock]]:
+    """Replace standalone TOML blocks in the Markdown body with placeholders."""
+    return _extract_delimited_blocks(body, delimiter="+++", prefix=_TOML_BLOCK_PREFIX, block_class=TomlBlock)
+
+
+def _extract_yaml_blocks(body: str) -> tuple[str, list[YamlBlock]]:
+    """Replace standalone YAML blocks in the Markdown body with placeholders."""
+    return _extract_delimited_blocks(body, delimiter="---", prefix=_YAML_BLOCK_PREFIX, block_class=YamlBlock)
 
 
 def _find_delimited_block_close(lines: list[str], start_index: int, *, delimiter: str) -> int | None:
@@ -192,6 +126,27 @@ def _format_yaml_line(line: str) -> str:
     return re.sub(r":\s+", ": ", stripped)
 
 
+def _join_front_matter(front_matter: str, body: str) -> str:
+    """Join front matter and formatted body."""
+    if not front_matter:
+        return body
+    body = body.lstrip("\n")
+    if body:
+        return f"{front_matter.rstrip()}\n\n{body}"
+    return f"{front_matter.rstrip()}\n"
+
+
+def _prepend_markdown_header(header: str, markdown_text: str) -> str:
+    """Prepend YAML or Markdown prefix without duplicating existing front matter."""
+    _, body = _split_front_matter(markdown_text)
+    header = header.rstrip("\n")
+    if not header:
+        return body or markdown_text
+    if not body:
+        return f"{header}\n"
+    return f"{header}\n\n{body}"
+
+
 def _restore_delimited_blocks(
     text: str,
     blocks: list[BlockT],
@@ -212,6 +167,51 @@ def _restore_delimited_blocks(
         return formatter(block)
 
     return pattern.sub(replace, text)
+
+
+def _restore_toml_blocks(text: str, blocks: list[TomlBlock]) -> str:
+    """Restore TOML body blocks."""
+    return _restore_delimited_blocks(
+        text,
+        blocks,
+        prefix=_TOML_BLOCK_PREFIX,
+        pattern=_TOML_BLOCK_RE,
+        formatter=lambda block: "\n".join(line.rstrip() for line in block.lines),
+    )
+
+
+def _restore_yaml_blocks(text: str, blocks: list[YamlBlock]) -> str:
+    """Restore YAML body blocks."""
+    return _restore_delimited_blocks(
+        text, blocks, prefix=_YAML_BLOCK_PREFIX, pattern=_YAML_BLOCK_RE, formatter=_format_yaml_block
+    )
+
+
+def _split_front_matter(markdown_text: str) -> tuple[str, str]:
+    """Split YAML front matter from Markdown body.
+
+    Returns front matter including `---` delimiters and the remaining body.
+    """
+    markdown_text = markdown_text.lstrip("\ufeff")
+    if not markdown_text.startswith("---"):
+        return "", markdown_text
+    parts = markdown_text.split("---", 2)
+    if len(parts) < _MIN_FRONT_MATTER_PARTS:
+        return "", markdown_text
+    return f"---{parts[1]}---", parts[2].lstrip()
+
+
+def _trim_trailing_blank_lines(text: str) -> str:
+    """Remove trailing blank lines while keeping a single final newline."""
+    lines = text.split("\n")
+    has_trailing_newline = text.endswith("\n")
+    if has_trailing_newline and lines:
+        lines.pop()
+    while lines and lines[-1] == "":
+        lines.pop()
+    if not lines:
+        return "\n"
+    return "\n".join(lines) + "\n"
 
 
 BlockT = TypeVar("BlockT", YamlBlock, TomlBlock)

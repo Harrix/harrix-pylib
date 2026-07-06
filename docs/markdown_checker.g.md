@@ -12,8 +12,8 @@ lang: en
 ## Contents
 
 - [🏛️ Class `MarkdownChecker`](#️-class-markdownchecker)
-  - [⚙️ Method `__init__`](#️-method-__init__)
   - [⚙️ Method `__call__`](#️-method-__call__)
+  - [⚙️ Method `__init__`](#️-method-__init__)
   - [⚙️ Method `check`](#️-method-check)
   - [⚙️ Method `check_directory`](#️-method-check_directory)
   - [⚙️ Method `find_markdown_files`](#️-method-find_markdown_files)
@@ -318,16 +318,16 @@ class MarkdownChecker:
         "</",
     ]
 
-    def __init__(self, project_root: Path | str | None = None) -> None:
-        """Initialize the MarkdownChecker with all available rules."""
-        self.all_rules = set(self.RULES.keys())
-        self.project_root = self._determine_project_root(project_root)
-
     def __call__(
         self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
     ) -> list[str]:
         """Check Markdown file for compliance with specified rules."""
         return self.check(filename, select=select, exclude_rules=exclude_rules)
+
+    def __init__(self, project_root: Path | str | None = None) -> None:
+        """Initialize the MarkdownChecker with all available rules."""
+        self.all_rules = set(self.RULES.keys())
+        self.project_root = self._determine_project_root(project_root)
 
     def check(
         self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
@@ -1361,25 +1361,6 @@ class MarkdownChecker:
 
 </details>
 
-### ⚙️ Method `__init__`
-
-```python
-def __init__(self, project_root: Path | str | None = None) -> None
-```
-
-Initialize the MarkdownChecker with all available rules.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def __init__(self, project_root: Path | str | None = None) -> None:
-        self.all_rules = set(self.RULES.keys())
-        self.project_root = self._determine_project_root(project_root)
-```
-
-</details>
-
 ### ⚙️ Method `__call__`
 
 ```python
@@ -1396,6 +1377,25 @@ def __call__(
         self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
     ) -> list[str]:
         return self.check(filename, select=select, exclude_rules=exclude_rules)
+```
+
+</details>
+
+### ⚙️ Method `__init__`
+
+```python
+def __init__(self, project_root: Path | str | None = None) -> None
+```
+
+Initialize the MarkdownChecker with all available rules.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def __init__(self, project_root: Path | str | None = None) -> None:
+        self.all_rules = set(self.RULES.keys())
+        self.project_root = self._determine_project_root(project_root)
 ```
 
 </details>

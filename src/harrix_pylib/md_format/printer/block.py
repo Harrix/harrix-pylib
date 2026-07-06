@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING
 
 from harrix_pylib.md_format.hard_break_format import HardBreakStyles
 from harrix_pylib.md_format.prose_wrap import (
-    wrap_prose,
+    _wrap_prose,
 )
-from harrix_pylib.md_format.text_format import normalize_inline_spaces
+from harrix_pylib.md_format.text_format import _normalize_inline_spaces
 
 if TYPE_CHECKING:
     from markdown_it.token import Token
@@ -198,7 +198,7 @@ def _render_alert(
     if body_parts:
         body = "\n\n".join(part for part in body_parts if part.strip())
         if options.prose_wrap == "always":
-            body = normalize_inline_spaces(body.replace("\n", " "))
+            body = _normalize_inline_spaces(body.replace("\n", " "))
             wrapped = _wrap_blockquote_block(body, options=options).rstrip("\n")
             quoted_lines.extend(wrapped.splitlines())
         else:
@@ -392,7 +392,7 @@ def _render_blockquote(
         and all(not part.lstrip().startswith(("-", "|", "#", "```")) for part in inner_parts)
         and not any("[[" in part and "\n" in part for part in inner_parts)
     ):
-        merged = normalize_inline_spaces(
+        merged = _normalize_inline_spaces(
             " ".join(part.strip().replace("\n", " ") for part in inner_parts if part.strip())
         )
         quoted = _wrap_blockquote_block(merged, options=options) + "\n"
@@ -516,6 +516,6 @@ def _wrap_blockquote_block(block: str, *, options: FormatOptions) -> str:
             wrapped_lines.append(">")
             continue
         prefix = "> "
-        wrapped = wrap_prose(line, width=options.print_width, prefix=prefix, continuation=prefix)
+        wrapped = _wrap_prose(line, width=options.print_width, prefix=prefix, continuation=prefix)
         wrapped_lines.extend(wrapped.split("\n"))
     return "\n".join(wrapped_lines)

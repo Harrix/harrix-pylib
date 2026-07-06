@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from harrix_pylib.md_format.code_fence import identify_code_blocks
-from harrix_pylib.md_format.text_lines import join_lines, make_placeholder, split_lines
+from harrix_pylib.md_format.code_fence import _identify_code_blocks
+from harrix_pylib.md_format.text_lines import _join_lines, _make_placeholder, _split_lines
 
 if TYPE_CHECKING:
     from harrix_pylib.md_format.options import FormatOptions
@@ -25,10 +25,10 @@ class CodeBlock:
     tight: bool = False
 
 
-def extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
+def _extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
     """Replace fenced code blocks with placeholders and store originals verbatim."""
-    lines, has_trailing_newline = split_lines(body)
-    code_block_info = list(identify_code_blocks(lines))
+    lines, has_trailing_newline = _split_lines(body)
+    code_block_info = list(_identify_code_blocks(lines))
     result: list[str] = []
     blocks: list[CodeBlock] = []
     index = 0
@@ -47,7 +47,7 @@ def extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
 
         block_lines = _trim_trailing_blank_lines_before_closing_fence(block_lines)
         base_indent = _leading_whitespace(block_lines[0])
-        placeholder_line = f"{base_indent}{make_placeholder(PLACEHOLDER_PREFIX, index)}"
+        placeholder_line = f"{base_indent}{_make_placeholder(PLACEHOLDER_PREFIX, index)}"
 
         inserted_blank = False
         if result and result[-1].strip():
@@ -61,35 +61,7 @@ def extract_code_blocks(body: str) -> tuple[str, list[CodeBlock]]:
         blocks.append(CodeBlock(index=index, lines=block_lines, base_indent=base_indent, tight=inserted_blank))
         index += 1
 
-    return join_lines(result, trailing_newline=has_trailing_newline), blocks
-
-
-def restore_code_blocks(text: str, blocks: list[CodeBlock], *, options: FormatOptions | None = None) -> str:
-    """Restore fenced code blocks from placeholders."""
-    if not blocks:
-        return text
-
-    blocks_by_index = {block.index: block for block in blocks}
-    lines, has_trailing_newline = split_lines(text)
-    restored: list[str] = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith(PLACEHOLDER_PREFIX):
-            try:
-                block_index = int(stripped.removeprefix(PLACEHOLDER_PREFIX))
-            except ValueError:
-                restored.append(line)
-                continue
-            block = blocks_by_index.get(block_index)
-            if block is None:
-                restored.append(line)
-                continue
-            block_lines = _format_markdown_fence_block(block.lines, _options=options)
-            current_indent = _leading_whitespace(line)
-            restored.extend(_reindent_line(block_line, block.base_indent, current_indent) for block_line in block_lines)
-            continue
-        restored.append(line)
-    return join_lines(restored, trailing_newline=has_trailing_newline)
+    return _join_lines(result, trailing_newline=has_trailing_newline), blocks
 
 
 def _format_markdown_fence_block(block_lines: list[str], *, _options: FormatOptions | None) -> list[str]:
@@ -109,6 +81,34 @@ def _reindent_line(line: str, base_indent: str, current_indent: str) -> str:
     if base_indent:
         return current_indent + line
     return line
+
+
+def _restore_code_blocks(text: str, blocks: list[CodeBlock], *, options: FormatOptions | None = None) -> str:
+    """Restore fenced code blocks from placeholders."""
+    if not blocks:
+        return text
+
+    blocks_by_index = {block.index: block for block in blocks}
+    lines, has_trailing_newline = _split_lines(text)
+    restored: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith(PLACEHOLDER_PREFIX):
+            try:
+                block_index = int(stripped.removeprefix(PLACEHOLDER_PREFIX))
+            except ValueError:
+                restored.append(line)
+                continue
+            block = blocks_by_index.get(block_index)
+            if block is None:
+                restored.append(line)
+                continue
+            block_lines = _format_markdown_fence_block(block.lines, _options=options)
+            current_indent = _leading_whitespace(line)
+            restored.extend(_reindent_line(block_line, block.base_indent, current_indent) for block_line in block_lines)
+            continue
+        restored.append(line)
+    return _join_lines(restored, trailing_newline=has_trailing_newline)
 
 
 def _trim_trailing_blank_lines_before_closing_fence(block_lines: list[str]) -> list[str]:
