@@ -15,6 +15,8 @@ lang: en
   - [⚙️ Method `__call__`](#️-method-__call__)
   - [⚙️ Method `__init__`](#️-method-__init__)
   - [⚙️ Method `optimize`](#️-method-optimize)
+  - [⚙️ Method `optimize_file`](#️-method-optimize_file)
+  - [⚙️ Method `optimize_folder`](#️-method-optimize_folder)
 
 </details>
 
@@ -94,6 +96,52 @@ class SvgOptimizer:
             stylesheet.collect(root)
 
         return _serialize(root)
+
+    def optimize_file(self, filename: Path | str, output_filename: Path | str | None = None) -> str:
+        """Optimize an SVG file and write the result.
+
+        Args:
+
+        - `filename` (`Path | str`): Source SVG file path.
+        - `output_filename` (`Path | str | None`): Destination path. If omitted, overwrites source.
+
+        Returns:
+
+        - `str`: Status message.
+
+        """
+        source = Path(filename)
+        target = Path(output_filename) if output_filename is not None else source
+        content = source.read_text(encoding="utf-8")
+        optimized = self.optimize(content)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(optimized, encoding="utf-8")
+        return f"✅ File {source.name} successfully optimized."
+
+    def optimize_folder(self, input_folder: Path | str, output_folder: Path | str) -> str:
+        """Optimize all SVG files in a folder.
+
+        Args:
+
+        - `input_folder` (`Path | str`): Folder with source SVG files.
+        - `output_folder` (`Path | str`): Folder for optimized SVG files.
+
+        Returns:
+
+        - `str`: Newline-separated status messages.
+
+        """
+        input_path = Path(input_folder)
+        output_path = Path(output_folder)
+        output_path.mkdir(parents=True, exist_ok=True)
+        lines: list[str] = []
+        for file in sorted(input_path.iterdir()):
+            if not file.is_file() or file.suffix.lower() != ".svg":
+                continue
+            lines.append(self.optimize_file(file, output_path / file.name))
+        if not lines:
+            lines.append("🔵 No SVG files found.")
+        return "\n".join(lines)
 ```
 
 </details>
@@ -191,6 +239,76 @@ def optimize(self, svg_text: str, *, multipass: bool | None = None) -> str:
             stylesheet.collect(root)
 
         return _serialize(root)
+```
+
+</details>
+
+### ⚙️ Method `optimize_file`
+
+```python
+def optimize_file(self, filename: Path | str, output_filename: Path | str | None = None) -> str
+```
+
+Optimize an SVG file and write the result.
+
+Args:
+
+- `filename` (`Path | str`): Source SVG file path.
+- `output_filename` (`Path | str | None`): Destination path. If omitted, overwrites source.
+
+Returns:
+
+- `str`: Status message.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def optimize_file(self, filename: Path | str, output_filename: Path | str | None = None) -> str:
+        source = Path(filename)
+        target = Path(output_filename) if output_filename is not None else source
+        content = source.read_text(encoding="utf-8")
+        optimized = self.optimize(content)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(optimized, encoding="utf-8")
+        return f"✅ File {source.name} successfully optimized."
+```
+
+</details>
+
+### ⚙️ Method `optimize_folder`
+
+```python
+def optimize_folder(self, input_folder: Path | str, output_folder: Path | str) -> str
+```
+
+Optimize all SVG files in a folder.
+
+Args:
+
+- `input_folder` (`Path | str`): Folder with source SVG files.
+- `output_folder` (`Path | str`): Folder for optimized SVG files.
+
+Returns:
+
+- `str`: Newline-separated status messages.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def optimize_folder(self, input_folder: Path | str, output_folder: Path | str) -> str:
+        input_path = Path(input_folder)
+        output_path = Path(output_folder)
+        output_path.mkdir(parents=True, exist_ok=True)
+        lines: list[str] = []
+        for file in sorted(input_path.iterdir()):
+            if not file.is_file() or file.suffix.lower() != ".svg":
+                continue
+            lines.append(self.optimize_file(file, output_path / file.name))
+        if not lines:
+            lines.append("🔵 No SVG files found.")
+        return "\n".join(lines)
 ```
 
 </details>

@@ -78,6 +78,42 @@ class MarkdownFormatter:
         """
         return _format_with_options(text, self.options)
 
+    def format_file(self, filename: Path | str) -> str:
+        """Format a Markdown file in place when content changes.
+
+        Args:
+
+        - `filename` (`Path | str`): Path to the Markdown file.
+
+        Returns:
+
+        - `str`: Status message.
+
+        """
+        path = Path(filename)
+        document = self.read_markdown_text(path)
+        document_new = self.format(document)
+        if document != document_new:
+            path.write_text(document_new, encoding="utf-8", newline="")
+            return f"✅ File {path} applied."
+        return "File is not changed."
+
+    def format_folder(self, folder: Path | str) -> str:
+        """Recursively format Markdown files in a folder.
+
+        Args:
+
+        - `folder` (`Path | str`): Directory containing Markdown files.
+
+        Returns:
+
+        - `str`: Newline-separated status messages.
+
+        """
+        from harrix_pylib import funcs_file  # noqa: PLC0415
+
+        return funcs_file.apply_func(folder, ".md", self.format_file)
+
     @staticmethod
     def normalize_line_endings(text: str) -> str:
         r"""Normalize mixed or corrupted line endings to LF.
@@ -115,42 +151,6 @@ class MarkdownFormatter:
         if data.startswith(b"\xef\xbb\xbf"):
             data = data[3:]
         return MarkdownFormatter.normalize_line_endings(data.decode("utf-8"))
-
-    def format_file(self, filename: Path | str) -> str:
-        """Format a Markdown file in place when content changes.
-
-        Args:
-
-        - `filename` (`Path | str`): Path to the Markdown file.
-
-        Returns:
-
-        - `str`: Status message.
-
-        """
-        path = Path(filename)
-        document = self.read_markdown_text(path)
-        document_new = self.format(document)
-        if document != document_new:
-            path.write_text(document_new, encoding="utf-8", newline="")
-            return f"✅ File {path} applied."
-        return "File is not changed."
-
-    def format_folder(self, folder: Path | str) -> str:
-        """Recursively format Markdown files in a folder.
-
-        Args:
-
-        - `folder` (`Path | str`): Directory containing Markdown files.
-
-        Returns:
-
-        - `str`: Newline-separated status messages.
-
-        """
-        from harrix_pylib import funcs_file  # noqa: PLC0415
-
-        return funcs_file.apply_func(folder, ".md", self.format_file)
 
 
 def _ensure_blank_line_in_empty_fences(body: str) -> str:

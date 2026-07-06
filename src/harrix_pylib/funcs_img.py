@@ -57,6 +57,8 @@ def optimize_image_with_tools(
 def optimize_svg(filename: Path | str, output_filename: Path | str | None = None) -> str:
     """Optimize an SVG file and write the result.
 
+    Deprecated: prefer :class:`~harrix_pylib.svg_optimize.SvgOptimizer`.
+
     Args:
 
     - `filename` (`Path | str`): Source SVG file path.
@@ -75,17 +77,13 @@ def optimize_svg(filename: Path | str, output_filename: Path | str | None = None
     ```
 
     """
-    source = Path(filename)
-    target = Path(output_filename) if output_filename is not None else source
-    content = source.read_text(encoding="utf-8")
-    optimized = SvgOptimizer().optimize(content)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(optimized, encoding="utf-8")
-    return f"✅ File {source.name} successfully optimized."
+    return SvgOptimizer().optimize_file(filename, output_filename)
 
 
 def optimize_svg_content(svg_text: str, *, multipass: bool = True) -> str:
     """Optimize SVG markup to a compact form similar to SVGO preset-default.
+
+    Deprecated: prefer :class:`~harrix_pylib.svg_optimize.SvgOptimizer`.
 
     Args:
 
@@ -111,6 +109,8 @@ def optimize_svg_content(svg_text: str, *, multipass: bool = True) -> str:
 def optimize_svg_folder(input_folder: Path | str, output_folder: Path | str) -> str:
     """Optimize all SVG files in a folder.
 
+    Deprecated: prefer :class:`~harrix_pylib.svg_optimize.SvgOptimizer`.
+
     Args:
 
     - `input_folder` (`Path | str`): Folder with source SVG files.
@@ -129,14 +129,4 @@ def optimize_svg_folder(input_folder: Path | str, output_folder: Path | str) -> 
     ```
 
     """
-    input_path = Path(input_folder)
-    output_path = Path(output_folder)
-    output_path.mkdir(parents=True, exist_ok=True)
-    lines: list[str] = []
-    for file in sorted(input_path.iterdir()):
-        if not file.is_file() or file.suffix.lower() != ".svg":
-            continue
-        lines.append(optimize_svg(file, output_path / file.name))
-    if not lines:
-        lines.append("🔵 No SVG files found.")
-    return "\n".join(lines)
+    return SvgOptimizer().optimize_folder(input_folder, output_folder)

@@ -1186,9 +1186,9 @@ def format_markdown(
     - `str`: Status message.
 
     """
-    return MarkdownFormatter(
-        end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
-    ).format_file(filename)
+    return MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format_file(
+        filename
+    )
 
 
 def format_markdown_content(
@@ -1214,9 +1214,9 @@ def format_markdown_content(
     - `str`: Formatted Markdown text.
 
     """
-    return MarkdownFormatter(
-        end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
-    ).format(markdown_text)
+    return MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format(
+        markdown_text
+    )
 
 
 def format_markdown_folder(
@@ -1238,9 +1238,9 @@ def format_markdown_folder(
     - `str`: Newline-separated status messages.
 
     """
-    return MarkdownFormatter(
-        end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
-    ).format_folder(folder)
+    return MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format_folder(
+        folder
+    )
 
 
 def format_quotes_as_markdown_content(markdown_text: str) -> str:

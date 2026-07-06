@@ -24,3 +24,13 @@ def test_svg_optimizer() -> None:
     assert len(single_pass) < len(before)
 
     assert optimizer.optimize(before, multipass=False) == single_pass
+
+
+def test_svg_optimizer_optimize_file(tmp_path: Path) -> None:
+    current_folder = h.dev.get_project_root()
+    before = Path(current_folder / "tests/data/optimize_svg__before.svg").read_text(encoding="utf-8")
+    source = tmp_path / "icon.svg"
+    source.write_text(before, encoding="utf-8")
+    message = h.svg_opt.SvgOptimizer().optimize_file(source)
+    assert "successfully optimized" in message
+    assert len(source.read_text(encoding="utf-8")) < len(before)

@@ -1407,6 +1407,8 @@ def format_markdown(filename: Path | str) -> str
 
 Format a Markdown file in place when content changes.
 
+Deprecated: prefer :class:`~harrix_pylib.md_format.MarkdownFormatter`.
+
 Args:
 
 - `filename` (`Path | str`): Path to the Markdown file.
@@ -1425,15 +1427,9 @@ Returns:
 def format_markdown(
     filename: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80
 ) -> str:
-    path = Path(filename)
-    document = MarkdownFormatter.read_markdown_text(path)
-    document_new = MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format(
-        document
+    return MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format_file(
+        filename
     )
-    if document != document_new:
-        path.write_text(document_new, encoding="utf-8", newline="")
-        return f"✅ File {path} applied."
-    return "File is not changed."
 ```
 
 </details>
@@ -1445,6 +1441,8 @@ def format_markdown_content(markdown_text: str) -> str
 ```
 
 Format Markdown content using the harrix-pylib Markdown formatter.
+
+Deprecated: prefer :class:`~harrix_pylib.md_format.MarkdownFormatter`.
 
 Args:
 
@@ -1483,6 +1481,8 @@ def format_markdown_folder(folder: Path | str) -> str
 
 Recursively format Markdown files in a folder.
 
+Deprecated: prefer :class:`~harrix_pylib.md_format.MarkdownFormatter`.
+
 Args:
 
 - `folder` (`Path | str`): Directory containing Markdown files.
@@ -1501,10 +1501,9 @@ Returns:
 def format_markdown_folder(
     folder: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80
 ) -> str:
-    formatter = functools.partial(
-        format_markdown, end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
+    return MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format_folder(
+        folder
     )
-    return h.file.apply_func(folder, ".md", formatter)
 ```
 
 </details>
