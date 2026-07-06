@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 import pytest
 
 import harrix_pylib as h
+from harrix_pylib.funcs_py import _is_magic_dunder_name, _is_private_name
 
 
 @pytest.mark.slow
@@ -211,8 +212,6 @@ class ExampleClass:
 
 
 def test_is_private_name() -> None:
-    from harrix_pylib.funcs_py import _is_magic_dunder_name, _is_private_name
-
     assert _is_private_name("_helper")
     assert _is_private_name("__internal")
     assert not _is_private_name("public")

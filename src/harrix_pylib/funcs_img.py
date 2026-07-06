@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from harrix_pylib import img_tools
 from harrix_pylib.svg_optimize import SvgOptimizer
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 EXE_RASTER_EXTENSIONS = img_tools.EXE_RASTER_EXTENSIONS
 
