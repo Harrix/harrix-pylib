@@ -1172,6 +1172,8 @@ def format_markdown(
 ) -> str:
     """Format a Markdown file in place when content changes.
 
+    Deprecated: prefer :class:`~harrix_pylib.md_format.MarkdownFormatter`.
+
     Args:
 
     - `filename` (`Path | str`): Path to the Markdown file.
@@ -1184,15 +1186,9 @@ def format_markdown(
     - `str`: Status message.
 
     """
-    path = Path(filename)
-    document = MarkdownFormatter.read_markdown_text(path)
-    document_new = MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format(
-        document
-    )
-    if document != document_new:
-        path.write_text(document_new, encoding="utf-8", newline="")
-        return f"✅ File {path} applied."
-    return "File is not changed."
+    return MarkdownFormatter(
+        end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
+    ).format_file(filename)
 
 
 def format_markdown_content(
@@ -1203,6 +1199,8 @@ def format_markdown_content(
     print_width: int = 80,
 ) -> str:
     """Format Markdown content using the harrix-pylib Markdown formatter.
+
+    Deprecated: prefer :class:`~harrix_pylib.md_format.MarkdownFormatter`.
 
     Args:
 
@@ -1216,15 +1214,17 @@ def format_markdown_content(
     - `str`: Formatted Markdown text.
 
     """
-    return MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format(
-        markdown_text
-    )
+    return MarkdownFormatter(
+        end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
+    ).format(markdown_text)
 
 
 def format_markdown_folder(
     folder: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80
 ) -> str:
     """Recursively format Markdown files in a folder.
+
+    Deprecated: prefer :class:`~harrix_pylib.md_format.MarkdownFormatter`.
 
     Args:
 
@@ -1238,10 +1238,9 @@ def format_markdown_folder(
     - `str`: Newline-separated status messages.
 
     """
-    formatter = functools.partial(
-        format_markdown, end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
-    )
-    return h.file.apply_func(folder, ".md", formatter)
+    return MarkdownFormatter(
+        end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width
+    ).format_folder(folder)
 
 
 def format_quotes_as_markdown_content(markdown_text: str) -> str:

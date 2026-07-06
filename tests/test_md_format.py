@@ -7,9 +7,7 @@ from typing import TypedDict
 
 import pytest
 
-import harrix_pylib as h
 from harrix_pylib.md_format import MarkdownFormatter
-from harrix_pylib.md_format.formatter import format_markdown_content
 from harrix_pylib.md_format.front_matter import _prepend_markdown_header
 from harrix_pylib.md_format.table_format import _text_display_width
 
@@ -47,6 +45,20 @@ _FIXTURE_FORMAT_KWARGS: _FixtureFormatKwargs = {
 }
 
 
+def _format_markdown(
+    text: str,
+    *,
+    end_of_line: str = "crlf",
+    prose_wrap: str = "preserve",
+    print_width: int = 80,
+) -> str:
+    return MarkdownFormatter(
+        end_of_line=end_of_line,
+        prose_wrap=prose_wrap,
+        print_width=print_width,
+    ).format(text)
+
+
 @pytest.mark.parametrize(
     ("before_name", "after_name"),
     _FIXTURE_PAIRS,
@@ -55,26 +67,26 @@ _FIXTURE_FORMAT_KWARGS: _FixtureFormatKwargs = {
 def test_format_markdown_content_matches_fixture(before_name: str, after_name: str) -> None:
     before = _read_fixture(before_name)
     expected = _read_fixture(after_name)
-    result = format_markdown_content(before, **_FIXTURE_FORMAT_KWARGS)
+    result = _format_markdown(before, **_FIXTURE_FORMAT_KWARGS)
     assert result == expected
 
 
 def test_format_markdown_content_does_not_wrap_long_list_links_by_default() -> None:
     source = "- [Не сохраняем сессию с открытыми файлами](#не-сохраняем-сессию-с-открытыми-файлами)\n"
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     expected_link = source.strip().removeprefix("- ")
     assert expected_link in result
     assert "фай\n" not in result
 
 
 def test_format_markdown_content_uses_crlf_by_default() -> None:
-    result = format_markdown_content("# Title\n\n")
+    result = _format_markdown("# Title\n\n")
     assert "\r\n" in result
     assert result.endswith("\r\n")
 
 
 def test_format_markdown_content_preserves_wiki_link() -> None:
-    result = format_markdown_content("[[A simple wiki link]]\n")
+    result = _format_markdown("[[A simple wiki link]]\n")
     assert "[[A simple wiki link]]" in result
 
 
@@ -114,7 +126,7 @@ def test_format_markdown_content_preserves_wiki_link() -> None:
     ],
 )
 def test_format_markdown_content_preserves_links(source: str, expected: str, forbidden: str) -> None:
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert expected in result
     if forbidden:
         assert forbidden not in result
@@ -123,7 +135,7 @@ def test_format_markdown_content_preserves_links(source: str, expected: str, for
 def test_format_markdown_content_converts_self_referential_url_link_to_angle_autolink() -> None:
     url = "http://www.example.org/docs/report-1-7.pdf"
     source = f"[{url}]({url})\n"
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == f"<{url}>\n"
     assert f"[{url}]({url})" not in result
     assert result.strip() != url
@@ -133,7 +145,7 @@ def test_format_markdown_content_preserves_many_angle_autolinks_without_placehol
     """Placeholder restore must match full indices (AL1 must not corrupt AL10)."""
     links = [f"<https://example.com/{index}>" for index in range(12)]
     source = "\n".join(f"- {link}" for link in links) + "\n"
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     for link in links:
         assert link in result
     assert result.count("<https://example.com/1>") == 1
@@ -141,7 +153,7 @@ def test_format_markdown_content_preserves_many_angle_autolinks_without_placehol
 
 def test_format_markdown_content_preserves_linkify_bare_domain_without_protocol() -> None:
     source = "| Site | www.msi.com |\n| --- | --- |\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "www.msi.com" in result
     assert "<www.msi.com>" not in result
     assert "[www.msi.com](http://www.msi.com)" not in result
@@ -149,19 +161,19 @@ def test_format_markdown_content_preserves_linkify_bare_domain_without_protocol(
 
 def test_format_markdown_content_preserves_bare_domains_in_list() -> None:
     source = "- jsfiddle.net\n- drive.google.com\n- vimeo.com\n- www.youtube.com\n"
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == source
 
 
 def test_format_markdown_content_converts_explicit_bare_domain_link_to_angle_autolink() -> None:
     source = "[www.example.com](http://www.example.com)\n"
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == "<www.example.com>\n"
 
 
 def test_format_markdown_content_preserves_front_matter() -> None:
     source = "---\nhello: world\n---\n\n# Title\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "---\r\nhello: world\r\n---" in result
     assert "# Title" in result
 
@@ -175,14 +187,14 @@ def test_prepend_markdown_header_strips_existing_front_matter() -> None:
 
 
 def test_format_markdown_content_formats_lists() -> None:
-    result = format_markdown_content("- one\n- two\n")
+    result = _format_markdown("- one\n- two\n")
     assert "- one" in result
     assert "- two" in result
 
 
 def test_format_markdown_content_formats_italic_with_underscores() -> None:
     for source in ("*No docstring provided.*\n", "_No docstring provided._\n"):
-        result = format_markdown_content(source)
+        result = _format_markdown(source)
         assert "_No docstring provided._" in result
         assert "*No docstring provided.*" not in result
 
@@ -198,7 +210,7 @@ def test_format_markdown_content_formats_italic_with_underscores() -> None:
     ],
 )
 def test_format_markdown_content_preserves_cyrillic_urls_without_encoding(source: str) -> None:
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     for line in source.strip().splitlines():
         assert line in result
     assert "%D0" not in result
@@ -209,7 +221,7 @@ def test_format_markdown_content_decodes_percent_encoded_unicode_in_link_url() -
         "[Видеоуроки по Arduino, 7-я серия - I2C и Processing]"
         "(http://wiki.amperka.ru/%D0%B2%D0%B8%D0%B4%D0%B5%D0%BE%D1%83%D1%80%D0%BE%D0%BA%D0%B8:7-i2c-%D0%B8-processing)\n"
     )
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == (
         "[Видеоуроки по Arduino, 7-я серия - I2C и Processing](http://wiki.amperka.ru/видеоуроки:7-i2c-и-processing)\n"
     )
@@ -218,13 +230,13 @@ def test_format_markdown_content_decodes_percent_encoded_unicode_in_link_url() -
 
 def test_format_markdown_content_decodes_percent_encoded_unicode_in_angle_autolink() -> None:
     source = "<http://wiki.amperka.ru/%D0%B2%D0%B8%D0%B4%D0%B5%D0%BE%D1%83%D1%80%D0%BE%D0%BA%D0%B8>\n"
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == "<http://wiki.amperka.ru/видеоуроки>\n"
 
 
 def test_format_markdown_content_preserves_inline_code_with_backticks() -> None:
     source = "`` `\\n`$1`:` ``\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "`` `\\n`$1`:` ``" in result
 
 
@@ -234,7 +246,7 @@ def test_format_markdown_content_does_not_scan_links_inside_inline_code() -> Non
         "Теперь мы можем заменить функции `getElementAt()` и `setElementAt()` "
         "оператором `operator[]()`.\n"
     )
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert "`operator[]()`" in result
     assert "`getElementAt()`" in result
     assert "`setElementAt()`" in result
@@ -243,7 +255,7 @@ def test_format_markdown_content_does_not_scan_links_inside_inline_code() -> Non
 
 def test_format_markdown_content_scans_real_links_but_not_inline_code_in_same_line() -> None:
     source = "Ссылка [harrix-pylib](https://github.com/Harrix/harrix-pylib) и код `operator[]()`.\n"
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert "[harrix-pylib](https://github.com/Harrix/harrix-pylib)" in result
     assert "`operator[]()`" in result
     assert "HSKMDFMTLD" not in result
@@ -251,21 +263,21 @@ def test_format_markdown_content_scans_real_links_but_not_inline_code_in_same_li
 
 def test_format_markdown_content_preserves_escaped_pipe_in_table_inline_code() -> None:
     source = "| Col1 | Col2 |\n| --- | --- |\n| `a\\|b` | Соответствует a или b |\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "`a\\|b`" in result
     assert "| `a|b` |" not in result
 
 
 def test_format_markdown_content_keeps_unescaped_pipe_in_inline_code_outside_table() -> None:
     source = "Use `a|b` in text.\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "`a|b`" in result
     assert "`a\\|b`" not in result
 
 
 def test_format_markdown_content_formats_nested_lists() -> None:
     source = "- [List](#list)\n    - [File a](#a)\n    - [File b](#b)\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "  - [File a](#a)" in result
     assert "    - [File a]" not in result
     assert "  - [File b](#b)" in result
@@ -277,18 +289,18 @@ def test_format_markdown_content_inserts_blank_line_after_list() -> None:
         "- Note titles, preview copy, drag-and-drop, folder expansion, etc.\n"
         "`NotesProvider._templateTargets` remain in `extension.js`.\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "etc.\r\n\r\n`NotesProvider" in result
 
 
 def test_format_markdown_content_preserves_blank_line_after_list() -> None:
     source = "- one\n- two\n\nParagraph after list.\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "- two\r\n\r\nParagraph after list." in result
 
 
 def test_format_markdown_content_formats_tables() -> None:
-    result = format_markdown_content("|a|b|\n|---|---|\n|1|2|\n")
+    result = _format_markdown("|a|b|\n|---|---|\n|1|2|\n")
     assert "| a   | b   |" in result
     assert "| 1   | 2   |" in result
     assert "| --- | --- |" in result
@@ -305,7 +317,7 @@ def test_format_markdown_content_aligns_table_columns() -> None:
         "| `bothub-api-key.txt` | `bothub_api_key` in `config/config.json` | "
         "BotHub access token for AI features        |\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert (
         "| File                 | Config key                               | "
         "Purpose                                    |" in result
@@ -323,7 +335,7 @@ def test_format_markdown_content_aligns_table_columns_with_angle_autolinks() -> 
         "| bootstrap        | 4 459 946          | <https://www.npmjs.com/package/bootstrap>        |\n"
         "| Bulma            | 199 847            | <https://www.npmjs.com/package/bulma>            |\n"
     )
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == source
 
 
@@ -335,7 +347,7 @@ def test_format_markdown_content_keeps_paragraph_after_table() -> None:
         "For school/corporate Wi-Fi, set optional `bothub.proxy`.\n"
         "Paths in `config.json` use the `snippet:api-keys/...` prefix.\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "| row1 | key1" in result
     assert "purpose1 |" in result
     assert "For school/corporate Wi-Fi" in result
@@ -351,7 +363,7 @@ def test_format_markdown_content_unwraps_spurious_table_rows() -> None:
         "| For school/corporate Wi-Fi, set optional `bothub.proxy` in "
         "`config/config.json` (see [DEVELOPMENT.md](../DEVELOPMENT.md)). |  |  |\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "| row1 | key1" in result
     assert "purpose1 |" in result
     assert "For school/corporate Wi-Fi" in result
@@ -366,7 +378,7 @@ def test_format_markdown_content_keeps_table_row_with_empty_cell() -> None:
         "Collected CSS class rules from SVG <style> elements. |\n"
         "| 🔧 [`_format_style`](https://github.com/Harrix/harrix-pylib/blob/main/docs/styles.g.md) |  |\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     table_lines = [line for line in result.splitlines() if line.strip().startswith("|")]
     assert len(table_lines) == 4  # noqa: PLR2004
     assert any("_format_style" in line and line.strip().endswith("|") for line in table_lines)
@@ -381,7 +393,7 @@ def test_format_markdown_content_keeps_multiple_trailing_empty_table_cells() -> 
         "| ACER | Esc, F12, F9 | Del, F2 | | |\n"
         "| ASUS | F8 | F9 | desktop | |\n"
     )
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     table_lines = [line for line in result.splitlines() if line.strip().startswith("|")]
     assert table_lines
     expected_pipes = table_lines[0].count("|")
@@ -393,16 +405,16 @@ def test_format_markdown_content_keeps_multiple_trailing_empty_table_cells() -> 
 
 
 def test_format_markdown_content_formats_math() -> None:
-    result = format_markdown_content("$E=mc^2$\n")
+    result = _format_markdown("$E=mc^2$\n")
     assert "$E=mc^2$" in result
-    block = format_markdown_content("$$\nx + y\n$$\n")
+    block = _format_markdown("$$\nx + y\n$$\n")
     assert "$$" in block
     assert "x + y" in block
 
 
 def test_format_markdown_content_preserves_block_math_inside_blockquote() -> None:
     source = "---\n\n> $$\n> x^{5+y}=\\frac{x+y_6}{\\sqrt{x+\\frac{1}{x}}}\n> $$\n"
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == source
     assert "> >" not in result
 
@@ -426,25 +438,25 @@ def test_format_markdown_content_preserves_indentation_in_block_math() -> None:
         "\\end{bmatrix}\n"
         "$$\n"
     )
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == source
 
 
 def test_format_markdown_content_preserves_empty_block_math() -> None:
     source = "$$\n\n$$\n"
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == source
 
 
 def test_format_markdown_content_preserves_tight_empty_block_math() -> None:
     source = "$$\n$$\n"
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == source
 
 
 def test_format_sample_fixture() -> None:
     before = _read_fixture("format_sample__before.md")
-    result = format_markdown_content(before)
+    result = _format_markdown(before)
     assert "[[wiki link]]" in result
     assert "$E=mc^2$" in result
     assert "| a   | b   |" in result
@@ -454,7 +466,7 @@ def test_format_sample_fixture() -> None:
 
 def test_format_markdown_content_repairs_double_crlf_line_endings() -> None:
     source = "---\r\r\nauthor: Anton Sergienko\r\r\nlang: en\r\r\n---\r\r\n\r\r\n# Title\r\r\n\r\r\n## Sub\r\r\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "author: Anton Sergienko" in result
     assert "mailto:" not in result
     assert "\n\n\n" not in result.replace("\r", "")
@@ -469,7 +481,7 @@ def test_format_markdown_content_preserves_paragraph_blank_lines() -> None:
         "The above copyright notice.\n\n"
         'THE SOFTWARE IS PROVIDED "AS IS".\n'
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "Anton\r\n\r\nPermission" in result
     assert "charge.\r\n\r\nThe above" in result
     assert "notice.\r\n\r\nTHE SOFTWARE" in result
@@ -477,7 +489,7 @@ def test_format_markdown_content_preserves_paragraph_blank_lines() -> None:
 
 def test_format_markdown_content_preserves_single_newline_paragraph() -> None:
     source = "Первый абзац.\nВторой абзац.\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "Первый абзац.\r\nВторой абзац." in result
     assert "Первый абзац.\r\n\r\nВторой абзац." not in result
 
@@ -486,7 +498,7 @@ def test_read_markdown_text_handles_r_double_crlf_on_disk(tmp_path: Path) -> Non
     source = "# Title\n\n## Sub\n"
     path = tmp_path / "note.md"
     path.write_bytes(source.replace("\n", "\r\r\n").encode("utf-8"))
-    result = format_markdown_content(MarkdownFormatter.read_markdown_text(path))
+    result = _format_markdown(MarkdownFormatter.read_markdown_text(path))
     assert result.count("\r\r\n") == 0
     assert "# Title\r\n\r\n## Sub" in result
 
@@ -501,14 +513,14 @@ def test_markdown_formatter_callable_reuses_options() -> None:
 def test_format_markdown_file(tmp_path: Path) -> None:
     source = tmp_path / "note.md"
     source.write_text("# Title\n\n", encoding="utf-8")
-    message = h.md.format_markdown(source)
+    message = MarkdownFormatter().format_file(source)
     assert "applied" in message or "not changed" in message
 
 
 def test_format_markdown_folder(tmp_path: Path) -> None:
     (tmp_path / "one.md").write_text("# One\n", encoding="utf-8")
     (tmp_path / "two.md").write_text("# Two\n", encoding="utf-8")
-    result = h.md.format_markdown_folder(tmp_path)
+    result = MarkdownFormatter().format_folder(tmp_path)
     assert "one.md" in result or "applied" in result.lower() or "not changed" in result.lower()
 
 
@@ -521,7 +533,7 @@ def test_format_markdown_content_preserves_code_block_lines() -> None:
         "Copy-Item -LiteralPath $src -Destination $dst -Recurse\n"
         "```\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert '$src = (Resolve-Path ".\\vscode\\harrix-notes-explorer-hsk").Path' in result
     assert "Remove-Item -LiteralPath $dst -Force -Recurse }\r\nCopy-Item" in result
     assert "Remove-Item -LiteralPath $dst -Force -Recurse }\r\n\r\nCopy-Item" not in result
@@ -529,7 +541,7 @@ def test_format_markdown_content_preserves_code_block_lines() -> None:
 
 def test_format_markdown_content_preserves_blank_lines_inside_code_block() -> None:
     source = "```powershell\n$a = 1\n\n\n$b = 2\n```\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "$a = 1\r\n\r\n\r\n$b = 2" in result
 
 
@@ -537,7 +549,7 @@ def test_format_markdown_content_formats_loose_list_with_multiple_paragraphs() -
     source = (
         "**How to run the `.ps1` file**\n\n- Первый абзац.\n\n  Второй абзац.\n\n- From `cmd.exe`: same `-File` line.\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "Первый абзац.\r\n\r\n  Второй абзац." in result
     assert "Второй абзац.\r\n\r\n- From `cmd.exe`" in result
 
@@ -551,7 +563,7 @@ def test_format_markdown_content_formats_loose_list_with_code_block() -> None:
         "  ```\n\n"
         "- From `cmd.exe`: same `-File` line.\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "blocks scripts):\r\n\r\n  ```powershell" in result
     assert "harrix-swiss-knife.ps1\r\n  ```\r\n\r\n- From `cmd.exe`" in result
     assert "powershell -NoProfile -ExecutionPolicy Bypass -File .\\install\\harrix-swiss-knife.ps1" in result
@@ -569,7 +581,7 @@ def test_format_markdown_content_preserves_python_indentation_in_code_block() ->
         "    return tag_str\n"
         "```\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "def tag_local_name(tag: str | bytes | bytearray | etree.QName) -> str:" in result
     assert "    if isinstance(tag, etree.QName):" in result
     assert "        return tag.localname" in result
@@ -586,7 +598,7 @@ def test_format_markdown_content_no_extra_trailing_blank_after_details() -> None
         "```\n\n"
         "</details>\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert result.endswith("</details>\r\n")
     assert not result.endswith("</details>\r\n\r\n")
 
@@ -597,7 +609,7 @@ def test_format_markdown_content_preserves_unindented_list_item_continuation() -
         "- `project_root` (`Path | str | None`): Root directory of the project for relative path calculation.\n"
         "If `None`, will try to find git root or use current working directory. Defaults to `None`.\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert (
         "calculation.\r\n  If `None`, will try to find git root or use current working directory. Defaults to `None`."
         in result
@@ -610,18 +622,18 @@ def test_format_markdown_content_indents_list_item_soft_break() -> None:
         "2. Create a personal access token when it is generated — if you lose it, you will have to\n"
         "regenerate the token.\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "you will have to\r\n   regenerate the token." in result
 
     long_source = (
         "224. Create a personal access token when it is generated — if you lose it, you will have to\n"
         "regenerate the token.\n"
     )
-    long_result = format_markdown_content(long_source)
+    long_result = _format_markdown(long_source)
     assert "you will have to\r\n     regenerate the token." in long_result
 
     bullet_source = "- Пример.\nПереод строки.\n"
-    bullet_result = format_markdown_content(bullet_source)
+    bullet_result = _format_markdown(bullet_source)
     assert "- Пример.\r\n  Переод строки." in bullet_result
 
 
@@ -631,7 +643,7 @@ def test_format_markdown_content_escapes_emphasis_like_characters() -> None:
         "Все исключения поддерживают метод what() , который возвращает строку типа char* с описанием.\n"
         "Вариант 3: имена типов дополняются префиксом «t_»\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "Стрелец А\\* в центре" in result
     assert "char\\* с описанием" in result
     assert "«t\\_»" in result
@@ -639,14 +651,14 @@ def test_format_markdown_content_escapes_emphasis_like_characters() -> None:
 
 def test_format_markdown_content_does_not_escape_spaced_multiplication() -> None:
     source = "The result is 5 * 2 for simple math.\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "5 * 2" in result
     assert "5 \\* 2" not in result
 
 
 def test_format_markdown_content_keeps_mid_word_underscores() -> None:
     source = "Use foo_bar_baz in code.\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "foo_bar_baz" in result
     assert "foo\\_bar" not in result
 
@@ -658,7 +670,7 @@ def test_format_markdown_content_keeps_prettier_literal_identifiers() -> None:
         "2. _[directory_name].short.g.md\n"
         "Use foo_bar_baz in code.\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert r"Oculus\Software\hyperbolic-magnetism-beat-saber\Beat Saber_Data" in result
     assert r"[\_id, habit_name" in result
     assert "_[directory_name].short.g.md" in result
@@ -677,7 +689,7 @@ def test_format_markdown_content_escapes_identifier_underscores() -> None:
         "В Windows все наборы инструментов определяют макрос _WIN32.\n"
         "t._id, t.amount\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "\\_get_save_handlers" in result
     assert "\\_auto_save_row" in result
     assert "\\_SAFE_TABLES" in result
@@ -698,7 +710,7 @@ def test_format_markdown_content_keeps_tight_list_with_nested_sublist() -> None:
         "  - [Method `collect`](#collect)\n\n"
         "- [Function `_format_style`](#func)\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "- [Class `StyleSheet`](#class)\r\n  - [Method `_init__`]" in result
     assert "collect`](#collect)\r\n- [Function `_format_style`]" in result
     assert "StyleSheet`](#class)\r\n\r\n  - [Method" not in result
@@ -707,7 +719,7 @@ def test_format_markdown_content_keeps_tight_list_with_nested_sublist() -> None:
 
 def test_format_markdown_content_keeps_tight_simple_list() -> None:
     source = "- one\n- two\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "- one\r\n- two" in result
     assert "- one\r\n\r\n- two" not in result
 
@@ -717,7 +729,7 @@ def test_format_markdown_content_collapses_redundant_inline_spaces() -> None:
         "- after opening guillemet « (direct speech, e.g. «Ваша задача);  # ignore: HP001\n"
         "- after dash at line start (dialogue, e.g. — Ваша работа хороша).  # ignore: HP001\n"
     )
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert ");  # ignore" not in result
     assert "); # ignore: HP001" in result
     assert ").  # ignore" not in result
@@ -726,7 +738,7 @@ def test_format_markdown_content_collapses_redundant_inline_spaces() -> None:
 
 def test_format_markdown_content_preserves_table_cell_spacing() -> None:
     source = "| a  b | x |\n| --- | --- |\n"
-    result = format_markdown_content(source)
+    result = _format_markdown(source)
     assert "a  b" in result
 
 
@@ -737,7 +749,7 @@ def test_format_markdown_content_trims_trailing_blank_line_after_list() -> None:
         "- `uv self update` — update uv itself.\n"
         "- `uv sync --upgrade` — update all project libraries.\n\n"
     )
-    result = format_markdown_content(source).replace("\r\n", "\n")
+    result = _format_markdown(source).replace("\r\n", "\n")
     assert result.endswith("- `uv sync --upgrade` — update all project libraries.\n")
     assert not result.endswith("- `uv sync --upgrade` — update all project libraries.\n\n")
 
@@ -750,20 +762,20 @@ def test_format_markdown_content_trims_trailing_blank_line_inside_fenced_block()
         "- `uv sync --upgrade` — update all project libraries.\n\n"
         "````\n"
     )
-    result = format_markdown_content(source).replace("\r\n", "\n")
+    result = _format_markdown(source).replace("\r\n", "\n")
     assert result.endswith("- `uv sync --upgrade` — update all project libraries.\n````\n")
     assert "libraries.\n\n````" not in result
 
 
 def test_format_markdown_content_keeps_blank_line_in_empty_fenced_block() -> None:
     source = "```\n```\n"
-    result = format_markdown_content(source).replace("\r\n", "\n")
+    result = _format_markdown(source).replace("\r\n", "\n")
     assert result == "```\n\n```\n"
 
 
 def test_format_markdown_content_preserves_reference_comment_inside_fenced_block() -> None:
     source = '```markdown\n[//]: # "Hidden comment"\n```\n'
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == source
     assert "```markdown [//]:" not in result
 
@@ -785,7 +797,7 @@ def test_format_markdown_content_preserves_github_alerts() -> None:
         "> [!WARNING]\n"
         "> Dangerous certain consequences of an action.\n"
     )
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == source
     assert "> [!NOTE] Information" not in result
 
@@ -800,14 +812,14 @@ def test_format_markdown_content_preserves_github_alerts_inside_fenced_markdown_
         "> Optional information to help a user be more successful.\n"
         "```\n"
     )
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == source
     assert "> [!NOTE] Information" not in result
 
 
 def test_format_markdown_content_preserves_blank_line_between_blockquote_paragraphs() -> None:
     source = "> The first paragraph in the quote.\n>\n> The second paragraph in the quote.\n"
-    result = format_markdown_content(source).replace("\r\n", "\n")
+    result = _format_markdown(source).replace("\r\n", "\n")
     assert result == ("> The first paragraph in the quote.\n>\n> The second paragraph in the quote.\n")
 
 
@@ -817,7 +829,7 @@ def test_format_markdown_content_preserves_escaped_ordered_list_like_line_start_
         ">\n"
         "> 39\\. Первый фрагмент текста. 40. Второй фрагмент. 41. Третий фрагмент.\n"
     )
-    result = format_markdown_content(source).replace("\r\n", "\n")
+    result = _format_markdown(source).replace("\r\n", "\n")
     assert "> 39\\. Первый фрагмент текста. 40. Второй фрагмент. 41. Третий фрагмент." in result
     assert "> 39. Первый фрагмент" not in result
 
@@ -832,7 +844,7 @@ def test_format_markdown_content_preserves_ordered_list_in_blockquote() -> None:
         ">\n"
         "> Заключительный абзац после списка.\n"
     )
-    result = format_markdown_content(source).replace("\r\n", "\n")
+    result = _format_markdown(source).replace("\r\n", "\n")
     assert "> 1. Первый пункт списка.\n" in result
     assert "> 2. Второй пункт списка.\n" in result
     assert "> 3. Третий пункт списка.\n" in result
@@ -848,7 +860,7 @@ def test_format_markdown_content_preserves_blank_line_before_attribution_after_b
         ">\n"
         "> -- _Author Name, Book Title_\n"
     )
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == source
     assert ">\n> -- _Author Name" in result
 
@@ -882,7 +894,7 @@ def test_format_markdown_content_preserves_ordered_list_after_blockquote_item_co
         ">\n"
         "> -- _Source B_\n"
     )
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert "> 10. Tenth item.\n" in result
     assert "> 1. Alpha point.\n" in result
     assert "> 2. Beta point.\n" in result
@@ -899,32 +911,32 @@ def test_format_markdown_content_preserves_blank_lines_in_blockquote_list_item_p
         ">\n"
         "> 2. Second item paragraph.\n"
     )
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == source
 
 
 def test_format_markdown_content_keeps_decimal_ratings_in_bullet_list_items() -> None:
     source = "- 10 - Транс\n- 7,5 - Чудеса\n- 9.5 - Тихоокеанский рубеж\n- 9,5 - Воображариум\n"
-    result = format_markdown_content(source).replace("\r\n", "\n")
+    result = _format_markdown(source).replace("\r\n", "\n")
     assert "- 9.5 - Тихоокеанский рубеж\n" in result
     assert "- 9\\.5 -" not in result
 
 
 def test_format_markdown_content_renders_hard_breaks_with_backslash() -> None:
     source = "У лукоморья дуб зелёный;\\\nЗлатая цепь на дубе том:\\\nИ днём и ночью кот учёный\\\n"
-    result = format_markdown_content(source).replace("\r\n", "\n")
+    result = _format_markdown(source).replace("\r\n", "\n")
     assert result == source
     assert "  \n" not in result
 
     two_space_source = "line one  \nline two\n"
-    two_space_result = format_markdown_content(two_space_source).replace("\r\n", "\n")
+    two_space_result = _format_markdown(two_space_source).replace("\r\n", "\n")
     assert two_space_result == "line one  \nline two\n"
 
 
 def test_format_markdown_content_preserves_trailing_backslash_in_fenced_text_block() -> None:
     path_line = "C:\\Users\\Default\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\\n"
     source = "```text\n" + path_line + "```\n"
-    result = format_markdown_content(source).replace("\r\n", "\n")
+    result = _format_markdown(source).replace("\r\n", "\n")
     assert path_line in result
     assert "Programs  \n" not in result
 
@@ -945,7 +957,7 @@ def test_format_markdown_content_preserves_backslash_in_fenced_python_comments()
         "print(p.parts)  # ('C:\\\\', 'Program Files', 'Internet Explorer', 'iexplore.exe')\n"
         "```\n"
     )
-    result = format_markdown_content(source).replace("\r\n", "\n")
+    result = _format_markdown(source).replace("\r\n", "\n")
     assert "print(p.anchor)  # \\\n" in result
     assert "print(p.root)  # \\\n" in result
     assert "print(p.anchor)  #   \n" not in result
@@ -954,6 +966,6 @@ def test_format_markdown_content_preserves_backslash_in_fenced_python_comments()
 
 def test_format_markdown_content_preserves_trailing_space_in_inline_code_before_text() -> None:
     source = "`cd .. ` — go to parent folder\n"
-    result = format_markdown_content(source, end_of_line="lf")
+    result = _format_markdown(source, end_of_line="lf")
     assert result == source
     assert "` cd ..  `" not in result

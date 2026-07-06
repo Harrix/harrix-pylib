@@ -116,26 +116,41 @@ class MarkdownFormatter:
             data = data[3:]
         return MarkdownFormatter.normalize_line_endings(data.decode("utf-8"))
 
+    def format_file(self, filename: Path | str) -> str:
+        """Format a Markdown file in place when content changes.
 
-def format_markdown_content(
-    text: str,
-    *,
-    end_of_line: str = "crlf",
-    prose_wrap: str = "preserve",
-    print_width: int = 80,
-) -> str:
-    """Format Markdown text.
+        Args:
 
-    Deprecated: prefer :class:`MarkdownFormatter`.
+        - `filename` (`Path | str`): Path to the Markdown file.
 
-    ``prose_wrap`` matches Prettier: ``preserve`` (default), ``always``, or ``never``.
-    Line wrapping uses ``print_width`` only when ``prose_wrap`` is ``always``.
-    """
-    return MarkdownFormatter(
-        end_of_line=end_of_line,
-        prose_wrap=prose_wrap,
-        print_width=print_width,
-    ).format(text)
+        Returns:
+
+        - `str`: Status message.
+
+        """
+        path = Path(filename)
+        document = self.read_markdown_text(path)
+        document_new = self.format(document)
+        if document != document_new:
+            path.write_text(document_new, encoding="utf-8", newline="")
+            return f"✅ File {path} applied."
+        return "File is not changed."
+
+    def format_folder(self, folder: Path | str) -> str:
+        """Recursively format Markdown files in a folder.
+
+        Args:
+
+        - `folder` (`Path | str`): Directory containing Markdown files.
+
+        Returns:
+
+        - `str`: Newline-separated status messages.
+
+        """
+        from harrix_pylib import funcs_file  # noqa: PLC0415
+
+        return funcs_file.apply_func(folder, ".md", self.format_file)
 
 
 def _ensure_blank_line_in_empty_fences(body: str) -> str:

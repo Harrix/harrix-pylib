@@ -269,12 +269,11 @@ Doc: [code_guard.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/cod
 
 ### 📄 File `formatter.py`
 
-Doc: [formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md)
+Doc: [formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/formatter.g.md)
 
-| Function/Class                                                                                                                         | Description                                                |
-| -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| 🏛️ Class [`MarkdownFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#️-class-markdownformatter)          | Format Markdown text inspired by Prettier markdown parser. |
-| 🔧 [`format_markdown_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#-function-format_markdown_content) | Format Markdown text.                                      |
+| Function/Class                                                                                                                                 | Description                                                |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 🏛️ Class [`MarkdownFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/formatter.g.md#️-class-markdownformatter)         | Format Markdown text; `format`, `format_file`, `format_folder` |
 
 ### 📄 File `front_matter.py`
 
