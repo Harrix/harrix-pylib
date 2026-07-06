@@ -13,7 +13,6 @@ lang: en
 
 - [🔧 Function `extract_angle_autolinks`](#-function-extract_angle_autolinks)
 - [🔧 Function `restore_angle_autolinks`](#-function-restore_angle_autolinks)
-- [🔧 Function `_decode_angle_autolink`](#-function-_decode_angle_autolink)
 
 </details>
 
@@ -64,26 +63,6 @@ def restore_angle_autolinks(text: str, autolinks: list[str]) -> str:
         return match.group(0)
 
     return _PLACEHOLDER_RE.sub(replace, text)
-```
-
-</details>
-
-## 🔧 Function `_decode_angle_autolink`
-
-```python
-def _decode_angle_autolink(autolink: str) -> str
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _decode_angle_autolink(autolink: str) -> str:
-    if not autolink.startswith("<") or not autolink.endswith(">"):
-        return autolink
-    return f"<{decode_percent_encoded_url(autolink[1:-1])}>"
 ```
 
 </details>

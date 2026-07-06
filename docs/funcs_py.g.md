@@ -17,8 +17,6 @@ lang: en
 - [🔧 Function `generate_md_docs_content`](#-function-generate_md_docs_content)
 - [🔧 Function `lint_and_fix_python_code`](#-function-lint_and_fix_python_code)
 - [🔧 Function `sort_py_code`](#-function-sort_py_code)
-- [🔧 Function `_fence_for_content`](#-function-_fence_for_content)
-- [🔧 Function `_max_backtick_run`](#-function-_max_backtick_run)
 
 </details>
 
@@ -181,11 +179,11 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
     functions = []
     classes = []
 
-    # Traverse the AST to collect function and class definitions
+    # Traverse the AST to collect public function and class definitions
     for node in tree.body:
-        if isinstance(node, ast.FunctionDef):
+        if isinstance(node, ast.FunctionDef) and not _is_private_name(node.name):
             functions.append(node)
-        elif isinstance(node, ast.ClassDef):
+        elif isinstance(node, ast.ClassDef) and not _is_private_name(node.name):
             classes.append(node)
         # Skip other node types (imports, variables, etc.)
 
@@ -238,6 +236,9 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
             name = f"🔧 `{func_name}`"
 
         entries.append((name, summary))
+
+    if not entries:
+        return ""
 
     # Create Markdown table
     output_lines = []
@@ -312,6 +313,14 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
 
     for filename in src_folder.rglob("*.py"):
         if not (filename.is_file() and not filename.stem.startswith("__")):
+            continue
+
+        with filename.open(encoding="utf-8") as source_file:
+            source_code = source_file.read()
+        tree = ast.parse(source_code, filename)
+
+        if not _has_public_documented_entities(tree):
+            result_lines.append(f"File {filename.name} is skipped (no public API).")
             continue
 
         list_funcs = h.py.extract_functions_and_classes(filename, is_add_link_demo=True, domain=domain)
@@ -506,6 +515,8 @@ def generate_md_docs_content(file_path: Path | str) -> str:
 
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.ClassDef):
+            if _is_private_name(node.name):
+                continue
             class_name = node.name
             class_docstring = ast.get_docstring(node)
             class_signature = get_class_signature(node)
@@ -523,9 +534,9 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             append_fenced_code(markdown_lines, class_code.strip())
             markdown_lines.append("</details>\n")
 
-            # Process class methods
+            # Process public class methods
             for class_node in node.body:
-                if isinstance(class_node, ast.FunctionDef):
+                if isinstance(class_node, ast.FunctionDef) and not _is_private_name(class_node.name):
                     method_name = class_node.name
                     method_docstring = ast.get_docstring(class_node)
                     method_signature = get_function_signature(class_node)
@@ -542,7 +553,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
                     markdown_lines.append("<summary>Code:</summary>\n")
                     append_fenced_code(markdown_lines, method_code.strip())
                     markdown_lines.append("</details>\n")
-        elif isinstance(node, ast.FunctionDef):
+        elif isinstance(node, ast.FunctionDef) and not _is_private_name(node.name):
             # Module level function
             func_name = node.name
             func_docstring = ast.get_docstring(node)
@@ -958,51 +969,6 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
     # Write the sorted code back to the file
     with Path(filename).open("w", encoding="utf-8") as f:
         f.write(new_code)
-```
-
-</details>
-
-## 🔧 Function `_fence_for_content`
-
-```python
-def _fence_for_content(content: str) -> tuple[str, str]
-```
-
-Return opening and closing Markdown fences long enough to contain `content`.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _fence_for_content(content: str, *, language: str = "python") -> tuple[str, str]:
-    fence = "`" * max(3, _max_backtick_run(content) + 1)
-    return f"{fence}{language}", fence
-```
-
-</details>
-
-## 🔧 Function `_max_backtick_run`
-
-```python
-def _max_backtick_run(text: str) -> int
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _max_backtick_run(text: str) -> int:
-    max_run = 0
-    current = 0
-    for char in text:
-        if char == "`":
-            current += 1
-            max_run = max(max_run, current)
-        else:
-            current = 0
-    return max_run
 ```
 
 </details>

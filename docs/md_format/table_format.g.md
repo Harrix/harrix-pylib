@@ -17,7 +17,6 @@ lang: en
 - [🔧 Function `parse_table_cells`](#-function-parse_table_cells)
 - [🔧 Function `text_display_width`](#-function-text_display_width)
 - [🔧 Function `unwrap_spurious_table_rows`](#-function-unwrap_spurious_table_rows)
-- [🔧 Function `_is_emoji_base`](#-function-_is_emoji_base)
 
 </details>
 
@@ -157,25 +156,6 @@ def unwrap_spurious_table_rows(body: str) -> str:
             continue
         result.append(line)
     return "\n".join(result)
-```
-
-</details>
-
-## 🔧 Function `_is_emoji_base`
-
-```python
-def _is_emoji_base(char: str) -> bool
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _is_emoji_base(char: str) -> bool:
-    code = ord(char)
-    return any(start <= code <= end for start, end in _EMOJI_CODE_POINT_RANGES)
 ```
 
 </details>

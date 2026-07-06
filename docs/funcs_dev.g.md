@@ -19,9 +19,6 @@ lang: en
 - [🔧 Function `run_powershell_script`](#-function-run_powershell_script)
 - [🔧 Function `run_powershell_script_as_admin`](#-function-run_powershell_script_as_admin)
 - [🔧 Function `write_in_output_txt`](#-function-write_in_output_txt)
-- [🔧 Function `_config_load_raw`](#-function-_config_load_raw)
-- [🔧 Function `_resolve_config_path`](#-function-_resolve_config_path)
-- [🔧 Function `_resolve_config_snippets`](#-function-_resolve_config_snippets)
 
 </details>
 
@@ -647,81 +644,6 @@ def write_in_output_txt(*, is_show_output: bool = True) -> Callable:
         return Wrapper()
 
     return decorator
-```
-
-</details>
-
-## 🔧 Function `_config_load_raw`
-
-```python
-def _config_load_raw(filename: str) -> dict
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _config_load_raw(filename: str, *, is_temp: bool = False) -> dict:
-    config_file = _resolve_config_path(filename, is_temp=is_temp)
-    with config_file.open("r", encoding="utf-8") as file:
-        return json.load(file)
-```
-
-</details>
-
-## 🔧 Function `_resolve_config_path`
-
-```python
-def _resolve_config_path(filename: str) -> Path
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _resolve_config_path(filename: str, *, is_temp: bool) -> Path:
-    if is_temp:
-        path_obj = Path(filename)
-        temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"
-        filename = str(path_obj.parent / temp_filename) if path_obj.parent != Path() else temp_filename
-    return Path(get_project_root()) / filename
-```
-
-</details>
-
-## 🔧 Function `_resolve_config_snippets`
-
-```python
-def _resolve_config_snippets(config: dict) -> dict
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _resolve_config_snippets(config: dict) -> dict:
-    def process_snippet(value: object) -> object:
-        if isinstance(value, str) and value.startswith("snippet:"):
-            snippet_path = Path(get_project_root()) / value.split("snippet:", 1)[1].strip()
-            if not snippet_path.exists():
-                return ""
-            with snippet_path.open("r", encoding="utf-8") as snippet_file:
-                return snippet_file.read()
-        return value
-
-    resolved = dict(config)
-    for key, value in resolved.items():
-        if isinstance(value, dict):
-            resolved[key] = {k: process_snippet(v) for k, v in value.items()}
-        else:
-            resolved[key] = process_snippet(value)
-    return resolved
 ```
 
 </details>

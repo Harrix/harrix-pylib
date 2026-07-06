@@ -15,7 +15,6 @@ lang: en
 - [🔧 Function `is_git_diff_friendly_ordered_list`](#-function-is_git_diff_friendly_ordered_list)
 - [🔧 Function `ordered_list_item_number`](#-function-ordered_list_item_number)
 - [🔧 Function `parse_ordered_list_marker`](#-function-parse_ordered_list_marker)
-- [🔧 Function `_is_blockquote_list_continuation_line`](#-function-_is_blockquote_list_continuation_line)
 
 </details>
 
@@ -139,24 +138,6 @@ def parse_ordered_list_marker(line: str) -> tuple[int, str] | None:
     if not match:
         return None
     return int(match.group(2)), match.group(3)
-```
-
-</details>
-
-## 🔧 Function `_is_blockquote_list_continuation_line`
-
-```python
-def _is_blockquote_list_continuation_line(line: str) -> bool
-```
-
-Return whether a blockquote line continues the previous list item body.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _is_blockquote_list_continuation_line(line: str) -> bool:
-    return bool(_BLOCKQUOTE_LIST_CONTINUATION_RE.match(line))
 ```
 
 </details>

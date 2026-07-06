@@ -63,7 +63,6 @@ lang: en
 - [🔧 Function `sort_sections_content`](#-function-sort_sections_content)
 - [🔧 Function `split_toc_content`](#-function-split_toc_content)
 - [🔧 Function `split_yaml_content`](#-function-split_yaml_content)
-- [🔧 Function `_is_toc_details_open`](#-function-_is_toc_details_open)
 
 </details>
 
@@ -4260,34 +4259,6 @@ yaml, content = h.md.split_yaml_content(md)
 ```python
 def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     return split_front_matter(markdown_text)
-```
-
-</details>
-
-## 🔧 Function `_is_toc_details_open`
-
-```python
-def _is_toc_details_open(lines: list[str], index: int) -> bool
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _is_toc_details_open(lines: list[str], index: int) -> bool:
-    if index >= len(lines) or lines[index].strip() != "<details>":
-        return False
-    scan = index + 1
-    while scan < len(lines) and not lines[scan].strip():
-        scan += 1
-    if scan >= len(lines):
-        return False
-    summary_line = lines[scan]
-    return "<summary>" in summary_line and (
-        "📖 Contents" in summary_line or "📖 Содержание" in summary_line  # ignore: HP001
-    )
 ```
 
 </details>

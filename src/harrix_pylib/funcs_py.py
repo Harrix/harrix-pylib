@@ -13,26 +13,6 @@ import harrix_pylib as h
 from harrix_pylib.md_format.front_matter import prepend_markdown_header
 
 
-def _is_magic_dunder_name(name: str) -> bool:
-    """Return whether name is a magic dunder method like `__init__`."""
-    return len(name) >= 4 and name.startswith("__") and name.endswith("__")  # noqa: PLR2004
-
-
-def _is_private_name(name: str) -> bool:
-    """Return whether name should be excluded from public documentation."""
-    return name.startswith("_") and not _is_magic_dunder_name(name)
-
-
-def _has_public_documented_entities(tree: ast.Module) -> bool:
-    """Return whether file has at least one public documented entity."""
-    for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and not _is_private_name(node.name):
-            return True
-        if isinstance(node, ast.ClassDef) and not _is_private_name(node.name):
-            return True
-    return False
-
-
 def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str:
     """Create a new project using uv, initializes it, and sets up necessary files.
 
@@ -926,6 +906,26 @@ def _fence_for_content(content: str, *, language: str = "python") -> tuple[str, 
     """Return opening and closing Markdown fences long enough to contain `content`."""
     fence = "`" * max(3, _max_backtick_run(content) + 1)
     return f"{fence}{language}", fence
+
+
+def _has_public_documented_entities(tree: ast.Module) -> bool:
+    """Return whether file has at least one public documented entity."""
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and not _is_private_name(node.name):
+            return True
+        if isinstance(node, ast.ClassDef) and not _is_private_name(node.name):
+            return True
+    return False
+
+
+def _is_magic_dunder_name(name: str) -> bool:
+    """Return whether name is a magic dunder method like `__init__`."""
+    return len(name) >= 4 and name.startswith("__") and name.endswith("__")  # noqa: PLR2004
+
+
+def _is_private_name(name: str) -> bool:
+    """Return whether name should be excluded from public documentation."""
+    return name.startswith("_") and not _is_magic_dunder_name(name)
 
 
 def _max_backtick_run(text: str) -> int:

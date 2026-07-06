@@ -14,8 +14,6 @@ lang: en
 - [🏛️ Class `HardBreakStyles`](#️-class-hardbreakstyles)
   - [⚙️ Method `next_is_backslash`](#️-method-next_is_backslash)
 - [🔧 Function `extract_backslash_hard_breaks`](#-function-extract_backslash_hard_breaks)
-- [🔧 Function `_line_has_single_backslash_hard_break`](#-function-_line_has_single_backslash_hard_break)
-- [🔧 Function `_line_has_space_hard_break`](#-function-_line_has_space_hard_break)
 
 </details>
 
@@ -94,48 +92,6 @@ def extract_backslash_hard_breaks(body: str) -> tuple[str, HardBreakStyles]:
             styles.backslash_breaks.append(False)
         converted.append(line)
     return join_lines(converted, trailing_newline=trailing), styles
-```
-
-</details>
-
-## 🔧 Function `_line_has_single_backslash_hard_break`
-
-```python
-def _line_has_single_backslash_hard_break(line: str) -> bool
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _line_has_single_backslash_hard_break(line: str, *, next_line: str) -> bool:
-    if not next_line.strip():
-        return False
-    if not line.endswith("\\"):
-        return False
-    return not line.endswith("\\\\")
-```
-
-</details>
-
-## 🔧 Function `_line_has_space_hard_break`
-
-```python
-def _line_has_space_hard_break(line: str) -> bool
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _line_has_space_hard_break(line: str, *, next_line: str) -> bool:
-    if not next_line.strip():
-        return False
-    return line.endswith(("  ", "\t"))
 ```
 
 </details>

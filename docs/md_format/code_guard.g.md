@@ -14,10 +14,6 @@ lang: en
 - [🏛️ Class `CodeBlock`](#️-class-codeblock)
 - [🔧 Function `extract_code_blocks`](#-function-extract_code_blocks)
 - [🔧 Function `restore_code_blocks`](#-function-restore_code_blocks)
-- [🔧 Function `_format_markdown_fence_block`](#-function-_format_markdown_fence_block)
-- [🔧 Function `_leading_whitespace`](#-function-_leading_whitespace)
-- [🔧 Function `_reindent_line`](#-function-_reindent_line)
-- [🔧 Function `_trim_trailing_blank_lines_before_closing_fence`](#-function-_trim_trailing_blank_lines_before_closing_fence)
 
 </details>
 
@@ -132,95 +128,6 @@ def restore_code_blocks(text: str, blocks: list[CodeBlock], *, options: FormatOp
             continue
         restored.append(line)
     return join_lines(restored, trailing_newline=has_trailing_newline)
-```
-
-</details>
-
-## 🔧 Function `_format_markdown_fence_block`
-
-```python
-def _format_markdown_fence_block(block_lines: list[str]) -> list[str]
-```
-
-Return fenced blocks verbatim; do not recursively format `markdown` fences.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _format_markdown_fence_block(block_lines: list[str], *, _options: FormatOptions | None) -> list[str]:
-    return block_lines
-```
-
-</details>
-
-## 🔧 Function `_leading_whitespace`
-
-```python
-def _leading_whitespace(line: str) -> str
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _leading_whitespace(line: str) -> str:
-    return line[: len(line) - len(line.lstrip())]
-```
-
-</details>
-
-## 🔧 Function `_reindent_line`
-
-```python
-def _reindent_line(line: str, base_indent: str, current_indent: str) -> str
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _reindent_line(line: str, base_indent: str, current_indent: str) -> str:
-    if not line.strip():
-        return line
-    if base_indent and line.startswith(base_indent):
-        return current_indent + line[len(base_indent) :]
-    if base_indent:
-        return current_indent + line
-    return line
-```
-
-</details>
-
-## 🔧 Function `_trim_trailing_blank_lines_before_closing_fence`
-
-```python
-def _trim_trailing_blank_lines_before_closing_fence(block_lines: list[str]) -> list[str]
-```
-
-Drop blank lines immediately before the closing fence line.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _trim_trailing_blank_lines_before_closing_fence(block_lines: list[str]) -> list[str]:
-    if len(block_lines) < _MIN_FENCED_BLOCK_LINES:
-        return block_lines
-
-    trimmed = list(block_lines)
-    closing_index = len(trimmed) - 1
-    while closing_index >= _MIN_FENCED_BLOCK_LINES and trimmed[closing_index - 1].strip() == "":
-        trimmed.pop(closing_index - 1)
-        closing_index -= 1
-    if len(trimmed) == _MIN_FENCED_BLOCK_LINES:
-        # Ensure an empty fenced block stays a fenced block (not inline code).
-        trimmed.insert(1, "")
-    return trimmed
 ```
 
 </details>

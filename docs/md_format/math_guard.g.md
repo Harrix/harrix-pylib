@@ -14,8 +14,6 @@ lang: en
 - [🏛️ Class `EmptyMathBlock`](#️-class-emptymathblock)
 - [🔧 Function `extract_empty_math_blocks`](#-function-extract_empty_math_blocks)
 - [🔧 Function `restore_empty_math_blocks`](#-function-restore_empty_math_blocks)
-- [🔧 Function `_find_empty_math_block_close`](#-function-_find_empty_math_block_close)
-- [🔧 Function `_leading_whitespace`](#-function-_leading_whitespace)
 
 </details>
 
@@ -118,59 +116,6 @@ def restore_empty_math_blocks(text: str, blocks: list[EmptyMathBlock]) -> str:
             continue
         restored.append(line)
     return join_lines(restored, trailing_newline=has_trailing_newline)
-```
-
-</details>
-
-## 🔧 Function `_find_empty_math_block_close`
-
-```python
-def _find_empty_math_block_close(lines: list[str], start: int, in_code: list[bool]) -> int | None
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _find_empty_math_block_close(lines: list[str], start: int, in_code: list[bool]) -> int | None:
-    open_match = _MATH_DELIMITER_RE.match(lines[start])
-    if open_match is None:
-        return None
-    indent = open_match.group(1)
-    line_index = start + 1
-    while line_index < len(lines):
-        if in_code[line_index]:
-            return None
-        close_match = _MATH_DELIMITER_RE.match(lines[line_index])
-        if close_match is not None and close_match.group(1) == indent:
-            if all(not lines[inner].strip() for inner in range(start + 1, line_index)):
-                return line_index
-            return None
-        if lines[line_index].strip():
-            return None
-        line_index += 1
-    return None
-```
-
-</details>
-
-## 🔧 Function `_leading_whitespace`
-
-```python
-def _leading_whitespace(line: str) -> str
-```
-
-_No docstring provided._
-
-<details>
-<summary>Code:</summary>
-
-```python
-def _leading_whitespace(line: str) -> str:
-    match = re.match(r"[ \t]*", line)
-    return match.group(0) if match else ""
 ```
 
 </details>
