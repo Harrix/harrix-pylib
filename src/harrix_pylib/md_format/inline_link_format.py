@@ -30,10 +30,12 @@ def _prepare_inline_links(body: str) -> tuple[str, list[_LinkDestination]]:
 
 
 def _prepare_inline_links_in_text(body: str, *, start_index: int) -> tuple[str, list[_LinkDestination], int]:
+    """Normalize and extract inline links from one line of text."""
     entries: list[_LinkDestination] = []
     index = start_index
 
     def handler(prefix: str, destination: str, suffix: str) -> str:
+        """Build a destination placeholder for one inline link match."""
         nonlocal index
         url, title = _split_inline_destination(destination)
         if title is not None:
@@ -52,4 +54,5 @@ def _prepare_inline_links_in_text(body: str, *, start_index: int) -> tuple[str, 
 
 
 def _should_skip_link_line(line: str) -> bool:
+    """Return whether link preprocessing should be skipped for this source line."""
     return line.lstrip().startswith("|") or line.startswith(("    ", "\t"))

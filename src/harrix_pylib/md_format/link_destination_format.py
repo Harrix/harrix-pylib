@@ -98,6 +98,7 @@ def _decode_unicode_percent_sequences(text: str) -> str:
 
 
 def _encode_special_characters(url: str) -> str:
+    """Percent-encode special characters in a link URL."""
     result: list[str] = []
     index = 0
     while index < len(url):
@@ -123,10 +124,12 @@ def _extract_link_destinations(body: str) -> tuple[str, list[_LinkDestination]]:
 
 
 def _extract_link_destinations_from_text(body: str, *, start_index: int) -> tuple[str, list[_LinkDestination]]:
+    """Extract inline link destinations from text via the shared link scanner."""
     entries: list[_LinkDestination] = []
     index = start_index
 
     def handler(prefix: str, destination: str, suffix: str) -> str:
+        """Build a destination placeholder for one inline link match."""
         nonlocal index
         url, title = _split_inline_destination(destination)
         display_title = _format_link_title(_unescape_title(title)) if title is not None else None
@@ -149,11 +152,12 @@ def _format_inline_link_destination(destination: str) -> str:
 
 
 def _format_link_url(url: str, *, wrap_parentheses: bool = True) -> str:
-    """Return canonical URL text for links and reference definitions."""
+    """Format a link destination URL for output."""
     return _format_link_url(url, wrap_parentheses=wrap_parentheses)
 
 
 def _format_link_url(url: str, *, wrap_parentheses: bool = True) -> str:
+    """Format a link destination URL for output."""
     url = _decode_percent_encoded_url(url.replace("&amp;", "&"))
     if url.startswith("<") and url.endswith(">"):
         return url
@@ -193,6 +197,7 @@ def _formatted_title_from_placeholder(href: str, entries_by_index: dict[int, _Li
 
 
 def _utf8_char_byte_length(lead_byte: int) -> int:
+    """Return UTF-8 byte length of one Unicode character."""
     if lead_byte < 0x80:
         return 1
     if lead_byte < 0xE0:

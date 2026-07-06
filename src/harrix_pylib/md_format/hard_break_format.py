@@ -43,6 +43,7 @@ def _extract_backslash_hard_breaks(body: str) -> tuple[str, _HardBreakStyles]:
 
 
 def _line_has_single_backslash_hard_break(line: str, *, next_line: str) -> bool:
+    """Return whether the line ends with a single trailing backslash hard break."""
     if not next_line.strip():
         return False
     if not line.endswith("\\"):
@@ -51,6 +52,7 @@ def _line_has_single_backslash_hard_break(line: str, *, next_line: str) -> bool:
 
 
 def _line_has_space_hard_break(line: str, *, next_line: str) -> bool:
+    """Return whether the line ends with two spaces or a tab hard break."""
     if not next_line.strip():
         return False
     return line.endswith(("  ", "\t"))

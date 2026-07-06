@@ -16,6 +16,7 @@ def _wiki_link_plugin(md: MarkdownIt) -> None:
     """Register wiki-link parsing before standard links."""
 
     def wiki_rule(state: StateInline, silent: bool) -> bool:  # noqa: FBT001
+        """markdown-it inline rule that parses ``[[wiki]]`` links."""
         if state.pos + 4 > len(state.src):
             return False
         if state.src[state.pos : state.pos + 2] != "[[":

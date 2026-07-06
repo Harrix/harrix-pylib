@@ -35,6 +35,7 @@ class _ReferenceBlock:
 
 
 def _canonicalize_reference_title(title: str) -> str:
+    """Canonicalize reference-definition title quoting."""
     return _canonicalize_link_title_content(_unescape_title(title))
 
 
@@ -109,6 +110,7 @@ def _extract_reference_blocks(body: str) -> tuple[str, list[_ReferenceBlock]]:
 
 
 def _footnote_blockquote_lines(first_text: str, indented_lines: list[str]) -> list[str] | None:
+    """Return blockquote lines extracted from a footnote block."""
     lines: list[str] = []
     if first_text.startswith(">"):
         lines.append(first_text)
@@ -124,6 +126,7 @@ def _footnote_blockquote_lines(first_text: str, indented_lines: list[str]) -> li
 
 
 def _footnote_indented_lines_are_block_content(indented_lines: list[str]) -> bool:
+    """Return whether indented footnote lines are block content rather than a code block."""
     for line in indented_lines:
         stripped = line.lstrip()
         if stripped.startswith((">", "```", "~~~")):
@@ -132,6 +135,7 @@ def _footnote_indented_lines_are_block_content(indented_lines: list[str]) -> boo
 
 
 def _format_footnote_block(lines: list[str], *, print_width: int) -> list[str]:
+    """Format a footnote reference block for output."""
     first = lines[0]
     match = _FOOTNOTE_DEF_RE.match(first)
     if not match:
@@ -176,6 +180,7 @@ def _format_footnote_indented_block(
     continuation: str,
     print_width: int,
 ) -> list[str]:
+    """Format indented footnote continuation lines."""
     first_stripped = first_text.strip()
     blockquote_lines = _footnote_blockquote_lines(first_stripped, indented_lines)
     if blockquote_lines is not None and len(blockquote_lines) > 1:
@@ -199,6 +204,7 @@ def _format_footnote_indented_block(
 
 
 def _format_inline_reference_part(line: str) -> str:
+    """Format one inline reference segment."""
     match = _LINK_DEF_RE.match(line)
     if not match:
         return line
@@ -211,6 +217,7 @@ def _format_inline_reference_part(line: str) -> str:
 
 
 def _format_link_definition(line: str, *, print_width: int) -> list[str]:
+    """Format a link reference definition line."""
     match = _LINK_DEF_RE.match(line)
     if not match:
         return [line]
@@ -242,6 +249,7 @@ def _format_link_definition(line: str, *, print_width: int) -> list[str]:
 def _format_reference_block(
     block: _ReferenceBlock, *, options: _FormatOptions, print_width: int = DEFAULT_PRINT_WIDTH
 ) -> list[str]:
+    """Format a reference-definition block for output."""
     if options.prose_wrap != "always":
         return list(block.lines)
     if block.kind == "footnote":
@@ -258,6 +266,7 @@ def _format_reference_link_url(url: str) -> str:
 
 
 def _format_reference_title(title: str) -> str:
+    """Format a reference-definition title for output."""
     unescaped = _unescape_title(title)
     if title.startswith("(") and title.endswith(")"):
         if " " in unescaped:
@@ -267,6 +276,7 @@ def _format_reference_title(title: str) -> str:
 
 
 def _line_is_short_link_reference(line: str) -> bool:
+    """Return whether a line is a short link reference definition."""
     stripped = line.strip()
     return stripped.startswith("[") and stripped.endswith("][]")
 
@@ -298,10 +308,12 @@ def _merge_multiline_link_definition(lines: list[str], line_index: int) -> tuple
 
 
 def _normalize_reference_label(label: str) -> str:
+    """Normalize a reference label for comparison."""
     return " ".join(label.split())
 
 
 def _reference_label_markup(label: str) -> str:
+    """Return reference-label markup for a normalized label."""
     normalized = _normalize_reference_label(label)
     if label != label.strip():
         inner = normalized.strip()
@@ -312,6 +324,7 @@ def _reference_label_markup(label: str) -> str:
 def _restore_inline_reference_line(
     line: str, blocks_by_index: dict[int, _ReferenceBlock], *, print_width: int
 ) -> list[str]:
+    """Restore inline reference syntax on one line."""
     ref_parts: list[str] = []
     first_match = _PLACEHOLDER_RE.search(line)
     prefix = line[: first_match.start()].rstrip() if first_match else ""
@@ -385,6 +398,7 @@ def _restore_reference_blocks(
 
 
 def _wrap_inline_reference_body(text: str, *, width: int) -> list[str]:
+    """Wrap a long inline reference body across lines."""
     match = re.match(r"^(?P<prefix>.*?)(?P<refs>(?:\[[^\]]+\]: https?://\S+\s*)+)$", text)
     if match is None:
         return _wrap_protected_urls(text, width=width)
@@ -423,9 +437,11 @@ def _wrap_inline_reference_body(text: str, *, width: int) -> list[str]:
 
 
 def _wrap_protected_urls(text: str, *, width: int) -> list[str]:
+    """Wrap reference text while protecting URL segments."""
     protected_urls: list[str] = []
 
     def protect_url(match: re.Match[str]) -> str:
+        """Protect a URL segment from reference-body wrapping."""
         protected_urls.append(match.group(0))
         return f"\x00URL{len(protected_urls) - 1}\x00"
 

@@ -22,6 +22,7 @@ _TABLE_SEPARATOR_CELL_RE = re.compile(r"^[-: ]+$")
 
 
 def _escape_table_cell(cell: str) -> str:
+    """Escape pipe characters and backslashes in a table cell."""
     if "|" not in cell:
         return cell
     if "`" in cell:
@@ -32,6 +33,7 @@ def _escape_table_cell(cell: str) -> str:
 
 
 def _expand_table_cell_placeholders(cell: str) -> str:
+    """Expand link placeholders inside a table cell."""
     autolinks = printer_context.ACTIVE_ANGLE_AUTOLINKS
     if not autolinks:
         return cell
@@ -45,6 +47,7 @@ def _format_table_row(
     *,
     strip_trailing_empty: bool = False,
 ) -> str:
+    """Format one GFM table row with column padding."""
     padded = cells + [""] * (len(column_widths) - len(cells))
     align_row = alignments + ["---"] * (len(column_widths) - len(alignments))
     effective_width = len(column_widths)
@@ -72,6 +75,7 @@ def _format_table_row(
 
 
 def _format_table_separator(column_widths: list[int], alignments: list[str]) -> str:
+    """Format the GFM table alignment separator row."""
     separators: list[str] = []
     for index, width in enumerate(column_widths):
         align = alignments[index] if index < len(alignments) else "---"
@@ -90,6 +94,7 @@ def _format_table_separator(column_widths: list[int], alignments: list[str]) -> 
 
 
 def _is_spurious_table_row(cells: list[str], width: int) -> bool:
+    """Return whether a table row was misparsed from prose."""
     min_spurious_width = 3
     if width < min_spurious_width or not cells[0].strip():
         return False
@@ -99,6 +104,7 @@ def _is_spurious_table_row(cells: list[str], width: int) -> bool:
 
 
 def _parse_table_row_cells(line: str) -> list[str] | None:
+    """Parse one table row into cell strings."""
     stripped = line.strip()
     if not stripped.startswith("|"):
         return None
@@ -106,6 +112,7 @@ def _parse_table_row_cells(line: str) -> list[str] | None:
 
 
 def _parse_table_rows(text: str) -> list[list[str]]:
+    """Parse table rows from rendered block text."""
     rows: list[list[str]] = []
     for line in text.splitlines():
         cells = _parse_table_row_cells(line)
@@ -115,10 +122,12 @@ def _parse_table_rows(text: str) -> list[list[str]]:
 
 
 def _parse_table_rows_expanded(text: str) -> list[list[str]]:
+    """Parse table rows after expanding cell placeholders."""
     return [[_expand_table_cell_placeholders(cell) for cell in row] for row in _parse_table_rows(text)]
 
 
 def _prefer_source_table_block(source_text: str, formatted_text: str) -> str | None:
+    """Return source table text when it should be preserved."""
     source_rows = _table_data_rows(_parse_table_rows_expanded(source_text))
     formatted_rows = _table_data_rows(_parse_table_rows(formatted_text))
     if not source_rows or source_rows != formatted_rows:
@@ -136,6 +145,7 @@ def _render_table(
     hard_break_styles: _HardBreakStyles | None = None,
     source_lines: list[str] | None = None,
 ) -> tuple[str, int]:
+    """Render a table token subtree to aligned GFM Markdown."""
     close_index = _find_close(tokens, index, "table_close")
     rows: list[list[str]] = []
     is_header = False
@@ -222,11 +232,13 @@ def _render_table(
 
 
 def _table_cell_display_width(cell: str) -> int:
+    """Return display width of one table cell."""
     escaped_pipe_width = sum(len(match.group(1)) // 2 for match in re.finditer(r"(\\+)\|", cell))
     return _text_display_width(cell) - escaped_pipe_width
 
 
 def _table_column_widths(rows: list[list[str]], width: int) -> list[int]:
+    """Return padded column widths for a table."""
     column_widths = [3] * width
     for row in rows:
         for index, cell in enumerate(row[:width]):
@@ -235,4 +247,5 @@ def _table_column_widths(rows: list[list[str]], width: int) -> list[int]:
 
 
 def _table_data_rows(rows: list[list[str]]) -> list[list[str]]:
+    """Return data rows excluding the alignment separator."""
     return [row for row in rows if not all(_TABLE_SEPARATOR_CELL_RE.fullmatch(cell or "") for cell in row)]

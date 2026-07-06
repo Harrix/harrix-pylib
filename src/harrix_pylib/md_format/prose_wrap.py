@@ -9,6 +9,7 @@ from harrix_pylib.md_format.table_format import _text_display_width
 
 
 def _avoid_list_marker_line_starts(lines: list[str]) -> list[str]:
+    """Pull trailing words from a wrap line so the next line does not start a list marker."""
     if len(lines) < 2:
         return lines
     fixed = list(lines)
@@ -59,6 +60,7 @@ def _avoid_list_marker_line_starts(lines: list[str]) -> list[str]:
 
 
 def _is_cjk(char: str) -> bool:
+    """Return whether a character is CJK or full-width."""
     if not char:
         return False
     if unicodedata.east_asian_width(char) in {"F", "W"}:
@@ -75,6 +77,7 @@ def _is_cjk(char: str) -> bool:
 
 
 def _is_hangul(char: str) -> bool:
+    """Return whether a character is Hangul."""
     if not char:
         return False
     code = ord(char)
@@ -82,6 +85,7 @@ def _is_hangul(char: str) -> bool:
 
 
 def _is_hiragana(char: str) -> bool:
+    """Return whether a character is Hiragana."""
     if not char:
         return False
     code = ord(char)
@@ -89,6 +93,7 @@ def _is_hiragana(char: str) -> bool:
 
 
 def _is_katakana(char: str) -> bool:
+    """Return whether a character is Katakana."""
     if not char:
         return False
     code = ord(char)
@@ -96,10 +101,12 @@ def _is_katakana(char: str) -> bool:
 
 
 def _is_small_kana(char: str) -> bool:
+    """Return whether a character is a small Kana."""
     return char in _SMALL_KANA
 
 
 def _kana_continuation_join(left: str, right: str) -> bool:
+    """Return whether small kana should join the previous kana run without a space."""
     if not left or not right or not _is_small_kana(right[0]):
         return False
     trailing_kana = 0
@@ -118,6 +125,7 @@ def _prose_display_width(text: str) -> int:
 
 
 def _segments(text: str) -> list[str]:
+    """Split phrasing text into inline segments for width-aware wrapping."""
     segments: list[str] = []
     position = 0
     while position < len(text):
@@ -167,6 +175,7 @@ def _should_omit_space_between(left: str, right: str) -> bool:
 
 
 def _softbreak_prefers_newline(before: str, after: str) -> bool:
+    """Return whether a soft break should become a newline before a lowercase word."""
     if not before or not after or not after[0].isalpha():
         return False
     match = re.search(r"[A-Z][a-z]+$", before)
@@ -193,6 +202,7 @@ def _wrap_paragraph_prose(text: str, *, width: int) -> str:
 
 
 def _wrap_plain_words(text: str, *, width: int, first_prefix: str, next_prefix: str) -> list[str]:
+    """Wrap plain word runs to the given display width."""
     words = re.split(r"(\s+)", text)
     lines: list[str] = []
     current = first_prefix
@@ -233,6 +243,7 @@ def _wrap_prose(text: str, *, width: int, prefix: str = "", continuation: str | 
 
 
 def _wrap_prose_after_hard_break(text: str, *, width: int) -> str:
+    """Wrap prose that follows a hard line break within a paragraph."""
     words = re.findall(r"\S+", text)
     if not words:
         return text
@@ -269,6 +280,7 @@ def _wrap_prose_after_hard_break(text: str, *, width: int) -> str:
 
 
 def _wrap_text_lines(text: str, *, width: int, first_prefix: str, next_prefix: str) -> list[str]:
+    """Wrap segmented phrasing text into prefixed output lines."""
     if _prose_display_width(first_prefix + text) <= width:
         return [first_prefix + text]
 

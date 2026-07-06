@@ -58,6 +58,7 @@ def _escape_markdown_text(text: str) -> str:
 
 
 def _escape_ordered_list_like_line_start(line: str) -> str:
+    """Escape a line start like ``39.`` so it is not parsed as an ordered list."""
     match = _ORDERED_LIST_LINE_START_RE.match(line)
     if not match:
         return line
@@ -77,6 +78,7 @@ def _escape_ordered_list_like_line_starts(text: str) -> str:
 
 
 def _is_alphanumeric(char: str) -> bool:
+    """Return whether a character is alphanumeric."""
     return char.isalnum()
 
 
@@ -90,6 +92,7 @@ def _is_failed_emphasis_underscore(text: str, index: int) -> bool:
 
 
 def _is_identifier_leading_underscore(text: str, index: int) -> bool:
+    """Return whether ``_`` at ``index`` starts an identifier, not emphasis."""
     if text[index] != "_" or index + 1 >= len(text):
         return False
 
@@ -110,6 +113,7 @@ def _is_identifier_leading_underscore(text: str, index: int) -> bool:
 
 
 def _is_left_flanking(text: str, index: int) -> bool:
+    """Return whether ``*``/``_`` at ``index`` is left-flanking per CommonMark."""
     if index + 1 < len(text) and _is_whitespace(text[index + 1]):
         return False
     if (
@@ -122,12 +126,14 @@ def _is_left_flanking(text: str, index: int) -> bool:
 
 
 def _is_punctuation(char: str) -> bool:
+    """Return whether a character counts as punctuation for emphasis rules."""
     if char in _PUNCTUATION:
         return True
     return unicodedata.category(char).startswith("P")
 
 
 def _is_right_flanking(text: str, index: int) -> bool:
+    """Return whether ``*``/``_`` at ``index`` is right-flanking per CommonMark."""
     if index > 0 and _is_whitespace(text[index - 1]):
         return False
     if (
@@ -140,14 +146,17 @@ def _is_right_flanking(text: str, index: int) -> bool:
 
 
 def _is_single_char_emphasis_underscore(text: str, index: int) -> bool:
+    """Return whether ``_`` is a failed single-character emphasis marker."""
     return _is_failed_emphasis_underscore(text, index)
 
 
 def _is_whitespace(char: str) -> bool:
+    """Return whether a character is whitespace."""
     return char.isspace()
 
 
 def _should_escape_asterisk(text: str, index: int) -> bool:
+    """Return whether ``*`` at ``index`` should be escaped in plain text."""
     if _should_escape_intraword_asterisk(text, index):
         return True
     return _is_left_flanking(text, index) or _is_right_flanking(text, index)
@@ -167,6 +176,7 @@ def _should_escape_intraword_asterisk(text: str, index: int) -> bool:
 
 
 def _should_escape_underscore(text: str, index: int) -> bool:
+    """Return whether ``_`` at ``index`` should be escaped in plain text."""
     if _is_single_char_emphasis_underscore(text, index):
         return False
     if index > 0 and text[index - 1] == "_":

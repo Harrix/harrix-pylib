@@ -32,6 +32,7 @@ from harrix_pylib.md_format.printer.tokens import _find_close, _format_hr_markup
 
 
 def _blockquote_line_content(line: str) -> str:
+    """Return blockquote body text without leading ``>`` markers."""
     content = line.lstrip()
     while content.startswith(">"):
         content = content[1:]
@@ -40,6 +41,7 @@ def _blockquote_line_content(line: str) -> str:
 
 
 def _blockquote_line_depth(line: str) -> int:
+    """Return blockquote nesting depth from leading ``>`` markers."""
     stripped = line.lstrip()
     depth = 0
     while stripped.startswith(">"):
@@ -50,6 +52,7 @@ def _blockquote_line_depth(line: str) -> int:
 
 
 def _blockquote_needs_blank_line(previous: str, current: str) -> bool:
+    """Return whether a blank line is required between two blockquote lines."""
     previous_lines = [line for line in previous.rstrip().splitlines() if line.strip()]
     current_lines = [line for line in current.lstrip().splitlines() if line.strip()]
     if not previous_lines or not current_lines:
@@ -88,6 +91,7 @@ def _empty_math_middle_text(content: str) -> str:
 
 
 def _join_blockquote_blocks(blocks: list[str]) -> str:
+    """Join rendered blockquote blocks with required blank lines."""
     if not blocks:
         return ""
     joined: list[str] = [blocks[0].rstrip("\n")]
@@ -105,6 +109,7 @@ def _join_blocks(
     part_indices: list[int] | None = None,
     source_lines: list[str] | None = None,
 ) -> str:
+    """Join rendered top-level blocks with spacing rules from source."""
     cleaned: list[str] = []
     cleaned_indices: list[int] = []
     for part_index, part in enumerate(parts):
@@ -160,6 +165,7 @@ def _render_alert(
     canonicalize_bullets: bool = False,
     normalize_star_to_dash: bool = False,
 ) -> tuple[str, int]:
+    """Render a GFM alert blockquote to Markdown."""
     markers = task_list_markers or []
     break_styles = hard_break_styles or _HardBreakStyles()
     layouts = list_layouts or []
@@ -228,6 +234,7 @@ def _render_block(
     in_list_item: bool = False,
     in_blockquote: bool = False,
 ) -> tuple[str, int]:
+    """Render one block token and its children to Markdown."""
     break_styles = hard_break_styles or _HardBreakStyles()
     layouts = list_layouts or []
     token = tokens[index]
@@ -361,6 +368,7 @@ def _render_blockquote(
     canonicalize_bullets: bool = False,
     normalize_star_to_dash: bool = False,
 ) -> tuple[str, int]:
+    """Render a blockquote token subtree to Markdown."""
     markers = task_list_markers or []
     break_styles = hard_break_styles or _HardBreakStyles()
     layouts = list_layouts or []
@@ -409,6 +417,7 @@ def _render_blockquote(
 
 
 def _render_fence(token: Token) -> str:
+    """Render a fenced code block token to Markdown."""
     info = (token.info or "").strip()
     fence = "```"
     content = token.content.strip("\n")
@@ -423,6 +432,7 @@ def _render_heading(
     hard_break_styles: _HardBreakStyles | None = None,
     source_lines: list[str] | None = None,
 ) -> tuple[str, int]:
+    """Render a heading token to Markdown."""
     source_line = _plain_heading_source_line(tokens, index, source_lines)
     if source_line is not None:
         return f"{source_line}\n", index + 3
@@ -436,6 +446,7 @@ def _render_heading(
 
 
 def _render_indented_code_block(content: str) -> str:
+    """Render an indented code block to Markdown."""
     lines = content.rstrip("\n").splitlines()
     if not lines:
         return "    \n"
@@ -443,6 +454,7 @@ def _render_indented_code_block(content: str) -> str:
 
 
 def _render_math_block(token: Token, *, label: str | None = None) -> str:
+    """Render a block-math token to Markdown."""
     raw_content = token.content
     content = _normalize_math_block_content(raw_content)
     if not content:
@@ -472,6 +484,7 @@ def _render_until_close(
     canonicalize_bullets: bool = False,
     normalize_star_to_dash: bool = False,
 ) -> str:
+    """Render child tokens until a matching close token."""
     markers = task_list_markers or []
     break_styles = hard_break_styles or _HardBreakStyles()
     layouts = list_layouts or []
@@ -499,6 +512,7 @@ def _render_until_close(
 
 
 def _should_join_without_blank_line(previous: str, current: str) -> bool:
+    """Return whether two rendered blocks should be joined without a blank line."""
     prev_lines = previous.strip("\n").splitlines()
     if not prev_lines:
         return False
@@ -509,6 +523,7 @@ def _should_join_without_blank_line(previous: str, current: str) -> bool:
 
 
 def _wrap_blockquote_block(block: str, *, options: _FormatOptions) -> str:
+    """Wrap blockquote inner lines when prose wrapping is enabled."""
     lines = block.rstrip().splitlines()
     wrapped_lines: list[str] = []
     for line in lines:

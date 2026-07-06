@@ -68,6 +68,7 @@ def _render_tokens_impl(
     list_layouts: list[_ListLayout] | None = None,
     source_lines: list[str] | None = None,
 ) -> str:
+    """Render top-level block tokens, merging adjacent paragraphs when possible."""
     fmt_options = options or printer_context.DEFAULT_OPTIONS
     markers = task_list_markers or []
     ordered_groups = list(ordered_list_marker_groups or [])

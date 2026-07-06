@@ -42,6 +42,7 @@ def _format_code_inline(
     *,
     in_table: bool = False,
 ) -> str:
+    """Format inline code with balanced backtick fences."""
     if in_table and "|" in content:
         content = content.replace("|", "\\|")
     max_run = _max_backtick_run(content)
@@ -79,6 +80,7 @@ def _format_self_referential_link(href: str, inner: str) -> str | None:
 
 
 def _inline_children_are_link_run(children: list[Token]) -> bool:
+    """Return whether inline children form a consecutive link token run."""
     if not any(child.type == "link_open" for child in children):
         return False
     for child in children:
@@ -90,6 +92,7 @@ def _inline_children_are_link_run(children: list[Token]) -> bool:
 
 
 def _inline_neighbor_text(children: list[Token], open_index: int, close_index: int) -> tuple[str, str]:
+    """Return literal text immediately before and after an inline range."""
     prev = ""
     if open_index > 0 and children[open_index - 1].type == "text":
         prev = children[open_index - 1].content
@@ -100,6 +103,7 @@ def _inline_neighbor_text(children: list[Token], open_index: int, close_index: i
 
 
 def _inline_text_after(children: list[Token], index: int) -> str:
+    """Return concatenated literal text after an inline token index."""
     next_index = index + 1
     while next_index < len(children):
         child = children[next_index]
@@ -112,6 +116,7 @@ def _inline_text_after(children: list[Token], index: int) -> str:
 
 
 def _inline_text_before(children: list[Token], index: int) -> str:
+    """Return concatenated literal text before an inline token index."""
     prev_index = index - 1
     while prev_index >= 0:
         child = children[prev_index]
@@ -124,14 +129,17 @@ def _inline_text_before(children: list[Token], index: int) -> str:
 
 
 def _inner_has_url_scheme(text: str) -> bool:
+    """Return whether inner link text contains a URL scheme."""
     return "://" in text
 
 
 def _is_linkify_link(token: Token) -> bool:
+    """Return whether the link token was produced by linkify."""
     return token.markup == "autolink"
 
 
 def _max_backtick_run(text: str) -> int:
+    """Return the longest run of consecutive backticks in text."""
     max_run = 0
     current = 0
     for char in text:
@@ -144,6 +152,7 @@ def _max_backtick_run(text: str) -> int:
 
 
 def _pack_link_parts(parts: list[str], *, width: int) -> list[str]:
+    """Pack link label, destination, and title parts within wrap width."""
     lines: list[str] = []
     current: list[str] = []
     current_width = 0
@@ -183,6 +192,7 @@ def _render_inline(
     hard_break_styles: _HardBreakStyles | None = None,
     softbreak_as_space: bool = False,
 ) -> str:
+    """Render inline token children to Markdown."""
     fmt_options = options or DEFAULT_OPTIONS
     break_styles = hard_break_styles or _HardBreakStyles()
     parts: list[str] = []
@@ -209,6 +219,7 @@ def _render_inline_token(
     hard_break_styles: _HardBreakStyles | None = None,
     softbreak_as_space: bool = False,
 ) -> tuple[str, int]:
+    """Render one inline token to Markdown."""
     fmt_options = options or DEFAULT_OPTIONS
     break_styles = hard_break_styles or _HardBreakStyles()
     child = children[index]
@@ -371,6 +382,7 @@ def _render_inline_until(
     options: _FormatOptions | None = None,
     hard_break_styles: _HardBreakStyles | None = None,
 ) -> tuple[str, int]:
+    """Render inline tokens until a stop index."""
     fmt_options = options or DEFAULT_OPTIONS
     break_styles = hard_break_styles or _HardBreakStyles()
     parts: list[str] = []
@@ -392,6 +404,7 @@ def _render_packed_link_run(
     options: _FormatOptions,
     hard_break_styles: _HardBreakStyles | None = None,
 ) -> str:
+    """Render a packed consecutive link run to Markdown."""
     parts: list[str] = []
     index = 0
     while index < len(children):
@@ -414,6 +427,7 @@ def _render_wiki_content(content: str) -> str:
 
 
 def _softbreak_follows_trailing_backslash(children: list[Token], index: int) -> bool:
+    """Return whether a soft break follows a trailing backslash in inline tokens."""
     prev_index = index - 1
     while prev_index >= 0:
         child = children[prev_index]
@@ -427,6 +441,7 @@ def _softbreak_follows_trailing_backslash(children: list[Token], index: int) -> 
 
 
 def _softbreak_should_omit_space(children: list[Token], index: int) -> bool:
+    """Return whether a soft break should omit the usual inter-word space."""
     before = _inline_text_before(children, index)
     after = _inline_text_after(children, index)
     if not before or not after:
@@ -435,6 +450,7 @@ def _softbreak_should_omit_space(children: list[Token], index: int) -> bool:
 
 
 def _wrap_inline_code_with_edge_spaces(content: str, fence: str) -> str:
+    """Wrap inline code content while preserving leading and trailing spaces."""
     if content and not content.strip():
         return f"{fence}{content}{fence}"
     if content.startswith(" ") and content.endswith(" "):

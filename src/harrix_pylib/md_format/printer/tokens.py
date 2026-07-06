@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 
 def _alignment_separator(align: str) -> str:
+    """Return the GFM alignment separator for a column alignment."""
     if align == "left":
         return ":--"
     if align == "center":
@@ -19,6 +20,7 @@ def _alignment_separator(align: str) -> str:
 
 
 def _choose_emphasis_delimiter(markup: str, prev: str, next_text: str) -> str:
+    """Choose ``*`` or ``_`` for emphasis based on neighbor characters."""
     if markup == "_":
         return "_"
     if prev and prev[-1] in "!∩╝ü" and next_text and next_text[0] in "!∩╝ü":
@@ -29,10 +31,12 @@ def _choose_emphasis_delimiter(markup: str, prev: str, next_text: str) -> str:
 
 
 def _contains_strong(children: list[Token], start: int, end: int) -> bool:
+    """Return whether the inline child range contains a strong emphasis token."""
     return any(children[index].type == "strong_open" for index in range(start, end + 1))
 
 
 def _find_close(tokens: list[Token], index: int, close_type: str) -> int:
+    """Return the token index of the matching close token."""
     depth = 0
     open_type = close_type.replace("_close", "_open")
     for current in range(index, len(tokens)):
@@ -46,6 +50,7 @@ def _find_close(tokens: list[Token], index: int, close_type: str) -> int:
 
 
 def _format_hr_markup(markup: str, *, preserve: bool = False) -> str:
+    """Normalize or preserve thematic-break markup characters."""
     if not preserve:
         return "---"
     chars = {char for char in markup if not char.isspace()}
@@ -60,6 +65,7 @@ def _format_hr_markup(markup: str, *, preserve: bool = False) -> str:
 
 
 def _has_digit_emphasis_neighbor(prev: str, next_text: str) -> bool:
+    """Return whether emphasis neighbors include a digit."""
     return bool(prev and prev[-1].isdigit()) or bool(next_text and next_text[0].isdigit())
 
 
@@ -88,6 +94,7 @@ def _inline_link_is_standalone(children: list[Token], link_open_index: int) -> b
 
 
 def _is_block_marker_line(text: str) -> bool:
+    """Return whether text looks like a block-level Markdown marker line."""
     stripped = text.lstrip()
     return stripped.startswith(("-", ">", "|", "#", "```", "~"))
 
@@ -109,6 +116,7 @@ def _link_raw_text(children: list[Token], link_open_index: int) -> str | None:
 
 
 def _normalize_bullet_marker(marker: str, *, normalize_star_to_dash: bool = False) -> str:
+    """Normalize bullet list marker characters for output."""
     if marker == "+":
         return "*"
     if normalize_star_to_dash and marker == "*":

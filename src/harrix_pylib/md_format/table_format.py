@@ -19,6 +19,7 @@ def _ensure_blank_line_after_tables(body: str) -> str:
 
 
 def _is_emoji_base(char: str) -> bool:
+    """Return whether a character is treated as a wide emoji base glyph."""
     code = ord(char)
     return any(start <= code <= end for start, end in _EMOJI_CODE_POINT_RANGES)
 

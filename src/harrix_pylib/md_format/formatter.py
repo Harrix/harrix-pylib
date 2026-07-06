@@ -159,6 +159,7 @@ def _ensure_blank_line_in_empty_fences(body: str) -> str:
 
 
 def _format_with_options(text: str, options: _FormatOptions) -> str:
+    """Run the full extract-parse-render-restore formatting pipeline."""
     normalized = MarkdownFormatter.normalize_line_endings(text)
     front_matter, body = _split_front_matter(normalized)
     if front_matter:
@@ -215,6 +216,7 @@ def _format_with_options(text: str, options: _FormatOptions) -> str:
 
 
 def _normalize_end_of_line(text: str, end_of_line: str) -> str:
+    """Convert normalized LF text to the requested line-ending style."""
     normalized = MarkdownFormatter.normalize_line_endings(text)
     if end_of_line == "lf":
         return normalized

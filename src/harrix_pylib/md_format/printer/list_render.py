@@ -42,6 +42,7 @@ def _blank_line_before_list_item(
     prev_item_index: int,
     source_lines: list[str] | None,
 ) -> bool:
+    """Return whether a blank line should precede a list item when rendering."""
     if not source_lines:
         return False
     prev_close = _find_close(tokens, prev_item_index, "list_item_close")
@@ -53,6 +54,7 @@ def _blank_line_before_list_item(
 
 
 def _bullet_item_leading_spaces(tokens: list[Token], item_index: int, source_lines: list[str] | None) -> int:
+    """Return leading spaces before a bullet list item in source."""
     line = _list_item_source_line(tokens, item_index, source_lines)
     if not line:
         return 1
@@ -69,6 +71,7 @@ def _bullet_item_leading_spaces(tokens: list[Token], item_index: int, source_lin
 
 
 def _direct_list_item_count(tokens: list[Token], list_index: int, close_index: int) -> int:
+    """Return the number of direct child list items."""
     count = 0
     child_index = list_index + 1
     while child_index < close_index:
@@ -81,6 +84,7 @@ def _direct_list_item_count(tokens: list[Token], list_index: int, close_index: i
 
 
 def _is_indented_source_codeblock(token: Token, source_lines: list[str] | None) -> bool:
+    """Return whether the token maps to an indented source code block line."""
     if token.type != "code_block":
         return False
     if not source_lines:
@@ -93,6 +97,7 @@ def _is_indented_source_codeblock(token: Token, source_lines: list[str] | None) 
 
 
 def _is_list_block(block: str) -> bool:
+    """Return whether rendered block text is a list."""
     for line in block.splitlines():
         if not line.strip():
             continue
@@ -101,6 +106,7 @@ def _is_list_block(block: str) -> bool:
 
 
 def _is_prose_list_item_block(block: str) -> bool:
+    """Return whether a list item block contains only prose content."""
     if not block.strip():
         return False
     if _is_list_block(block):
@@ -109,12 +115,14 @@ def _is_prose_list_item_block(block: str) -> bool:
 
 
 def _line_has_task_checkbox(line: str) -> bool:
+    """Return has task checkbox for a line."""
     return bool(re.search(r"\[[ xX]\]", line)) or "HSKMDFMTTASK" in line
 
 
 def _list_followed_by_indented_codeblock(
     tokens: list[Token], list_close_index: int, source_lines: list[str] | None
 ) -> bool:
+    """Return whether a list is immediately followed by an indented code block."""
     next_index = list_close_index + 1
     if next_index >= len(tokens):
         return False
@@ -122,6 +130,7 @@ def _list_followed_by_indented_codeblock(
 
 
 def _list_has_nested_bullets(tokens: list[Token], start: int, end: int) -> bool:
+    """Return whether a list contains nested bullet items."""
     depth = 0
     for index in range(start, end):
         token = tokens[index]
@@ -135,6 +144,7 @@ def _list_has_nested_bullets(tokens: list[Token], start: int, end: int) -> bool:
 
 
 def _list_is_loose(tokens: list[Token], index: int, close_index: int) -> bool:
+    """Return whether the whole list should render as loose."""
     item_ranges: list[tuple[int, int]] = []
     item_index = index + 1
     while item_index < close_index:
@@ -156,6 +166,7 @@ def _list_is_loose(tokens: list[Token], index: int, close_index: int) -> bool:
 
 
 def _list_item_checkbox(tokens: list[Token], item_open_index: int) -> str | None:
+    """Return task-list checkbox markup for a list item."""
     checked = tokens[item_open_index].attrGet("checked")
     if checked is None:
         return None
@@ -165,6 +176,7 @@ def _list_item_checkbox(tokens: list[Token], item_open_index: int) -> str | None
 def _list_item_followed_by_indented_codeblock(
     tokens: list[Token], item_close: int, source_lines: list[str] | None
 ) -> bool:
+    """Return whether a list item is followed by an indented code block."""
     next_index = item_close + 1
     if next_index >= len(tokens):
         return False
@@ -177,6 +189,7 @@ def _list_item_followed_by_indented_codeblock(
 
 
 def _list_item_has_extra_blocks(tokens: list[Token], item_index: int, item_close: int) -> bool:
+    """Return whether a list item contains blocks beyond its first paragraph."""
     paragraph_count = 0
     child_index = item_index + 1
     while child_index < item_close:
@@ -199,6 +212,7 @@ def _list_item_has_extra_blocks(tokens: list[Token], item_index: int, item_close
 
 
 def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_index: int) -> bool:
+    """Return whether one list item should render as loose."""
     paragraph_count = 0
     nested_list_count = 0
     previous_block_end: int | None = None
@@ -253,6 +267,7 @@ def _list_item_is_loose(tokens: list[Token], item_open_index: int, item_close_in
 
 
 def _list_item_last_source_line_index(tokens: list[Token], item_open_index: int, item_close_index: int) -> int | None:
+    """Return the source line index of the last line belonging to a list item."""
     item_map = tokens[item_open_index].map
     if not item_map:
         return None
@@ -281,6 +296,7 @@ def _list_item_last_source_line_index(tokens: list[Token], item_open_index: int,
 
 
 def _list_item_nested_list_index(tokens: list[Token], item_index: int, item_close: int) -> int | None:
+    """Return the token index of a nested list inside a list item."""
     child_index = item_index + 1
     while child_index < item_close:
         if tokens[child_index].type in {"bullet_list_open", "ordered_list_open"}:
@@ -293,6 +309,7 @@ def _list_item_nested_list_index(tokens: list[Token], item_index: int, item_clos
 
 
 def _list_item_source_line(tokens: list[Token], item_index: int, source_lines: list[str] | None) -> str | None:
+    """Return the source line for a list item marker."""
     if not source_lines:
         return None
     tok_map = tokens[item_index].map
@@ -305,6 +322,7 @@ def _list_item_source_line(tokens: list[Token], item_index: int, source_lines: l
 
 
 def _list_marker_prefix(marker: str, *, align: bool = False, content_spaces: int | None = None) -> str:
+    """Build list marker prefix with optional alignment spaces."""
     if content_spaces is not None:
         return f"{marker}{' ' * content_spaces}"
     if align and marker.endswith((".", ")")):
@@ -362,6 +380,7 @@ def _ordered_list_marker_target_width(
     list_base_indent: int,
     source_lines: list[str] | None,
 ) -> int | None:
+    """Return target display width for ordered-list marker prefixes."""
     target_width: int | None = None
     item_index = index + 1
     while item_index < close_index:
@@ -381,6 +400,7 @@ def _ordered_list_marker_target_width(
 
 
 def _ordered_marker_delimiter(line: str) -> str | None:
+    """Return ordered-list marker delimiter (``.`` or ``)``) from a source line."""
     match = re.match(r"^\s*\d+([.)])\s+", line)
     return match.group(1) if match else None
 
@@ -388,6 +408,7 @@ def _ordered_marker_delimiter(line: str) -> str | None:
 def _ordered_marker_specs_from_source(
     tokens: list[Token], index: int, close_index: int, source_lines: list[str] | None
 ) -> list[tuple[int, str]]:
+    """Collect ordered-list marker number and delimiter specs from source lines."""
     if not source_lines:
         return []
     markers: list[tuple[int, str]] = []
@@ -411,6 +432,7 @@ def _ordered_sibling_gap_before_item(
     prev_item_index: int,
     source_lines: list[str] | None,
 ) -> bool:
+    """Return whether source has a blank line before a sibling ordered-list item."""
     if not source_lines:
         return False
     prev_line = _list_item_source_line(tokens, prev_item_index, source_lines)
@@ -444,6 +466,7 @@ def _render_list(
     parent_is_aligned: bool = False,
     forced_base_indent: int | None = None,
 ) -> tuple[str, int]:
+    """Render a list token subtree to Markdown."""
     break_styles = hard_break_styles or _HardBreakStyles()
     layouts = list_layouts or []
     close_type = "ordered_list_close" if ordered else "bullet_list_close"
@@ -703,6 +726,7 @@ def _render_list_item_lines(
     align_prefix: bool = False,
     marker_content_spaces: int | None = None,
 ) -> list[str]:
+    """Render list-item lines including nested blocks."""
     if not item_lines:
         return [(" " * base_indent) + marker]
 
@@ -799,6 +823,7 @@ def _should_preserve_list_marker_spacing(
     source_lines: list[str] | None,
     list_close_index: int | None = None,
 ) -> bool:
+    """Return whether original list-marker spacing should be preserved."""
     if marker_spaces <= 1:
         return False
     list_followed = list_close_index is not None and _list_followed_by_indented_codeblock(
@@ -812,6 +837,7 @@ def _should_preserve_list_marker_spacing(
 
 
 def _source_has_blockquote_blank_line(source_lines: list[str], start: int, end: int) -> bool:
+    """Return whether source lines include a blank line inside a blockquote range."""
     for line_index in range(start, end):
         if line_index < 0 or line_index >= len(source_lines):
             continue
@@ -829,6 +855,7 @@ def _star_marker_becomes_dash(
     *,
     has_nested_bullets: bool,
 ) -> bool:
+    """Return whether ``*`` bullet markers should be normalized to ``-``."""
     if has_nested_bullets:
         return True
     nested_dash_groups = sum(
@@ -844,6 +871,7 @@ def _star_marker_becomes_dash(
 def _top_level_list_base_indent(
     tokens: list[Token], index: int, close_index: int, source_lines: list[str] | None
 ) -> int:
+    """Return base indent width for a top-level list in source."""
     if not source_lines:
         return 0
     src_indent = _list_source_indent(tokens, index, source_lines)
@@ -859,6 +887,7 @@ def _top_level_list_base_indent(
 
 
 def _top_level_list_single_item_is_simple(tokens: list[Token], list_index: int, close_index: int) -> bool:
+    """Return whether a single-item top-level list has only simple prose content."""
     for item_index in range(list_index + 1, close_index):
         if tokens[item_index].type != "list_item_open":
             continue
@@ -875,6 +904,7 @@ def _top_level_list_single_item_is_simple(tokens: list[Token], list_index: int, 
 
 
 def _wrap_list_item_prose(block: str, *, prefix: str, continuation: str, width: int) -> list[str]:
+    """Wrap list-item prose with list-item prefixes."""
     split_at = block.find(") - ")
     if split_at < 0:
         return _wrap_prose(block, width=width, prefix=prefix, continuation=continuation).split("\n")

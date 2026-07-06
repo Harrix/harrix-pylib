@@ -66,6 +66,7 @@ def _extract_delimited_blocks(
     prefix: str,
     block_class: type[BlockT],
 ) -> tuple[str, list[BlockT]]:
+    """Extract delimited front-matter blocks into placeholders."""
     lines, trailing = _split_lines(body)
     result: list[str] = []
     blocks: list[BlockT] = []
@@ -104,6 +105,7 @@ def _extract_yaml_blocks(body: str) -> tuple[str, list[_YamlBlock]]:
 
 
 def _find_delimited_block_close(lines: list[str], start_index: int, *, delimiter: str) -> int | None:
+    """Find the closing delimiter line for a front-matter block."""
     for line_index in range(start_index, len(lines)):
         if lines[line_index].strip() == delimiter:
             return line_index
@@ -113,6 +115,7 @@ def _find_delimited_block_close(lines: list[str], start_index: int, *, delimiter
 
 
 def _format_yaml_block(block: _YamlBlock) -> str:
+    """Format a YAML block with normalized indentation."""
     inner = [_format_yaml_line(line) for line in block.lines[1:-1] if line.strip()]
     if not inner:
         return "---\n---"
@@ -120,6 +123,7 @@ def _format_yaml_block(block: _YamlBlock) -> str:
 
 
 def _format_yaml_line(line: str) -> str:
+    """Format one line inside a YAML block."""
     stripped = line.strip()
     if stripped.startswith("-"):
         stripped = re.sub(r"^-\s+", "- ", stripped)
@@ -155,11 +159,13 @@ def _restore_delimited_blocks(
     pattern: re.Pattern[str],
     formatter: Callable[[BlockT], str],
 ) -> str:
+    """Restore delimited front-matter blocks from placeholders."""
     if not blocks:
         return text
     blocks_by_index = {block.index: block for block in blocks}
 
     def replace(match: re.Match[str]) -> str:
+        """``re.sub`` callback that restores a delimited block from its placeholder."""
         block_index = int(match.group().removeprefix(prefix))
         block = blocks_by_index.get(block_index)
         if block is None:

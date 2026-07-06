@@ -31,6 +31,7 @@ def _blank_separates_sibling_items(lines: list[str], item_index: int, base_inden
 def _consume_item(
     lines: list[str], start: int, base_indent: int, nested_layouts: list[_ListLayout]
 ) -> tuple[int, bool]:
+    """Scan one list item body and return the next line index and loose flag."""
     index = start + 1
     loose = False
     pending_blank = False
@@ -67,6 +68,7 @@ def _drop_code_placeholder_blanks(lines: list[str], tight_code_indices: set[int]
         return lines
 
     def _tight_placeholder(line: str) -> bool:
+        """Return whether a line is a tightly attached code-block placeholder."""
         stripped = line.strip()
         if not stripped.startswith(CODE_PLACEHOLDER_PREFIX):
             return False
@@ -107,10 +109,12 @@ def _is_ordered_list_line(line: str) -> bool:
 
 
 def _line_indent(line: str) -> int:
+    """Return the number of leading whitespace characters in a line."""
     return len(line) - len(line.lstrip())
 
 
 def _parent_list_marker_line(lines: list[str], from_index: int, base_indent: int) -> str | None:
+    """Return the nearest same-level list marker line above ``from_index``."""
     index = from_index
     while index >= 0:
         line = lines[index]
@@ -121,6 +125,7 @@ def _parent_list_marker_line(lines: list[str], from_index: int, base_indent: int
 
 
 def _scan_list(lines: list[str], start: int, layouts: list[_ListLayout]) -> int:
+    """Scan one list block and append its layout metadata."""
     base_indent = _line_indent(lines[start])
     start_is_ordered = _is_ordered_list_line(lines[start])
     gaps_before_item = [False]

@@ -70,10 +70,12 @@ def _format_markdown_fence_block(block_lines: list[str], *, _options: _FormatOpt
 
 
 def _leading_whitespace(line: str) -> str:
+    """Return leading whitespace from a line."""
     return line[: len(line) - len(line.lstrip())]
 
 
 def _reindent_line(line: str, base_indent: str, current_indent: str) -> str:
+    """Reindent a code line from ``base_indent`` to ``current_indent``."""
     if not line.strip():
         return line
     if base_indent and line.startswith(base_indent):

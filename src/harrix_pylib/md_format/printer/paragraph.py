@@ -38,6 +38,7 @@ from harrix_pylib.md_format.printer.inline import (
 
 
 def _broken_wiki_link_source_paragraph(tokens: list[Token], index: int, source_lines: list[str] | None) -> str | None:
+    """Return source paragraph text for a broken wiki-link token sequence."""
     if not source_lines:
         return None
     paragraph_map = tokens[index].map
@@ -70,6 +71,7 @@ def _broken_wiki_link_source_paragraph(tokens: list[Token], index: int, source_l
 
     # Find a line that has an unclosed [[  (i.e. has [[ but no ]] after it)
     def _has_unclosed_wiki_open(line: str) -> bool:
+        """Return whether paragraph text contains an unclosed ``[[`` wiki opener."""
         pos = line.find("[[")
         if pos < 0:
             return False
@@ -86,6 +88,7 @@ def _broken_wiki_link_source_paragraph(tokens: list[Token], index: int, source_l
 
 
 def _join_prose_run_parts(parts: list[str]) -> str:
+    """Join rendered prose-run parts with appropriate spacing."""
     if not parts:
         return ""
     merged = parts[0]
@@ -103,10 +106,12 @@ def _join_prose_run_parts(parts: list[str]) -> str:
 
 
 def _join_without_space(left: str, right: str) -> bool:
+    """Return whether two prose fragments should be joined without an intervening space."""
     return _should_omit_space_between(left, right)
 
 
 def _merged_run_is_link_only_paragraphs(tokens: list[Token], start: int, run_end: int) -> bool:
+    """Return whether a merged paragraph run contains only link paragraphs."""
     paragraph_index = start
     while paragraph_index < run_end:
         children = tokens[paragraph_index + 1].children or []
@@ -119,6 +124,7 @@ def _merged_run_is_link_only_paragraphs(tokens: list[Token], start: int, run_end
 
 
 def _merged_run_is_whitespace_inline_code(tokens: list[Token], start: int, run_end: int) -> bool:
+    """Return whether a merged run is whitespace-separated inline code spans."""
     paragraph_index = start
     while paragraph_index < run_end:
         inline = tokens[paragraph_index + 1]
@@ -132,6 +138,7 @@ def _merged_run_is_whitespace_inline_code(tokens: list[Token], start: int, run_e
 
 
 def _merged_run_should_join_as_prose(tokens: list[Token], start: int, run_end: int) -> bool:
+    """Return whether adjacent paragraphs in a run should be joined as one prose block."""
     paragraph_index = start
     while paragraph_index < run_end:
         inline = tokens[paragraph_index + 1]
@@ -143,6 +150,7 @@ def _merged_run_should_join_as_prose(tokens: list[Token], start: int, run_end: i
 
 
 def _paragraph_contains_hangul(text: str) -> bool:
+    """Return whether paragraph text contains Hangul characters."""
     non_space = [char for char in text if not char.isspace()]
     if not non_space:
         return False
@@ -151,6 +159,7 @@ def _paragraph_contains_hangul(text: str) -> bool:
 
 
 def _paragraph_is_cjk_dominant(text: str) -> bool:
+    """Return whether CJK characters dominate paragraph text."""
     non_space = [char for char in text if not char.isspace()]
     if not non_space:
         return False
@@ -159,6 +168,7 @@ def _paragraph_is_cjk_dominant(text: str) -> bool:
 
 
 def _paragraph_run_end(tokens: list[Token], start: int) -> int | None:
+    """Return the exclusive end index of a paragraph token run."""
     start_map = tokens[start].map
     if tokens[start].type != "paragraph_open" or not start_map:
         return None
@@ -176,6 +186,7 @@ def _paragraph_run_end(tokens: list[Token], start: int) -> int | None:
 
 
 def _paragraph_single_text_source_line(tokens: list[Token], index: int, source_lines: list[str] | None) -> str | None:
+    """Return the single source line backing a one-line paragraph, if any."""
     if not source_lines:
         return None
     paragraph_map = tokens[index].map
@@ -192,6 +203,7 @@ def _paragraph_single_text_source_line(tokens: list[Token], index: int, source_l
 
 
 def _paragraph_source_line(tokens: list[Token], index: int, source_lines: list[str] | None) -> str | None:
+    """Return the source line mapped to a paragraph token."""
     if not source_lines:
         return None
     paragraph_map = tokens[index].map
@@ -204,6 +216,7 @@ def _paragraph_source_line(tokens: list[Token], index: int, source_lines: list[s
 
 
 def _plain_heading_source_line(tokens: list[Token], index: int, source_lines: list[str] | None) -> str | None:
+    """Return the source ATX heading line for a heading token."""
     if not source_lines:
         return None
     heading_map = tokens[index].map
@@ -222,6 +235,7 @@ def _plain_heading_source_line(tokens: list[Token], index: int, source_lines: li
 
 
 def _plain_inline_code_source_line(tokens: list[Token], index: int, source_lines: list[str] | None) -> str | None:
+    """Return the source line for a paragraph that is only inline code."""
     if not source_lines:
         return None
     paragraph_map = tokens[index].map
@@ -248,6 +262,7 @@ def _plain_paragraph_source_line(
     options: _FormatOptions,
     rendered_line: str,
 ) -> str | None:
+    """Return the source line for a plain paragraph token."""
     source_line = _paragraph_single_text_source_line(tokens, index, source_lines)
     if source_line is None:
         return None
@@ -280,6 +295,7 @@ def _render_joined_prose_run(
     options: _FormatOptions,
     hard_break_styles: _HardBreakStyles | None = None,
 ) -> str:
+    """Render a joined multi-paragraph prose run."""
     break_styles = hard_break_styles or _HardBreakStyles()
     parts: list[str] = []
     paragraph_index = start
@@ -301,6 +317,7 @@ def _render_joined_prose_run(
 
 
 def _render_merged_whitespace_inline_code(tokens: list[Token], start: int, run_end: int) -> str:
+    """Render merged whitespace-separated inline code paragraphs."""
     contents: list[str] = []
     paragraph_index = start
     while paragraph_index < run_end:
@@ -320,6 +337,7 @@ def _render_paragraph(
     source_lines: list[str] | None = None,
     preserve_source_line: bool = True,
 ) -> tuple[str, int]:
+    """Render one paragraph block token to Markdown."""
     if preserve_source_line:
         inline_code_line = _plain_inline_code_source_line(tokens, index, source_lines)
         if inline_code_line is not None:
@@ -373,6 +391,7 @@ def _render_paragraph(
 
 
 def _setext_heading_source_line(tokens: list[Token], index: int, source_lines: list[str] | None) -> str | None:
+    """Return the source setext heading line for a heading token."""
     if not source_lines:
         return None
     heading_map = tokens[index].map
@@ -388,6 +407,7 @@ def _setext_heading_source_line(tokens: list[Token], index: int, source_lines: l
 
 
 def _should_wrap_prose(text: str, *, prefix: str, width: int) -> bool:
+    """Return whether paragraph prose should be wrapped to ``print_width``."""
     return _prose_display_width(prefix + text) > width
 
 
@@ -397,6 +417,7 @@ def _source_blocks_are_adjacent(
     current_index: int | None,
     source_lines: list[str] | None,
 ) -> bool:
+    """Return whether two block tokens are adjacent in the original source."""
     if tokens is None or source_lines is None or previous_index is None or current_index is None:
         return False
     previous_map = tokens[previous_index].map
@@ -433,6 +454,7 @@ def _source_blocks_are_adjacent(
 
 
 def _source_bullet_marker(line: str) -> str | None:
+    """Return the bullet marker character from a source list line."""
     match = re.match(r"\s*([-*+])\s+", line)
     if match is None:
         return None
@@ -440,12 +462,14 @@ def _source_bullet_marker(line: str) -> str | None:
 
 
 def _source_line_is_more_literal(source_line: str, rendered_line: str) -> bool:
+    """Return whether the source line is more literal than the rendered line."""
     if source_line.count("\\") > rendered_line.count("\\"):
         return True
     return bool("&" in source_line and source_line != rendered_line and ("&amp;" in source_line or "&#" in source_line))
 
 
 def _strip_list_item_content(line: str) -> str:
+    """Strip list marker prefix and return item body text."""
     match = LIST_ITEM_CONTENT_RE.match(line)
     if match is None:
         return line
@@ -459,6 +483,7 @@ def _try_render_merged_link_paragraphs(
     options: _FormatOptions,
     hard_break_styles: _HardBreakStyles | None = None,
 ) -> tuple[str | None, int]:
+    """Try to render adjacent link-only paragraphs as one prose run."""
     run_end = _paragraph_run_end(tokens, index)
     if run_end is None:
         return None, index
@@ -487,6 +512,7 @@ def _try_render_merged_paragraphs(
     options: _FormatOptions,
     hard_break_styles: _HardBreakStyles | None = None,
 ) -> tuple[str | None, int]:
+    """Try to render adjacent plain paragraphs as one prose run."""
     if options.prose_wrap != "always":
         return None, index
     run_end = _paragraph_run_end(tokens, index)
@@ -509,6 +535,7 @@ def _try_render_merged_paragraphs(
 def _unparsed_image_reference_source_line(
     tokens: list[Token], index: int, source_lines: list[str] | None
 ) -> str | None:
+    """Return the source line for an unparsed image reference paragraph."""
     source_line = _paragraph_source_line(tokens, index, source_lines)
     if source_line is None:
         return None
