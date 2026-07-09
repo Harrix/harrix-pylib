@@ -101,7 +101,13 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
     return res
 
 
-def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: bool = True, domain: str = "") -> str:
+def extract_functions_and_classes(
+    filename: Path | str,
+    *,
+    is_add_link_demo: bool = True,
+    domain: str = "",
+    src_folder: Path | str | None = None,
+) -> str:
     """Extract all classes and functions from a Python file and formats them into a Markdown list.
 
     Args:
@@ -109,6 +115,7 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
     - `filename` (Path | str): The path to the Python file to be parsed.
     - `is_add_link_demo` (`bool`): Whether to add a link to the documentation demo. Defaults to `True`.
     - `domain` (`str`): The domain for the documentation link. Defaults to an empty string.
+    - `src_folder` (`Path | str | None`): The project's `src` folder used to build nested `.g.md` paths. Defaults to `None`.
 
     Returns:
 
@@ -144,6 +151,12 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
 
     """
     filename = Path(filename)
+    if src_folder is not None:
+        docs_g_md_path = _docs_g_md_relative_path(filename, Path(src_folder))
+    else:
+        docs_g_md_path = Path(f"{filename.stem}.g.md")
+    docs_path = docs_g_md_path.as_posix()
+
     with Path(filename).open(encoding="utf-8") as f:
         code = f.read()
 
@@ -181,7 +194,7 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
             # Generate GitHub-compatible anchor using the same logic as GitHub
             heading_text = f"🏛️ Class `{class_name}`"
             anchor = h.md.generate_id(heading_text, existing_ids)
-            class_link = f"{domain}/blob/main/docs/{filename.stem}.g.md#{anchor}"
+            class_link = f"{domain}/blob/main/docs/{docs_path}#{anchor}"
             if base_classes_str:
                 name = f"🏛️ Class [`{class_name} ({base_classes_str})`]({class_link})"
             else:
@@ -204,7 +217,7 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
             # Generate GitHub-compatible anchor using the same logic as GitHub
             heading_text = f"🔧 Function `{func_name}`"
             anchor = h.md.generate_id(heading_text, existing_ids)
-            func_link = f"{domain}/blob/main/docs/{filename.stem}.g.md#{anchor}"
+            func_link = f"{domain}/blob/main/docs/{docs_path}#{anchor}"
             name = f"🔧 [`{func_name}`]({func_link})"
         else:
             name = f"🔧 `{func_name}`"
@@ -218,8 +231,8 @@ def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: boo
     output_lines = []
     output_lines.append(f"### 📄 File `{filename.name}`\n")
     if is_add_link_demo:
-        link = f"{domain}/blob/main/docs/{filename.stem}.g.md"
-        output_lines.append(f"Doc: [{filename.stem}.g.md]({link})\n")
+        link = f"{domain}/blob/main/docs/{docs_path}"
+        output_lines.append(f"Doc: [{docs_path}]({link})\n")
     output_lines.append("| Function/Class | Description |")
     output_lines.append("|----------------|-------------|")
 
@@ -286,21 +299,12 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
             result_lines.append(f"File {filename.name} is skipped (no public API).")
             continue
 
-        list_funcs = h.py.extract_functions_and_classes(filename, is_add_link_demo=True, domain=domain)
+        list_funcs = h.py.extract_functions_and_classes(
+            filename, is_add_link_demo=True, domain=domain, src_folder=src_folder
+        )
         docs = generate_md_docs_content(filename)
 
-        # Calculate relative path from src folder to preserve folder structure
-        relative_path = filename.relative_to(src_folder)
-
-        # Skip the first part (project name folder) if it exists
-        if len(relative_path.parts) > 1:
-            # Remove the first directory (project name) from the path
-            relative_path_parts = relative_path.parts[1:]
-            docs_relative_path = Path(*relative_path_parts).with_suffix(".g.md")
-        else:
-            # If file is directly in src folder, keep original path
-            docs_relative_path = relative_path.with_suffix(".g.md")
-
+        docs_relative_path = _docs_g_md_relative_path(filename, src_folder)
         filename_docs = docs_folder / docs_relative_path
 
         # Create parent directories if they don't exist
@@ -900,6 +904,14 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
     # Write the sorted code back to the file
     with Path(filename).open("w", encoding="utf-8") as f:
         f.write(new_code)
+
+
+def _docs_g_md_relative_path(py_file: Path, src_folder: Path) -> Path:
+    """Return the relative `.g.md` path under `docs/` for a Python source file."""
+    relative_path = py_file.relative_to(src_folder)
+    if len(relative_path.parts) > 1:
+        return Path(*relative_path.parts[1:]).with_suffix(".g.md")
+    return relative_path.with_suffix(".g.md")
 
 
 def _fence_for_content(content: str, *, language: str = "python") -> tuple[str, str]:

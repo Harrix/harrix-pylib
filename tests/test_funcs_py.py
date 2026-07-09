@@ -69,6 +69,59 @@ def test_extract_functions_and_classes() -> None:
     assert md == md_after
 
 
+def test_extract_functions_and_classes_nested_docs_links() -> None:
+    with TemporaryDirectory() as temp_folder:
+        temp_path = Path(temp_folder)
+        src_folder = temp_path / "src" / "pkg"
+        module_file = src_folder / "sub" / "module.py"
+        module_file.parent.mkdir(parents=True)
+        module_file.write_text(
+            '''class NestedClass:
+    """Nested class docstring."""
+    pass
+
+def nested_function() -> None:
+    """Nested function docstring."""
+    pass
+''',
+            encoding="utf-8",
+        )
+
+        md = h.py.extract_functions_and_classes(
+            module_file,
+            is_add_link_demo=True,
+            domain="https://example.com/repo",
+            src_folder=temp_path / "src",
+        )
+
+        assert "Doc: [sub/module.g.md](https://example.com/repo/blob/main/docs/sub/module.g.md)" in md
+        assert "docs/sub/module.g.md" in md
+        assert "docs/module.g.md" not in md
+
+
+def test_generate_md_docs_nested_folder_readme_links() -> None:
+    with TemporaryDirectory() as temp_folder:
+        temp_path = Path(temp_folder)
+        src_folder = temp_path / "src" / "pkg" / "sub"
+        src_folder.mkdir(parents=True)
+
+        (src_folder / "test_file.py").write_text(
+            '''def example_function() -> None:
+    """Example function in nested folder."""
+    pass
+''',
+            encoding="utf-8",
+        )
+        (temp_path / "README.md").write_text("# Test\n\n## 📚 List of functions\n", encoding="utf-8")
+
+        h.py.generate_md_docs(folder=temp_path, beginning_of_md="# Test Documentation\n", domain="test")
+
+        readme_content = (temp_path / "README.md").read_text(encoding="utf-8")
+        assert "test/blob/main/docs/sub/test_file.g.md" in readme_content
+        assert "Doc: [sub/test_file.g.md](test/blob/main/docs/sub/test_file.g.md)" in readme_content
+        assert (temp_path / "docs" / "sub" / "test_file.g.md").exists()
+
+
 def test_generate_md_docs() -> None:
     # Setup
     with TemporaryDirectory() as temp_folder:

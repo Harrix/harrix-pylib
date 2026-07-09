@@ -245,19 +245,19 @@ Doc: [python_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs
 
 ### 📄 File `formatter.py`
 
-Doc: [formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md)
+Doc: [md_format/formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/formatter.g.md)
 
-| Function/Class                                                                                                                | Description                                                |
-| ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| 🏛️ Class [`MarkdownFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#️-class-markdownformatter) | Format Markdown text inspired by Prettier Markdown parser. |
+| Function/Class                                                                                                                          | Description                                                |
+| --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 🏛️ Class [`MarkdownFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/formatter.g.md#️-class-markdownformatter) | Format Markdown text inspired by Prettier Markdown parser. |
 
 ### 📄 File `optimizer.py`
 
-Doc: [optimizer.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/optimizer.g.md)
+Doc: [svg_optimize/optimizer.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/svg_optimize/optimizer.g.md)
 
-| Function/Class                                                                                                      | Description                                                           |
-| ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| 🏛️ Class [`SvgOptimizer`](https://github.com/Harrix/harrix-pylib/blob/main/docs/optimizer.g.md#️-class-svgoptimizer) | Optimize SVG markup to a compact form similar to SVGO preset-default. |
+| Function/Class                                                                                                                   | Description                                                           |
+| -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 🏛️ Class [`SvgOptimizer`](https://github.com/Harrix/harrix-pylib/blob/main/docs/svg_optimize/optimizer.g.md#️-class-svgoptimizer) | Optimize SVG markup to a compact form similar to SVGO preset-default. |
 
 ## 📄 License
 
