@@ -249,7 +249,7 @@ Doc: [formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/form
 
 | Function/Class                                                                                                                | Description                                                |
 | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| 🏛️ Class [`MarkdownFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#️-class-markdownformatter) | Format Markdown text inspired by Prettier markdown parser. |
+| 🏛️ Class [`MarkdownFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/formatter.g.md#️-class-markdownformatter) | Format Markdown text inspired by Prettier Markdown parser. |
 
 ### 📄 File `optimizer.py`
 

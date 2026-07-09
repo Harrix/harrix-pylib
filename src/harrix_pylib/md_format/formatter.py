@@ -37,7 +37,7 @@ _EMPTY_FENCE_RE = re.compile(r"(?m)^(?P<indent>[ \t]*)(?P<fence>`{3,}|~{3,})[ \t
 
 
 class MarkdownFormatter:
-    """Format Markdown text inspired by Prettier markdown parser."""
+    """Format Markdown text inspired by Prettier Markdown parser."""
 
     def __call__(self, text: str) -> str:
         """Format Markdown text."""

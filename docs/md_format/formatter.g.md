@@ -28,7 +28,7 @@ lang: en
 class MarkdownFormatter
 ```
 
-Format Markdown text inspired by Prettier markdown parser.
+Format Markdown text inspired by Prettier Markdown parser.
 
 <details>
 <summary>Code:</summary>
