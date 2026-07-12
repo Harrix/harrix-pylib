@@ -131,7 +131,9 @@ Args:
 - `filename` (Path | str): The path to the Python file to be parsed.
 - `is_add_link_demo` (`bool`): Whether to add a link to the documentation demo. Defaults to `True`.
 - `domain` (`str`): The domain for the documentation link. Defaults to an empty string.
-- `src_folder` (`Path | str | None`): The project's `src` folder used to build nested `.g.md` paths. Defaults to `None`.
+- `src_folder` (`Path | str | None`): The project's `src` folder used to build nested `.g.md` paths. Defaults to
+
+`None`.
 
 Returns:
 
