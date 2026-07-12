@@ -867,6 +867,15 @@ def test_generate_image_captions_content() -> None:
     assert md_after == h.md.generate_image_captions_content(md)
 
 
+def test_generate_image_captions_content_consecutive_images() -> None:
+    current_folder = h.dev.get_project_root()
+    md = Path(current_folder / "tests/data/generate_image_captions_consecutive__before.md").read_text(encoding="utf8")
+    md_after = Path(current_folder / "tests/data/generate_image_captions_consecutive__after.md").read_text(
+        encoding="utf8"
+    )
+    assert md_after == h.md.generate_image_captions_content(md)
+
+
 def test_append_yaml_tag() -> None:
     """Test adding YAML tag to a Markdown file."""
     md_before = """---

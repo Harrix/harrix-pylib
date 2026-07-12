@@ -2212,8 +2212,22 @@ def generate_image_captions_content(markdown_text: str) -> str:
         new_lines.append(line)
     content_md = "\n".join(new_lines)
 
-    # Add captions
+    # Separate consecutive images with blank lines
     image_re = re.compile(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$")
+    new_lines = []
+    lines = content_md.split("\n")
+    for line, inside_code in identify_code_blocks(lines):
+        if inside_code:
+            new_lines.append(line)
+            continue
+        if image_re.match(line) and new_lines:
+            prev_line = new_lines[-1]
+            if prev_line.strip() and (image_re.match(prev_line) or re.match(r"^_.*_$", prev_line)):
+                new_lines.append("")
+        new_lines.append(line)
+    content_md = "\n".join(new_lines)
+
+    # Add captions
     forbidden_substrings = ("![Featured image](", "img.shields.io", "<!-- no-caption -->")
 
     image_count = 0

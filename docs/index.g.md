@@ -35,9 +35,7 @@ lang: en
 
 </details>
 
-![GitHub](https://img.shields.io/badge/GitHub-harrix--pylib-blue?logo=github)
-![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib)
-![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
+![GitHub](https://img.shields.io/badge/GitHub-harrix--pylib-blue?logo=github) ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
 
 GitHub: <https://github.com/Harrix/harrix-pylib>
 
