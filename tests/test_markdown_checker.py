@@ -937,23 +937,27 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H031: Invalid image alt text format
+        # H031: Invalid or placeholder image alt text
         # =====================================================================
-        invalid_alt_file = temp_path / "invalid_alt.md"
-        invalid_alt_file.write_text(
-            "---\nlang: en\n---\n\n![GitHub repo](img/image.png)\n",
-            encoding="utf-8",
-        )
-        errors = checker.check(invalid_alt_file, select={"H031"})
-        assert any("H031" in e for e in errors)
-
-        valid_alt_cases = [
+        invalid_alt_cases = [
             "![](img/image.png)\n",
             "![alt text](img/image.png)\n",
-            "![Alt Text](img/image.png)\n",
             "![Alt text](img/image.png)\n",
+            "![ALT TEXT](img/image.png)\n",
+            "![Alt Text](img/image.png)\n",
+            "![lowercase caption](img/image.png)\n",
+        ]
+        for index, body in enumerate(invalid_alt_cases):
+            invalid_alt_file = temp_path / f"invalid_alt_{index}.md"
+            invalid_alt_file.write_text(f"---\nlang: en\n---\n\n{body}", encoding="utf-8")
+            errors = checker.check(invalid_alt_file, select={"H031"})
+            assert any("H031" in e for e in errors), f"H031 must fire for invalid alt text: {body.strip()}"
+
+        valid_alt_cases = [
+            "![Возвращение функционала PrintScreen](img/image.png)\n",
+            "![GitHub repo](img/image.png)\n",
             "![Alt text 2](img/image2.png)\n",
-            "![alt text 2](img/image2.png)\n",
+            "![Uppercase caption](img/image.png)\n",
         ]
         for index, body in enumerate(valid_alt_cases):
             valid_alt_file = temp_path / f"valid_alt_{index}.md"
