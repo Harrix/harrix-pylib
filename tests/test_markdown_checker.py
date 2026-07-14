@@ -635,6 +635,48 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
+        # H032: Two consecutive dots
+        # =====================================================================
+        two_dots_file = temp_path / "two_dots.md"
+        two_dots_file.write_text("---\nlang: en\n---\n\nWait for it..\n", encoding="utf-8")
+        errors = checker.check(two_dots_file, select={"H032"})
+        assert any("H032" in e for e in errors)
+
+        two_dots_mid_file = temp_path / "two_dots_mid.md"
+        two_dots_mid_file.write_text("---\nlang: en\n---\n\nEnd of sentence.. Next sentence.\n", encoding="utf-8")
+        errors = checker.check(two_dots_mid_file, select={"H032"})
+        assert any("H032" in e for e in errors)
+
+        # Three dots should trigger H017, not H032
+        three_not_two_file = temp_path / "three_not_two.md"
+        three_not_two_file.write_text("---\nlang: en\n---\n\nWait for it...\n", encoding="utf-8")
+        errors = checker.check(three_not_two_file, select={"H032"})
+        assert not errors
+
+        # Parent-directory path ../ should not trigger H032
+        parent_path_file = temp_path / "parent_path.md"
+        parent_path_file.write_text("---\nlang: en\n---\n\nSee ../docs for details.\n", encoding="utf-8")
+        errors = checker.check(parent_path_file, select={"H032"})
+        assert not errors
+
+        # Correct ellipsis should not trigger H032
+        ellipsis_ok_file = temp_path / "ellipsis_ok_h032.md"
+        ellipsis_ok_file.write_text("---\nlang: en\n---\n\nWait for it… and more.\n", encoding="utf-8")
+        errors = checker.check(ellipsis_ok_file, select={"H032"})
+        assert not errors
+
+        # Two dots inside code / inline code should not trigger H032
+        two_dots_code_file = temp_path / "two_dots_code.md"
+        two_dots_code_file.write_text("---\nlang: en\n---\n\n```python\nx = range(1..10)\n```\n", encoding="utf-8")
+        errors = checker.check(two_dots_code_file, select={"H032"})
+        assert not errors
+
+        two_dots_inline_file = temp_path / "two_dots_inline.md"
+        two_dots_inline_file.write_text("---\nlang: en\n---\n\nUse `1..10` in code.\n", encoding="utf-8")
+        errors = checker.check(two_dots_inline_file, select={"H032"})
+        assert not errors
+
+        # =====================================================================
         # H018: Curly/straight quotes instead of angle quotes
         # =====================================================================
         straight_quote_file = temp_path / "straight_quote.md"

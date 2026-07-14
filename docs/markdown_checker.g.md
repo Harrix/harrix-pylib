@@ -61,6 +61,7 @@ Rules:
 - **H029** - Space required after colon in inline emphasis.
 - **H030** - Colon outside inline emphasis (should be inside).
 - **H031** - Invalid or placeholder image alt text (empty, editor placeholder, or lowercase start).
+- **H032** - Two consecutive dots (typo for period or incomplete ellipsis; `../` paths are allowed).
 
 <details>
 <summary>Code:</summary>
@@ -127,9 +128,11 @@ class MarkdownChecker:
         "H029": "Space required after colon in inline emphasis",
         "H030": "Colon outside inline emphasis (should be inside)",
         "H031": "Invalid or placeholder image alt text",
+        "H032": "Two consecutive dots",
     }
 
     _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
+    _TWO_DOTS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<!\.)\.\.(?![\./])")
 
     # Patterns for H029: colon inside or after inline emphasis without following space
     _EMPHASIS_COLON_NO_SPACE_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
@@ -892,6 +895,9 @@ class MarkdownChecker:
             error_msg = f'{self.RULES["H017"]}: "..." should be "…"'
             yield self._format_error("H017", error_msg, filename, line_num=line_num, col=col)
 
+        if "H032" in rules:
+            yield from self._check_two_dots(filename, line, clean_line, line_num)
+
         if "H018" in rules:
             yield from self._check_quotes(filename, line, clean_line, line_num)
 
@@ -1114,6 +1120,15 @@ class MarkdownChecker:
             ):
                 error_msg = f'{self.RULES["H015"]}: found " !"'
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
+
+    def _check_two_dots(self, filename: Path, _line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for exactly two consecutive dots (H032).
+
+        Does not match ``...`` (handled by H017) or ``../`` parent-directory paths.
+        """
+        for match in self._TWO_DOTS_PATTERN.finditer(clean_line):
+            error_msg = f'{self.RULES["H032"]}: ".." should be "." or "…"'
+            yield self._format_error("H032", error_msg, filename, line_num=line_num, col=match.start() + 1)
 
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '&ast;' (H024).
