@@ -458,6 +458,24 @@ def test_markdown_checker() -> None:
         errors = checker.check(single_line_math_code_file, select={"H013"})
         assert not errors
 
+        # Horizontal rule before code block should not trigger H013
+        hr_before_code_file = temp_path / "hr_before_code.md"
+        hr_before_code_file.write_text(
+            "---\nlang: en\n---\n\n---\n\n```cpp\nbool value = true;\n```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(hr_before_code_file, select={"H013"})
+        assert not errors
+
+        # Alternative horizontal rule markers before code block should not trigger H013
+        hr_stars_before_code_file = temp_path / "hr_stars_before_code.md"
+        hr_stars_before_code_file.write_text(
+            "---\nlang: en\n---\n\n***\n\n```cpp\nbool value = true;\n```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(hr_stars_before_code_file, select={"H013"})
+        assert not errors
+
         # =====================================================================
         # H014: Missing colon before image
         # =====================================================================

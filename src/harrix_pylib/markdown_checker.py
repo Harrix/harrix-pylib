@@ -118,6 +118,7 @@ class MarkdownChecker:
     _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
     _TWO_DOTS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<!\.)\.\.(?![\./])")
     _MATH_DELIMITER_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*\$\$\s*$")
+    _HORIZONTAL_RULE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(?:\*\s*){3,}$|^(?:-\s*){3,}$|^(?:_\s*){3,}$")
 
     # Patterns for H029: colon inside or after inline emphasis without following space
     _EMPHASIS_COLON_NO_SPACE_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
@@ -1289,6 +1290,10 @@ class MarkdownChecker:
             content = content.lstrip()[1:].lstrip()
         return content.startswith("--")
 
+    def _is_horizontal_rule(self, line: str) -> bool:
+        """Return True if the line is a Markdown horizontal rule (``---``, ``***``, ``___``)."""
+        return bool(self._HORIZONTAL_RULE_PATTERN.match(line.strip()))
+
     @staticmethod
     def _is_hyphenated_identifier_fragment(text: str, start: int, end: int) -> bool:
         """Return True if span is part of a hyphenated identifier (e.g. ``markdown-it``, ``git-diff-friendly``)."""
@@ -1371,4 +1376,9 @@ class MarkdownChecker:
     def _should_check_paragraph_end(self, line: str) -> bool:
         """Return True if line is a regular paragraph that should end with colon before code/image."""
         stripped = line.strip()
-        return bool(stripped) and stripped != "```" and not stripped.startswith(("![", "#"))
+        return (
+            bool(stripped)
+            and stripped != "```"
+            and not stripped.startswith(("![", "#"))
+            and not self._is_horizontal_rule(stripped)
+        )
