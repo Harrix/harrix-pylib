@@ -916,6 +916,18 @@ def test_markdown_checker() -> None:
         errors = checker.check(list_sentence_error_file, select={"H021"})
         assert any("H021" in e for e in errors)
 
+        # Language abbreviations should not trigger H021
+        lang_abbrev_file = temp_path / "lang_abbrev_h021.md"
+        lang_abbrev_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "Систематическая ошибка выжившего (англ. survivorship bias) — разновидность.\n"
+            "(лат. аргумент к народу)\n"
+            "см. также раздел ниже\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(lang_abbrev_file, select={"H021"})
+        assert not errors
+
         # =====================================================================
         # H022: Non-breaking space
         # =====================================================================

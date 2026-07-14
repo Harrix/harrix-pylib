@@ -50,7 +50,8 @@ Rules:
 - **H018** - Curly/straight quotes instead of angle quotes.
 - **H019** - HTML tags in markdown content.
 - **H020** - Image caption starts with lowercase letter.
-- **H021** - Lowercase letter after sentence-ending punctuation.
+- **H021** - Lowercase letter after sentence-ending punctuation (abbreviations like `англ.`,
+  `лат.`, `см.` are allowed).
 - **H022** - Non-breaking space character found.
 - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
 - **H024** - Latin "x" or Cyrillic "x" used instead of multiplication sign "x".
@@ -138,6 +139,34 @@ class MarkdownChecker:
     _TWO_DOTS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<!\.)\.\.(?![\./])")
     _MATH_DELIMITER_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*\$\$\s*$")
     _HORIZONTAL_RULE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(?:\*\s*){3,}$|^(?:-\s*){3,}$|^(?:_\s*){3,}$")
+
+    # Abbreviations whose trailing period must not trigger H021
+    _H021_ALLOWED_TAIL_LEN: ClassVar[int] = 10
+    _H021_PERIOD_ABBREVS: ClassVar[frozenset[str]] = frozenset(
+        {
+            "англ.",
+            "анг.",
+            "лат.",
+            "нем.",
+            "франц.",
+            "греч.",
+            "рус.",  # noqa: RUF001  # ignore: HP001
+            "итал.",
+            "исп.",
+            "порт.",
+            "укр.",
+            "кит.",
+            "яп.",
+            "см.",
+            "e.g.",
+            "i.e.",
+            "т. е.",  # noqa: RUF001  # ignore: HP001
+            "т. д.",  # ignore: HP001
+            "т. ч.",  # ignore: HP001
+            "т. п.",  # ignore: HP001
+        }
+    )
+    _H021_RU_DOTTED_ABBREV_SECONDS: ClassVar[frozenset[str]] = frozenset({"е", "д", "ч", "п"})  # noqa: RUF001  # ignore: HP001
 
     # Patterns for H029: colon inside or after inline emphasis without following space
     _EMPHASIS_COLON_NO_SPACE_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
@@ -376,6 +405,34 @@ class MarkdownChecker:
             elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
                 yield from self.find_markdown_files(item, additional_ignore_patterns)
 
+    def _build_display_math_line_indices(self, code_block_info: list) -> frozenset[int]:
+        """Return content-line indices that belong to display-math ``$$...$$`` blocks."""
+        display_math_lines: set[int] = set()
+        in_math = False
+
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                continue
+
+            if self._MATH_DELIMITER_PATTERN.match(line):
+                display_math_lines.add(index)
+                in_math = not in_math
+                continue
+
+            stripped = line.strip()
+            if (
+                stripped.startswith("$$")
+                and stripped.endswith("$$")
+                and len(stripped) > self._EMPTY_SINGLE_LINE_DISPLAY_MATH_LEN
+            ):
+                display_math_lines.add(index)
+                continue
+
+            if in_math:
+                display_math_lines.add(index)
+
+        return frozenset(display_math_lines)
+
     def _check_all_lines_rules(
         self, filename: Path, line: str, line_num: int, rules: set, *, is_code_block: bool = False
     ) -> Generator[str, None, None]:
@@ -412,8 +469,12 @@ class MarkdownChecker:
                 lang = ""
 
             yield from self._check_yaml_rules(filename, yaml_part, all_lines, rules)
-            yield from self._check_content_rules(filename, all_lines, yaml_end_line, rules, content, lang=lang)
-            yield from self._check_code_rules(filename, all_lines, yaml_end_line, rules)
+            content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
+            code_block_info = list(h.md.identify_code_blocks(content_lines))
+            yield from self._check_content_rules(
+                filename, all_lines, yaml_end_line, rules, content, lang=lang, code_block_info=code_block_info
+            )
+            yield from self._check_code_rules(filename, yaml_end_line, rules, code_block_info=code_block_info)
 
         except (OSError, UnicodeDecodeError) as e:
             yield self._format_error("H000", f"Exception error: {e}", filename)
@@ -423,12 +484,9 @@ class MarkdownChecker:
     # =========================================================================
 
     def _check_code_rules(
-        self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set
+        self, filename: Path, yaml_end_line: int, rules: set, *, code_block_info: list
     ) -> Generator[str, None, None]:
         """Check code block related rules."""
-        content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
-        code_block_info = list(h.md.identify_code_blocks(content_lines))
-
         for i, (line, _is_code_block) in enumerate(code_block_info):
             actual_line_num = (yaml_end_line - 1) + i + 1
 
@@ -451,6 +509,7 @@ class MarkdownChecker:
         content_lines: list[str],
         line_index: int,
         code_block_info: list,
+        display_math_lines: frozenset[int],
     ) -> Generator[str, None, None]:
         """Check for missing colon before code block (H013)."""
         if line_index + 2 >= len(code_block_info):
@@ -468,7 +527,7 @@ class MarkdownChecker:
         if not self._should_check_paragraph_end(line):
             return
 
-        if self._line_in_display_math(content_lines, line_index):
+        if line_index in display_math_lines:
             return
 
         # Check pattern: non-empty line, empty line, code block start
@@ -486,7 +545,14 @@ class MarkdownChecker:
             yield self._format_error("H013", error_msg, filename, line_num=line_num, col=col)
 
     def _check_colon_before_image(
-        self, filename: Path, line: str, line_num: int, content_lines: list[str], line_index: int
+        self,
+        filename: Path,
+        line: str,
+        line_num: int,
+        content_lines: list[str],
+        line_index: int,
+        *,
+        display_math_lines: frozenset[int],
     ) -> Generator[str, None, None]:
         """Check for missing colon before image (H014)."""
         if line_index + 2 >= len(content_lines):
@@ -494,7 +560,7 @@ class MarkdownChecker:
         if not self._should_check_paragraph_end(line):
             return
 
-        if self._line_in_display_math(content_lines, line_index):
+        if line_index in display_math_lines:
             return
 
         next_line = content_lines[line_index + 1]
@@ -591,11 +657,19 @@ class MarkdownChecker:
     # =========================================================================
 
     def _check_content_rules(
-        self, filename: Path, all_lines: list[str], yaml_end_line: int, rules: set, content: str = "", *, lang: str = ""
+        self,
+        filename: Path,
+        all_lines: list[str],
+        yaml_end_line: int,
+        rules: set,
+        content: str = "",
+        *,
+        lang: str = "",
+        code_block_info: list,
     ) -> Generator[str, None, None]:
         """Check content-related rules working directly with original file lines."""
         content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
-        code_block_info = list(h.md.identify_code_blocks(content_lines))
+        display_math_lines = self._build_display_math_line_indices(code_block_info)
 
         yield from self._check_file_level_rules(
             filename, all_lines, rules, content, code_block_info=code_block_info, yaml_end_line=yaml_end_line
@@ -617,6 +691,7 @@ class MarkdownChecker:
                     rules,
                     yaml_end_line,
                     lang=lang,
+                    display_math_lines=display_math_lines,
                 )
 
     def _check_dash_usage(
@@ -836,10 +911,9 @@ class MarkdownChecker:
         Checks each non-inline-code segment separately so removed code (e.g.
         ``Optional. `"value"` stores``) does not falsely join a period with the
         next word. Periods in ordered-list and section numbers (``1.``,
-        ``3.1.``) are ignored.
+        ``3.1.``) and known abbreviations (``англ.``, ``лат.``, ``см.``) are ignored.
         """
         pattern = r"[.!?]\s+([a-zа-яё])"  # noqa: RUF001  # ignore: HP001
-        exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001  # ignore: HP001
 
         offset = 0
         for segment, in_code in h.md.identify_code_blocks_line(line):
@@ -847,10 +921,7 @@ class MarkdownChecker:
                 for match in re.finditer(pattern, segment):
                     letter = match.group(1)
                     pos = match.start()
-                    if pos > 0 and segment[pos - 1].isdigit():
-                        continue
-                    context = segment[max(0, pos - 4) : match.end()]
-                    if any(exc in context.lower() for exc in exceptions):
+                    if self._is_h021_allowed_period(segment, pos, match.end()):
                         continue
 
                     col = offset + match.start(1) + 1
@@ -870,6 +941,7 @@ class MarkdownChecker:
         yaml_end_line: int,
         *,
         lang: str = "",
+        display_math_lines: frozenset[int],
     ) -> Generator[str, None, None]:
         """Check rules that apply only to non-code lines (markdown content, not YAML/code)."""
         # Remove inline code, URLs, and identifier-like link labels before text checks
@@ -895,11 +967,13 @@ class MarkdownChecker:
 
         if "H013" in rules:
             yield from self._check_colon_before_code(
-                filename, line, line_num, content_lines, line_index, code_block_info
+                filename, line, line_num, content_lines, line_index, code_block_info, display_math_lines
             )
 
         if "H014" in rules:
-            yield from self._check_colon_before_image(filename, line, line_num, content_lines, line_index)
+            yield from self._check_colon_before_image(
+                filename, line, line_num, content_lines, line_index, display_math_lines=display_math_lines
+            )
 
         if "H015" in rules:
             yield from self._check_space_before_punctuation(filename, line, clean_line, line_num)
@@ -1315,6 +1389,29 @@ class MarkdownChecker:
             content = content.lstrip()[1:].lstrip()
         return content.startswith("--")
 
+    def _is_h021_allowed_period(self, segment: str, period_pos: int, match_end: int) -> bool:
+        """Return True if punctuation at ``period_pos`` is not a sentence-ending period for H021."""
+        if period_pos > 0 and segment[period_pos - 1].isdigit():
+            return True
+        if self._is_h021_ru_dotted_abbrev_period(segment, period_pos):
+            return True
+        tail = segment[max(0, period_pos - self._H021_ALLOWED_TAIL_LEN) : period_pos + 1].lower()
+        if any(tail.endswith(abbrev) for abbrev in self._H021_PERIOD_ABBREVS):
+            return True
+        context = segment[max(0, period_pos - 6) : match_end].lower()
+        return any(abbrev in context for abbrev in self._H021_PERIOD_ABBREVS)
+
+    @staticmethod
+    def _is_h021_ru_dotted_abbrev_period(segment: str, period_pos: int) -> bool:
+        """Return True if period opens a Russian dotted abbrev like ``т. д.`` or ``т. е.``."""  # noqa: RUF002  # ignore: HP001
+        return (
+            period_pos > 0
+            and segment[period_pos - 1].lower() == "т"  # ignore: HP001
+            and period_pos + 2 < len(segment)
+            and segment[period_pos + 1] == " "
+            and segment[period_pos + 2].lower() in MarkdownChecker._H021_RU_DOTTED_ABBREV_SECONDS
+        )
+
     def _is_horizontal_rule(self, line: str) -> bool:
         """Return True if the line is a Markdown horizontal rule (``---``, ``***``, ``___``)."""
         return bool(self._HORIZONTAL_RULE_PATTERN.match(line.strip()))
@@ -1346,38 +1443,6 @@ class MarkdownChecker:
             if start <= pos < end:
                 return part.strip() == "-"
             start = end + 1  # +1 for the | separator
-        return False
-
-    def _line_in_display_math(self, content_lines: list[str], line_index: int) -> bool:
-        """Return True if the line belongs to a display-math ``$$...$$`` block."""
-        code_block_info = list(h.md.identify_code_blocks(content_lines))
-        in_math = False
-
-        for index, (line, in_code) in enumerate(code_block_info):
-            if in_code:
-                if index == line_index:
-                    return False
-                continue
-
-            if self._MATH_DELIMITER_PATTERN.match(line):
-                if index == line_index:
-                    return True
-                in_math = not in_math
-                continue
-
-            stripped = line.strip()
-            if (
-                stripped.startswith("$$")
-                and stripped.endswith("$$")
-                and len(stripped) > self._EMPTY_SINGLE_LINE_DISPLAY_MATH_LEN
-            ):
-                if index == line_index:
-                    return True
-                continue
-
-            if index == line_index:
-                return in_math
-
         return False
 
     def _paragraph_last_char(self, line: str) -> tuple[str, int]:
