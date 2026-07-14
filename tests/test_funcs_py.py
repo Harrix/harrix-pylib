@@ -138,6 +138,61 @@ CLI commands after installation.
             shutil.rmtree(library_path)
 
 
+@pytest.mark.slow
+def test_create_uv_new_notebook() -> None:
+    with TemporaryDirectory() as temp_dir:
+        notebook_name = "TestNotebook"
+        path = Path(temp_dir)
+        cli_commands = """
+## CLI commands
+
+CLI commands after installation.
+
+- `uv self update` — update uv itself.
+- `uv sync --upgrade` — update all project libraries.
+        """
+
+        h.py.create_uv_new_notebook(notebook_name, temp_dir, "code-insiders", cli_commands)
+
+        notebook_path = path / notebook_name
+        assert notebook_path.is_dir()
+        assert (notebook_path / "notebook.ipynb").is_file()
+        assert not (notebook_path / "main.py").is_file()
+        assert (notebook_path / "pyproject.toml").is_file()
+        assert (notebook_path / "README.md").is_file()
+        assert (notebook_path / ".venv").is_dir()
+
+        notebook = json.loads((notebook_path / "notebook.ipynb").read_text(encoding="utf-8"))
+        assert notebook["nbformat"] == 4
+        assert 'print("Hello, World!")' in notebook["cells"][0]["source"][0]
+
+        pyproject = (notebook_path / "pyproject.toml").read_text(encoding="utf-8")
+        assert "jupyter" in pyproject
+        assert "ipykernel" in pyproject
+
+        settings_path = notebook_path / ".vscode" / "settings.json"
+        tasks_path = notebook_path / ".vscode" / "tasks.json"
+        assert settings_path.is_file()
+        assert tasks_path.is_file()
+
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        assert settings["python.defaultInterpreterPath"] == "${workspaceFolder}/.venv/Scripts/python.exe"
+        assert settings["python.terminal.activateEnvironment"] is True
+
+        tasks = json.loads(tasks_path.read_text(encoding="utf-8"))
+        task = tasks["tasks"][0]
+        assert task["runOptions"]["runOn"] == "folderOpen"
+        assert ".venv\\Scripts\\Activate.ps1" in task["command"]
+
+        with (notebook_path / "README.md").open("r", encoding="utf-8") as file:
+            content = file.read()
+            assert f"# {notebook_name}\n\n" in content
+            assert "uv self update" in content
+
+        if notebook_path.exists():
+            shutil.rmtree(notebook_path)
+
+
 def test_extract_functions_and_classes() -> None:
     current_folder = h.dev.get_project_root()
     filename = Path(current_folder / "tests/data/extract_functions_and_classes__before.txt")

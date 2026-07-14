@@ -96,6 +96,92 @@ __all__ = ["hello"]
     return _append_readme_title_and_cli(library_path, library_name, cli_commands, res)
 
 
+def create_uv_new_notebook(notebook_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str:
+    """Create a new Jupyter notebook project using uv and set up necessary files.
+
+    Args:
+
+    - `notebook_name` (`str`): The name of the new notebook project.
+    - `folder` (`Path | str`): The folder path where the project will be created.
+    - `editor` (`str`): The name of the text editor for opening the project. Example: `code`
+    - `cli_commands` (`Path | str`): The section of CLI commands for `README.md`.
+
+    Returns:
+
+    - `str`: A string containing the result of the operations performed.
+
+    Structure "C:/projects/jupyter-notebook-01":
+
+    ```text
+    ├─ .git
+    ├─ .gitignore
+    ├─ .python-version
+    ├─ .venv
+    ├─ pyproject.toml
+    ├─ README.md
+    ├─ notebook.ipynb
+    ├─ .vscode
+    │  ├─ settings.json
+    │  └─ tasks.json
+    └─ uv.lock
+    ```
+
+    """
+    notebook_name = notebook_name.replace("_", "-").replace(" ", "-")
+    folder_path = Path(folder)
+    notebook_path = folder_path / notebook_name
+    notebook_ipynb = notebook_path / "notebook.ipynb"
+    main_py = notebook_path / "main.py"
+
+    commands = f"""
+        cd {folder_path}
+        uv init {notebook_name}
+        cd {notebook_name}
+        uv sync
+        uv add --dev ruff
+        uv add --dev pytest
+        uv add --dev jupyter
+        uv add --dev ipykernel
+        {_POWERSHELL_APPEND_RUFF}
+    """
+
+    res = h.dev.run_powershell_script(commands)
+
+    if main_py.is_file():
+        main_py.unlink()
+
+    notebook_content = {
+        "cells": [
+            {
+                "cell_type": "code",
+                "execution_count": None,
+                "metadata": {},
+                "outputs": [],
+                "source": ['print("Hello, World!")\n'],
+            }
+        ],
+        "metadata": {
+            "kernelspec": {
+                "display_name": "Python 3",
+                "language": "python",
+                "name": "python3",
+            },
+            "language_info": {
+                "name": "python",
+                "version": "3.13.0",
+            },
+        },
+        "nbformat": 4,
+        "nbformat_minor": 5,
+    }
+    notebook_ipynb.write_text(json.dumps(notebook_content, indent=1) + "\n", encoding="utf-8")
+
+    _write_vscode_dev_terminal_config(notebook_path)
+    res += _open_project_in_editor(notebook_path, notebook_ipynb, editor)
+
+    return _append_readme_title_and_cli(notebook_path, notebook_name, cli_commands, res)
+
+
 def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str:
     """Create a new project using uv, initializes it, and sets up necessary files.
 
