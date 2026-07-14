@@ -487,7 +487,6 @@ class MarkdownChecker:
         filename: Path,
         line: str,
         line_num: int,
-        content_lines: list[str],
         line_index: int,
         code_block_info: list,
         display_math_lines: frozenset[int],
@@ -948,7 +947,7 @@ class MarkdownChecker:
 
         if "H013" in rules:
             yield from self._check_colon_before_code(
-                filename, line, line_num, content_lines, line_index, code_block_info, display_math_lines
+                filename, line, line_num, line_index, code_block_info, display_math_lines
             )
 
         if "H014" in rules:

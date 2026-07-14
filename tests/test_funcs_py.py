@@ -10,6 +10,8 @@ import pytest
 import harrix_pylib as h
 from harrix_pylib.funcs_py import _is_magic_dunder_name, _is_private_name
 
+NOTEBOOK_NBFORMAT = 4
+
 
 @pytest.mark.slow
 def test_create_uv_new_project() -> None:
@@ -163,7 +165,7 @@ CLI commands after installation.
         assert (notebook_path / ".venv").is_dir()
 
         notebook = json.loads((notebook_path / "notebook.ipynb").read_text(encoding="utf-8"))
-        assert notebook["nbformat"] == 4
+        assert notebook["nbformat"] == NOTEBOOK_NBFORMAT
         assert 'print("Hello, World!")' in notebook["cells"][0]["source"][0]
 
         pyproject = (notebook_path / "pyproject.toml").read_text(encoding="utf-8")
