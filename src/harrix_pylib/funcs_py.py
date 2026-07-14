@@ -14,6 +14,87 @@ import libcst as cst
 import harrix_pylib as h
 from harrix_pylib.md_format.front_matter import _prepend_markdown_header
 
+_POWERSHELL_APPEND_RUFF = """
+        Add-Content -Path pyproject.toml -Value "`n[tool.ruff]"
+        Add-Content -Path pyproject.toml -Value "line-length = 120"
+"""
+
+
+def create_uv_new_library(library_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str:
+    """Create a new library using uv, initializes it, and sets up necessary files.
+
+    Args:
+
+    - `library_name` (`str`): The name of the new library.
+    - `folder` (`Path | str`): The folder path where the library will be created.
+    - `editor` (`str`): The name of the text editor for opening the library. Example: `code`
+    - `cli_commands` (`Path | str`): The section of CLI commands for `README.md`.
+
+    Returns:
+
+    - `str`: A string containing the result of the operations performed.
+
+    Structure "C:/projects/TestLibrary":
+
+    ```text
+    ├─ .git
+    ├─ .gitignore
+    ├─ .python-version
+    ├─ .venv
+    ├─ pyproject.toml
+    ├─ README.md
+    ├─ .vscode
+    │  ├─ settings.json
+    │  └─ tasks.json
+    ├─ src
+    │  └─ testlibrary
+    │     ├─ core.py
+    │     ├─ py.typed
+    │     └─ __init__.py
+    └─ uv.lock
+    ```
+
+    """
+    library_name = library_name.replace("_", "-").replace(" ", "-")
+    library_name_under = library_name.replace("-", "_")
+    folder_path = Path(folder)
+    library_path = folder_path / library_name
+    package_dir = library_path / "src" / library_name_under
+    core_py = package_dir / "core.py"
+    init_py = package_dir / "__init__.py"
+
+    commands = f"""
+        cd {folder_path}
+        uv init --lib {library_name}
+        cd {library_name}
+        uv sync
+        uv add --dev ruff
+        uv add --dev pytest
+        {_POWERSHELL_APPEND_RUFF}
+    """
+
+    res = h.dev.run_powershell_script(commands)
+
+    core_py.write_text(
+        '''def hello(name: str = "World") -> str:
+    """Return a greeting message."""
+    return f"Hello, {name}!"
+''',
+        encoding="utf-8",
+    )
+    init_py.write_text(
+        """from .core import hello
+
+__all__ = ["hello"]
+""",
+        encoding="utf-8",
+    )
+
+    _write_vscode_dev_terminal_config(library_path)
+    res += _open_project_in_editor(library_path, core_py, editor)
+
+    return _append_readme_title_and_cli(library_path, library_name, cli_commands, res)
+
 
 def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str:
     """Create a new project using uv, initializes it, and sets up necessary files.
@@ -89,8 +170,7 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
         uv sync
         uv add --dev ruff
         uv add --dev pytest
-        Add-Content -Path pyproject.toml -Value "`n[tool.ruff]"
-        Add-Content -Path pyproject.toml -Value "line-length = 120"
+        {_POWERSHELL_APPEND_RUFF}
     """
 
     res = h.dev.run_powershell_script(commands)
@@ -98,61 +178,10 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
     main_py.parent.mkdir(parents=True, exist_ok=True)
     main_py.write_text('print("Hello, World!")\n', encoding="utf-8")
 
-    vscode_dir = project_path / ".vscode"
-    vscode_dir.mkdir(parents=True, exist_ok=True)
-    settings = {
-        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
-        "python.terminal.activateEnvironment": True,
-        "task.allowAutomaticTasks": "on",
-    }
-    (vscode_dir / "settings.json").write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+    _write_vscode_dev_terminal_config(project_path)
+    res += _open_project_in_editor(project_path, main_py, editor)
 
-    tasks = {
-        "version": "2.0.0",
-        "tasks": [
-            {
-                "label": "Open dev terminal",
-                "type": "shell",
-                "command": "& '${workspaceFolder}\\.venv\\Scripts\\Activate.ps1'; python --version",
-                "options": {
-                    "cwd": "${workspaceFolder}",
-                },
-                "windows": {
-                    "options": {
-                        "shell": {
-                            "executable": "powershell.exe",
-                            "args": ["-NoExit", "-Command"],
-                        }
-                    }
-                },
-                "runOptions": {"runOn": "folderOpen"},
-                "presentation": {
-                    "reveal": "always",
-                    "panel": "dedicated",
-                    "focus": True,
-                },
-                "problemMatcher": [],
-            }
-        ],
-    }
-    (vscode_dir / "tasks.json").write_text(json.dumps(tasks, indent=2) + "\n", encoding="utf-8")
-
-    editor_env = os.environ.copy()
-    editor_env.pop("VIRTUAL_ENV", None)
-    editor_command = f'{editor} --new-window "{project_path.resolve()}" "{main_py.resolve()}"'
-    res += h.dev.run_command(editor_command, env=editor_env)
-
-    readme_path = project_path / "README.md"
-    try:
-        with readme_path.open("a", encoding="utf-8") as file:
-            file.write(f"# {project_name}\n\n{cli_commands}")
-        res += f"Content successfully added to {readme_path}"
-    except FileNotFoundError:
-        res += f"File not found: {readme_path}"
-    except OSError as e:
-        res += f"I/O error: {e}"
-
-    return res
+    return _append_readme_title_and_cli(project_path, project_name, cli_commands, res)
 
 
 def extract_functions_and_classes(
@@ -961,6 +990,19 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         f.write(new_code)
 
 
+def _append_readme_title_and_cli(project_path: Path, name: str, cli_commands: str, res: str) -> str:
+    """Append title and CLI commands section to README.md."""
+    readme_path = project_path / "README.md"
+    try:
+        with readme_path.open("a", encoding="utf-8") as file:
+            file.write(f"# {name}\n\n{cli_commands}")
+        return res + f"Content successfully added to {readme_path}"
+    except FileNotFoundError:
+        return res + f"File not found: {readme_path}"
+    except OSError as e:
+        return res + f"I/O error: {e}"
+
+
 def _docs_g_md_relative_path(py_file: Path, src_folder: Path) -> Path:
     """Return the relative `.g.md` path under `docs/` for a Python source file."""
     relative_path = py_file.relative_to(src_folder)
@@ -1005,3 +1047,53 @@ def _max_backtick_run(text: str) -> int:
         else:
             current = 0
     return max_run
+
+
+def _open_project_in_editor(project_path: Path, file_path: Path, editor: str) -> str:
+    """Open a project folder and file in a new editor window without inheriting VIRTUAL_ENV."""
+    editor_env = os.environ.copy()
+    editor_env.pop("VIRTUAL_ENV", None)
+    editor_command = f'{editor} --new-window "{project_path.resolve()}" "{file_path.resolve()}"'
+    return h.dev.run_command(editor_command, env=editor_env)
+
+
+def _write_vscode_dev_terminal_config(project_path: Path) -> None:
+    """Write VS Code/Cursor settings and an auto-open terminal task for a uv project."""
+    vscode_dir = project_path / ".vscode"
+    vscode_dir.mkdir(parents=True, exist_ok=True)
+    settings = {
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+        "python.terminal.activateEnvironment": True,
+        "task.allowAutomaticTasks": "on",
+    }
+    (vscode_dir / "settings.json").write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+
+    tasks = {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Open dev terminal",
+                "type": "shell",
+                "command": "& '${workspaceFolder}\\.venv\\Scripts\\Activate.ps1'; python --version",
+                "options": {
+                    "cwd": "${workspaceFolder}",
+                },
+                "windows": {
+                    "options": {
+                        "shell": {
+                            "executable": "powershell.exe",
+                            "args": ["-NoExit", "-Command"],
+                        }
+                    }
+                },
+                "runOptions": {"runOn": "folderOpen"},
+                "presentation": {
+                    "reveal": "always",
+                    "panel": "dedicated",
+                    "focus": True,
+                },
+                "problemMatcher": [],
+            }
+        ],
+    }
+    (vscode_dir / "tasks.json").write_text(json.dumps(tasks, indent=2) + "\n", encoding="utf-8")

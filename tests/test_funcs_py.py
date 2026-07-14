@@ -78,6 +78,66 @@ CLI commands after installation.
             shutil.rmtree(project_path)
 
 
+@pytest.mark.slow
+def test_create_uv_new_library() -> None:
+    with TemporaryDirectory() as temp_dir:
+        library_name = "TestLibrary"
+        path = Path(temp_dir)
+        cli_commands = """
+## CLI commands
+
+CLI commands after installation.
+
+- `uv self update` — update uv itself.
+- `uv sync --upgrade` — update all project libraries.
+        """
+
+        h.py.create_uv_new_library(library_name, temp_dir, "code-insiders", cli_commands)
+
+        library_path = path / library_name
+        assert library_path.is_dir()
+
+        library_name_under = library_name.replace("-", "_")
+        package_path = library_path / "src" / library_name_under
+        assert package_path.is_dir()
+
+        assert (package_path / "__init__.py").is_file()
+        assert (package_path / "core.py").is_file()
+        assert (package_path / "py.typed").is_file()
+        assert (library_path / "pyproject.toml").is_file()
+        assert (library_path / "README.md").is_file()
+        assert (library_path / ".venv").is_dir()
+
+        core_content = (package_path / "core.py").read_text(encoding="utf-8")
+        assert "def hello(name: str = " in core_content
+
+        init_content = (package_path / "__init__.py").read_text(encoding="utf-8")
+        assert "from .core import hello" in init_content
+        assert '__all__ = ["hello"]' in init_content
+
+        settings_path = library_path / ".vscode" / "settings.json"
+        tasks_path = library_path / ".vscode" / "tasks.json"
+        assert settings_path.is_file()
+        assert tasks_path.is_file()
+
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        assert settings["python.defaultInterpreterPath"] == "${workspaceFolder}/.venv/Scripts/python.exe"
+        assert settings["python.terminal.activateEnvironment"] is True
+
+        tasks = json.loads(tasks_path.read_text(encoding="utf-8"))
+        task = tasks["tasks"][0]
+        assert task["runOptions"]["runOn"] == "folderOpen"
+        assert ".venv\\Scripts\\Activate.ps1" in task["command"]
+
+        with (library_path / "README.md").open("r", encoding="utf-8") as file:
+            content = file.read()
+            assert f"# {library_name}\n\n" in content
+            assert "uv self update" in content
+
+        if library_path.exists():
+            shutil.rmtree(library_path)
+
+
 def test_extract_functions_and_classes() -> None:
     current_folder = h.dev.get_project_root()
     filename = Path(current_folder / "tests/data/extract_functions_and_classes__before.txt")

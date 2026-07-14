@@ -11,12 +11,100 @@ lang: en
 
 ## Contents
 
+- [🔧 Function `create_uv_new_library`](#-function-create_uv_new_library)
 - [🔧 Function `create_uv_new_project`](#-function-create_uv_new_project)
 - [🔧 Function `extract_functions_and_classes`](#-function-extract_functions_and_classes)
 - [🔧 Function `generate_md_docs`](#-function-generate_md_docs)
 - [🔧 Function `generate_md_docs_content`](#-function-generate_md_docs_content)
 - [🔧 Function `lint_and_fix_python_code`](#-function-lint_and_fix_python_code)
 - [🔧 Function `sort_py_code`](#-function-sort_py_code)
+
+</details>
+
+## 🔧 Function `create_uv_new_library`
+
+```python
+def create_uv_new_library(library_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str
+```
+
+Create a new library using uv, initializes it, and sets up necessary files.
+
+Args:
+
+- `library_name` (`str`): The name of the new library.
+- `folder` (`Path | str`): The folder path where the library will be created.
+- `editor` (`str`): The name of the text editor for opening the library. Example: `code`
+- `cli_commands` (`Path | str`): The section of CLI commands for `README.md`.
+
+Returns:
+
+- `str`: A string containing the result of the operations performed.
+
+Structure "C:/projects/TestLibrary":
+
+```text
+├─ .git
+├─ .gitignore
+├─ .python-version
+├─ .venv
+├─ pyproject.toml
+├─ README.md
+├─ .vscode
+│  ├─ settings.json
+│  └─ tasks.json
+├─ src
+│  └─ testlibrary
+│     ├─ core.py
+│     ├─ py.typed
+│     └─ __init__.py
+└─ uv.lock
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def create_uv_new_library(library_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str:
+    library_name = library_name.replace("_", "-").replace(" ", "-")
+    library_name_under = library_name.replace("-", "_")
+    folder_path = Path(folder)
+    library_path = folder_path / library_name
+    package_dir = library_path / "src" / library_name_under
+    core_py = package_dir / "core.py"
+    init_py = package_dir / "__init__.py"
+
+    commands = f"""
+        cd {folder_path}
+        uv init --lib {library_name}
+        cd {library_name}
+        uv sync
+        uv add --dev ruff
+        uv add --dev pytest
+        {_POWERSHELL_APPEND_RUFF}
+    """
+
+    res = h.dev.run_powershell_script(commands)
+
+    core_py.write_text(
+        '''def hello(name: str = "World") -> str:
+    """Return a greeting message."""
+    return f"Hello, {name}!"
+''',
+        encoding="utf-8",
+    )
+    init_py.write_text(
+        """from .core import hello
+
+__all__ = ["hello"]
+""",
+        encoding="utf-8",
+    )
+
+    _write_vscode_dev_terminal_config(library_path)
+    res += _open_project_in_editor(library_path, core_py, editor)
+
+    return _append_readme_title_and_cli(library_path, library_name, cli_commands, res)
+```
 
 </details>
 
@@ -102,8 +190,7 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
         uv sync
         uv add --dev ruff
         uv add --dev pytest
-        Add-Content -Path pyproject.toml -Value "`n[tool.ruff]"
-        Add-Content -Path pyproject.toml -Value "line-length = 120"
+        {_POWERSHELL_APPEND_RUFF}
     """
 
     res = h.dev.run_powershell_script(commands)
@@ -111,61 +198,10 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
     main_py.parent.mkdir(parents=True, exist_ok=True)
     main_py.write_text('print("Hello, World!")\n', encoding="utf-8")
 
-    vscode_dir = project_path / ".vscode"
-    vscode_dir.mkdir(parents=True, exist_ok=True)
-    settings = {
-        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
-        "python.terminal.activateEnvironment": True,
-        "task.allowAutomaticTasks": "on",
-    }
-    (vscode_dir / "settings.json").write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+    _write_vscode_dev_terminal_config(project_path)
+    res += _open_project_in_editor(project_path, main_py, editor)
 
-    tasks = {
-        "version": "2.0.0",
-        "tasks": [
-            {
-                "label": "Open dev terminal",
-                "type": "shell",
-                "command": "& '${workspaceFolder}\\.venv\\Scripts\\Activate.ps1'; python --version",
-                "options": {
-                    "cwd": "${workspaceFolder}",
-                },
-                "windows": {
-                    "options": {
-                        "shell": {
-                            "executable": "powershell.exe",
-                            "args": ["-NoExit", "-Command"],
-                        }
-                    }
-                },
-                "runOptions": {"runOn": "folderOpen"},
-                "presentation": {
-                    "reveal": "always",
-                    "panel": "dedicated",
-                    "focus": True,
-                },
-                "problemMatcher": [],
-            }
-        ],
-    }
-    (vscode_dir / "tasks.json").write_text(json.dumps(tasks, indent=2) + "\n", encoding="utf-8")
-
-    editor_env = os.environ.copy()
-    editor_env.pop("VIRTUAL_ENV", None)
-    editor_command = f'{editor} --new-window "{project_path.resolve()}" "{main_py.resolve()}"'
-    res += h.dev.run_command(editor_command, env=editor_env)
-
-    readme_path = project_path / "README.md"
-    try:
-        with readme_path.open("a", encoding="utf-8") as file:
-            file.write(f"# {project_name}\n\n{cli_commands}")
-        res += f"Content successfully added to {readme_path}"
-    except FileNotFoundError:
-        res += f"File not found: {readme_path}"
-    except OSError as e:
-        res += f"I/O error: {e}"
-
-    return res
+    return _append_readme_title_and_cli(project_path, project_name, cli_commands, res)
 ```
 
 </details>
