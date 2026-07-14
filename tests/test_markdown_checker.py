@@ -890,6 +890,32 @@ def test_markdown_checker() -> None:
         errors = checker.check(inline_code_after_period_file, select={"H021"})
         assert not errors
 
+        # Ordered list marker and section number should not trigger H021
+        ordered_list_file = temp_path / "ordered_list_h021.md"
+        ordered_list_file.write_text(
+            "---\nlang: ru\n---\n\n1. код\n2. файл\n3. описание\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ordered_list_file, select={"H021"})
+        assert not errors
+
+        section_number_file = temp_path / "section_number_h021.md"
+        section_number_file.write_text(
+            "---\nlang: ru\n---\n\nВ пункте 3.1. сказано, что нужно найти инструменты.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(section_number_file, select={"H021"})
+        assert not errors
+
+        # Lowercase after a real sentence-ending period inside list item should trigger H021
+        list_sentence_error_file = temp_path / "list_sentence_h021.md"
+        list_sentence_error_file.write_text(
+            "---\nlang: ru\n---\n\n1. Первое предложение. второе предложение.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(list_sentence_error_file, select={"H021"})
+        assert any("H021" in e for e in errors)
+
         # =====================================================================
         # H022: Non-breaking space
         # =====================================================================

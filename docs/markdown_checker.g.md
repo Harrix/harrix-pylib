@@ -835,7 +835,8 @@ class MarkdownChecker:
 
         Checks each non-inline-code segment separately so removed code (e.g.
         ``Optional. `"value"` stores``) does not falsely join a period with the
-        next word.
+        next word. Periods in ordered-list and section numbers (``1.``,
+        ``3.1.``) are ignored.
         """
         pattern = r"[.!?]\s+([a-zа-яё])"  # noqa: RUF001  # ignore: HP001
         exceptions = ["e.g.", "i.e.", "т. е", "т. д", "т. ч", "т. п"]  # noqa: RUF001  # ignore: HP001
@@ -846,6 +847,8 @@ class MarkdownChecker:
                 for match in re.finditer(pattern, segment):
                     letter = match.group(1)
                     pos = match.start()
+                    if pos > 0 and segment[pos - 1].isdigit():
+                        continue
                     context = segment[max(0, pos - 4) : match.end()]
                     if any(exc in context.lower() for exc in exceptions):
                         continue
