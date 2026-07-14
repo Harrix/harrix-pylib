@@ -2,6 +2,7 @@
 
 import ast
 import bisect
+import json
 import shutil
 import subprocess
 import tempfile
@@ -63,32 +64,71 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
     ├─ .venv
     ├─ pyproject.toml
     ├─ README.md
+    ├─ .vscode
+    │  ├─ settings.json
+    │  └─ tasks.json
     ├─ src
     │  └─ testproject
     │     ├─ main.py
-    │     └─ _init__.py
+    │     └─ __init__.py
     └─ uv.lock
     ```
 
     """
     project_name = project_name.replace("_", "-").replace(" ", "-")
     project_name_under = project_name.replace("-", "_")
+    folder_path = Path(folder)
+    project_path = folder_path / project_name
+    main_py = project_path / "src" / project_name_under / "main.py"
+
     commands = f"""
-        cd {folder}
+        cd {folder_path}
         uv init --package {project_name}
         cd {project_name}
         uv sync
         uv add --dev ruff
         uv add --dev pytest
-        New-Item -ItemType File -Path src/{project_name_under}/main.py -Force
-        New-Item -ItemType File -Path src/{project_name_under}/_init__.py -Force
         Add-Content -Path pyproject.toml -Value "`n[tool.ruff]"
         Add-Content -Path pyproject.toml -Value "line-length = 120"
-        {editor} {folder}/{project_name}"""
+    """
 
     res = h.dev.run_powershell_script(commands)
 
-    readme_path = Path(folder) / project_name / "README.md"
+    main_py.parent.mkdir(parents=True, exist_ok=True)
+    main_py.write_text('print("Hello, World!")\n', encoding="utf-8")
+
+    vscode_dir = project_path / ".vscode"
+    vscode_dir.mkdir(parents=True, exist_ok=True)
+    settings = {
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+        "python.terminal.activateEnvironment": True,
+        "task.allowAutomaticTasks": "on",
+    }
+    (vscode_dir / "settings.json").write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+
+    tasks = {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Open dev terminal",
+                "type": "shell",
+                "command": "python --version",
+                "runOptions": {"runOn": "folderOpen"},
+                "presentation": {
+                    "reveal": "always",
+                    "panel": "dedicated",
+                    "focus": True,
+                },
+                "problemMatcher": [],
+            }
+        ],
+    }
+    (vscode_dir / "tasks.json").write_text(json.dumps(tasks, indent=2) + "\n", encoding="utf-8")
+
+    editor_command = f'{editor} "{project_path.resolve()}" "{main_py.resolve()}"'
+    res += h.dev.run_command(editor_command)
+
+    readme_path = project_path / "README.md"
     try:
         with readme_path.open("a", encoding="utf-8") as file:
             file.write(f"# {project_name}\n\n{cli_commands}")

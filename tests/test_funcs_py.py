@@ -1,5 +1,6 @@
 """Tests for the functions in the py module of harrix_pylib."""
 
+import json
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -34,8 +35,8 @@ CLI commands after installation.
         project_path = path / project_name
         assert project_path.is_dir()
 
-        # Check if the `src` directory was created
-        src_path = project_path / "src" / project_name
+        project_name_under = project_name.replace("-", "_")
+        src_path = project_path / "src" / project_name_under
         assert src_path.is_dir()
 
         # Check for the presence of expected files
@@ -43,6 +44,21 @@ CLI commands after installation.
         assert (src_path / "main.py").is_file()
         assert (project_path / "pyproject.toml").is_file()
         assert (project_path / "README.md").is_file()
+
+        assert (src_path / "main.py").read_text(encoding="utf-8").strip() == 'print("Hello, World!")'
+
+        settings_path = project_path / ".vscode" / "settings.json"
+        tasks_path = project_path / ".vscode" / "tasks.json"
+        assert settings_path.is_file()
+        assert tasks_path.is_file()
+
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        assert settings["python.defaultInterpreterPath"] == "${workspaceFolder}/.venv/Scripts/python.exe"
+        assert settings["python.terminal.activateEnvironment"] is True
+        assert settings["task.allowAutomaticTasks"] == "on"
+
+        tasks = json.loads(tasks_path.read_text(encoding="utf-8"))
+        assert tasks["tasks"][0]["runOptions"]["runOn"] == "folderOpen"
 
         # Verify content in README.md
         with (project_path / "README.md").open("r", encoding="utf-8") as file:
