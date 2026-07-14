@@ -58,7 +58,9 @@ CLI commands after installation.
         assert settings["task.allowAutomaticTasks"] == "on"
 
         tasks = json.loads(tasks_path.read_text(encoding="utf-8"))
-        assert tasks["tasks"][0]["runOptions"]["runOn"] == "folderOpen"
+        task = tasks["tasks"][0]
+        assert task["runOptions"]["runOn"] == "folderOpen"
+        assert ".venv\\Scripts\\Activate.ps1" in task["command"]
 
         # Verify content in README.md
         with (project_path / "README.md").open("r", encoding="utf-8") as file:

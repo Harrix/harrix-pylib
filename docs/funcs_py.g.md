@@ -126,7 +126,18 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
             {
                 "label": "Open dev terminal",
                 "type": "shell",
-                "command": "python --version",
+                "command": "& '${workspaceFolder}\\.venv\\Scripts\\Activate.ps1'; python --version",
+                "options": {
+                    "cwd": "${workspaceFolder}",
+                },
+                "windows": {
+                    "options": {
+                        "shell": {
+                            "executable": "powershell.exe",
+                            "args": ["-NoExit", "-Command"],
+                        }
+                    }
+                },
                 "runOptions": {"runOn": "folderOpen"},
                 "presentation": {
                     "reveal": "always",
@@ -139,8 +150,10 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
     }
     (vscode_dir / "tasks.json").write_text(json.dumps(tasks, indent=2) + "\n", encoding="utf-8")
 
-    editor_command = f'{editor} "{project_path.resolve()}" "{main_py.resolve()}"'
-    res += h.dev.run_command(editor_command)
+    editor_env = os.environ.copy()
+    editor_env.pop("VIRTUAL_ENV", None)
+    editor_command = f'{editor} --new-window "{project_path.resolve()}" "{main_py.resolve()}"'
+    res += h.dev.run_command(editor_command, env=editor_env)
 
     readme_path = project_path / "README.md"
     try:
