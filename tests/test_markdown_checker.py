@@ -420,6 +420,44 @@ def test_markdown_checker() -> None:
         errors = checker.check(bold_colon_code_file, select={"H013"})
         assert not errors
 
+        # Display math block before code block should not trigger H013
+        math_before_code_file = temp_path / "math_before_code.md"
+        math_before_code_file.write_text(
+            "---\nlang: en\n---\n\n"
+            "```latex\n"
+            "\\left( \\begin{array}{ccc}\n"
+            "a & b & c \\\\\n"
+            "d & e & f \\\\\n"
+            "g & h & i\n"
+            "\\end{array} \\right)\n"
+            "```\n\n"
+            "$$\n"
+            "\\left( \\begin{array}{ccc}\n"
+            "a & b & c \\\\\n"
+            "d & e & f \\\\\n"
+            "g & h & i\n"
+            "\\end{array} \\right)\n"
+            "$$\n\n"
+            "```latex\n"
+            "\\begin{Bmatrix}\n"
+            "2\\\\\n"
+            "3\\\\\n"
+            "\\end{Bmatrix}\n"
+            "```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(math_before_code_file, select={"H013"})
+        assert not errors
+
+        # Single-line display math before code block should not trigger H013
+        single_line_math_code_file = temp_path / "single_line_math_code.md"
+        single_line_math_code_file.write_text(
+            "---\nlang: en\n---\n\n$$x = 1$$\n\n```python\nprint(x)\n```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(single_line_math_code_file, select={"H013"})
+        assert not errors
+
         # =====================================================================
         # H014: Missing colon before image
         # =====================================================================

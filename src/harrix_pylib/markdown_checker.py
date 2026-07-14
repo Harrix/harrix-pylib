@@ -114,6 +114,7 @@ class MarkdownChecker:
 
     _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
     _TWO_DOTS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<!\.)\.\.(?![\./])")
+    _MATH_DELIMITER_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*\$\$\s*$")
 
     # Patterns for H029: colon inside or after inline emphasis without following space
     _EMPHASIS_COLON_NO_SPACE_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
@@ -424,7 +425,7 @@ class MarkdownChecker:
         filename: Path,
         line: str,
         line_num: int,
-        _content_lines: list[str],
+        content_lines: list[str],
         line_index: int,
         code_block_info: list,
     ) -> Generator[str, None, None]:
@@ -442,6 +443,9 @@ class MarkdownChecker:
         next_next_line, _ = next_next_info
 
         if not self._should_check_paragraph_end(line):
+            return
+
+        if self._line_in_display_math(content_lines, line_index):
             return
 
         # Check pattern: non-empty line, empty line, code block start
@@ -465,6 +469,9 @@ class MarkdownChecker:
         if line_index + 2 >= len(content_lines):
             return
         if not self._should_check_paragraph_end(line):
+            return
+
+        if self._line_in_display_math(content_lines, line_index):
             return
 
         next_line = content_lines[line_index + 1]
@@ -1306,6 +1313,34 @@ class MarkdownChecker:
             if start <= pos < end:
                 return part.strip() == "-"
             start = end + 1  # +1 for the | separator
+        return False
+
+    def _line_in_display_math(self, content_lines: list[str], line_index: int) -> bool:
+        """Return True if the line belongs to a display-math ``$$...$$`` block."""
+        code_block_info = list(h.md.identify_code_blocks(content_lines))
+        in_math = False
+
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                if index == line_index:
+                    return False
+                continue
+
+            if self._MATH_DELIMITER_PATTERN.match(line):
+                if index == line_index:
+                    return True
+                in_math = not in_math
+                continue
+
+            stripped = line.strip()
+            if stripped.startswith("$$") and stripped.endswith("$$") and len(stripped) > 4:
+                if index == line_index:
+                    return True
+                continue
+
+            if index == line_index:
+                return in_math
+
         return False
 
     def _paragraph_last_char(self, line: str) -> tuple[str, int]:
