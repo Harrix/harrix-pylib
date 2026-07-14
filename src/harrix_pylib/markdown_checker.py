@@ -53,6 +53,9 @@ class MarkdownChecker:
     # Minimum length for a line to be treated as italic-only caption (e.g. _text_)
     _MIN_ITALIC_CAPTION_LEN: ClassVar[int] = 2
 
+    # Length of empty single-line display math ``$$$$``; real content must be longer
+    _EMPTY_SINGLE_LINE_DISPLAY_MATH_LEN: ClassVar[int] = 4
+
     # Markers that suppress colon-before-code/image warnings (shared between H013 and H014 checks)
     _COLON_SKIP_MARKERS: ClassVar[tuple[str, ...]] = (
         "[!DETAILS]",
@@ -1333,7 +1336,11 @@ class MarkdownChecker:
                 continue
 
             stripped = line.strip()
-            if stripped.startswith("$$") and stripped.endswith("$$") and len(stripped) > 4:
+            if (
+                stripped.startswith("$$")
+                and stripped.endswith("$$")
+                and len(stripped) > self._EMPTY_SINGLE_LINE_DISPLAY_MATH_LEN
+            ):
                 if index == line_index:
                     return True
                 continue
