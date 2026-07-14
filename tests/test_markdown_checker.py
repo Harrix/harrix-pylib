@@ -1172,3 +1172,12 @@ def test_markdown_checker() -> None:
         )
         errors = checker.check(colon_inside_emphasis_ok_file, select={"H030"})
         assert not errors
+
+        # Trailing colon after emphasis at end of line should not trigger H030
+        trailing_colon_emphasis_file = temp_path / "trailing_colon_emphasis.md"
+        trailing_colon_emphasis_file.write_text(
+            "---\nlang: ru\n---\n\nЗамена видеокодека на **madVR**:\n\n![Первоначальный кодек](img/mpc-hc_02.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(trailing_colon_emphasis_file, select={"H030"})
+        assert not errors

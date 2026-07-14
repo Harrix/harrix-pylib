@@ -59,7 +59,7 @@ Rules:
 - **H027** - Space required after "№".
 - **H028** - Question mark followed by period (?.).
 - **H029** - Space required after colon in inline emphasis.
-- **H030** - Colon outside inline emphasis (should be inside).
+- **H030** - Colon outside inline emphasis (should be inside when line continues after colon).
 - **H031** - Invalid or placeholder image alt text (empty, editor placeholder, or lowercase start).
 - **H032** - Two consecutive dots (typo for period or incomplete ellipsis; `../` paths are allowed).
 
@@ -533,7 +533,8 @@ class MarkdownChecker:
     def _check_colon_outside_emphasis(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check for colon outside inline emphasis (H030).
 
-        Colon after *, **, _, __, ~~ labels should be inside emphasis markers.
+        Colon after *, **, _, __, ~~ labels should be inside emphasis markers when
+        the same line continues after the colon. A trailing colon at end of line is allowed.
         Uses original line; matches inside inline code are skipped.
         """
         code_ranges: list[tuple[int, int]] = []
@@ -550,6 +551,8 @@ class MarkdownChecker:
         for pattern in self._EMPHASIS_COLON_OUTSIDE_PATTERNS:
             for match in pattern.finditer(line):
                 if _inside_inline_code(match.start()):
+                    continue
+                if not line[match.end() :].strip():
                     continue
                 col = match.end()
                 if col in reported_cols:
