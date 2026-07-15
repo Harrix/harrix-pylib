@@ -62,7 +62,7 @@ CLI commands after installation:
 - `ty check` — check Python types in the project's Python files.
 - `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a
   different Python version.
-- `uv python upgrade` — upgrade python to the latest patch release.
+- `uv python upgrade` — upgrade Python to the latest patch release.
 - `uv self update` — update uv itself.
 - `uv sync --upgrade` — update all project libraries (sometimes you need to call
   twice).
