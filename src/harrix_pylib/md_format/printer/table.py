@@ -127,14 +127,26 @@ def _parse_table_rows_expanded(text: str) -> list[list[str]]:
 
 
 def _prefer_source_table_block(source_text: str, formatted_text: str) -> str | None:
-    """Return source table text when it should be preserved."""
+    """Return source table text when it is already column-aligned and not skinnier.
+
+    Misaligned source tables are never preserved. Already-aligned source is kept
+    when it is at least as long as the reformatted table (emoji / autolink padding).
+    Character-aligned but skinnier source (e.g. CJK needing display-width padding)
+    is reformatted.
+
+    Alignment is checked after expanding autolink placeholders, because placeholders
+    shorten cells and would make a correctly padded source look misaligned mid-format.
+    """
     source_rows = _table_data_rows(_parse_table_rows_expanded(source_text))
     formatted_rows = _table_data_rows(_parse_table_rows(formatted_text))
     if not source_rows or source_rows != formatted_rows:
         return None
-    if len(source_text.rstrip("\n")) >= len(formatted_text.rstrip("\n")):
-        return source_text if source_text.endswith("\n") else f"{source_text}\n"
-    return None
+    alignment_source = _expand_table_cell_placeholders(source_text)
+    if not _source_table_columns_are_aligned(alignment_source):
+        return None
+    if len(source_text.rstrip("\n")) < len(formatted_text.rstrip("\n")):
+        return None
+    return source_text if source_text.endswith("\n") else f"{source_text}\n"
 
 
 def _render_table(
@@ -229,6 +241,30 @@ def _render_table(
         if preferred is not None:
             return preferred, close_index + 1
     return result, close_index + 1
+
+
+def _source_table_columns_are_aligned(source_text: str) -> bool:
+    """Return whether every table row has the same character width per column.
+
+    Uses ``len`` (source characters), not terminal display width, so emoji and
+    similar glyphs that occupy two terminal columns do not falsely look misaligned.
+    """
+    lines = [line for line in source_text.splitlines() if line.strip().startswith("|")]
+    if len(lines) < 2:
+        return False
+    expected_widths: list[int] | None = None
+    for line in lines:
+        stripped = line.strip()
+        if not stripped.endswith("|"):
+            return False
+        parts = stripped[1:-1].split("|")
+        widths = [len(part) for part in parts]
+        if expected_widths is None:
+            expected_widths = widths
+            continue
+        if widths != expected_widths:
+            return False
+    return True
 
 
 def _table_cell_display_width(cell: str) -> int:
