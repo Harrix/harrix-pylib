@@ -154,9 +154,7 @@ class MarkdownChecker:
         r"(?::\.|(?:[»\"”'])\.,|(?:[^\W\d_]{6,})\.,)",
         re.UNICODE,
     )
-    _MALFORMED_TIME_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
-        r"^\s*#{1,6}\s+\d{1,2}(?:;:|::)\d{2}\s*$"
-    )
+    _MALFORMED_TIME_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*#{1,6}\s+\d{1,2}(?:;:|::)\d{2}\s*$")
 
     # Repeated adjacent word (H054); ignore short tokens like ``c c``
     _WORD_TOKEN_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"[^\W\d_]+", re.UNICODE)
@@ -670,6 +668,41 @@ class MarkdownChecker:
                     yield self._format_error("H041", self.RULES["H041"], filename, line_num=line_num, col=col)
             offset += len(segment)
 
+    def _check_broken_internal_fragments(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check same-file ``#fragment`` links against generated heading IDs (H055)."""
+        heading_ids = self._collect_heading_ids(code_block_info)
+        resolved_self = filename.resolve()
+
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                continue
+            offset = 0
+            actual_line_num = (yaml_end_line - 1) + index + 1
+            for segment, in_inline_code in h.md.identify_code_blocks_line(line):
+                if not in_inline_code:
+                    for match in self._LINK_DESTINATION_PATTERN.finditer(segment):
+                        destination = self._extract_link_destination(match.group(1))
+                        if not destination or "#" not in destination:
+                            continue
+                        path_part, fragment = destination.split("#", maxsplit=1)
+                        fragment = unquote(fragment)
+                        if not fragment:
+                            continue
+                        path_part = unquote(path_part)
+                        if path_part:
+                            if path_part.startswith(("http://", "https://", "mailto:", "data:")):
+                                continue
+                            target = (filename.parent / path_part).resolve()
+                            if target != resolved_self:
+                                continue
+                        if fragment not in heading_ids:
+                            col = offset + match.start(1) + 1
+                            error_msg = f'{self.RULES["H055"]}: "#{fragment}" not found'
+                            yield self._format_error("H055", error_msg, filename, line_num=actual_line_num, col=col)
+                offset += len(segment)
+
     def _check_broken_relative_links(
         self, filename: Path, content: str, yaml_end_line: int
     ) -> Generator[str, None, None]:
@@ -690,9 +723,7 @@ class MarkdownChecker:
                 if not in_inline_code:
                     for match in self._LINK_DESTINATION_PATTERN.finditer(segment):
                         destination = self._extract_link_destination(match.group(1))
-                        if not destination or destination.startswith(
-                            ("http://", "https://", "#", "mailto:", "data:")
-                        ):
+                        if not destination or destination.startswith(("http://", "https://", "#", "mailto:", "data:")):
                             continue
                         path_part = unquote(destination.split("#", maxsplit=1)[0])
                         if not path_part:
@@ -702,9 +733,7 @@ class MarkdownChecker:
                             actual_line_num = (yaml_end_line - 1) + index + 1
                             col = offset + match.start(1) + 1
                             error_msg = f'{self.RULES["H045"]}: "{path_part}" not found'
-                            yield self._format_error(
-                                "H045", error_msg, filename, line_num=actual_line_num, col=col
-                            )
+                            yield self._format_error("H045", error_msg, filename, line_num=actual_line_num, col=col)
                 offset += len(segment)
 
     # =========================================================================
@@ -1100,6 +1129,15 @@ class MarkdownChecker:
         if "H002" in rules and " " in str(filename):
             yield self._format_error("H002", self.RULES["H002"], filename)
 
+    def _check_heading_too_deep(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for ATX headings deeper than H6 (H052)."""
+        match = self._ATX_HEADING_TOO_DEEP_PATTERN.match(line)
+        if not match:
+            return
+        level = len(match.group(1))
+        error_msg = f"{self.RULES['H052']}: found H{level}"
+        yield self._format_error("H052", error_msg, filename, line_num=line_num, col=1)
+
     def _check_horizontal_bar(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
@@ -1258,6 +1296,21 @@ class MarkdownChecker:
                     yield self._format_error("H021", error_msg, filename, line_num=line_num, col=col)
             offset += len(segment)
 
+    def _check_malformed_punctuation(
+        self, filename: Path, line: str, clean_line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        """Check for malformed punctuation sequences (H051)."""
+        if self._MALFORMED_TIME_HEADING_PATTERN.match(line):
+            yield self._format_error("H051", self.RULES["H051"], filename, line_num=line_num, col=1)
+
+        for match in self._MALFORMED_PUNCT_SEQUENCE_PATTERN.finditer(clean_line):
+            snippet = match.group(0)
+            col = line.find(snippet)
+            if col < 0:
+                col = match.start()
+            error_msg = f'{self.RULES["H051"]}: "{snippet}"'
+            yield self._format_error("H051", error_msg, filename, line_num=line_num, col=col + 1)
+
     def _check_missing_figure_captions(
         self, filename: Path, code_block_info: list, yaml_end_line: int
     ) -> Generator[str, None, None]:
@@ -1295,49 +1348,6 @@ class MarkdownChecker:
                 yield self._format_error("H035", self.RULES["H035"], filename, line_num=actual_line_num, col=1)
             index += 1
 
-    def _check_multiple_h1_headings(
-        self, filename: Path, code_block_info: list, yaml_end_line: int
-    ) -> Generator[str, None, None]:
-        """Check for multiple H1 headings (H038)."""
-        h1_count = 0
-        for index, (line, in_code) in enumerate(code_block_info):
-            if in_code:
-                continue
-            match = self._ATX_HEADING_PATTERN.match(line)
-            if match and len(match.group(1)) == 1:
-                h1_count += 1
-                if h1_count > 1:
-                    actual_line_num = (yaml_end_line - 1) + index + 1
-                    yield self._format_error("H038", self.RULES["H038"], filename, line_num=actual_line_num, col=1)
-                    return
-
-    def _check_heading_too_deep(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for ATX headings deeper than H6 (H052)."""
-        match = self._ATX_HEADING_TOO_DEEP_PATTERN.match(line)
-        if not match:
-            return
-        level = len(match.group(1))
-        error_msg = f"{self.RULES['H052']}: found H{level}"
-        yield self._format_error("H052", error_msg, filename, line_num=line_num, col=1)
-
-    def _check_mixed_script_words(
-        self, filename: Path, line: str, clean_line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check for words that mix Latin and Cyrillic letters (H049)."""
-        for match in self._MIXED_SCRIPT_TOKEN_PATTERN.finditer(clean_line):
-            token = match.group(0)
-            if not (
-                self._LATIN_LETTER_PATTERN.search(token) and self._CYRILLIC_LETTER_PATTERN.search(token)
-            ):
-                continue
-            if token.casefold() in self._MIXED_SCRIPT_ALLOWLIST:
-                continue
-            col = line.find(token)
-            if col < 0:
-                col = match.start()
-            error_msg = f'{self.RULES["H049"]}: "{token}"'
-            yield self._format_error("H049", error_msg, filename, line_num=line_num, col=col + 1)
-
     def _check_missing_space_after_punctuation(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
@@ -1370,172 +1380,37 @@ class MarkdownChecker:
             error_msg = f'{self.RULES["H050"]}: "{snippet}"'
             yield self._format_error("H050", error_msg, filename, line_num=line_num, col=col + 1)
 
-    def _check_malformed_punctuation(
+    def _check_mixed_script_words(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for malformed punctuation sequences (H051)."""
-        if self._MALFORMED_TIME_HEADING_PATTERN.match(line):
-            yield self._format_error("H051", self.RULES["H051"], filename, line_num=line_num, col=1)
-
-        for match in self._MALFORMED_PUNCT_SEQUENCE_PATTERN.finditer(clean_line):
-            snippet = match.group(0)
-            col = line.find(snippet)
+        """Check for words that mix Latin and Cyrillic letters (H049)."""
+        for match in self._MIXED_SCRIPT_TOKEN_PATTERN.finditer(clean_line):
+            token = match.group(0)
+            if not (self._LATIN_LETTER_PATTERN.search(token) and self._CYRILLIC_LETTER_PATTERN.search(token)):
+                continue
+            if token.casefold() in self._MIXED_SCRIPT_ALLOWLIST:
+                continue
+            col = line.find(token)
             if col < 0:
                 col = match.start()
-            error_msg = f'{self.RULES["H051"]}: "{snippet}"'
-            yield self._format_error("H051", error_msg, filename, line_num=line_num, col=col + 1)
+            error_msg = f'{self.RULES["H049"]}: "{token}"'
+            yield self._format_error("H049", error_msg, filename, line_num=line_num, col=col + 1)
 
-    def _check_repeated_adjacent_words(
-        self, filename: Path, line: str, clean_line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check for repeated adjacent words outside code (H054).
-
-        Only whitespace may separate the two words (so ``Notes-Notes`` is allowed).
-        """
-        previous: str | None = None
-        previous_start = 0
-        previous_end = 0
-        for match in self._WORD_TOKEN_PATTERN.finditer(clean_line):
-            token = match.group(0)
-            current = token.casefold()
-            if (
-                previous is not None
-                and current == previous
-                and len(token) >= self._H054_MIN_WORD_LEN
-                and clean_line[previous_end:match.start()].isspace()
-            ):
-                snippet = clean_line[previous_start : match.end()]
-                col = line.find(snippet)
-                if col < 0:
-                    col = previous_start
-                error_msg = f'{self.RULES["H054"]}: "{token}"'
-                yield self._format_error("H054", error_msg, filename, line_num=line_num, col=col + 1)
-            previous = current
-            previous_start = match.start()
-            previous_end = match.end()
-
-    def _check_unbalanced_table_inline_code(
-        self, filename: Path, line: str, line_num: int
-    ) -> Generator[str, None, None]:
-        """Check for unbalanced backticks inside Markdown table cells (H056)."""
-        stripped = line.strip()
-        if not stripped.startswith("|"):
-            return
-        # Keep leading/trailing empty segments from split; inspect non-separator cells.
-        cells = line.split("|")
-        col_offset = 0
-        for cell_index, cell in enumerate(cells):
-            if cell_index == 0:
-                col_offset += len(cell) + 1
-                continue
-            if cell_index == len(cells) - 1 and not cell.strip():
-                break
-            # Skip alignment rows like ``| --- | :---: |``
-            if re.fullmatch(r"\s*:?-{3,}:?\s*", cell):
-                col_offset += len(cell) + 1
-                continue
-            if cell.count("`") % 2 == 1:
-                odd_pos = cell.find("`")
-                while odd_pos >= 0 and cell[: odd_pos + 1].count("`") % 2 == 0:
-                    odd_pos = cell.find("`", odd_pos + 1)
-                col = col_offset + max(odd_pos, 0) + 1
-                yield self._format_error("H056", self.RULES["H056"], filename, line_num=line_num, col=col)
-                return
-            col_offset += len(cell) + 1
-
-    def _check_unbalanced_details_summary(
+    def _check_multiple_h1_headings(
         self, filename: Path, code_block_info: list, yaml_end_line: int
     ) -> Generator[str, None, None]:
-        """Check nesting balance of ``<details>`` / ``<summary>`` (H053)."""
-        details_depth = 0
-        summary_depth = 0
-        first_error_line: int | None = None
-        tag_pattern = re.compile(
-            r"</?(?:details|summary)\b[^>]*>",
-            re.IGNORECASE,
-        )
-
+        """Check for multiple H1 headings (H038)."""
+        h1_count = 0
         for index, (line, in_code) in enumerate(code_block_info):
-            if in_code:
-                continue
-            actual_line_num = (yaml_end_line - 1) + index + 1
-            for segment, in_inline_code in h.md.identify_code_blocks_line(line):
-                if in_inline_code:
-                    continue
-                for match in tag_pattern.finditer(segment):
-                    tag = match.group(0).lower()
-                    if tag.startswith("<details"):
-                        details_depth += 1
-                    elif tag.startswith("</details"):
-                        details_depth -= 1
-                        if details_depth < 0 and first_error_line is None:
-                            first_error_line = actual_line_num
-                            details_depth = 0
-                    elif tag.startswith("<summary"):
-                        summary_depth += 1
-                    elif tag.startswith("</summary"):
-                        summary_depth -= 1
-                        if summary_depth < 0 and first_error_line is None:
-                            first_error_line = actual_line_num
-                            summary_depth = 0
-
-        if first_error_line is not None or details_depth != 0 or summary_depth != 0:
-            line_num = first_error_line or ((yaml_end_line - 1) + len(code_block_info))
-            yield self._format_error("H053", self.RULES["H053"], filename, line_num=line_num, col=1)
-
-    def _check_broken_internal_fragments(
-        self, filename: Path, code_block_info: list, yaml_end_line: int
-    ) -> Generator[str, None, None]:
-        """Check same-file ``#fragment`` links against generated heading IDs (H055)."""
-        heading_ids = self._collect_heading_ids(code_block_info)
-        resolved_self = filename.resolve()
-
-        for index, (line, in_code) in enumerate(code_block_info):
-            if in_code:
-                continue
-            offset = 0
-            actual_line_num = (yaml_end_line - 1) + index + 1
-            for segment, in_inline_code in h.md.identify_code_blocks_line(line):
-                if not in_inline_code:
-                    for match in self._LINK_DESTINATION_PATTERN.finditer(segment):
-                        destination = self._extract_link_destination(match.group(1))
-                        if not destination or "#" not in destination:
-                            continue
-                        path_part, fragment = destination.split("#", maxsplit=1)
-                        fragment = unquote(fragment)
-                        if not fragment:
-                            continue
-                        path_part = unquote(path_part)
-                        if path_part:
-                            if path_part.startswith(("http://", "https://", "mailto:", "data:")):
-                                continue
-                            target = (filename.parent / path_part).resolve()
-                            if target != resolved_self:
-                                continue
-                        if fragment not in heading_ids:
-                            col = offset + match.start(1) + 1
-                            error_msg = f'{self.RULES["H055"]}: "#{fragment}" not found'
-                            yield self._format_error(
-                                "H055", error_msg, filename, line_num=actual_line_num, col=col
-                            )
-                offset += len(segment)
-
-    def _collect_heading_ids(self, code_block_info: list) -> set[str]:
-        """Collect GitHub-style heading IDs from ATX headings outside fenced code."""
-        existing_ids: set[str] = set()
-        heading_ids: set[str] = set()
-        for line, in_code in code_block_info:
             if in_code:
                 continue
             match = self._ATX_HEADING_PATTERN.match(line)
-            if not match:
-                continue
-            level = len(match.group(1))
-            title = line[level:].strip()
-            title = title.replace(" <!-- top-section -->", "").replace("<!-- top-section -->", "")
-            slug = h.md.generate_id(title, existing_ids)
-            heading_ids.add(slug)
-        return heading_ids
+            if match and len(match.group(1)) == 1:
+                h1_count += 1
+                if h1_count > 1:
+                    actual_line_num = (yaml_end_line - 1) + index + 1
+                    yield self._format_error("H038", self.RULES["H038"], filename, line_num=actual_line_num, col=1)
+                    return
 
     def _check_non_code_line_rules(
         self,
@@ -1735,6 +1610,35 @@ class MarkdownChecker:
             error_msg = f"{self.RULES['H018']}: found {description}"
             yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
 
+    def _check_repeated_adjacent_words(
+        self, filename: Path, line: str, clean_line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        """Check for repeated adjacent words outside code (H054).
+
+        Only whitespace may separate the two words (so ``Notes-Notes`` is allowed).
+        """
+        previous: str | None = None
+        previous_start = 0
+        previous_end = 0
+        for match in self._WORD_TOKEN_PATTERN.finditer(clean_line):
+            token = match.group(0)
+            current = token.casefold()
+            if (
+                previous is not None
+                and current == previous
+                and len(token) >= self._H054_MIN_WORD_LEN
+                and clean_line[previous_end : match.start()].isspace()
+            ):
+                snippet = clean_line[previous_start : match.end()]
+                col = line.find(snippet)
+                if col < 0:
+                    col = previous_start
+                error_msg = f'{self.RULES["H054"]}: "{token}"'
+                yield self._format_error("H054", error_msg, filename, line_num=line_num, col=col + 1)
+            previous = current
+            previous_start = match.start()
+            previous_end = match.end()
+
     def _check_russian_polite_pronouns(
         self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
@@ -1891,6 +1795,75 @@ class MarkdownChecker:
             error_msg = f'{self.RULES["H032"]}: ".." should be "." or "…"'
             yield self._format_error("H032", error_msg, filename, line_num=line_num, col=match.start() + 1)
 
+    def _check_unbalanced_details_summary(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check nesting balance of ``<details>`` / ``<summary>`` (H053)."""
+        details_depth = 0
+        summary_depth = 0
+        first_error_line: int | None = None
+        tag_pattern = re.compile(
+            r"</?(?:details|summary)\b[^>]*>",
+            re.IGNORECASE,
+        )
+
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                continue
+            actual_line_num = (yaml_end_line - 1) + index + 1
+            for segment, in_inline_code in h.md.identify_code_blocks_line(line):
+                if in_inline_code:
+                    continue
+                for match in tag_pattern.finditer(segment):
+                    tag = match.group(0).lower()
+                    if tag.startswith("<details"):
+                        details_depth += 1
+                    elif tag.startswith("</details"):
+                        details_depth -= 1
+                        if details_depth < 0 and first_error_line is None:
+                            first_error_line = actual_line_num
+                            details_depth = 0
+                    elif tag.startswith("<summary"):
+                        summary_depth += 1
+                    elif tag.startswith("</summary"):
+                        summary_depth -= 1
+                        if summary_depth < 0 and first_error_line is None:
+                            first_error_line = actual_line_num
+                            summary_depth = 0
+
+        if first_error_line is not None or details_depth != 0 or summary_depth != 0:
+            line_num = first_error_line or ((yaml_end_line - 1) + len(code_block_info))
+            yield self._format_error("H053", self.RULES["H053"], filename, line_num=line_num, col=1)
+
+    def _check_unbalanced_table_inline_code(
+        self, filename: Path, line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        """Check for unbalanced backticks inside Markdown table cells (H056)."""
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            return
+        # Keep leading/trailing empty segments from split; inspect non-separator cells.
+        cells = line.split("|")
+        col_offset = 0
+        for cell_index, cell in enumerate(cells):
+            if cell_index == 0:
+                col_offset += len(cell) + 1
+                continue
+            if cell_index == len(cells) - 1 and not cell.strip():
+                break
+            # Skip alignment rows like ``| --- | :---: |``
+            if re.fullmatch(r"\s*:?-{3,}:?\s*", cell):
+                col_offset += len(cell) + 1
+                continue
+            if cell.count("`") % 2 == 1:
+                odd_pos = cell.find("`")
+                while odd_pos >= 0 and cell[: odd_pos + 1].count("`") % 2 == 0:
+                    odd_pos = cell.find("`", odd_pos + 1)
+                col = col_offset + max(odd_pos, 0) + 1
+                yield self._format_error("H056", self.RULES["H056"], filename, line_num=line_num, col=col)
+                return
+            col_offset += len(cell) + 1
+
     def _check_unmatched_guillemets(
         self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
@@ -1975,6 +1948,23 @@ class MarkdownChecker:
         except yaml.YAMLError as e:
             yield self._format_error("H000", f"YAML parsing error: {e}", filename, line_num=1)
 
+    def _collect_heading_ids(self, code_block_info: list) -> set[str]:
+        """Collect GitHub-style heading IDs from ATX headings outside fenced code."""
+        existing_ids: set[str] = set()
+        heading_ids: set[str] = set()
+        for line, in_code in code_block_info:
+            if in_code:
+                continue
+            match = self._ATX_HEADING_PATTERN.match(line)
+            if not match:
+                continue
+            level = len(match.group(1))
+            title = line[level:].strip()
+            title = title.replace(" <!-- top-section -->", "").replace("<!-- top-section -->", "")
+            slug = h.md.generate_id(title, existing_ids)
+            heading_ids.add(slug)
+        return heading_ids
+
     def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]:
         """Determine which rules should be active."""
         active = select & set(self.RULES.keys()) if select is not None else self.all_rules.copy()
@@ -1992,6 +1982,24 @@ class MarkdownChecker:
                 return current
             current = current.parent
         return Path.cwd()
+
+    @staticmethod
+    def _extract_link_destination(raw: str) -> str:
+        """Return the path/URL part of a Markdown link destination, without title.
+
+        A title is stripped only when it uses CommonMark quoting
+        (``path "title"``, ``path 'title'``, or ``path (title)``).
+        """
+        url = raw.strip()
+        if not url:
+            return ""
+        if url.startswith("<"):
+            end = url.find(">")
+            return url[1:end].strip() if end != -1 else url[1:].strip()
+        titled = re.match(r"^(.*?)(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))\s*$", url)
+        if titled:
+            return titled.group(1).strip()
+        return url
 
     def _find_yaml_block_end_line(self, all_lines: list[str]) -> int:
         """Find the line number where YAML block ends."""
@@ -2026,24 +2034,6 @@ class MarkdownChecker:
             if line.strip().startswith(f"{field}:"):
                 return i
         return 2
-
-    @staticmethod
-    def _extract_link_destination(raw: str) -> str:
-        """Return the path/URL part of a Markdown link destination, without title.
-
-        A title is stripped only when it uses CommonMark quoting
-        (``path "title"``, ``path 'title'``, or ``path (title)``).
-        """
-        url = raw.strip()
-        if not url:
-            return ""
-        if url.startswith("<"):
-            end = url.find(">")
-            return url[1:end].strip() if end != -1 else url[1:].strip()
-        titled = re.match(r"^(.*?)(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))\s*$", url)
-        if titled:
-            return titled.group(1).strip()
-        return url
 
     def _format_error(self, error_code: str, message: str, filename: Path, *, line_num: int = 0, col: int = 0) -> str:
         """Format error message in ruff style."""
