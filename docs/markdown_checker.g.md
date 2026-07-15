@@ -50,8 +50,8 @@ Rules:
 - **H018** - Curly/straight quotes instead of angle quotes.
 - **H019** - HTML tags in markdown content.
 - **H020** - Image caption starts with lowercase letter.
-- **H021** - Lowercase letter after sentence-ending punctuation (abbreviations like `англ.`,
-  `лат.`, `см.` are allowed).
+- **H021** - Lowercase letter after sentence-ending punctuation (abbreviations like `англ.`, # ignore: HP001
+  `лат.`, `см.` are allowed). # ignore: HP001
 - **H022** - Non-breaking space character found.
 - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
 - **H024** - Latin "x" or Cyrillic "x" used instead of multiplication sign "x".
@@ -144,20 +144,20 @@ class MarkdownChecker:
     _H021_ALLOWED_TAIL_LEN: ClassVar[int] = 10
     _H021_PERIOD_ABBREVS: ClassVar[frozenset[str]] = frozenset(
         {
-            "англ.",
-            "анг.",
-            "лат.",
-            "нем.",
-            "франц.",
-            "греч.",
+            "англ.",  # ignore: HP001
+            "анг.",  # ignore: HP001
+            "лат.",  # ignore: HP001
+            "нем.",  # ignore: HP001
+            "франц.",  # ignore: HP001
+            "греч.",  # ignore: HP001
             "рус.",  # noqa: RUF001  # ignore: HP001
-            "итал.",
-            "исп.",
-            "порт.",
-            "укр.",
-            "кит.",
-            "яп.",
-            "см.",
+            "итал.",  # ignore: HP001
+            "исп.",  # ignore: HP001
+            "порт.",  # ignore: HP001
+            "укр.",  # ignore: HP001
+            "кит.",  # ignore: HP001
+            "яп.",  # ignore: HP001
+            "см.",  # ignore: HP001
             "e.g.",
             "i.e.",
             "т. е.",  # noqa: RUF001  # ignore: HP001
@@ -910,7 +910,7 @@ class MarkdownChecker:
         Checks each non-inline-code segment separately so removed code (e.g.
         ``Optional. `"value"` stores``) does not falsely join a period with the
         next word. Periods in ordered-list and section numbers (``1.``,
-        ``3.1.``) and known abbreviations (``англ.``, ``лат.``, ``см.``) are ignored.
+        ``3.1.``) and known abbreviations (``англ.``, ``лат.``, ``см.``) are ignored.  # ignore: HP001
         """
         pattern = r"[.!?]\s+([a-zа-яё])"  # noqa: RUF001  # ignore: HP001
 
