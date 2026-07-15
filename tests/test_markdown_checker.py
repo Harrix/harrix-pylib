@@ -1219,3 +1219,244 @@ def test_markdown_checker() -> None:
         )
         errors = checker.check(trailing_colon_emphasis_file, select={"H030"})
         assert not errors
+
+        # =====================================================================
+        # H033: Unclosed fenced code block
+        # =====================================================================
+        unclosed_fence_file = temp_path / "unclosed_fence.md"
+        unclosed_fence_file.write_text(
+            "---\nlang: en\n---\n\nExample:\n\n```python\nprint('hello')\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(unclosed_fence_file, select={"H033"})
+        assert any("H033" in e for e in errors)
+
+        closed_fence_file = temp_path / "closed_fence.md"
+        closed_fence_file.write_text(
+            "---\nlang: en\n---\n\nExample:\n\n```python\nprint('hello')\n```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(closed_fence_file, select={"H033"})
+        assert not errors
+
+        # =====================================================================
+        # H034: Code fence without language identifier
+        # =====================================================================
+        no_lang_fence_file = temp_path / "no_lang_fence.md"
+        no_lang_fence_file.write_text("---\nlang: en\n---\n\nExample:\n\n```\ncode\n```\n", encoding="utf-8")
+        errors = checker.check(no_lang_fence_file, select={"H034"})
+        assert any("H034" in e for e in errors)
+
+        lang_fence_ok_file = temp_path / "lang_fence_ok.md"
+        lang_fence_ok_file.write_text(
+            "---\nlang: en\n---\n\nExample:\n\n```python\ncode\n```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(lang_fence_ok_file, select={"H034"})
+        assert not errors
+
+        nested_fence_file = temp_path / "nested_fence.md"
+        nested_fence_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "````markdown\n"
+            "Пример:\n\n"
+            "```text\n"
+            "line one\n"
+            "```\n\n"
+            "Ещё пример:\n\n"
+            "```\n"
+            "line two\n"
+            "```\n"
+            "````\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(nested_fence_file, select={"H034"})
+        assert not errors
+
+        # =====================================================================
+        # H035: Missing figure caption after image
+        # =====================================================================
+        no_caption_file = temp_path / "no_caption.md"
+        no_caption_file.write_text(
+            "---\nlang: en\n---\n\nExample:\n\n![Alt text](img/image.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(no_caption_file, select={"H035"})
+        assert any("H035" in e for e in errors)
+
+        with_caption_file = temp_path / "with_caption.md"
+        with_caption_file.write_text(
+            "---\nlang: en\n---\n\nExample:\n\n![Alt text](img/image.png)\n\n_Figure 1: Alt text_\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(with_caption_file, select={"H035"})
+        assert not errors
+
+        ru_caption_file = temp_path / "ru_caption.md"
+        ru_caption_file.write_text(
+            "---\nlang: ru\n---\n\nПример:\n\n![Подпись](img/image.png)\n\n_Рисунок 1 — Подпись_\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_caption_file, select={"H035"})
+        assert not errors
+
+        # =====================================================================
+        # H036: Missing space after # in ATX heading
+        # =====================================================================
+        heading_no_space_file = temp_path / "heading_no_space.md"
+        heading_no_space_file.write_text("---\nlang: en\n---\n\n#Title\n", encoding="utf-8")
+        errors = checker.check(heading_no_space_file, select={"H036"})
+        assert any("H036" in e for e in errors)
+
+        heading_space_ok_file = temp_path / "heading_space_ok.md"
+        heading_space_ok_file.write_text("---\nlang: en\n---\n\n# Title\n", encoding="utf-8")
+        errors = checker.check(heading_space_ok_file, select={"H036"})
+        assert not errors
+
+        # =====================================================================
+        # H037: Skipped heading level
+        # =====================================================================
+        skipped_heading_file = temp_path / "skipped_heading.md"
+        skipped_heading_file.write_text("---\nlang: en\n---\n\n# Title\n\n### Subtitle\n", encoding="utf-8")
+        errors = checker.check(skipped_heading_file, select={"H037"})
+        assert any("H037" in e for e in errors)
+
+        # =====================================================================
+        # H038: Multiple H1 headings
+        # =====================================================================
+        multiple_h1_file = temp_path / "multiple_h1.md"
+        multiple_h1_file.write_text("---\nlang: en\n---\n\n# One\n\n# Two\n", encoding="utf-8")
+        errors = checker.check(multiple_h1_file, select={"H038"})
+        assert any("H038" in e for e in errors)
+
+        # =====================================================================
+        # H039: Backslash in local Markdown path
+        # =====================================================================
+        backslash_path_file = temp_path / "backslash_path.md"
+        backslash_path_file.write_text(
+            "---\nlang: en\n---\n\n![Alt](img\\image.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(backslash_path_file, select={"H039"})
+        assert any("H039" in e for e in errors)
+
+        # =====================================================================
+        # H006 extension: Expanded incorrect words
+        # =====================================================================
+        typescript_file = temp_path / "typescript.md"
+        typescript_file.write_text("---\nlang: en\n---\n\nUse typescript and json.\n", encoding="utf-8")
+        errors = checker.check(typescript_file, select={"H006"})
+        assert any("H006" in e and "typescript" in e for e in errors)
+        assert any("H006" in e and "json" in e for e in errors)
+
+        # =====================================================================
+        # H040: lang field does not match document language
+        # =====================================================================
+        lang_mismatch_en_file = temp_path / "lang_mismatch_en.md"
+        lang_mismatch_en_file.write_text(
+            "---\nlang: en\n---\n\nЭто русский текст.\nЕщё одна строка.\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(lang_mismatch_en_file, select={"H040"})
+        assert any("H040" in e for e in errors)
+
+        lang_mismatch_ru_file = temp_path / "lang_mismatch_ru.md"
+        lang_mismatch_ru_file.write_text("---\nlang: ru\n---\n\nOnly English text here.\n", encoding="utf-8")
+        errors = checker.check(lang_mismatch_ru_file, select={"H040"})
+        assert any("H040" in e for e in errors)
+
+        # =====================================================================
+        # H041: Bare URL in text
+        # =====================================================================
+        bare_url_file = temp_path / "bare_url.md"
+        bare_url_file.write_text("---\nlang: en\n---\n\nSee https://example.com for details.\n", encoding="utf-8")
+        errors = checker.check(bare_url_file, select={"H041"})
+        assert any("H041" in e for e in errors)
+
+        wrapped_url_file = temp_path / "wrapped_url.md"
+        wrapped_url_file.write_text(
+            "---\nlang: en\n---\n\nSee <https://example.com> for details.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(wrapped_url_file, select={"H041"})
+        assert not errors
+
+        # =====================================================================
+        # H019 extension: Additional forbidden HTML tags
+        # =====================================================================
+        br_tag_file = temp_path / "br_tag.md"
+        br_tag_file.write_text("---\nlang: en\n---\n\nLine<br>break\n", encoding="utf-8")
+        errors = checker.check(br_tag_file, select={"H019"})
+        assert any("H019" in e for e in errors)
+
+        # =====================================================================
+        # H042: Invisible Unicode character
+        # =====================================================================
+        invisible_char_file = temp_path / "invisible_char.md"
+        invisible_char_file.write_text("---\nlang: en\n---\n\nWord\u200bbreak\n", encoding="utf-8")
+        errors = checker.check(invisible_char_file, select={"H042"})
+        assert any("H042" in e for e in errors)
+
+        # =====================================================================
+        # H043: Unmatched guillemets
+        # =====================================================================
+        unmatched_guillemet_file = temp_path / "unmatched_guillemet.md"
+        unmatched_guillemet_file.write_text(
+            "---\nlang: ru\n---\n\n«Незакрытая цитата\n", encoding="utf-8"
+        )  # ignore: HP001
+        errors = checker.check(unmatched_guillemet_file, select={"H043"})
+        assert any("H043" in e for e in errors)
+
+        # =====================================================================
+        # H044: Missing space before % or °
+        # =====================================================================
+        percent_no_space_file = temp_path / "percent_no_space.md"
+        percent_no_space_file.write_text("---\nlang: ru\n---\n\nЗагрузка 50%.\n", encoding="utf-8")
+        errors = checker.check(percent_no_space_file, select={"H044"})
+        assert any("H044" in e for e in errors)
+
+        # =====================================================================
+        # H045: Broken relative Markdown link (opt-in)
+        # =====================================================================
+        broken_link_file = temp_path / "broken_link.md"
+        broken_link_file.write_text(
+            "---\nlang: en\n---\n\n[Missing](./missing-file.md)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(broken_link_file, select={"H045"})
+        assert any("H045" in e for e in errors)
+
+        existing_target = temp_path / "existing-target.md"
+        existing_target.write_text("---\nlang: en\n---\n\n# Target\n", encoding="utf-8")
+        valid_link_file = temp_path / "valid_link.md"
+        valid_link_file.write_text(
+            "---\nlang: en\n---\n\n[Existing](./existing-target.md)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(valid_link_file, select={"H045"})
+        assert not errors
+
+        # =====================================================================
+        # H046: LF line endings instead of CRLF (opt-in)
+        # =====================================================================
+        lf_endings_file = temp_path / "lf_endings.md"
+        lf_endings_file.write_text("---\nlang: en\n---\n\n# Title\n", encoding="utf-8", newline="\n")
+        errors = checker.check(lf_endings_file, select={"H046"})
+        assert any("H046" in e for e in errors)
+
+        crlf_endings_file = temp_path / "crlf_endings.md"
+        crlf_endings_file.write_bytes("---\r\nlang: en\r\n---\r\n\r\n# Title\r\n".encode())
+        errors = checker.check(crlf_endings_file, select={"H046"})
+        assert not errors
+
+        # =====================================================================
+        # H047: BOM at start of file (opt-in)
+        # =====================================================================
+        bom_file = temp_path / "bom.md"
+        bom_file.write_bytes("\ufeff---\nlang: en\n---\n\n# Title\n".encode())
+        errors = checker.check(bom_file, select={"H047"})
+        assert any("H047" in e for e in errors)
+
+        # Opt-in rules are excluded from default all_rules
+        assert "H045" not in checker.all_rules
+        assert "H033" in checker.all_rules
