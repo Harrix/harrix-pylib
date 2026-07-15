@@ -1416,7 +1416,7 @@ def test_markdown_checker() -> None:
         assert any("H044" in e for e in errors)
 
         # =====================================================================
-        # H045: Broken relative Markdown link (opt-in)
+        # H045: Broken relative Markdown link (default)
         # =====================================================================
         broken_link_file = temp_path / "broken_link.md"
         broken_link_file.write_text(
@@ -1434,6 +1434,26 @@ def test_markdown_checker() -> None:
             encoding="utf-8",
         )
         errors = checker.check(valid_link_file, select={"H045"})
+        assert not errors
+
+        # Inline code with ](...) must not trigger H045 (false positive for operator[])
+        inline_code_link_file = temp_path / "inline_code_link.md"
+        inline_code_link_file.write_text(
+            "---\nlang: en\n---\n\nUse `E& operator[](int)` in C++.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(inline_code_link_file, select={"H045"})
+        assert not errors
+
+        # Percent-encoded path and optional title must resolve correctly
+        encoded_target = temp_path / "encoded target.md"
+        encoded_target.write_text("---\nlang: en\n---\n\n# Encoded\n", encoding="utf-8")
+        encoded_link_file = temp_path / "encoded_link.md"
+        encoded_link_file.write_text(
+            '---\nlang: en\n---\n\n[Encoded](./encoded%20target.md "Title")\n',
+            encoding="utf-8",
+        )
+        errors = checker.check(encoded_link_file, select={"H045"})
         assert not errors
 
         # =====================================================================
@@ -1457,6 +1477,165 @@ def test_markdown_checker() -> None:
         errors = checker.check(bom_file, select={"H047"})
         assert any("H047" in e for e in errors)
 
+        # =====================================================================
+        # H048: Unicode replacement character
+        # =====================================================================
+        replacement_file = temp_path / "replacement_char.md"
+        replacement_file.write_text("---\nlang: ru\n---\n\nтекст с \ufffd символом\n", encoding="utf-8")
+        errors = checker.check(replacement_file, select={"H048"})
+        assert any("H048" in e for e in errors)
+
+        # =====================================================================
+        # H049: Mixed Latin and Cyrillic letters
+        # =====================================================================
+        mixed_script_file = temp_path / "mixed_script.md"
+        mixed_script_file.write_text("---\nlang: ru\n---\n\nCистемы с обратной связью\n", encoding="utf-8")
+        errors = checker.check(mixed_script_file, select={"H049"})
+        assert any("H049" in e for e in errors)
+
+        allowlisted_mixed_file = temp_path / "allowlisted_mixed.md"
+        allowlisted_mixed_file.write_text("---\nlang: ru\n---\n\nФильм Духless\n", encoding="utf-8")
+        errors = checker.check(allowlisted_mixed_file, select={"H049"})
+        assert not errors
+
+        # =====================================================================
+        # H050: Missing space after punctuation
+        # =====================================================================
+        missing_space_punct_file = temp_path / "missing_space_punct.md"
+        missing_space_punct_file.write_text(
+            "---\nlang: ru\n---\n\nСлово,другое слово\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(missing_space_punct_file, select={"H050"})
+        assert any("H050" in e for e in errors)
+
+        ascii_csv_like_file = temp_path / "ascii_csv_like.md"
+        ascii_csv_like_file.write_text("---\nlang: en\n---\n\nSee items a,b and 1979a,b.\n", encoding="utf-8")
+        errors = checker.check(ascii_csv_like_file, select={"H050"})
+        assert not errors
+
+        admonition_file = temp_path / "admonition_h050.md"
+        admonition_file.write_text("---\nlang: en\n---\n\n[!NOTE]\n\nText\n", encoding="utf-8")
+        errors = checker.check(admonition_file, select={"H050"})
+        assert not errors
+
+        # =====================================================================
+        # H051: Malformed punctuation sequence
+        # =====================================================================
+        malformed_punct_file = temp_path / "malformed_punct.md"
+        malformed_punct_file.write_text(
+            "---\nlang: ru\n---\n\nЭто постулат:. Далее текст.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(malformed_punct_file, select={"H051"})
+        assert any("H051" in e for e in errors)
+
+        malformed_time_file = temp_path / "malformed_time.md"
+        malformed_time_file.write_text("---\nlang: ru\n---\n\n### 16;:34\n", encoding="utf-8")
+        errors = checker.check(malformed_time_file, select={"H051"})
+        assert any("H051" in e for e in errors)
+
+        abbrev_comma_file = temp_path / "abbrev_comma.md"
+        abbrev_comma_file.write_text(
+            "---\nlang: ru\n---\n\nЭлектрозаводская ул., 21, Москва\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(abbrev_comma_file, select={"H051"})
+        assert not errors
+
+        word_dot_comma_file = temp_path / "word_dot_comma.md"
+        word_dot_comma_file.write_text(
+            "---\nlang: ru\n---\n\nЖил в гостинице., потом уехал.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(word_dot_comma_file, select={"H051"})
+        assert any("H051" in e for e in errors)
+
+        # =====================================================================
+        # H052: Heading deeper than H6
+        # =====================================================================
+        deep_heading_file = temp_path / "deep_heading.md"
+        deep_heading_file.write_text(
+            "---\nlang: en\n---\n\n# Title\n\n####### Too deep\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(deep_heading_file, select={"H052"})
+        assert any("H052" in e for e in errors)
+
+        # =====================================================================
+        # H053: Unbalanced details/summary
+        # =====================================================================
+        unbalanced_details_file = temp_path / "unbalanced_details.md"
+        unbalanced_details_file.write_text(
+            "---\nlang: en\n---\n\n<details>\n<details>\n\nText\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(unbalanced_details_file, select={"H053"})
+        assert any("H053" in e for e in errors)
+
+        balanced_details_file = temp_path / "balanced_details.md"
+        balanced_details_file.write_text(
+            "---\nlang: en\n---\n\n<details>\n<summary>More</summary>\n\nText\n\n</details>\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(balanced_details_file, select={"H053"})
+        assert not errors
+
+        # =====================================================================
+        # H054: Repeated adjacent word (opt-in)
+        # =====================================================================
+        repeated_word_file = temp_path / "repeated_word.md"
+        repeated_word_file.write_text(
+            "---\nlang: en\n---\n\nCorrect code code here\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(repeated_word_file, select={"H054"})
+        assert any("H054" in e for e in errors)
+
+        hyphenated_repeat_file = temp_path / "hyphenated_repeat.md"
+        hyphenated_repeat_file.write_text(
+            "---\nlang: en\n---\n\nFolder Notes-Notes example\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(hyphenated_repeat_file, select={"H054"})
+        assert not errors
+
+        # =====================================================================
+        # H055: Broken internal fragment link (opt-in)
+        # =====================================================================
+        broken_fragment_file = temp_path / "broken_fragment.md"
+        broken_fragment_file.write_text(
+            "---\nlang: en\n---\n\n# Title\n\n[Bad](#missing-anchor)\n\n## Real Section\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(broken_fragment_file, select={"H055"})
+        assert any("H055" in e for e in errors)
+
+        valid_fragment_file = temp_path / "valid_fragment.md"
+        valid_fragment_file.write_text(
+            "---\nlang: en\n---\n\n# Title\n\n[Good](#real-section)\n\n## Real Section\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(valid_fragment_file, select={"H055"})
+        assert not errors
+
+        # =====================================================================
+        # H056: Unbalanced inline code in table cell (opt-in)
+        # =====================================================================
+        unbalanced_table_code_file = temp_path / "unbalanced_table_code.md"
+        unbalanced_table_code_file.write_text(
+            "---\nlang: en\n---\n\n| A | B |\n| --- | --- |\n| `operator | ` |\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(unbalanced_table_code_file, select={"H056"})
+        assert any("H056" in e for e in errors)
+
         # Opt-in rules are excluded from default all_rules
-        assert "H045" not in checker.all_rules
+        assert "H045" in checker.all_rules
+        assert "H048" in checker.all_rules
+        assert "H054" not in checker.all_rules
+        assert "H055" not in checker.all_rules
+        assert "H056" not in checker.all_rules
+        assert "H046" not in checker.all_rules
+        assert "H047" not in checker.all_rules
         assert "H033" in checker.all_rules

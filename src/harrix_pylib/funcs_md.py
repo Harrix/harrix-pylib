@@ -2371,7 +2371,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             if not match:
                 continue
             level = len(match.group())
-            if level == 1:  # Skip the main title
+            if level < 2 or level > 6:  # Skip H1 and invalid H7+
                 continue
             # Extract the header text
             title = line[level:].strip()
@@ -2647,6 +2647,8 @@ def increase_heading_level_content(markdown_text: str) -> str:
 
     This function processes a Markdown text and increases the level of all headings
     (lines starting with '#') outside of code blocks by prepending an additional '#'.
+    Headings that are already H6 (six leading ``#``) are left unchanged so combining
+    notes never produces invalid H7+ headings.
 
     Args:
 
@@ -2679,7 +2681,16 @@ def increase_heading_level_content(markdown_text: str) -> str:
         if is_code_block:
             new_lines.append(line)
             continue
-        new_lines.append("#" + line if line.startswith("#") else line)
+        if line.startswith("#"):
+            level = 0
+            for char in line:
+                if char != "#":
+                    break
+                level += 1
+            # Markdown supports at most H6; do not deepen beyond that when combining notes.
+            new_lines.append(line if level >= 6 else "#" + line)
+        else:
+            new_lines.append(line)
     return "\n".join(new_lines)
 
 

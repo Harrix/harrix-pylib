@@ -1592,6 +1592,11 @@ This is some text.
 More text here."""
     assert h.md.increase_heading_level_content(md_text) == expected
 
+    # H6 headings must not become invalid H7+
+    h6_text = "###### Already H6\n\n##### H5"
+    h6_expected = "###### Already H6\n\n###### H5"
+    assert h.md.increase_heading_level_content(h6_text) == h6_expected
+
 
 def test_decrease_heading_level_content() -> None:
     md_text = """## Heading
