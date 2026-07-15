@@ -73,6 +73,7 @@ class MarkdownChecker:
     - **H054** - Repeated adjacent word (opt-in).
     - **H055** - Broken internal fragment link (opt-in).
     - **H056** - Unbalanced inline code in table cell (opt-in).
+    - **H057** - Trailing period at end of ATX heading.
 
     """
 
@@ -116,8 +117,11 @@ class MarkdownChecker:
     # ATX heading without space after hash marks (H036)
     _ATX_HEADING_NO_SPACE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s{0,3}#{1,6}[^\s#]")
 
-    # ATX heading with level (H037, H038)
-    _ATX_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(#{1,6})\s+")
+    # ATX heading with level (H037, H038, H057)
+    _ATX_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(#{1,6})\s+(.*)$")
+
+    # Trailing closed-ATX hashes (H057): ``## Title ##``
+    _ATX_CLOSING_HASHES_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"\s+#+\s*$")
 
     # ATX heading deeper than H6 (H052); space after hashes optional
     _ATX_HEADING_TOO_DEEP_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s{0,3}(#{7,})\s*")
@@ -235,6 +239,7 @@ class MarkdownChecker:
         "H054": "Repeated adjacent word",
         "H055": "Broken internal fragment link",
         "H056": "Unbalanced inline code in table cell",
+        "H057": "Trailing period at end of ATX heading",
     }
 
     _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
@@ -438,6 +443,28 @@ class MarkdownChecker:
         "Powershell": "PowerShell",
         "docker": "Docker",
         "python": "Python",
+        # Russian orthography (SFU web style / Gramota)
+        "интернет": "Интернет",  # ignore: HP001
+        "интернета": "Интернета",  # ignore: HP001
+        "интернету": "Интернету",  # ignore: HP001
+        "интернетом": "Интернетом",  # ignore: HP001
+        "интернете": "Интернете",  # ignore: HP001
+        "он-лайн": "онлайн",  # ignore: HP001
+        "Он-лайн": "Онлайн",  # ignore: HP001
+        "ОН-ЛАЙН": "онлайн",  # ignore: HP001
+        "on-line": "онлайн",  # ignore: HP001
+        "On-line": "Онлайн",  # ignore: HP001
+        "ON-LINE": "онлайн",
+        "ВУЗ": "вуз",  # ignore: HP001
+        "ВУЗа": "вуза",  # ignore: HP001
+        "ВУЗу": "вузу",  # ignore: HP001
+        "ВУЗом": "вузом",  # ignore: HP001
+        "ВУЗе": "вузе",  # ignore: HP001
+        "ВУЗы": "вузы",  # ignore: HP001
+        "ВУЗов": "вузов",  # ignore: HP001
+        "ВУЗам": "вузам",  # ignore: HP001
+        "ВУЗами": "вузами",  # ignore: HP001
+        "ВУЗах": "вузах",  # ignore: HP001
     }
 
     # Pre-compiled regex patterns for INCORRECT_WORDS — built once at class definition time
@@ -1138,6 +1165,24 @@ class MarkdownChecker:
         error_msg = f"{self.RULES['H052']}: found H{level}"
         yield self._format_error("H052", error_msg, filename, line_num=line_num, col=1)
 
+    def _check_heading_trailing_period(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for trailing period at end of ATX heading (H057).
+
+        A final ``.`` is forbidden; ``?``, ``!``, and ``…`` are allowed. An internal
+        period before the last sentence is fine (e.g. ``Глава 5. Буди, буди!``).
+        """
+        match = self._ATX_HEADING_PATTERN.match(line)
+        if not match:
+            return
+        title = match.group(2).strip()
+        title = self._ATX_CLOSING_HASHES_PATTERN.sub("", title).strip()
+        title = title.replace(" <!-- top-section -->", "").replace("<!-- top-section -->", "").strip()
+        if not title or title.endswith("...") or title.endswith("…"):
+            return
+        if title.endswith("."):
+            col = line.rfind(".") + 1
+            yield self._format_error("H057", self.RULES["H057"], filename, line_num=line_num, col=col)
+
     def _check_horizontal_bar(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
@@ -1537,6 +1582,9 @@ class MarkdownChecker:
 
         if "H052" in rules:
             yield from self._check_heading_too_deep(filename, line, line_num)
+
+        if "H057" in rules:
+            yield from self._check_heading_trailing_period(filename, line, line_num)
 
         if "H054" in rules:
             yield from self._check_repeated_adjacent_words(filename, line, clean_line, line_num)

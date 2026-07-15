@@ -1563,6 +1563,63 @@ def test_markdown_checker() -> None:
         assert any("H052" in e for e in errors)
 
         # =====================================================================
+        # H057: Trailing period at end of ATX heading
+        # =====================================================================
+        heading_period_file = temp_path / "heading_period.md"
+        heading_period_file.write_text(
+            "---\nlang: ru\n---\n\n## Никогда не разговаривайте с неизвестными.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(heading_period_file, select={"H057"})
+        assert any("H057" in e for e in errors)
+
+        heading_ok_file = temp_path / "heading_ok.md"
+        heading_ok_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "## Исповедь горячего сердца. В стихах\n\n"
+            "## Глава 5. Буди, буди!\n\n"
+            "## Что дальше?\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(heading_ok_file, select={"H057"})
+        assert not errors
+
+        # =====================================================================
+        # H006: Интернет / онлайн / вуз
+        # =====================================================================
+        internet_file = temp_path / "internet_word.md"
+        internet_file.write_text(
+            "---\nlang: ru\n---\n\nНашёл в интернете пример.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(internet_file, select={"H006"})
+        assert any("H006" in e and "интернете" in e for e in errors)
+
+        internet_compound_file = temp_path / "internet_compound.md"
+        internet_compound_file.write_text(
+            "---\nlang: ru\n---\n\nСистема интернет-оповещения работает.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(internet_compound_file, select={"H006"})
+        assert not any("H006" in e and "интернет" in e for e in errors)
+
+        online_file = temp_path / "online_word.md"
+        online_file.write_text(
+            "---\nlang: ru\n---\n\nВсе должны быть он-лайн.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(online_file, select={"H006"})
+        assert any("H006" in e and "он-лайн" in e for e in errors)
+
+        vuz_file = temp_path / "vuz_word.md"
+        vuz_file.write_text(
+            "---\nlang: ru\n---\n\nПять ВУЗов из России.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(vuz_file, select={"H006"})
+        assert any("H006" in e and "ВУЗов" in e for e in errors)
+
+        # =====================================================================
         # H053: Unbalanced details/summary
         # =====================================================================
         unbalanced_details_file = temp_path / "unbalanced_details.md"
@@ -1633,6 +1690,7 @@ def test_markdown_checker() -> None:
         # Opt-in rules are excluded from default all_rules
         assert "H045" in checker.all_rules
         assert "H048" in checker.all_rules
+        assert "H057" in checker.all_rules
         assert "H054" not in checker.all_rules
         assert "H055" not in checker.all_rules
         assert "H056" not in checker.all_rules
