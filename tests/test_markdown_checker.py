@@ -1445,7 +1445,7 @@ def test_markdown_checker() -> None:
         assert any("H046" in e for e in errors)
 
         crlf_endings_file = temp_path / "crlf_endings.md"
-        crlf_endings_file.write_bytes("---\r\nlang: en\r\n---\r\n\r\n# Title\r\n".encode())
+        crlf_endings_file.write_bytes(b"---\r\nlang: en\r\n---\r\n\r\n# Title\r\n")
         errors = checker.check(crlf_endings_file, select={"H046"})
         assert not errors
 

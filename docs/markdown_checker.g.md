@@ -1008,7 +1008,7 @@ class MarkdownChecker:
         if "H038" in rules and code_block_info is not None:
             yield from self._check_multiple_h1_headings(filename, code_block_info, yaml_end_line)
 
-        if "H040" in rules and lang:
+        if "H040" in rules and lang and code_block_info is not None:
             yield from self._check_lang_content_mismatch(filename, content_lines, code_block_info, lang, yaml_end_line)
 
         if "H045" in rules:
