@@ -1893,7 +1893,7 @@ class MarkdownChecker:
     def _check_unbalanced_table_inline_code(
         self, filename: Path, line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for unbalanced backticks inside Markdown table cells (H056).
+        r"""Check for unbalanced backticks inside Markdown table cells (H056).
 
         Splits on unescaped ``|`` only so escaped pipes (``\\|`` inside
         `` `a \\| b` ``) stay inside one cell and do not trigger this rule.
