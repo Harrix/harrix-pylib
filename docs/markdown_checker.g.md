@@ -171,7 +171,7 @@ class MarkdownChecker:
     _MISSING_SPACE_AFTER_PUNCT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"([,;!?])(?=[^\W\d_])", re.UNICODE)
 
     # Malformed punctuation sequences (H051).
-    # Word+``.,`` requires 6+ letters so short abbrevs like ``напр.,`` / ``ул.,`` are ignored.
+    # Word+``.,`` requires 6+ letters so short abbrevs like ``напр.,`` / ``ул.,`` are ignored.  # ignore: HP001
     _MALFORMED_PUNCT_SEQUENCE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
         r"(?::\.|(?:[»\"”'])\.,|(?:[^\W\d_]{6,})\.,)",
         re.UNICODE,
@@ -472,7 +472,7 @@ class MarkdownChecker:
         "ОН-ЛАЙН": "онлайн",  # noqa: RUF001  # ignore: HP001
         "on-line": "онлайн",  # ignore: HP001
         "On-line": "Онлайн",  # ignore: HP001
-        "ON-LINE": "онлайн",
+        "ON-LINE": "онлайн",  # ignore: HP001
         "ВУЗ": "вуз",  # noqa: RUF001  # ignore: HP001
         "ВУЗа": "вуза",  # noqa: RUF001  # ignore: HP001
         "ВУЗу": "вузу",  # noqa: RUF001  # ignore: HP001
@@ -1187,7 +1187,7 @@ class MarkdownChecker:
         """Check for trailing period at end of ATX heading (H057).
 
         A final ``.`` is forbidden; ``?``, ``!``, and ``…`` are allowed. An internal
-        period before the last sentence is fine (e.g. ``Глава 5. Буди, буди!``).
+        period before the last sentence is fine (e.g. ``Глава 5. Буди, буди!``).  # ignore: HP001
         """
         match = self._ATX_HEADING_PATTERN.match(line)
         if not match:
