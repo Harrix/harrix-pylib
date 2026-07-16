@@ -1600,6 +1600,57 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
+        # H058: Punctuation before closing guillemet
+        # =====================================================================
+        period_inside_guillemet_file = temp_path / "period_inside_guillemet.md"
+        period_inside_guillemet_file.write_text(
+            "---\nlang: ru\n---\n\nСон по мотивам «Очень странных дел.»\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(period_inside_guillemet_file, select={"H058"})
+        assert any("H058" in e for e in errors)
+
+        period_after_guillemet_file = temp_path / "period_after_guillemet.md"
+        period_after_guillemet_file.write_text(
+            "---\nlang: ru\n---\n\nСон по мотивам «Очень странных дел».\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(period_after_guillemet_file, select={"H058"})
+        assert not errors
+
+        exclamation_inside_guillemet_file = temp_path / "exclamation_inside_guillemet.md"
+        exclamation_inside_guillemet_file.write_text(
+            "---\nlang: ru\n---\n\nОн сказал: «Как хорошо!»\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(exclamation_inside_guillemet_file, select={"H058"})
+        assert not errors
+
+        question_inside_guillemet_file = temp_path / "question_inside_guillemet.md"
+        question_inside_guillemet_file.write_text(
+            "---\nlang: ru\n---\n\nСпросили: «Где?»\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(question_inside_guillemet_file, select={"H058"})
+        assert not errors
+
+        abbrev_inside_guillemet_file = temp_path / "abbrev_inside_guillemet.md"
+        abbrev_inside_guillemet_file.write_text(
+            "---\nlang: ru\n---\n\nСмотри список «и т. д.» в конце.\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(abbrev_inside_guillemet_file, select={"H058"})
+        assert not errors
+
+        period_inside_guillemet_en_file = temp_path / "period_inside_guillemet_en.md"
+        period_inside_guillemet_en_file.write_text(
+            "---\nlang: en\n---\n\nHe watched «Stranger Things.»\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(period_inside_guillemet_en_file, select={"H058"})
+        assert not errors
+
+        # =====================================================================
         # H006: Интернет / онлайн / вуз  # noqa: ERA001
         # =====================================================================
         internet_file = temp_path / "internet_word.md"

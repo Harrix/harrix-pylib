@@ -88,6 +88,9 @@ Rules:
 - **H055** - Broken internal fragment link.
 - **H056** - Unbalanced inline code in table cell.
 - **H057** - Trailing period at end of ATX heading.
+- **H058** - Punctuation (`.`, `,`, `;`, `:`) before closing guillemet `»`
+  (Russian typography; `!»` / `?»` / `…»` are allowed; single-letter abbreviations
+  like `«и т. д.»` are exempt).
 
 <details>
 <summary>Code:</summary>
@@ -175,6 +178,13 @@ class MarkdownChecker:
     )
     _MALFORMED_TIME_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*#{1,6}\s+\d{1,2}(?:;:|::)\d{2}\s*$")
 
+    # Punctuation before closing guillemet (H058). Period only after 2+ letters so
+    # single-letter abbreviations like ``т. д.»`` / ``т. е.»`` are ignored.  # ignore: HP001
+    _PUNCT_BEFORE_CLOSING_GUILLEMET_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
+        r"(?:[^\W\d_]{2,}\.|[,;:])»",
+        re.UNICODE,
+    )
+
     # Repeated adjacent word (H054); ignore short tokens like ``c c``.
     # Include hyphenated compounds (`well-known``) as one token so
     # ``well well-known`` is not treated as a repeat of ``well``.
@@ -257,6 +267,7 @@ class MarkdownChecker:
         "H055": "Broken internal fragment link",
         "H056": "Unbalanced inline code in table cell",
         "H057": "Trailing period at end of ATX heading",
+        "H058": "Punctuation before closing guillemet",
     }
 
     _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
@@ -1610,6 +1621,9 @@ class MarkdownChecker:
         if "H057" in rules:
             yield from self._check_heading_trailing_period(filename, line, line_num)
 
+        if "H058" in rules:
+            yield from self._check_punctuation_before_closing_guillemet(filename, line, clean_line, line_num)
+
         if "H054" in rules:
             yield from self._check_repeated_adjacent_words(filename, line, clean_line, line_num)
 
@@ -1624,6 +1638,24 @@ class MarkdownChecker:
         """
         for match in re.finditer(r"\u2116(?=[^ ])", line):  # № followed by a non-space character
             yield self._format_error("H027", self.RULES["H027"], filename, line_num=line_num, col=match.start() + 1)
+
+    def _check_punctuation_before_closing_guillemet(
+        self, filename: Path, line: str, clean_line: str, line_num: int
+    ) -> Generator[str, None, None]:
+        """Check for ``.``, ``,``, ``;``, ``:`` before closing guillemet (H058).
+
+        Only applies when the line contains Russian letters. Period is flagged only
+        after two or more letters so abbreviations like ``«и т. д.»`` are allowed.  # ignore: HP001
+        """
+        if not re.search(r"[а-яА-ЯёЁ]", line):  # noqa: RUF001  # ignore: HP001
+            return
+        for match in self._PUNCT_BEFORE_CLOSING_GUILLEMET_PATTERN.finditer(clean_line):
+            snippet = match.group(0)
+            col = line.find(snippet, match.start())
+            if col < 0:
+                col = match.start()
+            error_msg = f'{self.RULES["H058"]}: "{snippet}"'
+            yield self._format_error("H058", error_msg, filename, line_num=line_num, col=col + 1)
 
     def _check_question_mark_period(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check for question mark followed by period '?.' (H028)."""
