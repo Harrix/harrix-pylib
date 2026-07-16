@@ -1457,7 +1457,7 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H046: LF line endings instead of CRLF (opt-in)
+        # H046: LF line endings instead of CRLF
         # =====================================================================
         lf_endings_file = temp_path / "lf_endings.md"
         lf_endings_file.write_text("---\nlang: en\n---\n\n# Title\n", encoding="utf-8", newline="\n")
@@ -1470,7 +1470,7 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H047: BOM at start of file (opt-in)
+        # H047: BOM at start of file
         # =====================================================================
         bom_file = temp_path / "bom.md"
         bom_file.write_bytes("\ufeff---\nlang: en\n---\n\n# Title\n".encode())
@@ -1639,7 +1639,7 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H054: Repeated adjacent word (opt-in)
+        # H054: Repeated adjacent word
         # =====================================================================
         repeated_word_file = temp_path / "repeated_word.md"
         repeated_word_file.write_text(
@@ -1658,7 +1658,7 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H055: Broken internal fragment link (opt-in)
+        # H055: Broken internal fragment link
         # =====================================================================
         broken_fragment_file = temp_path / "broken_fragment.md"
         broken_fragment_file.write_text(
@@ -1677,7 +1677,7 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H056: Unbalanced inline code in table cell (opt-in)
+        # H056: Unbalanced inline code in table cell
         # =====================================================================
         unbalanced_table_code_file = temp_path / "unbalanced_table_code.md"
         unbalanced_table_code_file.write_text(
@@ -1687,13 +1687,14 @@ def test_markdown_checker() -> None:
         errors = checker.check(unbalanced_table_code_file, select={"H056"})
         assert any("H056" in e for e in errors)
 
-        # Opt-in rules are excluded from default all_rules
+        # All registered rules are enabled by default
         assert "H045" in checker.all_rules
+        assert "H046" in checker.all_rules
+        assert "H047" in checker.all_rules
         assert "H048" in checker.all_rules
+        assert "H054" in checker.all_rules
+        assert "H055" in checker.all_rules
+        assert "H056" in checker.all_rules
         assert "H057" in checker.all_rules
-        assert "H054" not in checker.all_rules
-        assert "H055" not in checker.all_rules
-        assert "H056" not in checker.all_rules
-        assert "H046" not in checker.all_rules
-        assert "H047" not in checker.all_rules
         assert "H033" in checker.all_rules
+        assert checker.all_rules == set(checker.RULES.keys())
