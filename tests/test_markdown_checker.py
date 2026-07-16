@@ -1672,6 +1672,24 @@ def test_markdown_checker() -> None:
         errors = checker.check(hyphenated_repeat_file, select={"H054"})
         assert not errors
 
+        # ``что что-то``: second token is a hyphenated compound, not a repeat
+        compound_after_word_file = temp_path / "compound_after_word.md"
+        compound_after_word_file.write_text(
+            "---\nlang: ru\n---\n\nОзначает ли это, что что-то имеет статус?\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(compound_after_word_file, select={"H054"})
+        assert not errors
+
+        # Real adjacent repeat of a hyphenated compound must still fail
+        repeated_compound_file = temp_path / "repeated_compound.md"
+        repeated_compound_file.write_text(
+            "---\nlang: en\n---\n\nThis is well-known well-known case\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(repeated_compound_file, select={"H054"})
+        assert any("H054" in e for e in errors)
+
         # =====================================================================
         # H055: Broken internal fragment link
         # =====================================================================

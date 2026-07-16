@@ -16,6 +16,7 @@ import harrix_pylib as h
 
 EndOfLine = Literal["lf", "crlf"]
 DEFAULT_END_OF_LINE: EndOfLine = "crlf"
+_MIN_GITATTRIBUTES_LINE_PARTS = 2  # pattern + at least one attribute
 
 
 def config_load(filename: str, *, is_temp: bool = False, resolve_snippets: bool = True) -> dict:
@@ -616,7 +617,7 @@ def _eol_from_gitattributes(attributes_file: Path, rel_posix: str) -> EndOfLine 
         if not line or line.startswith("#"):
             continue
         parts = line.split()
-        if len(parts) < 2:
+        if len(parts) < _MIN_GITATTRIBUTES_LINE_PARTS:
             continue
         pattern, *attrs = parts
         if not _gitattributes_pattern_matches(rel_posix, pattern):
