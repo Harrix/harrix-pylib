@@ -179,7 +179,7 @@ class MarkdownChecker:
     _MALFORMED_TIME_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*#{1,6}\s+\d{1,2}(?:;:|::)\d{2}\s*$")
 
     # Punctuation before closing guillemet (H058). Period only after 2+ letters so
-    # single-letter abbreviations like ``т. д.»`` / ``т. е.»`` are ignored.  # ignore: HP001
+    # single-letter abbreviations like ``т. д.»`` / ``т. е.»`` are ignored.  # noqa: RUF003  # ignore: HP001
     _PUNCT_BEFORE_CLOSING_GUILLEMET_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
         r"(?:[^\W\d_]{2,}\.|[,;:])»",
         re.UNICODE,
