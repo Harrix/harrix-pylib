@@ -1994,7 +1994,11 @@ class MarkdownChecker:
             yield self._format_error("H000", f"YAML parsing error: {e}", filename, line_num=1)
 
     def _collect_heading_ids(self, code_block_info: list) -> set[str]:
-        """Collect GitHub-style heading IDs from ATX headings outside fenced code."""
+        """Collect GitHub-style heading IDs from ATX headings outside fenced code.
+
+        IDs are stored percent-decoded so fragments like ``#️-technologies`` (raw
+        U+FE0F) match slugs that ``generate_id`` emits as ``%EF%B8%8F-technologies``.
+        """
         existing_ids: set[str] = set()
         heading_ids: set[str] = set()
         for line, in_code in code_block_info:
@@ -2007,7 +2011,7 @@ class MarkdownChecker:
             title = line[level:].strip()
             title = title.replace(" <!-- top-section -->", "").replace("<!-- top-section -->", "")
             slug = h.md.generate_id(title, existing_ids)
-            heading_ids.add(slug)
+            heading_ids.add(unquote(slug))
         return heading_ids
 
     def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]:

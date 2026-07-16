@@ -1676,6 +1676,32 @@ def test_markdown_checker() -> None:
         errors = checker.check(valid_fragment_file, select={"H055"})
         assert not errors
 
+        # Emoji with VS16 (U+FE0F): raw and percent-encoded fragments must match
+        vs16_raw_file = temp_path / "vs16_raw_fragment.md"
+        vs16_raw_file.write_text(
+            "---\nlang: en\n---\n\n# Title\n\n[Tech](#️-technologies)\n\n## 🛠️ Technologies\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(vs16_raw_file, select={"H055"})
+        assert not errors
+
+        vs16_encoded_file = temp_path / "vs16_encoded_fragment.md"
+        vs16_encoded_file.write_text(
+            "---\nlang: en\n---\n\n# Title\n\n[Tech](#%EF%B8%8F-technologies)\n\n## 🛠️ Technologies\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(vs16_encoded_file, select={"H055"})
+        assert not errors
+
+        # Emoji without VS16: leading hyphen after emoji strip
+        plain_emoji_file = temp_path / "plain_emoji_fragment.md"
+        plain_emoji_file.write_text(
+            "---\nlang: en\n---\n\n# Title\n\n[Install](#-installation)\n\n## 📦 Installation\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(plain_emoji_file, select={"H055"})
+        assert not errors
+
         # =====================================================================
         # H056: Unbalanced inline code in table cell
         # =====================================================================

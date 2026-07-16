@@ -2045,6 +2045,11 @@ def test_generate_id() -> None:
     result = h.md.generate_id("Heading with 😀 emoji", existing_ids)
     assert "heading-with" in result
 
+    # Emoji with VS16 keeps percent-encoded U+FE0F; plain emoji strips cleanly
+    emoji_ids = set()
+    assert h.md.generate_id("🛠️ Technologies", emoji_ids) == "%EF%B8%8F-technologies"
+    assert h.md.generate_id("📦 Installation", emoji_ids) == "-installation"
+
     # Test markdown formatting removal
     result = h.md.generate_id("**Bold** and *italic* text", existing_ids)
     assert result == "bold-and-italic-text"
