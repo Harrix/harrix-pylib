@@ -158,8 +158,8 @@ class MarkdownChecker:
     _MALFORMED_TIME_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*#{1,6}\s+\d{1,2}(?:;:|::)\d{2}\s*$")
 
     # Repeated adjacent word (H054); ignore short tokens like ``c c``.
-    # Include hyphenated compounds (``что-то``, ``well-known``) as one token so
-    # ``что что-то`` is not treated as a repeat of ``что``.
+    # Include hyphenated compounds (`well-known``) as one token so
+    # ``well well-known`` is not treated as a repeat of ``well``.
     _WORD_TOKEN_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"[^\W\d_]+(?:-[^\W\d_]+)*", re.UNICODE)
     _H054_MIN_WORD_LEN: ClassVar[int] = 3
 
@@ -1670,7 +1670,7 @@ class MarkdownChecker:
         """Check for repeated adjacent words outside code (H054).
 
         Only whitespace may separate the two words (so ``Notes-Notes`` is allowed).
-        Hyphenated compounds count as one token (``что что-то`` is not a repeat).
+        Hyphenated compounds count as one token.
         """
         previous: str | None = None
         previous_start = 0
