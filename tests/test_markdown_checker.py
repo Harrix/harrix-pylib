@@ -1746,6 +1746,20 @@ def test_markdown_checker() -> None:
         errors = checker.check(unbalanced_table_code_file, select={"H056"})
         assert any("H056" in e for e in errors)
 
+        # Escaped pipes inside inline code are not cell separators
+        escaped_pipe_table_file = temp_path / "escaped_pipe_table.md"
+        escaped_pipe_table_file.write_text(
+            "---\nlang: en\n---\n\n"
+            "| A | B |\n"
+            "| --- | --- |\n"
+            "| `a \\| b` | ok |\n"
+            "| `operator\\|`, `operator^` | bitwise |\n"
+            "| `operator\\|\\|` | or |\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(escaped_pipe_table_file, select={"H056"})
+        assert not errors
+
         # All registered rules are enabled by default
         assert "H045" in checker.all_rules
         assert "H046" in checker.all_rules

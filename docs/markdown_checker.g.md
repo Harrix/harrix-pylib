@@ -1911,31 +1911,30 @@ class MarkdownChecker:
     def _check_unbalanced_table_inline_code(
         self, filename: Path, line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for unbalanced backticks inside Markdown table cells (H056)."""
+        """Check for unbalanced backticks inside Markdown table cells (H056).
+
+        Splits on unescaped ``|`` only so escaped pipes (``\\|`` inside
+        `` `a \\| b` ``) stay inside one cell and do not trigger this rule.
+        """
         stripped = line.strip()
         if not stripped.startswith("|"):
             return
-        # Keep leading/trailing empty segments from split; inspect non-separator cells.
-        cells = line.split("|")
-        col_offset = 0
-        for cell_index, cell in enumerate(cells):
+        cells = self._split_markdown_table_row(line)
+        for cell_index, (cell, cell_start) in enumerate(cells):
             if cell_index == 0:
-                col_offset += len(cell) + 1
                 continue
             if cell_index == len(cells) - 1 and not cell.strip():
                 break
             # Skip alignment rows like ``| --- | :---: |``
             if re.fullmatch(r"\s*:?-{3,}:?\s*", cell):
-                col_offset += len(cell) + 1
                 continue
             if cell.count("`") % 2 == 1:
                 odd_pos = cell.find("`")
                 while odd_pos >= 0 and cell[: odd_pos + 1].count("`") % 2 == 0:
                     odd_pos = cell.find("`", odd_pos + 1)
-                col = col_offset + max(odd_pos, 0) + 1
+                col = cell_start + max(odd_pos, 0) + 1
                 yield self._format_error("H056", self.RULES["H056"], filename, line_num=line_num, col=col)
                 return
-            col_offset += len(cell) + 1
 
     def _check_unmatched_guillemets(
         self, filename: Path, line: str, _clean_line: str, line_num: int
@@ -2163,6 +2162,16 @@ class MarkdownChecker:
             content = content.lstrip()[1:].lstrip()
         return content.startswith("--")
 
+    @staticmethod
+    def _is_escaped_table_pipe(line: str, index: int) -> bool:
+        """Return True if ``line[index]`` is a pipe escaped by an odd run of backslashes."""
+        n = 0
+        j = index - 1
+        while j >= 0 and line[j] == "\\":
+            n += 1
+            j -= 1
+        return n % 2 == 1
+
     def _is_h021_allowed_period(self, segment: str, period_pos: int, match_end: int) -> bool:
         """Return True if punctuation at ``period_pos`` is not a sentence-ending period for H021."""
         if period_pos > 0 and segment[period_pos - 1].isdigit():
@@ -2246,6 +2255,18 @@ class MarkdownChecker:
             and not stripped.startswith(("![", "#"))
             and not self._is_horizontal_rule(stripped)
         )
+
+    @classmethod
+    def _split_markdown_table_row(cls, line: str) -> list[tuple[str, int]]:
+        """Split a table row on unescaped ``|``; return ``(cell, start_index)`` pairs."""
+        cells: list[tuple[str, int]] = []
+        start = 0
+        for i, ch in enumerate(line):
+            if ch == "|" and not cls._is_escaped_table_pipe(line, i):
+                cells.append((line[start:i], start))
+                start = i + 1
+        cells.append((line[start:], start))
+        return cells
 ````
 
 </details>
