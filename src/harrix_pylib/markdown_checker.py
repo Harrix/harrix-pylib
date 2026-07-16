@@ -75,8 +75,7 @@ class MarkdownChecker:
     - **H056** - Unbalanced inline code in table cell.
     - **H057** - Trailing period at end of ATX heading.
     - **H058** - Punctuation (``.``, ``,``, ``;``, ``:``) before closing guillemet ``»``
-      (Russian typography; ``!»`` / ``?»`` / ``…»`` are allowed; single-letter abbreviations
-      like ``«и т. д.»`` are exempt).
+      (Russian typography; ``!»`` / ``?»`` / ``…»`` are allowed; single-letter abbreviations).
 
     """
 
