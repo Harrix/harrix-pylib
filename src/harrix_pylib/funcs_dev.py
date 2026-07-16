@@ -1,5 +1,6 @@
 """Functions for development working."""
 
+import fnmatch
 import inspect
 import json
 import os
@@ -8,10 +9,13 @@ import subprocess
 import tempfile
 import time
 from collections.abc import Callable
-from pathlib import Path
-from typing import Any
+from pathlib import Path, PurePosixPath
+from typing import Any, Literal
 
 import harrix_pylib as h
+
+EndOfLine = Literal["lf", "crlf"]
+DEFAULT_END_OF_LINE: EndOfLine = "crlf"
 
 
 def config_load(filename: str, *, is_temp: bool = False, resolve_snippets: bool = True) -> dict:
@@ -161,6 +165,48 @@ def config_update_value(key: str, value: object, filename: str, *, is_temp: bool
 
     # Save the updated config
     config_save(config, filename, is_temp=is_temp)
+
+
+def get_preferred_end_of_line(path: Path | str) -> EndOfLine:
+    """Return preferred line endings from the nearest ``.gitattributes``.
+
+    Walks up from ``path`` looking for ``.gitattributes``. Matching rules that set
+    ``eol=lf`` or ``eol=crlf`` win (later rules override earlier ones). If no EOL
+    attribute applies, returns ``crlf`` (the Markdown tooling default).
+
+    Args:
+
+    - `path` (`Path | str`): File or folder path used as the starting point.
+
+    Returns:
+
+    - `EndOfLine`: ``"lf"`` or ``"crlf"``.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    print(h.dev.get_preferred_end_of_line("README.md"))
+    ```
+
+    """
+    resolved = Path(path).resolve()
+    probe = resolved / "probe.md" if resolved.is_dir() else resolved
+    for directory in (probe.parent, *probe.parent.parents):
+        attributes_file = directory / ".gitattributes"
+        if not attributes_file.is_file():
+            continue
+        try:
+            rel = probe.relative_to(directory).as_posix()
+        except ValueError:
+            continue
+        eol = _eol_from_gitattributes(attributes_file, rel)
+        if eol is not None:
+            return eol
+        # Nearest .gitattributes without an eol= rule still ends the search.
+        break
+    return DEFAULT_END_OF_LINE
 
 
 def get_project_root() -> Path:
@@ -556,6 +602,42 @@ def _config_load_raw(filename: str, *, is_temp: bool = False) -> dict:
     config_file = _resolve_config_path(filename, is_temp=is_temp)
     with config_file.open("r", encoding="utf-8") as file:
         return json.load(file)
+
+
+def _eol_from_gitattributes(attributes_file: Path, rel_posix: str) -> EndOfLine | None:
+    """Return the last ``eol=`` value that matches ``rel_posix``, if any."""
+    found: EndOfLine | None = None
+    try:
+        lines = attributes_file.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    for raw_line in lines:
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if len(parts) < 2:
+            continue
+        pattern, *attrs = parts
+        if not _gitattributes_pattern_matches(rel_posix, pattern):
+            continue
+        for attr in attrs:
+            if attr == "eol=lf":
+                found = "lf"
+            elif attr == "eol=crlf":
+                found = "crlf"
+    return found
+
+
+def _gitattributes_pattern_matches(rel_posix: str, pattern: str) -> bool:
+    """Match a simplified Git attributes pattern against a relative POSIX path."""
+    normalized = pattern.replace("\\", "/")
+    if normalized.endswith("/"):
+        return False
+    name = PurePosixPath(rel_posix).name
+    if "/" not in normalized:
+        return fnmatch.fnmatch(name, normalized) or fnmatch.fnmatch(rel_posix, f"*/{normalized}")
+    return fnmatch.fnmatch(rel_posix, normalized)
 
 
 def _resolve_config_path(filename: str, *, is_temp: bool) -> Path:

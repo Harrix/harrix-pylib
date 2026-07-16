@@ -1457,17 +1457,32 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H046: LF line endings instead of CRLF
+        # H046: Wrong line endings (respect .gitattributes eol=)
         # =====================================================================
         lf_endings_file = temp_path / "lf_endings.md"
         lf_endings_file.write_text("---\nlang: en\n---\n\n# Title\n", encoding="utf-8", newline="\n")
         errors = checker.check(lf_endings_file, select={"H046"})
         assert any("H046" in e for e in errors)
+        assert any("LF line endings instead of CRLF" in e for e in errors)
 
         crlf_endings_file = temp_path / "crlf_endings.md"
         crlf_endings_file.write_bytes(b"---\r\nlang: en\r\n---\r\n\r\n# Title\r\n")
         errors = checker.check(crlf_endings_file, select={"H046"})
         assert not errors
+
+        lf_repo = temp_path / "lf_repo"
+        lf_repo.mkdir()
+        (lf_repo / ".gitattributes").write_text("* text=auto eol=lf\n", encoding="utf-8")
+        lf_ok = lf_repo / "lf_ok.md"
+        lf_ok.write_text("---\nlang: en\n---\n\n# Title\n", encoding="utf-8", newline="\n")
+        errors = checker.check(lf_ok, select={"H046"})
+        assert not errors
+
+        lf_bad = lf_repo / "lf_bad.md"
+        lf_bad.write_bytes(b"---\r\nlang: en\r\n---\r\n\r\n# Title\r\n")
+        errors = checker.check(lf_bad, select={"H046"})
+        assert any("H046" in e for e in errors)
+        assert any("CRLF line endings instead of LF" in e for e in errors)
 
         # =====================================================================
         # H047: BOM at start of file

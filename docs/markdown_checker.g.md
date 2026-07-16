@@ -76,7 +76,7 @@ Rules:
 - **H043** - Unmatched guillemet on line.
 - **H044** - Missing space before `%` or `°` (Russian typography).
 - **H045** - Broken relative Markdown link or image.
-- **H046** - LF line endings instead of CRLF.
+- **H046** - Wrong line endings (must match nearest `.gitattributes` `eol=`, else CRLF).
 - **H047** - BOM at start of file.
 - **H048** - Unicode replacement character U+FFFD found.
 - **H049** - Mixed Latin and Cyrillic letters in one word.
@@ -243,7 +243,7 @@ class MarkdownChecker:
         "H043": "Unmatched guillemet on line",
         "H044": "Missing space before % or °",
         "H045": "Broken relative Markdown link",
-        "H046": "LF line endings instead of CRLF",
+        "H046": "Wrong line endings",
         "H047": "BOM at start of file",
         "H048": "Unicode replacement character found",
         "H049": "Mixed Latin and Cyrillic letters in one word",
@@ -1151,7 +1151,7 @@ class MarkdownChecker:
             yield from self._check_broken_relative_links(filename, content, yaml_end_line)
 
         if "H046" in rules:
-            yield from self._check_lf_line_endings(filename)
+            yield from self._check_line_endings(filename)
 
         if "H053" in rules and code_block_info is not None:
             yield from self._check_unbalanced_details_summary(filename, code_block_info, yaml_end_line)
@@ -1321,14 +1321,21 @@ class MarkdownChecker:
         elif lang == "ru" and cyrillic_lines == 0:
             yield self._format_error("H040", f"{self.RULES['H040']}: lang is ru but no Cyrillic text found", filename)
 
-    def _check_lf_line_endings(self, filename: Path) -> Generator[str, None, None]:
-        """Check for LF-only line endings instead of CRLF (H046)."""
+    def _check_line_endings(self, filename: Path) -> Generator[str, None, None]:
+        """Check line endings against preferred EOL from ``.gitattributes`` (H046)."""
+        preferred = h.dev.get_preferred_end_of_line(filename)
         raw = filename.read_bytes()
         if b"\n" not in raw:
             return
-        if b"\r\n" in raw:
+        has_crlf = b"\r\n" in raw
+        if preferred == "lf":
+            if has_crlf:
+                error_msg = f"{self.RULES['H046']}: CRLF line endings instead of LF"
+                yield self._format_error("H046", error_msg, filename, line_num=1, col=1)
             return
-        yield self._format_error("H046", self.RULES["H046"], filename, line_num=1, col=1)
+        if not has_crlf:
+            error_msg = f"{self.RULES['H046']}: LF line endings instead of CRLF"
+            yield self._format_error("H046", error_msg, filename, line_num=1, col=1)
 
     def _check_lowercase_after_punctuation(
         self, filename: Path, line: str, _clean_line: str, line_num: int

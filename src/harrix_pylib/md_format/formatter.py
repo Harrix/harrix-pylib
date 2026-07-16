@@ -79,7 +79,7 @@ class MarkdownFormatter:
         return _format_with_options(text, self.options)
 
     def format_file(self, filename: Path | str) -> str:
-        """Format a Markdown file in place when content changes.
+        """Format a Markdown file in place when content or line endings change.
 
         Args:
 
@@ -91,9 +91,10 @@ class MarkdownFormatter:
 
         """
         path = Path(filename)
+        raw = path.read_bytes()
         document = self.read_markdown_text(path)
         document_new = self.format(document)
-        if document != document_new:
+        if document != document_new or self._needs_end_of_line_rewrite(raw):
             path.write_text(document_new, encoding="utf-8", newline="")
             return f"✅ File {path} applied."
         return "File is not changed."
@@ -151,6 +152,17 @@ class MarkdownFormatter:
         if data.startswith(b"\xef\xbb\xbf"):
             data = data[3:]
         return MarkdownFormatter.normalize_line_endings(data.decode("utf-8"))
+
+    def _needs_end_of_line_rewrite(self, raw: bytes) -> bool:
+        """Return True when on-disk endings disagree with ``end_of_line``."""
+        if b"\n" not in raw:
+            return False
+        has_crlf = b"\r\n" in raw
+        if self.options.end_of_line == "lf":
+            return has_crlf
+        if self.options.end_of_line == "crlf":
+            return not has_crlf
+        return False
 
 
 def _ensure_blank_line_in_empty_fences(body: str) -> str:

@@ -498,6 +498,30 @@ def test_format_markdown_content_repairs_double_crlf_line_endings() -> None:
     assert "# Title\r\n\r\n## Sub" in result or "# Title\n\n## Sub" in result.replace("\r\n", "\n")
 
 
+def test_format_file_writes_requested_end_of_line(tmp_path: Path) -> None:
+    """format_file should persist the requested end_of_line style on disk."""
+    source = "---\nlang: en\n---\n\n# Title\n\nParagraph.\n"
+    lf_file = tmp_path / "lf.md"
+    lf_file.write_text(source, encoding="utf-8", newline="\n")
+    MarkdownFormatter(end_of_line="lf").format_file(lf_file)
+    lf_raw = lf_file.read_bytes()
+    assert b"\r\n" not in lf_raw
+    assert b"\n" in lf_raw
+
+    crlf_file = tmp_path / "crlf.md"
+    crlf_file.write_text(source, encoding="utf-8", newline="\n")
+    MarkdownFormatter(end_of_line="crlf").format_file(crlf_file)
+    crlf_raw = crlf_file.read_bytes()
+    assert b"\r\n" in crlf_raw
+
+    # Content-identical after normalize: still rewrite CRLF → LF when requested
+    crlf_to_lf = tmp_path / "crlf_to_lf.md"
+    crlf_to_lf.write_bytes(b"---\r\nlang: en\r\n---\r\n\r\n# Title\r\n\r\nParagraph.\r\n")
+    msg = MarkdownFormatter(end_of_line="lf").format_file(crlf_to_lf)
+    assert "applied" in msg
+    assert b"\r\n" not in crlf_to_lf.read_bytes()
+
+
 def test_format_markdown_content_preserves_paragraph_blank_lines() -> None:
     source = (
         "# The MIT License\n\n"

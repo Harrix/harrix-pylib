@@ -19,6 +19,32 @@ def test_get_project_root() -> None:
     assert (path / "tests").is_dir()
 
 
+def test_get_preferred_end_of_line(tmp_path: Path) -> None:
+    """Prefer eol from nearest .gitattributes; default to crlf."""
+    assert h.dev.get_preferred_end_of_line(tmp_path) == "crlf"
+    assert h.dev.get_preferred_end_of_line(tmp_path / "missing.md") == "crlf"
+
+    lf_repo = tmp_path / "lf_repo"
+    lf_repo.mkdir()
+    (lf_repo / ".gitattributes").write_text("* text=auto eol=lf\n", encoding="utf-8")
+    assert h.dev.get_preferred_end_of_line(lf_repo) == "lf"
+    assert h.dev.get_preferred_end_of_line(lf_repo / "README.md") == "lf"
+    nested = lf_repo / "docs"
+    nested.mkdir()
+    assert h.dev.get_preferred_end_of_line(nested / "index.md") == "lf"
+
+    crlf_repo = tmp_path / "crlf_repo"
+    crlf_repo.mkdir()
+    (crlf_repo / ".gitattributes").write_text("* text=auto eol=crlf\n", encoding="utf-8")
+    assert h.dev.get_preferred_end_of_line(crlf_repo / "note.md") == "crlf"
+
+    md_only = tmp_path / "md_only"
+    md_only.mkdir()
+    (md_only / ".gitattributes").write_text("*.md text eol=lf\n*.py text eol=crlf\n", encoding="utf-8")
+    assert h.dev.get_preferred_end_of_line(md_only / "README.md") == "lf"
+    assert h.dev.get_preferred_end_of_line(md_only / "main.py") == "crlf"
+
+
 def test_config_load() -> None:
     config = h.dev.config_load(str(h.dev.get_project_root() / "tests/data/config.json"))
     assert config["path_github"] == "C:/GitHub"

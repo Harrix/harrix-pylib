@@ -14,6 +14,7 @@ lang: en
 - [🔧 Function `config_load`](#-function-config_load)
 - [🔧 Function `config_save`](#-function-config_save)
 - [🔧 Function `config_update_value`](#-function-config_update_value)
+- [🔧 Function `get_preferred_end_of_line`](#-function-get_preferred_end_of_line)
 - [🔧 Function `get_project_root`](#-function-get_project_root)
 - [🔧 Function `run_command`](#-function-run_command)
 - [🔧 Function `run_powershell_script`](#-function-run_powershell_script)
@@ -200,6 +201,59 @@ def config_update_value(key: str, value: object, filename: str, *, is_temp: bool
 
     # Save the updated config
     config_save(config, filename, is_temp=is_temp)
+```
+
+</details>
+
+## 🔧 Function `get_preferred_end_of_line`
+
+```python
+def get_preferred_end_of_line(path: Path | str) -> EndOfLine
+```
+
+Return preferred line endings from the nearest `.gitattributes`.
+
+Walks up from `path` looking for `.gitattributes`. Matching rules that set
+`eol=lf` or `eol=crlf` win (later rules override earlier ones). If no EOL
+attribute applies, returns `crlf` (the Markdown tooling default).
+
+Args:
+
+- `path` (`Path | str`): File or folder path used as the starting point.
+
+Returns:
+
+- `EndOfLine`: `"lf"` or `"crlf"`.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+print(h.dev.get_preferred_end_of_line("README.md"))
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def get_preferred_end_of_line(path: Path | str) -> EndOfLine:
+    resolved = Path(path).resolve()
+    probe = resolved / "probe.md" if resolved.is_dir() else resolved
+    for directory in (probe.parent, *probe.parent.parents):
+        attributes_file = directory / ".gitattributes"
+        if not attributes_file.is_file():
+            continue
+        try:
+            rel = probe.relative_to(directory).as_posix()
+        except ValueError:
+            continue
+        eol = _eol_from_gitattributes(attributes_file, rel)
+        if eol is not None:
+            return eol
+        # Nearest .gitattributes without an eol= rule still ends the search.
+        break
+    return DEFAULT_END_OF_LINE
 ```
 
 </details>
