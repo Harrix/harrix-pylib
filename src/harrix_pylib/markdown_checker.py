@@ -143,9 +143,9 @@ class MarkdownChecker:
     # Intentional mixed-script stylizations allowed by H049 (casefolded)
     _MIXED_SCRIPT_ALLOWLIST: ClassVar[frozenset[str]] = frozenset(
         {
-            "zомбилэнд",  # ignore: HP001
-            "духless",  # ignore: HP001
-            "vизитеры",  # ignore: HP001
+            "zомбилэнд",  # noqa: RUF001  # ignore: HP001
+            "духless",  # noqa: RUF001  # ignore: HP001
+            "vизитеры",  # noqa: RUF001  # ignore: HP001
         }
     )
 
@@ -451,20 +451,20 @@ class MarkdownChecker:
         "интернете": "Интернете",  # ignore: HP001
         "он-лайн": "онлайн",  # ignore: HP001
         "Он-лайн": "Онлайн",  # ignore: HP001
-        "ОН-ЛАЙН": "онлайн",  # ignore: HP001
+        "ОН-ЛАЙН": "онлайн",  # noqa: RUF001  # ignore: HP001
         "on-line": "онлайн",  # ignore: HP001
         "On-line": "Онлайн",  # ignore: HP001
         "ON-LINE": "онлайн",
-        "ВУЗ": "вуз",  # ignore: HP001
-        "ВУЗа": "вуза",  # ignore: HP001
-        "ВУЗу": "вузу",  # ignore: HP001
+        "ВУЗ": "вуз",  # noqa: RUF001  # ignore: HP001
+        "ВУЗа": "вуза",  # noqa: RUF001  # ignore: HP001
+        "ВУЗу": "вузу",  # noqa: RUF001  # ignore: HP001
         "ВУЗом": "вузом",  # ignore: HP001
-        "ВУЗе": "вузе",  # ignore: HP001
+        "ВУЗе": "вузе",  # noqa: RUF001  # ignore: HP001
         "ВУЗы": "вузы",  # ignore: HP001
         "ВУЗов": "вузов",  # ignore: HP001
         "ВУЗам": "вузам",  # ignore: HP001
         "ВУЗами": "вузами",  # ignore: HP001
-        "ВУЗах": "вузах",  # ignore: HP001
+        "ВУЗах": "вузах",  # noqa: RUF001  # ignore: HP001
     }
 
     # Pre-compiled regex patterns for INCORRECT_WORDS — built once at class definition time
@@ -1177,7 +1177,7 @@ class MarkdownChecker:
         title = match.group(2).strip()
         title = self._ATX_CLOSING_HASHES_PATTERN.sub("", title).strip()
         title = title.replace(" <!-- top-section -->", "").replace("<!-- top-section -->", "").strip()
-        if not title or title.endswith("...") or title.endswith("…"):
+        if not title or title.endswith(("...", "…")):
             return
         if title.endswith("."):
             col = line.rfind(".") + 1

@@ -18,6 +18,10 @@ from harrix_pylib.md_format.code_fence import _identify_code_blocks_line as _md_
 from harrix_pylib.md_format.formatter import MarkdownFormatter
 from harrix_pylib.md_format.front_matter import _split_front_matter
 
+# Markdown ATX heading levels: H1-H6; TOC uses H2-H6
+_MIN_TOC_HEADING_LEVEL = 2
+_MAX_HEADING_LEVEL = 6
+
 
 def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_content: str) -> tuple[str, Path]:
     r"""Add a new diary entry to the yearly Markdown file.
@@ -2371,7 +2375,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
             if not match:
                 continue
             level = len(match.group())
-            if level < 2 or level > 6:  # Skip H1 and invalid H7+
+            if level < _MIN_TOC_HEADING_LEVEL or level > _MAX_HEADING_LEVEL:  # Skip H1 and invalid H7+
                 continue
             # Extract the header text
             title = line[level:].strip()
@@ -2688,7 +2692,7 @@ def increase_heading_level_content(markdown_text: str) -> str:
                     break
                 level += 1
             # Markdown supports at most H6; do not deepen beyond that when combining notes.
-            new_lines.append(line if level >= 6 else "#" + line)
+            new_lines.append(line if level >= _MAX_HEADING_LEVEL else "#" + line)
         else:
             new_lines.append(line)
     return "\n".join(new_lines)

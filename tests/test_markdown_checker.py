@@ -1585,7 +1585,7 @@ def test_markdown_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H006: Интернет / онлайн / вуз
+        # H006: Интернет / онлайн / вуз  # noqa: ERA001
         # =====================================================================
         internet_file = temp_path / "internet_word.md"
         internet_file.write_text(
