@@ -50,8 +50,8 @@ Rules:
 - **H018** - Curly/straight quotes instead of angle quotes.
 - **H019** - HTML tags in markdown content.
 - **H020** - Image caption starts with lowercase letter.
-- **H021** - Lowercase letter after sentence-ending punctuation (abbreviations like `англ.`, # ignore: HP001
-  `лат.`, `см.` are allowed). # ignore: HP001
+- **H021** - Lowercase letter after sentence-ending punctuation (dotted abbreviations from packaged
+  JSON databases are allowed; not gated by YAML `lang`).
 - **H022** - Non-breaking space character found.
 - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
 - **H024** - Latin "x" or Cyrillic "x" used instead of multiplication sign "x".
@@ -274,34 +274,6 @@ class MarkdownChecker:
     _MATH_DELIMITER_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*\$\$\s*$")
     _HORIZONTAL_RULE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(?:\*\s*){3,}$|^(?:-\s*){3,}$|^(?:_\s*){3,}$")
 
-    # Abbreviations whose trailing period must not trigger H021
-    _H021_ALLOWED_TAIL_LEN: ClassVar[int] = 10
-    _H021_PERIOD_ABBREVS: ClassVar[frozenset[str]] = frozenset(
-        {
-            "англ.",  # ignore: HP001
-            "анг.",  # ignore: HP001
-            "лат.",  # ignore: HP001
-            "нем.",  # ignore: HP001
-            "франц.",  # ignore: HP001
-            "греч.",  # ignore: HP001
-            "рус.",  # noqa: RUF001  # ignore: HP001
-            "итал.",  # ignore: HP001
-            "исп.",  # ignore: HP001
-            "порт.",  # ignore: HP001
-            "укр.",  # ignore: HP001
-            "кит.",  # ignore: HP001
-            "яп.",  # ignore: HP001
-            "см.",  # ignore: HP001
-            "e.g.",
-            "i.e.",
-            "т. е.",  # noqa: RUF001  # ignore: HP001
-            "т. д.",  # ignore: HP001
-            "т. ч.",  # ignore: HP001
-            "т. п.",  # ignore: HP001
-        }
-    )
-    _H021_RU_DOTTED_ABBREV_SECONDS: ClassVar[frozenset[str]] = frozenset({"е", "д", "ч", "п"})  # noqa: RUF001  # ignore: HP001
-
     # Patterns for H029: colon inside or after inline emphasis without following space
     _EMPHASIS_COLON_NO_SPACE_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
         re.compile(r"\*\*\*[^*\n]+:\*\*\*(?=\S)"),
@@ -439,12 +411,6 @@ class MarkdownChecker:
         "Github": "GitHub",
         "github": "GitHub",
         "git": "Git",
-        # Russian abbreviations (with spaces: т. е., т. д., т. ч., т. п.)  # ignore: HP001  # noqa: RUF003
-        "т.е.": "т. е.",  # noqa: RUF001  # ignore: HP001
-        "Т.е.": "Т. е.",  # noqa: RUF001  # ignore: HP001
-        "т.д.": "т. д.",  # ignore: HP001
-        "т.ч.": "т. ч.",  # ignore: HP001
-        "т.п.": "т. п.",  # ignore: HP001
         # TypeScript, Node.js, and common tech terms (H006 extension)
         "typescript": "TypeScript",
         "Typescript": "TypeScript",
@@ -494,19 +460,26 @@ class MarkdownChecker:
         "ВУЗах": "вузах",  # noqa: RUF001  # ignore: HP001
     }
 
-    # Pre-compiled regex patterns for INCORRECT_WORDS — built once at class definition time
-    # to avoid recompiling on every checked line.
-    _INCORRECT_WORD_PATTERNS: ClassVar[dict[str, tuple[re.Pattern, str]]] = {
-        word: (
-            re.compile(
-                rf"\b{re.escape(word)}\b"
-                if re.match(r"^[\w]+$", word)
-                else rf"(?<![a-zA-Zа-яА-ЯёЁ0-9_]){re.escape(word)}(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001 # ignore: HP001
-            ),
-            correct,
-        )
-        for word, correct in INCORRECT_WORDS.items()
+    # Pre-compiled regex patterns for INCORRECT_WORDS plus spaced-abbreviation H006 pairs
+    # from packaged JSON (RU+EN). Built once at class definition time.
+    _ABBREV_DATA = load_abbreviation_data()
+    _INCORRECT_WORD_PATTERNS: ClassVar[dict[str, tuple[re.Pattern[str], str]]] = {
+        **{
+            word: (
+                re.compile(
+                    rf"\b{re.escape(word)}\b"
+                    if re.match(r"^[\w]+$", word)
+                    else rf"(?<![a-zA-Zа-яА-ЯёЁ0-9_]){re.escape(word)}(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001 # ignore: HP001
+                ),
+                correct,
+            )
+            for word, correct in INCORRECT_WORDS.items()
+        },
+        **_ABBREV_DATA.h006_patterns,
     }
+
+    # Mask pattern for dotted abbreviations (H021); loaded from the same JSON databases
+    _H021_ABBREV_MASK_PATTERN: ClassVar[re.Pattern[str] | None] = _ABBREV_DATA.h021_mask_pattern
 
     # Incorrect code block language identifiers
     INCORRECT_LANGUAGES: ClassVar[dict[str, str]] = {
@@ -1357,17 +1330,19 @@ class MarkdownChecker:
         Checks each non-inline-code segment separately so removed code (e.g.
         ``Optional. `"value"` stores``) does not falsely join a period with the
         next word. Periods in ordered-list and section numbers (``1.``,
-        ``3.1.``) and known abbreviations (``англ.``, ``лат.``, ``см.``) are ignored.  # ignore: HP001
+        ``3.1.``) and known dotted abbreviations from packaged JSON databases
+        are ignored (abbreviations are masked before the scan).
         """
         pattern = r"[.!?]\s+([a-zа-яё])"  # noqa: RUF001  # ignore: HP001
 
         offset = 0
         for segment, in_code in h.md.identify_code_blocks_line(line):
             if not in_code:
-                for match in re.finditer(pattern, segment):
+                masked = mask_abbreviations(segment, self._H021_ABBREV_MASK_PATTERN)
+                for match in re.finditer(pattern, masked):
                     letter = match.group(1)
                     pos = match.start()
-                    if self._is_h021_allowed_period(segment, pos, match.end()):
+                    if self._is_h021_allowed_period(masked, pos):
                         continue
 
                     col = offset + match.start(1) + 1
@@ -2203,28 +2178,14 @@ class MarkdownChecker:
             j -= 1
         return n % 2 == 1
 
-    def _is_h021_allowed_period(self, segment: str, period_pos: int, match_end: int) -> bool:
-        """Return True if punctuation at ``period_pos`` is not a sentence-ending period for H021."""
-        if period_pos > 0 and segment[period_pos - 1].isdigit():
-            return True
-        if self._is_h021_ru_dotted_abbrev_period(segment, period_pos):
-            return True
-        tail = segment[max(0, period_pos - self._H021_ALLOWED_TAIL_LEN) : period_pos + 1].lower()
-        if any(tail.endswith(abbrev) for abbrev in self._H021_PERIOD_ABBREVS):
-            return True
-        context = segment[max(0, period_pos - 6) : match_end].lower()
-        return any(abbrev in context for abbrev in self._H021_PERIOD_ABBREVS)
-
     @staticmethod
-    def _is_h021_ru_dotted_abbrev_period(segment: str, period_pos: int) -> bool:
-        """Return True if period opens a Russian dotted abbrev like ``т. д.`` or ``т. е.``."""  # noqa: RUF002  # ignore: HP001
-        return (
-            period_pos > 0
-            and segment[period_pos - 1].lower() == "т"  # ignore: HP001
-            and period_pos + 2 < len(segment)
-            and segment[period_pos + 1] == " "
-            and segment[period_pos + 2].lower() in MarkdownChecker._H021_RU_DOTTED_ABBREV_SECONDS
-        )
+    def _is_h021_allowed_period(segment: str, period_pos: int) -> bool:
+        """Return True if punctuation at ``period_pos`` is not a sentence-ending period for H021.
+
+        Dotted abbreviations are masked before this check; remaining exceptions are
+        ordered-list / section numbers (digit before the period).
+        """
+        return period_pos > 0 and segment[period_pos - 1].isdigit()
 
     def _is_horizontal_rule(self, line: str) -> bool:
         """Return True if the line is a Markdown horizontal rule (``---``, ``***``, ``___``)."""

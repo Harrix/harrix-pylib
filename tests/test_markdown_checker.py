@@ -122,6 +122,25 @@ def test_markdown_checker() -> None:
         assert any("H006" in e and "т.е." in e for e in errors)
         assert any("H006" in e and "т.д." in e for e in errors)
 
+        # Multi-part spaced abbreviations from JSON database (H006)
+        ru_abbrev_multipart_file = temp_path / "ru_abbrev_multipart.md"
+        ru_abbrev_multipart_file.write_text(
+            "---\nlang: ru\n---\n\nВключая в т.ч. единицы а.е.м. и форму г.н.с.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_abbrev_multipart_file, select={"H006"})
+        assert any("H006" in e and "в т.ч." in e for e in errors)
+        assert any("H006" in e and "а.е.м." in e for e in errors)
+
+        # Spaced canonical forms should not trigger H006; lang must not gate abbrev checks
+        ru_abbrev_ok_file = temp_path / "ru_abbrev_ok.md"
+        ru_abbrev_ok_file.write_text(
+            "---\nlang: en\n---\n\nПишем т. е., в т. ч. и а. е. м. правильно.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_abbrev_ok_file, select={"H006"})
+        assert not errors
+
         # Test that code blocks are ignored
         code_block_file = temp_path / "code_block_test.md"
         code_block_file.write_text(
@@ -926,6 +945,15 @@ def test_markdown_checker() -> None:
             encoding="utf-8",
         )
         errors = checker.check(lang_abbrev_file, select={"H021"})
+        assert not errors
+
+        # Expanded JSON abbreviations and English forms; lang must not gate checks
+        expanded_abbrev_file = temp_path / "expanded_abbrev_h021.md"
+        expanded_abbrev_file.write_text(
+            "---\nlang: en\n---\n\nНапример напр. так. Работает г. н. с. сегодня. Also et al. said.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(expanded_abbrev_file, select={"H021"})
         assert not errors
 
         # =====================================================================

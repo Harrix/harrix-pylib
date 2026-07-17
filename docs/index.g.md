@@ -20,6 +20,7 @@ lang: en
 - [📦 Installation](#-installation)
 - [🏃 Quick start](#-quick-start)
 - [📚 List of functions](#-list-of-functions)
+  - [📄 File `abbreviation_data.py`](#-file-abbreviation_datapy)
   - [📄 File `funcs_dev.py`](#-file-funcs_devpy)
   - [📄 File `funcs_file.py`](#-file-funcs_filepy)
   - [📄 File `funcs_img.py`](#-file-funcs_imgpy)
@@ -90,6 +91,19 @@ print(md_clean)
 ```
 
 ## 📚 List of functions
+
+### 📄 File `abbreviation_data.py`
+
+Doc: [abbreviation_data.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md)
+
+| Function/Class                                                                                                                               | Description                                                                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 🏛️ Class [`AbbreviationData`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#️-class-abbreviationdata)          | Compiled abbreviation data for H006 spacing and H021 masking.                   |
+| 🔧 [`is_spaced_multipart`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-is_spaced_multipart)       | Return True if form is a multi-part dotted abbrev with spaces (H006 candidate). |
+| 🔧 [`load_abbreviation_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-load_abbreviation_data) | Load RU+EN abbreviation JSON (always both; not gated by document lang).         |
+| 🔧 [`mask_abbreviations`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-mask_abbreviations)         | Replace known dotted abbreviations with same-length placeholders for H021.      |
+| 🔧 [`normalize_abbrev`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-normalize_abbrev)             | Normalize soft hyphens and trim whitespace.                                     |
+| 🔧 [`unspaced_variant`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-unspaced_variant)             | Collapse spaces that follow periods inside multi-part dotted abbreviations.     |
 
 ### 📄 File `funcs_dev.py`
 
