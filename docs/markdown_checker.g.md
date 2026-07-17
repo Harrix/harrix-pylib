@@ -2159,7 +2159,7 @@ class MarkdownChecker:
 
     @staticmethod
     def _is_blockquote_attribution_line(line: str) -> bool:
-        """Return True if line is a blockquote attribution (e.g. '> -- Author')."""
+        """Return True if line is a blockquote attribution (e.g. `> -- Author`)."""
         stripped = line.lstrip()
         if not stripped.startswith(">"):
             return False
