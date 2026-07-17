@@ -120,7 +120,7 @@ class MarkdownFormatter:
         r"""Normalize mixed or corrupted line endings to LF.
 
         Handles CRLF applied twice (``\r\r\n``), which otherwise becomes a blank
-        line between every source line after the legacy two-step ``\r`` cleanup or
+        line between every source line after a two-step ``\r`` cleanup or
         after ``pathlib.Path.read_text`` universal-newline translation.
 
         Args:

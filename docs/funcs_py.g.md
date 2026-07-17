@@ -481,6 +481,9 @@ Args:
   documentation is generated or formatted.
 - `include_private` (`bool`): Whether to include private names (starting with `_`, except magic dunders).
   Defaults to `False`.
+- `docs_folder` (`Path | str | None`): Output folder for generated `.g.md` files. Defaults to `folder / "docs"`.
+- `update_readme` (`bool`): Whether to update `## 📚 List of functions` in README. Defaults to `True`.
+- `copy_root_md` (`bool`): Whether to copy root `*.md` files into the docs folder. Defaults to `True`.
 
 Returns:
 
@@ -507,18 +510,21 @@ def generate_md_docs(
     domain: str,
     *,
     include_private: bool = False,
+    docs_folder: Path | str | None = None,
+    update_readme: bool = True,
+    copy_root_md: bool = True,
 ) -> str:
     result_lines = []
     folder = Path(folder)
 
-    docs_folder = folder / "docs"
+    output_docs = Path(docs_folder) if docs_folder is not None else folder / "docs"
 
     # Remove entire docs folder and recreate it
-    if docs_folder.exists():
-        shutil.rmtree(docs_folder)
+    if output_docs.exists():
+        shutil.rmtree(output_docs)
         result_lines.append("Removed entire docs folder")
 
-    docs_folder.mkdir(parents=True, exist_ok=True)
+    output_docs.mkdir(parents=True, exist_ok=True)
     result_lines.append("Created clean docs folder")
 
     list_funcs_all = ""
@@ -547,7 +553,7 @@ def generate_md_docs(
         docs = generate_md_docs_content(filename, include_private=include_private)
 
         docs_relative_path = _docs_g_md_relative_path(filename, src_folder)
-        filename_docs = docs_folder / docs_relative_path
+        filename_docs = output_docs / docs_relative_path
 
         # Create parent directories if they don't exist
         filename_docs.parent.mkdir(parents=True, exist_ok=True)
@@ -565,12 +571,16 @@ def generate_md_docs(
     if len(list_funcs_all.splitlines()) > min_count_lines:
         list_funcs_all = list_funcs_all[:-1]
 
-    try:
-        h.md.replace_section(folder / "README.md", list_funcs_all, "## 📚 List of functions")
-    except FileNotFoundError:
-        result_lines.append("❗ Don't find `## List of functions`.")
-    except ValueError:
-        result_lines.append("❗ Don't find `## List of functions`.")
+    if update_readme:
+        try:
+            h.md.replace_section(folder / "README.md", list_funcs_all, "## 📚 List of functions")
+        except FileNotFoundError:
+            result_lines.append("❗ Don't find `## List of functions`.")
+        except ValueError:
+            result_lines.append("❗ Don't find `## List of functions`.")
+
+    if not copy_root_md:
+        return "\n".join(result_lines)
 
     # Copy all MD files from root to docs folder
     for md_file in folder.glob("*.md"):
@@ -582,12 +592,12 @@ def generate_md_docs(
                 final_content = h.md.generate_toc_with_links_content(final_content)
                 final_content = h.md.generate_image_captions_content(final_content)
 
-                (docs_folder / "index.g.md").write_text(final_content, encoding="utf-8", newline="\n")
+                (output_docs / "index.g.md").write_text(final_content, encoding="utf-8", newline="\n")
                 result_lines.append(f"File {md_file.name} copied as index.g.md")
             else:
                 # Convert filename to lowercase for other MD files and add .g.md
                 target_filename = md_file.stem.lower() + ".g.md"
-                target_path = docs_folder / target_filename
+                target_path = output_docs / target_filename
 
                 # Read original content and add beginning_of_md
                 original_content = md_file.read_text(encoding="utf-8")

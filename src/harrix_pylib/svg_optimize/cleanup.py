@@ -1,4 +1,4 @@
-"""Remove metadata, comments, and deprecated SVG attributes."""
+"""Remove metadata, comments, and obsolete SVG attributes."""
 
 from __future__ import annotations
 
@@ -12,12 +12,12 @@ if TYPE_CHECKING:
 SVG_NS = "http://www.w3.org/2000/svg"
 
 REMOVE_TAGS = frozenset({"metadata", "desc", "title", "sodipodi:namedview", "namedview"})
-DEPRECATED_ATTRS = frozenset({"version", "enable-background"})
+OBSOLETE_ATTRS = frozenset({"version", "enable-background"})
 EDITOR_NS_PREFIXES = ("adobe", "illustrator", "sodipodi", "inkscape", "sketch", "figma")
 
 
 def _cleanup(root: etree._Element) -> None:
-    """Remove metadata elements and deprecated attributes from the SVG tree."""
+    """Remove metadata elements and obsolete attributes from the SVG tree."""
     for tag in REMOVE_TAGS:
         for elem in root.iter(tag):
             parent = elem.getparent()
@@ -27,7 +27,7 @@ def _cleanup(root: etree._Element) -> None:
     for elem in root.iter():
         for attr in list(elem.attrib):
             local = attr.split("}")[-1] if "}" in attr else attr
-            if local in DEPRECATED_ATTRS or any(
+            if local in OBSOLETE_ATTRS or any(
                 attr.startswith(f"{{{prefix}") or prefix in attr.lower() for prefix in EDITOR_NS_PREFIXES
             ):
                 del elem.attrib[attr]

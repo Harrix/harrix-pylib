@@ -1176,8 +1176,6 @@ def format_markdown(
 ) -> str:
     """Format a Markdown file in place when content changes.
 
-    Deprecated: prefer ``harrix_pylib.md_format.MarkdownFormatter``.
-
     Args:
 
     - `filename` (`Path | str`): Path to the Markdown file.
@@ -1204,8 +1202,6 @@ def format_markdown_content(
 ) -> str:
     """Format Markdown content using the harrix-pylib Markdown formatter.
 
-    Deprecated: prefer ``harrix_pylib.md_format.MarkdownFormatter``.
-
     Args:
 
     - `markdown_text` (`str`): Markdown source text.
@@ -1227,8 +1223,6 @@ def format_markdown_folder(
     folder: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80
 ) -> str:
     """Recursively format Markdown files in a folder.
-
-    Deprecated: prefer ``harrix_pylib.md_format.MarkdownFormatter``.
 
     Args:
 
@@ -2829,7 +2823,7 @@ def note_md_path(parent: Path | str, stem: str) -> Path:
     """Resolve the path to an existing note, preferring the named-folder layout.
 
     The library supports two layouts: named-folder ``parent/stem/stem.md`` (canonical)
-    and legacy flat ``parent/stem.md``. When both files exist, the named-folder path
+    and flat ``parent/stem.md``. When both files exist, the named-folder path
     is returned. When neither exists, the named-folder path is returned for creation.
 
     Args:

@@ -673,6 +673,54 @@ class _PrivateClass:
         assert "_private_function" in readme_content
 
 
+def test_generate_md_docs_custom_folder_without_readme_side_effects() -> None:
+    with TemporaryDirectory() as temp_folder:
+        temp_path = Path(temp_folder)
+        src_folder = temp_path / "src"
+        src_folder.mkdir()
+        out_docs = temp_path / "out-docs"
+
+        (src_folder / "sample.py").write_text(
+            '''def public_function() -> None:
+    """Public module function."""
+    pass
+
+def _private_function() -> None:
+    """Private module function."""
+    pass
+''',
+            encoding="utf8",
+        )
+        (temp_path / "README.md").write_text(
+            "# Test\n\n## 📚 List of functions\n\nunchanged marker\n",
+            encoding="utf8",
+        )
+        (temp_path / "docs").mkdir()
+        (temp_path / "docs" / "existing.g.md").write_text("# keep me\n", encoding="utf8")
+
+        result = h.py.generate_md_docs(
+            folder=temp_path,
+            beginning_of_md="---\nlang: en\n---\n",
+            domain="test",
+            include_private=True,
+            docs_folder=out_docs,
+            update_readme=False,
+            copy_root_md=False,
+        )
+
+        assert (out_docs / "sample.g.md").exists()
+        assert "_private_function" in (out_docs / "sample.g.md").read_text(encoding="utf8")
+        assert not (out_docs / "index.g.md").exists()
+        assert "File sample.py is processed." in result
+
+        assert (temp_path / "docs" / "existing.g.md").exists()
+        assert (temp_path / "docs" / "existing.g.md").read_text(encoding="utf8") == "# keep me\n"
+
+        readme_content = (temp_path / "README.md").read_text(encoding="utf8")
+        assert "unchanged marker" in readme_content
+        assert "public_function" not in readme_content
+
+
 def test_generate_md_docs_content_uses_longer_fence_for_nested_backticks() -> None:
     content = '''
 class ExampleAction:

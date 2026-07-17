@@ -1144,7 +1144,7 @@ def test_named_note_md_path_and_note_md_path() -> None:
         named.write_text("# Named", encoding="utf-8")
         assert h.md.note_md_path(parent, "NamedOnly") == named
 
-        # Test 3: only flat layout exists (legacy)
+        # Test 3: only flat layout exists
         flat = parent / "FlatOnly.md"
         flat.write_text("# Flat", encoding="utf-8")
         assert h.md.note_md_path(parent, "FlatOnly") == flat

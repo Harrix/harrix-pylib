@@ -81,8 +81,6 @@ def optimize_svg(filename: Path | str, output_filename: Path | str | None = None
 
 Optimize an SVG file and write the result.
 
-Deprecated: prefer `harrix_pylib.svg_optimize.SvgOptimizer`.
-
 Args:
 
 - `filename` (`Path | str`): Source SVG file path.
@@ -118,8 +116,6 @@ def optimize_svg_content(svg_text: str) -> str
 
 Optimize SVG markup to a compact form similar to SVGO preset-default.
 
-Deprecated: prefer `harrix_pylib.svg_optimize.SvgOptimizer`.
-
 Args:
 
 - `svg_text` (`str`): Raw SVG content.
@@ -154,8 +150,6 @@ def optimize_svg_folder(input_folder: Path | str, output_folder: Path | str) -> 
 ```
 
 Optimize all SVG files in a folder.
-
-Deprecated: prefer `harrix_pylib.svg_optimize.SvgOptimizer`.
 
 Args:
 
