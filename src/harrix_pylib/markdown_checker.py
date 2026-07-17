@@ -22,7 +22,7 @@ class MarkdownChecker:
     - **H003** - YAML is missing (except `README.md` and `LICENSE.md`).
     - **H004** - The lang field is missing in YAML.
     - **H005** - In YAML, lang is not set to `en` or `ru`.
-    - **H006** - Incorrect word form used (e.g., "markdown" instead of "Markdown").
+    - **H006** - Incorrect word form used (e.g., ``markdown`` instead of ``Markdown``).
     - **H007** - Incorrect code block language identifier.
     - **H008** - Trailing whitespace at end of line.
     - **H009** - Double spaces in line (not in code blocks).
@@ -35,17 +35,17 @@ class MarkdownChecker:
     - **H016** - Incorrect dash/hyphen usage.
     - **H017** - Three dots instead of ellipsis character.
     - **H018** - Curly/straight quotes instead of angle quotes.
-    - **H019** - HTML tags in markdown content.
+    - **H019** - HTML tags in Markdown content.
     - **H020** - Image caption starts with lowercase letter.
     - **H021** - Lowercase letter after sentence-ending punctuation (dotted abbreviations from packaged
       JSON databases are allowed; not gated by YAML ``lang``).
     - **H022** - Non-breaking space character found.
     - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
     - **H024** - Latin "x" or Cyrillic "x" used instead of multiplication sign "x".
-    - **H025** - Image markdown "![" found not at start of line.
-    - **H026** - Horizontal bar "―" (dialogue dash) should not be used.
-    - **H027** - Space required after "№".
-    - **H028** - Question mark followed by period (?.).
+    - **H025** - Image Markdown marker (exclamation + bracket) found not at start of line.
+    - **H026** - Horizontal bar ``―`` (dialogue dash) should not be used.
+    - **H027** - Space required after the numero sign (U+2116).
+    - **H028** - Question mark followed by period ``?.``.
     - **H029** - Space required after colon in inline emphasis.
     - **H030** - Colon outside inline emphasis (should be inside when line continues after colon).
     - **H031** - Invalid or placeholder image alt text (empty, editor placeholder, or lowercase start).
@@ -75,8 +75,8 @@ class MarkdownChecker:
     - **H055** - Broken internal fragment link.
     - **H056** - Unbalanced inline code in table cell.
     - **H057** - Trailing period at end of ATX heading.
-    - **H058** - Punctuation (``.``, ``,``, ``;``, ``:``) before closing guillemet ``»``
-      (Russian typography; ``!»`` / ``?»`` / ``…»`` are allowed; single-letter abbreviations).
+    - **H058** - Punctuation (``.``, ``,``, ``;``, ``:``) immediately before a closing guillemet
+      (Russian typography; ``!`` / ``?`` / ``…`` before the closer are allowed; single-letter abbreviations).
 
     """
 

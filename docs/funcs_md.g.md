@@ -1407,7 +1407,7 @@ def format_markdown(filename: Path | str) -> str
 
 Format a Markdown file in place when content changes.
 
-Deprecated: prefer :class:`~harrix_pylib.md_format.MarkdownFormatter`.
+Deprecated: prefer `harrix_pylib.md_format.MarkdownFormatter`.
 
 Args:
 
@@ -1442,7 +1442,7 @@ def format_markdown_content(markdown_text: str) -> str
 
 Format Markdown content using the harrix-pylib Markdown formatter.
 
-Deprecated: prefer :class:`~harrix_pylib.md_format.MarkdownFormatter`.
+Deprecated: prefer `harrix_pylib.md_format.MarkdownFormatter`.
 
 Args:
 
@@ -1481,7 +1481,7 @@ def format_markdown_folder(folder: Path | str) -> str
 
 Recursively format Markdown files in a folder.
 
-Deprecated: prefer :class:`~harrix_pylib.md_format.MarkdownFormatter`.
+Deprecated: prefer `harrix_pylib.md_format.MarkdownFormatter`.
 
 Args:
 
@@ -1845,7 +1845,7 @@ def generate_id(text: str, existing_ids: set[str]) -> str
 Return exactly the same anchor slug GitHub creates for a Markdown heading.
 
 This function generates unique anchor IDs for Markdown headings following GitHub's
-algorithm. It converts text to lowercase, removes markdown formatting, handles
+algorithm. It converts text to lowercase, removes Markdown formatting, handles
 special characters, and ensures uniqueness by adding numeric suffixes when needed.
 
 Args:
@@ -3647,8 +3647,7 @@ def replace_section(filename: Path | str, replace_content: str, title_section: s
 
     document_new = replace_section_content(document, replace_content, title_section)
     if document != document_new:
-        with filename.open("w", encoding="utf-8") as file:
-            file.write(document_new)
+        filename.write_text(document_new, encoding="utf-8", newline="\n")
         return f"✅ File {filename} is changed."
     return "File is not changed."
 ```

@@ -121,7 +121,7 @@ class MarkdownFormatter:
 
         Handles CRLF applied twice (``\r\r\n``), which otherwise becomes a blank
         line between every source line after the legacy two-step ``\r`` cleanup or
-        after :func:`pathlib.Path.read_text` universal-newline translation.
+        after ``pathlib.Path.read_text`` universal-newline translation.
 
         Args:
 

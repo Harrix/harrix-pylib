@@ -60,7 +60,7 @@ def optimize_image_with_tools(
 def optimize_svg(filename: Path | str, output_filename: Path | str | None = None) -> str:
     """Optimize an SVG file and write the result.
 
-    Deprecated: prefer :class:`~harrix_pylib.svg_optimize.SvgOptimizer`.
+    Deprecated: prefer ``harrix_pylib.svg_optimize.SvgOptimizer``.
 
     Args:
 
@@ -86,7 +86,7 @@ def optimize_svg(filename: Path | str, output_filename: Path | str | None = None
 def optimize_svg_content(svg_text: str, *, multipass: bool = True) -> str:
     """Optimize SVG markup to a compact form similar to SVGO preset-default.
 
-    Deprecated: prefer :class:`~harrix_pylib.svg_optimize.SvgOptimizer`.
+    Deprecated: prefer ``harrix_pylib.svg_optimize.SvgOptimizer``.
 
     Args:
 
@@ -112,7 +112,7 @@ def optimize_svg_content(svg_text: str, *, multipass: bool = True) -> str:
 def optimize_svg_folder(input_folder: Path | str, output_folder: Path | str) -> str:
     """Optimize all SVG files in a folder.
 
-    Deprecated: prefer :class:`~harrix_pylib.svg_optimize.SvgOptimizer`.
+    Deprecated: prefer ``harrix_pylib.svg_optimize.SvgOptimizer``.
 
     Args:
 

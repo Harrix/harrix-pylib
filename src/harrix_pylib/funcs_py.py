@@ -276,6 +276,7 @@ def extract_functions_and_classes(
     is_add_link_demo: bool = True,
     domain: str = "",
     src_folder: Path | str | None = None,
+    include_private: bool = False,
 ) -> str:
     """Extract all classes and functions from a Python file and formats them into a Markdown list.
 
@@ -286,6 +287,8 @@ def extract_functions_and_classes(
     - `domain` (`str`): The domain for the documentation link. Defaults to an empty string.
     - `src_folder` (`Path | str | None`): The project's `src` folder used to build nested `.g.md` paths. Defaults to
     `None`.
+    - `include_private` (`bool`): Whether to include private names (starting with `_`, except magic dunders).
+    Defaults to `False`.
 
     Returns:
 
@@ -336,11 +339,11 @@ def extract_functions_and_classes(
     functions = []
     classes = []
 
-    # Traverse the AST to collect public function and class definitions
+    # Traverse the AST to collect function and class definitions
     for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and not _is_private_name(node.name):
+        if isinstance(node, ast.FunctionDef) and _should_document_name(node.name, include_private=include_private):
             functions.append(node)
-        elif isinstance(node, ast.ClassDef) and not _is_private_name(node.name):
+        elif isinstance(node, ast.ClassDef) and _should_document_name(node.name, include_private=include_private):
             classes.append(node)
         # Skip other node types (imports, variables, etc.)
 
@@ -413,7 +416,13 @@ def extract_functions_and_classes(
     return "\n".join(output_lines)
 
 
-def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> str:
+def generate_md_docs(
+    folder: Path | str,
+    beginning_of_md: str,
+    domain: str,
+    *,
+    include_private: bool = False,
+) -> str:
     r"""Generate documentation for all Python files within a given project folder.
 
     Args:
@@ -424,6 +433,8 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
     or other Markdown formatting.
     - `domain` (`str`): The domain or context in which the project is used, which might influence how
     documentation is generated or formatted.
+    - `include_private` (`bool`): Whether to include private names (starting with `_`, except magic dunders).
+    Defaults to `False`.
 
     Returns:
 
@@ -465,14 +476,19 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
             source_code = source_file.read()
         tree = ast.parse(source_code, filename)
 
-        if not _has_public_documented_entities(tree):
-            result_lines.append(f"File {filename.name} is skipped (no public API).")
+        if not _has_documented_entities(tree, include_private=include_private):
+            skip_reason = "no documented API" if include_private else "no public API"
+            result_lines.append(f"File {filename.name} is skipped ({skip_reason}).")
             continue
 
         list_funcs = h.py.extract_functions_and_classes(
-            filename, is_add_link_demo=True, domain=domain, src_folder=src_folder
+            filename,
+            is_add_link_demo=True,
+            domain=domain,
+            src_folder=src_folder,
+            include_private=include_private,
         )
-        docs = generate_md_docs_content(filename)
+        docs = generate_md_docs_content(filename, include_private=include_private)
 
         docs_relative_path = _docs_g_md_relative_path(filename, src_folder)
         filename_docs = docs_folder / docs_relative_path
@@ -483,7 +499,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
         final_content = _prepend_markdown_header(beginning_of_md, docs)
         final_content = h.md.generate_toc_with_links_content(final_content)
         final_content = h.md.generate_image_captions_content(final_content)
-        filename_docs.write_text(final_content, encoding="utf-8")
+        filename_docs.write_text(final_content, encoding="utf-8", newline="\n")
 
         list_funcs_all += list_funcs + "\n\n"
 
@@ -510,7 +526,7 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
                 final_content = h.md.generate_toc_with_links_content(final_content)
                 final_content = h.md.generate_image_captions_content(final_content)
 
-                (docs_folder / "index.g.md").write_text(final_content, encoding="utf-8")
+                (docs_folder / "index.g.md").write_text(final_content, encoding="utf-8", newline="\n")
                 result_lines.append(f"File {md_file.name} copied as index.g.md")
             else:
                 # Convert filename to lowercase for other MD files and add .g.md
@@ -526,19 +542,21 @@ def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> s
                 final_content = h.md.generate_image_captions_content(final_content)
 
                 # Write to docs folder
-                target_path.write_text(final_content, encoding="utf-8")
+                target_path.write_text(final_content, encoding="utf-8", newline="\n")
                 result_lines.append(f"File {md_file.name} copied as {target_filename}")
 
     return "\n".join(result_lines)
 
 
-def generate_md_docs_content(file_path: Path | str) -> str:
+def generate_md_docs_content(file_path: Path | str, *, include_private: bool = False) -> str:
     """Generate Markdown documentation for a single Python file.
 
     Args:
 
     - `file_path` (`Path | str`): The path to the Python file to be documented, can be either
     a `Path` object or a string.
+    - `include_private` (`bool`): Whether to include private names (starting with `_`, except magic dunders).
+    Defaults to `False`.
 
     Returns:
 
@@ -641,7 +659,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
 
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.ClassDef):
-            if _is_private_name(node.name):
+            if not _should_document_name(node.name, include_private=include_private):
                 continue
             class_name = node.name
             class_docstring = ast.get_docstring(node)
@@ -660,9 +678,11 @@ def generate_md_docs_content(file_path: Path | str) -> str:
             append_fenced_code(markdown_lines, class_code.strip())
             markdown_lines.append("</details>\n")
 
-            # Process public class methods
+            # Process class methods
             for class_node in node.body:
-                if isinstance(class_node, ast.FunctionDef) and not _is_private_name(class_node.name):
+                if isinstance(class_node, ast.FunctionDef) and _should_document_name(
+                    class_node.name, include_private=include_private
+                ):
                     method_name = class_node.name
                     method_docstring = ast.get_docstring(class_node)
                     method_signature = get_function_signature(class_node)
@@ -679,7 +699,7 @@ def generate_md_docs_content(file_path: Path | str) -> str:
                     markdown_lines.append("<summary>Code:</summary>\n")
                     append_fenced_code(markdown_lines, method_code.strip())
                     markdown_lines.append("</details>\n")
-        elif isinstance(node, ast.FunctionDef) and not _is_private_name(node.name):
+        elif isinstance(node, ast.FunctionDef) and _should_document_name(node.name, include_private=include_private):
             # Module level function
             func_name = node.name
             func_docstring = ast.get_docstring(node)
@@ -1103,14 +1123,19 @@ def _fence_for_content(content: str, *, language: str = "python") -> tuple[str, 
     return f"{fence}{language}", fence
 
 
-def _has_public_documented_entities(tree: ast.Module) -> bool:
-    """Return whether file has at least one public documented entity."""
+def _has_documented_entities(tree: ast.Module, *, include_private: bool = False) -> bool:
+    """Return whether file has at least one documented entity."""
     for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and not _is_private_name(node.name):
+        if isinstance(node, ast.FunctionDef) and _should_document_name(node.name, include_private=include_private):
             return True
-        if isinstance(node, ast.ClassDef) and not _is_private_name(node.name):
+        if isinstance(node, ast.ClassDef) and _should_document_name(node.name, include_private=include_private):
             return True
     return False
+
+
+def _has_public_documented_entities(tree: ast.Module) -> bool:
+    """Return whether file has at least one public documented entity."""
+    return _has_documented_entities(tree, include_private=False)
 
 
 def _is_magic_dunder_name(name: str) -> bool:
@@ -1141,6 +1166,11 @@ def _open_project_in_editor(project_path: Path, file_path: Path, editor: str) ->
     editor_env.pop("VIRTUAL_ENV", None)
     editor_command = f'{editor} --new-window "{project_path.resolve()}" "{file_path.resolve()}"'
     return h.dev.run_command(editor_command, env=editor_env)
+
+
+def _should_document_name(name: str, *, include_private: bool) -> bool:
+    """Return whether name should appear in generated documentation."""
+    return include_private or not _is_private_name(name)
 
 
 def _write_vscode_dev_terminal_config(project_path: Path) -> None:

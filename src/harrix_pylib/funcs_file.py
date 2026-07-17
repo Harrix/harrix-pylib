@@ -369,7 +369,7 @@ def collect_text_files_to_markdown(file_paths: Sequence[str | Path], base_folder
 
     Returns:
 
-    - `str`: A markdown string containing all files with fenced code blocks,
+    - `str`: A Markdown string containing all files with fenced code blocks,
     safe for files that already contain backticks.
 
     Example:
@@ -826,7 +826,7 @@ def rename_epub_file(filename: Path | str) -> str:
 
     This function reads an EPUB file and extracts author, title, and year information
     from its metadata (OPF file). The file is then renamed according to the pattern:
-    "LastName FirstName - Title - Year.epub" (year is optional).
+    ``LastName FirstName - Title - Year.epub`` (year is optional).
 
     If metadata extraction fails, the function attempts to transliterate the filename
     from English to Russian, assuming it might be a transliterated Russian title.
@@ -1009,7 +1009,7 @@ def rename_fb2_file(filename: Path | str) -> str:
 
     This function reads an FB2 file and extracts author, title, and year information
     from its XML metadata. The file is then renamed according to the pattern:
-    "LastName FirstName - Title - Year.fb2" (year is optional).
+    ``LastName FirstName - Title - Year.fb2`` (year is optional).
 
     If metadata extraction fails, the function attempts to transliterate the filename
     from English to Russian, assuming it might be a transliterated Russian title.
@@ -1479,7 +1479,7 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
     Note:
 
     - Only processes subdirectories, not the main directory itself.
-    - Looks for image files with extensions: .jpg, .jpeg, .png, .avif, .svg
+    - Looks for image files with extensions: ``.jpg``, ``.jpeg``, ``.png``, ``.avif``, ``.svg``
     - Will not overwrite existing 'featured-image' files.
 
     Example:
@@ -1552,7 +1552,7 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
 
     This function reads a PDF file and extracts author, title, and year information
     from its metadata. The file is then renamed according to the pattern:
-    "LastName FirstName - Title - Year.pdf" (year is optional).
+    ``LastName FirstName - Title - Year.pdf`` (year is optional).
 
     If metadata extraction fails, the function attempts to transliterate the filename
     from English to Russian, assuming it might be a transliterated Russian title.

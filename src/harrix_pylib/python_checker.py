@@ -63,7 +63,7 @@ class PythonChecker:
         Args:
 
         - `project_root` (`Path | str | None`): Root directory of the project for relative path calculation.
-        If `None`, will try to find git root or use current working directory. Defaults to `None`.
+        If `None`, will try to find Git root or use current working directory. Defaults to `None`.
 
         """
         self.all_rules = set(self.RULES.keys())

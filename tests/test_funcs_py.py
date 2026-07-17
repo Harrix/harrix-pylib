@@ -546,6 +546,133 @@ class _PrivateClass:
         assert "private_only" not in readme_content
 
 
+def test_generate_md_docs_content_includes_private_symbols() -> None:
+    content = '''
+def _private_function() -> None:
+    """Private module function."""
+    pass
+
+def public_function() -> None:
+    """Public module function."""
+    pass
+
+class _PrivateClass:
+    """Private class."""
+
+    def method(self) -> None:
+        """Private class method."""
+        pass
+
+class PublicClass:
+    """Public class."""
+
+    def __init__(self) -> None:
+        """Initialize the class."""
+        pass
+
+    def _internal_method(self) -> None:
+        """Private method."""
+        pass
+
+    def public_method(self) -> None:
+        """Public method."""
+        pass
+'''
+
+    with TemporaryDirectory() as temp_folder:
+        temp_path = Path(temp_folder)
+        test_file = temp_path / "private_symbols.py"
+        test_file.write_text(content, encoding="utf8")
+
+        md_content = h.py.generate_md_docs_content(str(test_file), include_private=True)
+
+        assert "# 📄 File `private_symbols.py`" in md_content
+        assert "## 🔧 Function `public_function`" in md_content
+        assert "## 🔧 Function `_private_function`" in md_content
+        assert "## 🏛️ Class `PublicClass`" in md_content
+        assert "## 🏛️ Class `_PrivateClass`" in md_content
+        assert "### ⚙️ Method `__init__`" in md_content
+        assert "### ⚙️ Method `public_method`" in md_content
+        assert "### ⚙️ Method `_internal_method`" in md_content
+        assert "### ⚙️ Method `method`" in md_content
+
+
+def test_extract_functions_and_classes_includes_private_symbols() -> None:
+    content = '''
+def _private_function() -> None:
+    """Private module function."""
+    pass
+
+def public_function() -> None:
+    """Public module function."""
+    pass
+
+class _PrivateClass:
+    """Private class."""
+    pass
+'''
+
+    with TemporaryDirectory() as temp_folder:
+        temp_path = Path(temp_folder)
+        test_file = temp_path / "private_symbols.py"
+        test_file.write_text(content, encoding="utf8")
+
+        md = h.py.extract_functions_and_classes(test_file, is_add_link_demo=False, include_private=True)
+
+        assert "public_function" in md
+        assert "_private_function" in md
+        assert "_PrivateClass" in md
+
+
+def test_generate_md_docs_includes_private_only_file() -> None:
+    with TemporaryDirectory() as temp_folder:
+        temp_path = Path(temp_folder)
+        src_folder = temp_path / "src"
+        src_folder.mkdir()
+
+        (src_folder / "public_file.py").write_text(
+            '''def public_function() -> None:
+    """Public module function."""
+    pass
+''',
+            encoding="utf8",
+        )
+        (src_folder / "private_only.py").write_text(
+            '''def _private_function() -> None:
+    """Private module function."""
+    pass
+
+class _PrivateClass:
+    """Private class."""
+    pass
+''',
+            encoding="utf8",
+        )
+        (temp_path / "README.md").write_text("# Test\n\n## 📚 List of functions\n", encoding="utf8")
+
+        result = h.py.generate_md_docs(
+            folder=temp_path,
+            beginning_of_md="# Test Documentation\n",
+            domain="test",
+            include_private=True,
+        )
+
+        docs_folder = temp_path / "docs"
+        assert (docs_folder / "public_file.g.md").exists()
+        assert (docs_folder / "private_only.g.md").exists()
+        assert "File public_file.py is processed." in result
+        assert "File private_only.py is processed." in result
+
+        private_docs = (docs_folder / "private_only.g.md").read_text(encoding="utf8")
+        assert "## 🔧 Function `_private_function`" in private_docs
+        assert "## 🏛️ Class `_PrivateClass`" in private_docs
+
+        readme_content = (temp_path / "README.md").read_text(encoding="utf8")
+        assert "public_file" in readme_content
+        assert "private_only" in readme_content
+        assert "_private_function" in readme_content
+
+
 def test_generate_md_docs_content_uses_longer_fence_for_nested_backticks() -> None:
     content = '''
 class ExampleAction:

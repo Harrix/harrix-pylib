@@ -451,7 +451,7 @@ Args:
 
 Returns:
 
-- `str`: A markdown string containing all files with fenced code blocks,
+- `str`: A Markdown string containing all files with fenced code blocks,
   safe for files that already contain backticks.
 
 Example:
@@ -987,7 +987,7 @@ Rename EPUB file based on metadata from file content.
 
 This function reads an EPUB file and extracts author, title, and year information
 from its metadata (OPF file). The file is then renamed according to the pattern:
-"LastName FirstName - Title - Year.epub" (year is optional).
+`LastName FirstName - Title - Year.epub` (year is optional).
 
 If metadata extraction fails, the function attempts to transliterate the filename
 from English to Russian, assuming it might be a transliterated Russian title.
@@ -1181,7 +1181,7 @@ Rename FB2 file based on metadata from file content.
 
 This function reads an FB2 file and extracts author, title, and year information
 from its XML metadata. The file is then renamed according to the pattern:
-"LastName FirstName - Title - Year.fb2" (year is optional).
+`LastName FirstName - Title - Year.fb2` (year is optional).
 
 If metadata extraction fails, the function attempts to transliterate the filename
 from English to Russian, assuming it might be a transliterated Russian title.
@@ -1695,7 +1695,7 @@ Returns:
 Note:
 
 - Only processes subdirectories, not the main directory itself.
-- Looks for image files with extensions: .jpg, .jpeg, .png, .avif, .svg
+- Looks for image files with extensions: `.jpg`, `.jpeg`, `.png`, `.avif`, `.svg`
 - Will not overwrite existing 'featured-image' files.
 
 Example:
@@ -1779,7 +1779,7 @@ Rename PDF file based on metadata from file content.
 
 This function reads a PDF file and extracts author, title, and year information
 from its metadata. The file is then renamed according to the pattern:
-"LastName FirstName - Title - Year.pdf" (year is optional).
+`LastName FirstName - Title - Year.pdf` (year is optional).
 
 If metadata extraction fails, the function attempts to transliterate the filename
 from English to Russian, assuming it might be a transliterated Russian title.
