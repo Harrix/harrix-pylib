@@ -8,7 +8,12 @@ from tempfile import TemporaryDirectory
 import pytest
 
 import harrix_pylib as h
-from harrix_pylib.funcs_py import _is_magic_dunder_name, _is_private_name
+from harrix_pylib.funcs_py import (
+    DocsSourceLoc,
+    _is_magic_dunder_name,
+    _is_private_name,
+    remap_markdown_docs_error,
+)
 
 NOTEBOOK_NBFORMAT = 4
 
@@ -693,12 +698,11 @@ def test_generate_md_docs_content_with_source_map_points_at_docstring() -> None:
         loc = line_map[docstring_line_indexes[0]]
         assert loc is not None
         assert loc.path == test_file.resolve()
-        assert loc.line == 2
+        expected_docstring_line = 2
+        assert loc.line == expected_docstring_line
 
 
 def test_remap_markdown_docs_error_uses_python_location() -> None:
-    from harrix_pylib.funcs_py import DocsSourceLoc, remap_markdown_docs_error
-
     py_path = Path("C:/proj/src/mod.py")
     line_map: list[DocsSourceLoc | None] = [
         None,

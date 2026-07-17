@@ -93,8 +93,10 @@ def check_python_docstring_markdown_errors(
             md_path.parent.mkdir(parents=True, exist_ok=True)
             md_path.write_text(content, encoding="utf-8", newline="\n")
 
-            for error in checker.check(md_path, exclude_rules=exclude_rules):
-                errors.append(remap_markdown_docs_error(error, line_map))
+            errors.extend(
+                remap_markdown_docs_error(error, line_map)
+                for error in checker.check(md_path, exclude_rules=exclude_rules)
+            )
 
     return errors
 ```
@@ -1034,12 +1036,12 @@ def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) 
     message = match.group(2)
     location = error[: match.start()]
     parts = location.split(":")
-    if len(parts) < 2:
+    if len(parts) < _MIN_ERROR_LOCATION_PARTS:
         return error
 
     md_col = 1
     try:
-        if parts[-1].isdigit() and len(parts) >= 3 and parts[-2].isdigit():  # noqa: PLR2004
+        if parts[-1].isdigit() and len(parts) >= _ERROR_LOCATION_WITH_COLUMN_PARTS and parts[-2].isdigit():
             md_col = int(parts[-1])
             md_line = int(parts[-2])
         elif parts[-1].isdigit():
