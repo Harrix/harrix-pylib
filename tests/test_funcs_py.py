@@ -700,6 +700,17 @@ def test_generate_md_docs_content_with_source_map_points_at_docstring() -> None:
         assert loc.path == test_file.resolve()
         expected_docstring_line = 2
         assert loc.line == expected_docstring_line
+        # Column is start of docstring text after indent and opening quotes: `    """Uses...`
+        assert loc.col == 8
+
+        md_line = md_lines[docstring_line_indexes[0]]
+        md_col = md_line.index("markdown") + 1
+        remapped = remap_markdown_docs_error(
+            f"temp.g.md:{docstring_line_indexes[0] + 1}:{md_col}: H006 Incorrect word form used",
+            line_map,
+        )
+        # `markdown` starts after `    """Uses ` → column 13
+        assert remapped.startswith(f"{test_file.resolve()}:2:13:")
 
 
 def test_remap_markdown_docs_error_uses_python_location() -> None:

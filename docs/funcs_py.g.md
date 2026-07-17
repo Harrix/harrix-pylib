@@ -787,11 +787,33 @@ def generate_md_docs_content_with_source_map(
     def entity_loc(node: ast.AST) -> DocsSourceLoc:
         return DocsSourceLoc(file_path, getattr(node, "lineno", 1) or 1, (getattr(node, "col_offset", 0) or 0) + 1)
 
-    def docstring_base_loc(node: ast.AST) -> DocsSourceLoc | None:
+    def docstring_content_locs(node: ast.AST, docstring: str) -> list[DocsSourceLoc]:
+        """Return per-line locs at the start of each docstring content line in source."""
         expr = _docstring_expr(node)
+        parts = docstring.splitlines() or [""]
         if expr is None:
-            return None
-        return DocsSourceLoc(file_path, expr.lineno, (expr.col_offset or 0) + 1)
+            fallback = entity_loc(node)
+            return [fallback for _ in parts]
+
+        first_src = source_lines[expr.lineno - 1].rstrip("\r\n")
+        opener_only = bool(re.match(r"^\s*(\"\"\"|''')\s*$", first_src))
+        line0 = expr.lineno + (1 if opener_only else 0)
+
+        locs: list[DocsSourceLoc] = []
+        for offset, part in enumerate(parts):
+            py_line = line0 + offset
+            if py_line < 1 or py_line > len(source_lines):
+                locs.append(DocsSourceLoc(file_path, expr.lineno, (expr.col_offset or 0) + 1))
+                continue
+            src = source_lines[py_line - 1].rstrip("\r\n")
+            if part:
+                idx = src.find(part)
+                if idx < 0:
+                    idx = len(src) - len(src.lstrip())
+            else:
+                idx = len(src) - len(src.lstrip())
+            locs.append(DocsSourceLoc(file_path, py_line, max(1, idx + 1)))
+        return locs
 
     def get_function_signature(node: ast.FunctionDef) -> str:
         args = []
@@ -875,9 +897,11 @@ def generate_md_docs_content_with_source_map(
 
     def emit_docstring_or_placeholder(node: ast.AST, docstring: str | None, fallback: DocsSourceLoc) -> None:
         if docstring:
-            base = docstring_base_loc(node) or fallback
-            emit_multiline(docstring, base)
-            emit_blank(base)
+            locs = docstring_content_locs(node, docstring)
+            parts = docstring.splitlines() or [""]
+            for part, loc in zip(parts, locs, strict=True):
+                emit(part, loc)
+            emit_blank(locs[-1] if locs else fallback)
         else:
             emit_structural("_No docstring provided._", fallback)
             emit_blank(fallback)
