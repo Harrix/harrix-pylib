@@ -11,14 +11,93 @@ lang: en
 
 ## Contents
 
+- [🏛️ Class `DocsSourceLoc`](#️-class-docssourceloc)
+- [🔧 Function `check_python_docstring_markdown_errors`](#-function-check_python_docstring_markdown_errors)
 - [🔧 Function `create_uv_new_library`](#-function-create_uv_new_library)
 - [🔧 Function `create_uv_new_notebook`](#-function-create_uv_new_notebook)
 - [🔧 Function `create_uv_new_project`](#-function-create_uv_new_project)
 - [🔧 Function `extract_functions_and_classes`](#-function-extract_functions_and_classes)
 - [🔧 Function `generate_md_docs`](#-function-generate_md_docs)
 - [🔧 Function `generate_md_docs_content`](#-function-generate_md_docs_content)
+- [🔧 Function `generate_md_docs_content_with_source_map`](#-function-generate_md_docs_content_with_source_map)
 - [🔧 Function `lint_and_fix_python_code`](#-function-lint_and_fix_python_code)
+- [🔧 Function `remap_markdown_docs_error`](#-function-remap_markdown_docs_error)
 - [🔧 Function `sort_py_code`](#-function-sort_py_code)
+
+</details>
+
+## 🏛️ Class `DocsSourceLoc`
+
+```python
+class DocsSourceLoc(NamedTuple)
+```
+
+Python source location corresponding to a generated Markdown docs line.
+
+<details>
+<summary>Code:</summary>
+
+```python
+class DocsSourceLoc(NamedTuple):
+
+    path: Path
+    line: int
+    col: int
+```
+
+</details>
+
+## 🔧 Function `check_python_docstring_markdown_errors`
+
+```python
+def check_python_docstring_markdown_errors(folder: Path | str) -> list[str]
+```
+
+Check docstring Markdown typography for Python sources; errors point at `.py` locations.
+
+Generates ephemeral docs (including private names when `include_private` is true), runs
+MarkdownChecker, and remaps findings to Python path/line/column. Does not modify the project.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def check_python_docstring_markdown_errors(
+    folder: Path | str,
+    *,
+    include_private: bool = True,
+) -> list[str]:
+    folder = Path(folder)
+    src_folder = folder / "src"
+    if not src_folder.is_dir():
+        return []
+
+    # File-level / front-matter / EOF rules do not apply to ephemeral docstring extracts.
+    exclude_rules = {"H001", "H002", "H003", "H004", "H005", "H011", "H046", "H047"}
+    checker = h.md_check.MarkdownChecker()
+    errors: list[str] = []
+
+    with tempfile.TemporaryDirectory(prefix="hsk-py-docstring-md-") as temp_dir:
+        temp_root = Path(temp_dir)
+        for py_file in sorted(src_folder.rglob("*.py")):
+            if not py_file.is_file() or py_file.stem.startswith("__"):
+                continue
+            with py_file.open(encoding="utf-8") as source_file:
+                tree = ast.parse(source_file.read(), filename=str(py_file))
+            if not _has_documented_entities(tree, include_private=include_private):
+                continue
+
+            content, line_map = generate_md_docs_content_with_source_map(py_file, include_private=include_private)
+            relative = _docs_g_md_relative_path(py_file, src_folder)
+            md_path = temp_root / relative
+            md_path.parent.mkdir(parents=True, exist_ok=True)
+            md_path.write_text(content, encoding="utf-8", newline="\n")
+
+            for error in checker.check(md_path, exclude_rules=exclude_rules):
+                errors.append(remap_markdown_docs_error(error, line_map))
+
+    return errors
+```
 
 </details>
 
@@ -650,6 +729,67 @@ result = h.py.generate_md_docs_content(filename)
 
 ```python
 def generate_md_docs_content(file_path: Path | str, *, include_private: bool = False) -> str:
+    content, _line_map = generate_md_docs_content_with_source_map(file_path, include_private=include_private)
+    return content
+```
+
+</details>
+
+## 🔧 Function `generate_md_docs_content_with_source_map`
+
+```python
+def generate_md_docs_content_with_source_map(file_path: Path | str) -> tuple[str, list[DocsSourceLoc | None]]
+```
+
+Generate Markdown docs for a Python file and a per-line map to Python source.
+
+Each entry in the returned map corresponds to one line of the Markdown content
+(1-based Markdown line `i` maps to `line_map[i - 1]`).
+
+<details>
+<summary>Code:</summary>
+
+```python
+def generate_md_docs_content_with_source_map(
+    file_path: Path | str,
+    *,
+    include_private: bool = False,
+) -> tuple[str, list[DocsSourceLoc | None]]:
+    file_path = Path(file_path).resolve()
+    with file_path.open(encoding="utf-8") as f:
+        source = f.read()
+    source_lines = source.splitlines(keepends=True)
+    tree = ast.parse(source)
+
+    out_lines: list[str] = []
+    line_map: list[DocsSourceLoc | None] = []
+
+    def emit(line: str, loc: DocsSourceLoc | None) -> None:
+        out_lines.append(line)
+        line_map.append(loc)
+
+    def emit_blank(loc: DocsSourceLoc | None = None) -> None:
+        emit("", loc)
+
+    def emit_structural(line: str, entity_loc: DocsSourceLoc) -> None:
+        emit(line, entity_loc)
+
+    def emit_multiline(text: str, base: DocsSourceLoc) -> None:
+        parts = text.splitlines()
+        if not parts:
+            emit("", base)
+            return
+        for offset, part in enumerate(parts):
+            emit(part, DocsSourceLoc(base.path, base.line + offset, base.col))
+
+    def entity_loc(node: ast.AST) -> DocsSourceLoc:
+        return DocsSourceLoc(file_path, getattr(node, "lineno", 1) or 1, (getattr(node, "col_offset", 0) or 0) + 1)
+
+    def docstring_base_loc(node: ast.AST) -> DocsSourceLoc | None:
+        expr = _docstring_expr(node)
+        if expr is None:
+            return None
+        return DocsSourceLoc(file_path, expr.lineno, (expr.col_offset or 0) + 1)
 
     def get_function_signature(node: ast.FunctionDef) -> str:
         args = []
@@ -677,7 +817,7 @@ def generate_md_docs_content(file_path: Path | str, *, include_private: bool = F
 
         args_str = ", ".join(args)
         args_str = args_str.replace("'", '"')
-        signature = f"def {node.name}({args_str})"  # Create the function signature
+        signature = f"def {node.name}({args_str})"
         if node.returns:
             signature += f" -> {ast.unparse(node.returns)}"
         return signature
@@ -690,17 +830,16 @@ def generate_md_docs_content(file_path: Path | str, *, include_private: bool = F
             signature += f"({bases_str})"
         return signature
 
-    def get_node_code(node: ast.FunctionDef | ast.ClassDef | ast.AsyncFunctionDef, source_lines: list[str]) -> str:
-        start_line = node.lineno - 1  # AST line numbers start from 1
+    def get_node_code(node: ast.FunctionDef | ast.ClassDef | ast.AsyncFunctionDef) -> tuple[str, int]:
+        """Return code without docstring and the 1-based first source line of returned code."""
+        start_line = node.lineno - 1
         end_line = node.end_lineno
-
-        # Check that end_lineno is not None
         if end_line is None:
-            return ""
+            return "", node.lineno
 
         node_lines = source_lines[start_line:end_line]
+        code_start_lineno = node.lineno
 
-        # Remove the docstring if it exists
         if (
             node.body
             and isinstance(node.body[0], ast.Expr)
@@ -710,91 +849,93 @@ def generate_md_docs_content(file_path: Path | str, *, include_private: bool = F
             docstring_node = node.body[0]
             docstring_start = docstring_node.lineno - 1
             docstring_end = docstring_node.end_lineno
-
-            # Check that docstring_end is not None
             if docstring_end is not None:
-                # Calculate the line indexes related to the docstring
-                docstring_lines = set(range(docstring_start, docstring_end))
-                node_lines = [line for i, line in enumerate(node_lines, start=start_line) if i not in docstring_lines]
+                docstring_line_indexes = set(range(docstring_start, docstring_end))
+                kept: list[tuple[int, str]] = [
+                    (i, line) for i, line in enumerate(node_lines, start=start_line) if i not in docstring_line_indexes
+                ]
+                if kept:
+                    code_start_lineno = kept[0][0] + 1
+                    node_lines = [line for _, line in kept]
+                else:
+                    node_lines = []
 
-        return "".join(node_lines)
+        return "".join(node_lines), code_start_lineno
 
-    def append_fenced_code(markdown_lines: list[str], content: str) -> None:
+    def append_fenced_code(content: str, code_start_lineno: int, fallback: DocsSourceLoc) -> None:
         open_fence, close_fence = _fence_for_content(content)
-        markdown_lines.append(open_fence)
-        markdown_lines.append(content)
-        markdown_lines.append(f"{close_fence}\n")
+        emit_structural(open_fence, fallback)
+        stripped = content.strip("\n")
+        if stripped:
+            emit_multiline(stripped, DocsSourceLoc(file_path, code_start_lineno, 1))
+        emit_structural(close_fence, fallback)
+        emit_blank(fallback)
 
-    file_path = Path(file_path)
-    with Path(file_path).open(encoding="utf-8") as f:
-        source = f.read()
-    source_lines = source.splitlines(keepends=True)
-    tree = ast.parse(source)
+    def emit_docstring_or_placeholder(node: ast.AST, docstring: str | None, fallback: DocsSourceLoc) -> None:
+        if docstring:
+            base = docstring_base_loc(node) or fallback
+            emit_multiline(docstring, base)
+            emit_blank(base)
+        else:
+            emit_structural("_No docstring provided._", fallback)
+            emit_blank(fallback)
 
-    markdown_lines = []
-    markdown_lines.append(f"# 📄 File `{file_path.name}`\n")
+    def emit_callable_docs(
+        heading: str,
+        signature: str,
+        node: ast.FunctionDef | ast.ClassDef,
+        docstring: str | None,
+    ) -> None:
+        loc = entity_loc(node)
+        emit_structural(heading, loc)
+        emit_blank(loc)
+        code, code_start = get_node_code(node)
+        append_fenced_code(signature, loc.line, loc)
+        emit_docstring_or_placeholder(node, docstring, loc)
+        emit_structural("<details>", loc)
+        emit_structural("<summary>Code:</summary>", loc)
+        emit_blank(loc)
+        append_fenced_code(code.strip(), code_start, loc)
+        emit_structural("</details>", loc)
+        emit_blank(loc)
+
+    file_loc = DocsSourceLoc(file_path, 1, 1)
+    emit_structural(f"# 📄 File `{file_path.name}`", file_loc)
+    emit_blank(file_loc)
 
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.ClassDef):
             if not _should_document_name(node.name, include_private=include_private):
                 continue
-            class_name = node.name
-            class_docstring = ast.get_docstring(node)
-            class_signature = get_class_signature(node)
-            class_code = get_node_code(node, source_lines)
-            # Add the class name and its signature
-            markdown_lines.append(f"## 🏛️ Class `{class_name}`\n")
-            append_fenced_code(markdown_lines, class_signature)
-            if class_docstring:
-                markdown_lines.append(f"{class_docstring}\n")
-            else:
-                markdown_lines.append("_No docstring provided._\n")
-            # Add the code to the details block
-            markdown_lines.append("<details>")
-            markdown_lines.append("<summary>Code:</summary>\n")
-            append_fenced_code(markdown_lines, class_code.strip())
-            markdown_lines.append("</details>\n")
-
-            # Process class methods
+            emit_callable_docs(
+                f"## 🏛️ Class `{node.name}`",
+                get_class_signature(node),
+                node,
+                ast.get_docstring(node),
+            )
             for class_node in node.body:
                 if isinstance(class_node, ast.FunctionDef) and _should_document_name(
                     class_node.name, include_private=include_private
                 ):
-                    method_name = class_node.name
-                    method_docstring = ast.get_docstring(class_node)
-                    method_signature = get_function_signature(class_node)
-                    method_code = get_node_code(class_node, source_lines)
-                    # Add the method name and its signature
-                    markdown_lines.append(f"### ⚙️ Method `{method_name}`\n")
-                    append_fenced_code(markdown_lines, method_signature)
-                    if method_docstring:
-                        markdown_lines.append(f"{method_docstring}\n")
-                    else:
-                        markdown_lines.append("_No docstring provided._\n")
-                    # Add the code to the details block
-                    markdown_lines.append("<details>")
-                    markdown_lines.append("<summary>Code:</summary>\n")
-                    append_fenced_code(markdown_lines, method_code.strip())
-                    markdown_lines.append("</details>\n")
+                    emit_callable_docs(
+                        f"### ⚙️ Method `{class_node.name}`",
+                        get_function_signature(class_node),
+                        class_node,
+                        ast.get_docstring(class_node),
+                    )
         elif isinstance(node, ast.FunctionDef) and _should_document_name(node.name, include_private=include_private):
-            # Module level function
-            func_name = node.name
-            func_docstring = ast.get_docstring(node)
-            func_signature = get_function_signature(node)
-            func_code = get_node_code(node, source_lines)
-            markdown_lines.append(f"## 🔧 Function `{func_name}`\n")
-            append_fenced_code(markdown_lines, func_signature)
-            if func_docstring:
-                markdown_lines.append(f"{func_docstring}\n")
-            else:
-                markdown_lines.append("_No docstring provided._\n")
-            # Add the code to the details block
-            markdown_lines.append("<details>")
-            markdown_lines.append("<summary>Code:</summary>\n")
-            append_fenced_code(markdown_lines, func_code.strip())
-            markdown_lines.append("</details>\n")
-    # Join all lines
-    return "\n".join(markdown_lines)
+            emit_callable_docs(
+                f"## 🔧 Function `{node.name}`",
+                get_function_signature(node),
+                node,
+                ast.get_docstring(node),
+            )
+
+    while out_lines and out_lines[-1] == "":
+        out_lines.pop()
+        line_map.pop()
+
+    return "\n".join(out_lines), line_map
 ```
 
 </details>
@@ -868,6 +1009,54 @@ def lint_and_fix_python_code(py_content: str) -> str:
     finally:
         # Delete the temporary file
         Path(temp_file_path).unlink()
+```
+
+</details>
+
+## 🔧 Function `remap_markdown_docs_error`
+
+```python
+def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) -> str
+```
+
+Rewrite a MarkdownChecker error to the corresponding Python source location.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) -> str:
+    match = _MD_DOCS_CODE_RE.search(error)
+    if match is None:
+        return error
+
+    code = match.group(1)
+    message = match.group(2)
+    location = error[: match.start()]
+    parts = location.split(":")
+    if len(parts) < 2:
+        return error
+
+    md_col = 1
+    try:
+        if parts[-1].isdigit() and len(parts) >= 3 and parts[-2].isdigit():  # noqa: PLR2004
+            md_col = int(parts[-1])
+            md_line = int(parts[-2])
+        elif parts[-1].isdigit():
+            md_line = int(parts[-1])
+        else:
+            return error
+    except ValueError:
+        return error
+
+    if md_line < 1 or md_line > len(line_map):
+        return error
+    loc = line_map[md_line - 1]
+    if loc is None:
+        return error
+
+    py_col = max(1, loc.col + md_col - 1)
+    return f"{loc.path}:{loc.line}:{py_col}: {code} {message}"
 ```
 
 </details>

@@ -673,6 +673,62 @@ class _PrivateClass:
         assert "_private_function" in readme_content
 
 
+def test_generate_md_docs_content_with_source_map_points_at_docstring() -> None:
+    content = '''def public_function() -> None:
+    """Uses markdown in prose."""
+    pass
+'''
+    with TemporaryDirectory() as temp_folder:
+        test_file = Path(temp_folder) / "sample.py"
+        test_file.write_text(content, encoding="utf8")
+
+        md, line_map = h.py.generate_md_docs_content_with_source_map(test_file)
+        md_lines = md.splitlines()
+        assert len(md_lines) == len(line_map)
+        assert "Uses markdown in prose." in md
+        docstring_line_indexes = [
+            i for i, (line, loc) in enumerate(zip(md_lines, line_map, strict=True)) if loc and "Uses markdown" in line
+        ]
+        assert docstring_line_indexes
+        loc = line_map[docstring_line_indexes[0]]
+        assert loc is not None
+        assert loc.path == test_file.resolve()
+        assert loc.line == 2
+
+
+def test_remap_markdown_docs_error_uses_python_location() -> None:
+    from harrix_pylib.funcs_py import DocsSourceLoc, remap_markdown_docs_error
+
+    py_path = Path("C:/proj/src/mod.py")
+    line_map: list[DocsSourceLoc | None] = [
+        None,
+        DocsSourceLoc(py_path, 10, 5),
+    ]
+    error = 'temp/mod.g.md:2:3: H006 Incorrect word form used: "markdown" should be "Markdown"'
+    remapped = remap_markdown_docs_error(error, line_map)
+    assert remapped == (f'{py_path}:10:7: H006 Incorrect word form used: "markdown" should be "Markdown"')
+
+
+def test_check_python_docstring_markdown_errors_reports_py_paths() -> None:
+    with TemporaryDirectory() as temp_folder:
+        temp_path = Path(temp_folder)
+        src_folder = temp_path / "src" / "pkg"
+        src_folder.mkdir(parents=True)
+        (src_folder / "sample.py").write_text(
+            '''def public_function() -> None:
+    """Uses markdown wording on purpose."""
+    pass
+''',
+            encoding="utf8",
+        )
+
+        errors = h.py.check_python_docstring_markdown_errors(temp_path, include_private=True)
+        assert errors
+        assert all(".py:" in err for err in errors)
+        assert any("H006" in err for err in errors)
+        assert not any(".g.md:" in err.split(": ", maxsplit=1)[0] for err in errors)
+
+
 def test_generate_md_docs_custom_folder_without_readme_side_effects() -> None:
     with TemporaryDirectory() as temp_folder:
         temp_path = Path(temp_folder)
