@@ -415,7 +415,7 @@ def extract_functions_and_classes(
         base_classes_str = ", ".join(base_classes) if base_classes else ""
         # Retrieve docstring and extract the first line (summary)
         docstring = ast.get_docstring(class_node)
-        summary = docstring.splitlines()[0] if docstring else ""
+        summary = _strip_trailing_linter_comments(docstring.splitlines()[0]) if docstring else ""
 
         # Format the class entry with link
         if is_add_link_demo and domain:
@@ -438,7 +438,7 @@ def extract_functions_and_classes(
         func_name = func_node.name
         # Retrieve docstring and extract the first line (summary)
         docstring = ast.get_docstring(func_node)
-        summary = docstring.splitlines()[0] if docstring else ""
+        summary = _strip_trailing_linter_comments(docstring.splitlines()[0]) if docstring else ""
 
         # Format the function entry with link
         if is_add_link_demo and domain:
@@ -794,8 +794,14 @@ def generate_md_docs_content_with_source_map(
         if docstring:
             locs = docstring_content_locs(node, docstring)
             parts = docstring.splitlines() or [""]
+            in_fence = False
             for part, loc in zip(parts, locs, strict=True):
-                emit(part, loc)
+                stripped_left = part.lstrip()
+                if stripped_left.startswith("```"):
+                    in_fence = not in_fence
+                    emit(part, loc)
+                    continue
+                emit(part if in_fence else _strip_trailing_linter_comments(part), loc)
             emit_blank(locs[-1] if locs else fallback)
         else:
             emit_structural("_No docstring provided._", fallback)
@@ -1358,6 +1364,19 @@ def _should_document_name(name: str, *, include_private: bool) -> bool:
     return include_private or not _is_private_name(name)
 
 
+def _strip_trailing_linter_comments(line: str) -> str:
+    """Remove trailing ``# noqa`` / ``# ignore:`` / ``# type: ignore`` / ``# ty: ignore`` tails.
+
+    Only end-of-line suppressions after whitespace are stripped. Stacked tails
+    (``# noqa: RUF001  # ignore: HP001``) are removed repeatedly.
+    """
+    while True:
+        updated = _TRAILING_LINTER_COMMENT_RE.sub("", line)
+        if updated == line:
+            return line
+        line = updated
+
+
 def _write_vscode_dev_terminal_config(project_path: Path) -> None:
     """Write VS Code/Cursor settings and an auto-open terminal task for a uv project."""
     vscode_dir = project_path / ".vscode"
@@ -1398,6 +1417,22 @@ def _write_vscode_dev_terminal_config(project_path: Path) -> None:
         ],
     }
     (vscode_dir / "tasks.json").write_text(json.dumps(tasks, indent=2) + "\n", encoding="utf-8")
+
+
+# Trailing harrix / ruff / ty / type-checker suppressions at end of a line.
+# ``file-ignore`` is matched before ``ignore``. Requires leading whitespace so mid-line
+# mentions like ``use # ignore: HP001`` are not treated as tails when more text follows;
+# only end-of-line tails are removed.
+_TRAILING_LINTER_COMMENT_RE = re.compile(
+    r"[ \t]+#\s*(?:"
+    r"noqa(?:\s*:\s*[A-Za-z0-9][A-Za-z0-9,\s]*)?"
+    r"|file-ignore\s*:\s*[A-Z][A-Z0-9,\s]*"
+    r"|ignore\s*:\s*[A-Z][A-Z0-9,\s]*"
+    r"|type\s*:\s*ignore(?:\[[^\]]*\])?"
+    r"|ty\s*:\s*ignore(?:\[[^\]]*\])?"
+    r")[ \t]*$",
+    re.IGNORECASE,
+)
 
 
 _POWERSHELL_APPEND_RUFF = """

@@ -12,6 +12,7 @@ from harrix_pylib.funcs_py import (
     DocsSourceLoc,
     _is_magic_dunder_name,
     _is_private_name,
+    _strip_trailing_linter_comments,
     remap_markdown_docs_error,
 )
 
@@ -678,6 +679,49 @@ class _PrivateClass:
         assert "_private_function" in readme_content
 
 
+def test_strip_trailing_linter_comments() -> None:
+    assert _strip_trailing_linter_comments("allowed.  # ignore: HP001") == "allowed."
+    assert _strip_trailing_linter_comments('word",  # noqa: RUF001  # ignore: HP001') == 'word",'
+    assert _strip_trailing_linter_comments("x  # noqa: E501") == "x"
+    assert _strip_trailing_linter_comments("x  # noqa") == "x"
+    assert _strip_trailing_linter_comments("x  # type: ignore[arg-type]") == "x"
+    assert _strip_trailing_linter_comments("x  # ty: ignore") == "x"
+    assert _strip_trailing_linter_comments("x  # file-ignore: HP001") == "x"
+    # Mid-line / prose mentions stay (not end-of-line bare tails after the construct)
+    assert _strip_trailing_linter_comments("Use `# ignore: HP001` on the line.") == (
+        "Use `# ignore: HP001` on the line."
+    )
+    assert _strip_trailing_linter_comments("plain line") == "plain line"
+
+
+def test_generate_md_docs_strips_trailing_linter_comments_outside_fences() -> None:
+    content = (
+        "def public_function() -> None:\n"
+        '    """Allow abbreviations like ``т. д.``.  # ignore: HP001\n'  # ignore: HP001
+        "\n"
+        "    Example:\n"
+        "\n"
+        "    ```python\n"
+        '    text = "т. д."  # ignore: HP001\n'  # ignore: HP001
+        "    # noqa: E501\n"
+        "    ```\n"
+        "\n"
+        "    Mention ``# ignore: HP001`` in prose.\n"
+        '    """\n'
+        "    pass\n"
+    )
+    with TemporaryDirectory() as temp_folder:
+        test_file = Path(temp_folder) / "sample.py"
+        test_file.write_text(content, encoding="utf8")
+        md = h.py.generate_md_docs_content(str(test_file))
+
+        assert "Allow abbreviations like ``т. д.``." in md  # ignore: HP001
+        assert "Allow abbreviations like ``т. д.``.  # ignore: HP001" not in md  # ignore: HP001
+        assert 'text = "т. д."  # ignore: HP001' in md  # ignore: HP001
+        assert "# noqa: E501" in md
+        assert "Mention ``# ignore: HP001`` in prose." in md
+
+
 def test_generate_md_docs_content_with_source_map_points_at_docstring() -> None:
     content = '''def public_function() -> None:
     """Uses markdown in prose."""
@@ -701,7 +745,8 @@ def test_generate_md_docs_content_with_source_map_points_at_docstring() -> None:
         expected_docstring_line = 2
         assert loc.line == expected_docstring_line
         # Column is start of docstring text after indent and opening quotes: `    """Uses...`
-        assert loc.col == 8
+        expected_docstring_col = 8
+        assert loc.col == expected_docstring_col
 
         md_line = md_lines[docstring_line_indexes[0]]
         md_col = md_line.index("markdown") + 1

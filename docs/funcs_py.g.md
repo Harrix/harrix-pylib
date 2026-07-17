@@ -486,7 +486,7 @@ def extract_functions_and_classes(
         base_classes_str = ", ".join(base_classes) if base_classes else ""
         # Retrieve docstring and extract the first line (summary)
         docstring = ast.get_docstring(class_node)
-        summary = docstring.splitlines()[0] if docstring else ""
+        summary = _strip_trailing_linter_comments(docstring.splitlines()[0]) if docstring else ""
 
         # Format the class entry with link
         if is_add_link_demo and domain:
@@ -509,7 +509,7 @@ def extract_functions_and_classes(
         func_name = func_node.name
         # Retrieve docstring and extract the first line (summary)
         docstring = ast.get_docstring(func_node)
-        summary = docstring.splitlines()[0] if docstring else ""
+        summary = _strip_trailing_linter_comments(docstring.splitlines()[0]) if docstring else ""
 
         # Format the function entry with link
         if is_add_link_demo and domain:
@@ -751,7 +751,7 @@ Each entry in the returned map corresponds to one line of the Markdown content
 <details>
 <summary>Code:</summary>
 
-```python
+````python
 def generate_md_docs_content_with_source_map(
     file_path: Path | str,
     *,
@@ -899,8 +899,14 @@ def generate_md_docs_content_with_source_map(
         if docstring:
             locs = docstring_content_locs(node, docstring)
             parts = docstring.splitlines() or [""]
+            in_fence = False
             for part, loc in zip(parts, locs, strict=True):
-                emit(part, loc)
+                stripped_left = part.lstrip()
+                if stripped_left.startswith("```"):
+                    in_fence = not in_fence
+                    emit(part, loc)
+                    continue
+                emit(part if in_fence else _strip_trailing_linter_comments(part), loc)
             emit_blank(locs[-1] if locs else fallback)
         else:
             emit_structural("_No docstring provided._", fallback)
@@ -962,7 +968,7 @@ def generate_md_docs_content_with_source_map(
         line_map.pop()
 
     return "\n".join(out_lines), line_map
-```
+````
 
 </details>
 
