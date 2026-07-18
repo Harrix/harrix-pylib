@@ -1013,7 +1013,7 @@ class MarkdownChecker:
     def _check_dash_usage(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for incorrect dash/hyphen usage (H016). Applies only to markdown text, not YAML/code.
+        """Check for incorrect dash/hyphen usage (H016). Applies only to Markdown text, not YAML/code.
 
         Exception: ``--`` at the start of blockquote attribution lines (e.g. ``> -- Author``).
         """
@@ -1186,7 +1186,7 @@ class MarkdownChecker:
     def _check_horizontal_bar(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for horizontal bar '―' (U+2015, dialogue dash) which should not be used (H026)."""
+        """Check for horizontal bar `―` (U+2015, dialogue dash) which should not be used (H026)."""
         if "\u2015" not in clean_line:
             return
         col = line.find("\u2015") + 1
@@ -1245,7 +1245,7 @@ class MarkdownChecker:
                 yield self._format_error("H020", error_msg, filename, line_num=line_num, col=3)
 
     def _check_image_not_at_line_start(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check that image markdown '![' is at start of (trimmed) line (H025)."""
+        """Check that image Markdown `![` is at the start of the trimmed line (H025)."""
         trimmed = line.strip()
         if "![" not in trimmed or trimmed.find("![") == 0:
             return
@@ -1480,7 +1480,7 @@ class MarkdownChecker:
         lang: str = "",
         display_math_lines: frozenset[int],
     ) -> Generator[str, None, None]:
-        """Check rules that apply only to non-code lines (markdown content, not YAML/code)."""
+        """Check rules that apply only to non-code lines (Markdown content, not YAML/code)."""
         # Remove inline code, URLs, and identifier-like link labels before text checks
         clean_line = self._remove_inline_code(line)
         clean_line = re.sub(r"\]\([^)]*\)", "]()", clean_line)
@@ -1605,10 +1605,10 @@ class MarkdownChecker:
             yield from self._check_unbalanced_table_inline_code(filename, line, line_num)
 
     def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check that '№' is followed by a space (H027).
+        """Check that `№` is followed by a space (H027).
 
-        Uses a regex lookahead to match '№' only when the next character exists and is not a space,
-        which naturally excludes '№' at the end of a line.
+        Uses a regex lookahead to match `№` only when the next character exists and is not a space,
+        which naturally excludes `№` at the end of a line.
         """
         for match in re.finditer(r"\u2116(?=[^ ])", line):  # № followed by a non-space character
             yield self._format_error("H027", self.RULES["H027"], filename, line_num=line_num, col=match.start() + 1)
@@ -1632,7 +1632,7 @@ class MarkdownChecker:
             yield self._format_error("H058", error_msg, filename, line_num=line_num, col=col + 1)
 
     def _check_question_mark_period(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for question mark followed by period '?.' (H028)."""
+        """Check for question mark followed by period `?.` (H028)."""
         offset = 0
         for segment, in_code in h.md.identify_code_blocks_line(line):
             if not in_code and "?." in segment:
@@ -1724,9 +1724,9 @@ class MarkdownChecker:
         """Check for capitalized Russian polite pronouns (H023). Use lowercase when addressing the reader.
 
         Exception: pronoun at sentence start is allowed:
-        - after line start or after .!?;
-        - after opening guillemet « (direct speech, e.g. «Ваша задача);  # ignore: HP001
-        - after dash at line start (dialogue, e.g. — Ваша работа хороша).  # ignore: HP001
+        - after line start or after `.!?;`;
+        - after opening guillemet `«` (direct speech, e.g. `«Ваша задача»`);  # ignore: HP001
+        - after dash at line start (dialogue, e.g. `— Ваша работа хороша`).  # ignore: HP001
         Yields at most one error per line.
         """
         boundary_before = r"(?<![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001 # ignore: HP001
@@ -1826,7 +1826,7 @@ class MarkdownChecker:
         """Check for space before punctuation marks (H015).
 
         Uses original line so that removal of inline code (e.g. `word`:)
-        does not create false " :" when segments are concatenated.
+        does not create false ` :` when segments are concatenated.
         Matches inside inline code (e.g. `cd ..`) are skipped.
         """
         code_ranges: list[tuple[int, int]] = []
@@ -2128,7 +2128,7 @@ class MarkdownChecker:
         return f"{location}: {error_code} {message}"
 
     def _get_link_url_ranges(self, line: str) -> set[int]:
-        """Return set of 0-based character positions that are inside Markdown link URLs (](url))."""
+        """Return set of 0-based character positions that are inside Markdown link URLs (`(url)`)."""
         positions: set[int] = set()
         for m in re.finditer(r"\]\([^)]*\)", line):
             for i in range(m.start() + 2, m.end() - 1):
@@ -2250,7 +2250,7 @@ class MarkdownChecker:
 
     @classmethod
     def _split_markdown_table_row(cls, line: str) -> list[tuple[str, int]]:
-        """Split a table row on unescaped ``|``; return ``(cell, start_index)`` pairs."""
+        """Split a table row on unescaped `|`; return `(cell, start_index)` pairs."""
         cells: list[tuple[str, int]] = []
         start = 0
         for i, ch in enumerate(line):
