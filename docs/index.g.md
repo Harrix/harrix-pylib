@@ -28,7 +28,7 @@ lang: en
   - [📄 File `funcs_py.py`](#-file-funcs_pypy)
   - [📄 File `img_tools.py`](#-file-img_toolspy)
   - [📄 File `md_checker.py`](#-file-md_checkerpy)
-  - [📄 File `python_checker.py`](#-file-python_checkerpy)
+  - [📄 File `py_checker.py`](#-file-py_checkerpy)
   - [📄 File `formatter.py`](#-file-formatterpy)
   - [📄 File `optimizer.py`](#-file-optimizerpy)
 - [📄 License](#-license)
@@ -260,13 +260,13 @@ Doc: [md_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_
 | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | 🏛️ Class [`MdChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_checker.g.md#️-class-mdchecker) | Class for checking Markdown files for compliance with specified rules. |
 
-### 📄 File `python_checker.py`
+### 📄 File `py_checker.py`
 
-Doc: [python_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/python_checker.g.md)
+Doc: [py_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_checker.g.md)
 
-| Function/Class                                                                                                             | Description                                                          |
-| -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 🏛️ Class [`PythonChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/python_checker.g.md#️-class-pythonchecker) | Class for checking Python files for compliance with specified rules. |
+| Function/Class                                                                                                 | Description                                                          |
+| -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 🏛️ Class [`PyChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_checker.g.md#️-class-pychecker) | Class for checking Python files for compliance with specified rules. |
 
 ### 📄 File `formatter.py`
 

@@ -1,52 +1,31 @@
----
-author: Anton Sergienko
-author-email: anton.b.sergienko@gmail.com
-lang: en
----
+"""Module providing functionality for checking Python files for compliance with specified rules."""
 
-# 📄 File `python_checker.py`
+import re
+from collections.abc import Generator
+from pathlib import Path
+from typing import ClassVar
 
-<details>
-<summary>📖 Contents ⬇️</summary>
+import harrix_pylib as h
 
-## Contents
 
-- [🏛️ Class `PythonChecker`](#️-class-pythonchecker)
-  - [⚙️ Method `__call__`](#️-method-__call__)
-  - [⚙️ Method `__init__`](#️-method-__init__)
-  - [⚙️ Method `check`](#️-method-check)
-  - [⚙️ Method `check_directory`](#️-method-check_directory)
-  - [⚙️ Method `find_python_files`](#️-method-find_python_files)
+class PyChecker:
+    """Class for checking Python files for compliance with specified rules.
 
-</details>
+    Rules:
 
-## 🏛️ Class `PythonChecker`
+    - **HP001** - Presence of Russian letters in the code.
+    - **HP002** - Old-style docstring formatting (non-Markdown style).
 
-```python
-class PythonChecker
-```
+    Examples for ignore directives:
 
-Class for checking Python files for compliance with specified rules.
+    ```python
+    # ignore: HP001
+    # ignore: HP001, HP002
+    # file-ignore: HP001
+    # file-ignore: HP001, HP002
+    ```
 
-Rules:
-
-- **HP001** - Presence of Russian letters in the code.
-- **HP002** - Old-style docstring formatting (non-Markdown style).
-
-Examples for ignore directives:
-
-```python
-# ignore: HP001
-# ignore: HP001, HP002
-# file-ignore: HP001
-# file-ignore: HP001, HP002
-```
-
-<details>
-<summary>Code:</summary>
-
-```python
-class PythonChecker:
+    """
 
     # Rule constants for easier maintenance
     RULES: ClassVar[dict[str, str]] = {
@@ -79,7 +58,7 @@ class PythonChecker:
         return self.check(filename, select=select, exclude_rules=exclude_rules)
 
     def __init__(self, project_root: Path | str | None = None) -> None:
-        """Initialize the PythonChecker with all available rules.
+        """Initialize the PyChecker with all available rules.
 
         Args:
 
@@ -466,171 +445,3 @@ class PythonChecker:
         ignored_rules = self._parse_rules_string(rules_str)
 
         return rule_code in ignored_rules
-```
-
-</details>
-
-### ⚙️ Method `__call__`
-
-```python
-def __call__(self, filename: Path | str) -> list[str]
-```
-
-Check Python file for compliance with specified rules.
-
-Args:
-
-- `filename` (`Path | str`): Path to the Python file to check.
-- `select` (`set[str] | None`): Set of rule codes to include in checking. Defaults to `None` (all rules).
-- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
-
-Returns:
-
-- `list[str]`: List of error messages found during checking.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def __call__(
-        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
-    ) -> list[str]:
-        return self.check(filename, select=select, exclude_rules=exclude_rules)
-```
-
-</details>
-
-### ⚙️ Method `__init__`
-
-```python
-def __init__(self, project_root: Path | str | None = None) -> None
-```
-
-Initialize the PythonChecker with all available rules.
-
-Args:
-
-- `project_root` (`Path | str | None`): Root directory of the project for relative path calculation.
-  If `None`, will try to find Git root or use current working directory. Defaults to `None`.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def __init__(self, project_root: Path | str | None = None) -> None:
-        self.all_rules = set(self.RULES.keys())
-        self.project_root = self._determine_project_root(project_root)
-```
-
-</details>
-
-### ⚙️ Method `check`
-
-```python
-def check(self, filename: Path | str) -> list[str]
-```
-
-Check Python file for compliance with specified rules.
-
-Args:
-
-- `filename` (`Path | str`): Path to the Python file to check.
-- `select` (`set[str] | None`): Set of rule codes to include in checking. Defaults to `None` (all rules).
-- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
-
-Returns:
-
-- `list[str]`: List of error messages found during checking.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def check(
-        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
-    ) -> list[str]:
-        filename = Path(filename)
-        active_rules = self._determine_active_rules(select, exclude_rules)
-        return list(self._check_all_rules(filename, active_rules))
-```
-
-</details>
-
-### ⚙️ Method `check_directory`
-
-```python
-def check_directory(self, directory: Path | str) -> dict[str, list[str]]
-```
-
-Check all Python files in directory for compliance with specified rules.
-
-Args:
-
-- `directory` (`Path | str`): Directory path to scan for Python files.
-- `select` (`set[str] | None`): Set of rule codes to include in checking. Defaults to `None` (all rules).
-- `exclude_rules` (`set[str] | None`): Set of rule codes to exclude from checking. Defaults to `None`.
-- `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to ignore. Defaults to `None`.
-
-Returns:
-
-- `dict[str, list[str]]`: Mapping of file paths to lists of error messages.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def check_directory(
-        self,
-        directory: Path | str,
-        *,
-        select: set[str] | None = None,
-        exclude_rules: set[str] | None = None,
-        additional_ignore_patterns: list[str] | None = None,
-    ) -> dict[str, list[str]]:
-        results: dict[str, list[str]] = {}
-        for py_file in self.find_python_files(directory, additional_ignore_patterns):
-            errors = self.check(py_file, select=select, exclude_rules=exclude_rules)
-            if errors:
-                results[str(py_file)] = errors
-        return results
-```
-
-</details>
-
-### ⚙️ Method `find_python_files`
-
-```python
-def find_python_files(self, directory: Path | str, additional_ignore_patterns: list[str] | None = None) -> Generator[Path, None, None]
-```
-
-Find all Python files in directory, ignoring hidden folders.
-
-Args:
-
-- `directory` (`Path | str`): Directory path to scan.
-- `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to ignore. Defaults to `None`.
-
-Yields:
-
-- `Path`: Path to each Python file found.
-
-<details>
-<summary>Code:</summary>
-
-```python
-def find_python_files(
-        self, directory: Path | str, additional_ignore_patterns: list[str] | None = None
-    ) -> Generator[Path, None, None]:
-        directory = Path(directory)
-        if not directory.is_dir():
-            return
-        if h.file.should_ignore_path(directory, additional_ignore_patterns):
-            return
-        for item in directory.iterdir():
-            if item.is_file() and item.suffix.lower() == ".py":
-                yield item
-            elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
-                yield from self.find_python_files(item, additional_ignore_patterns)
-```
-
-</details>

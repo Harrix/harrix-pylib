@@ -1,4 +1,4 @@
-"""Tests for the PythonChecker class."""
+"""Tests for the PyChecker class."""
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -6,9 +6,9 @@ from tempfile import TemporaryDirectory
 import harrix_pylib as h
 
 
-def test_python_checker() -> None:
-    """Test PythonChecker for all rules and scenarios."""
-    checker = h.py_check.PythonChecker()
+def test_py_checker() -> None:
+    """Test PyChecker for all rules and scenarios."""
+    checker = h.py_check.PyChecker()
 
     with TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
