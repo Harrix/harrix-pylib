@@ -350,6 +350,15 @@ def test_md_checker() -> None:
         errors = checker.check(inline_code_no_double_file, select={"H009"})
         assert not [e for e in errors if "H009" in e], "H009 must not fire for line with inline code only"
 
+        # Double spaces only inside inline code must not trigger H009
+        double_inside_code_file = temp_path / "double_inside_code.md"
+        double_inside_code_file.write_text(
+            "---\nlang: en\n---\n\nStacked tails (`# noqa: RUF001  # ignore: HP001`) are removed.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(double_inside_code_file, select={"H009"})
+        assert not [e for e in errors if "H009" in e], "H009 must ignore double spaces inside inline code"
+
         # =====================================================================
         # H010: Tab character
         # =====================================================================
@@ -1100,6 +1109,15 @@ def test_md_checker() -> None:
         errors = checker.check(image_start_file, select={"H025"})
         assert not errors
 
+        # `![` mentioned inside inline code must not trigger H025
+        image_in_code_file = temp_path / "image_in_code.md"
+        image_in_code_file.write_text(
+            "---\nlang: en\n---\n\nCheck that image Markdown `![` is at the start of the line.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(image_in_code_file, select={"H025"})
+        assert not errors, "H025 must ignore ![ inside inline code"
+
         # =====================================================================
         # H031: Invalid or placeholder image alt text
         # =====================================================================
@@ -1167,6 +1185,15 @@ def test_md_checker() -> None:
         )
         errors = checker.check(numero_space_ok_file, select={"H027"})
         assert not errors
+
+        # `№` inside inline code must not trigger H027
+        numero_in_code_file = temp_path / "numero_in_code.md"
+        numero_in_code_file.write_text(
+            "---\nlang: ru\n---\n\nCheck that `№` is followed by a space, e.g. exclude `№` at EOL.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(numero_in_code_file, select={"H027"})
+        assert not errors, "H027 must ignore № inside inline code"
 
         # =====================================================================
         # H028: Question mark followed by period
@@ -1434,6 +1461,15 @@ def test_md_checker() -> None:
         )  # ignore: HP001
         errors = checker.check(unmatched_guillemet_file, select={"H043"})
         assert any("H043" in e for e in errors)
+
+        # Guillemets only inside inline code must not trigger H043
+        guillemet_in_code_file = temp_path / "guillemet_in_code.md"
+        guillemet_in_code_file.write_text(
+            "---\nlang: ru\n---\n\nAfter opening guillemet `«` (e.g. `«Ваша задача»`).\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(guillemet_in_code_file, select={"H043"})
+        assert not errors, "H043 must ignore guillemets inside inline code"
 
         # =====================================================================
         # H044: Missing space before % or °

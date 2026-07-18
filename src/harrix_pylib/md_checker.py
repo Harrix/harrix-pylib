@@ -663,10 +663,17 @@ class MdChecker:
             yield self._format_error("H036", self.RULES["H036"], filename, line_num=line_num, col=col)
 
     def _check_backslash_in_path(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for backslash in Markdown link/image paths (H039)."""
-        for match in self._BACKSLASH_PATH_PATTERN.finditer(line):
-            col = match.start(1) + 1
-            yield self._format_error("H039", self.RULES["H039"], filename, line_num=line_num, col=col)
+        """Check for backslash in Markdown link/image paths (H039).
+
+        Matches inside inline code are skipped.
+        """
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                for match in self._BACKSLASH_PATH_PATTERN.finditer(segment):
+                    col = offset + match.start(1) + 1
+                    yield self._format_error("H039", self.RULES["H039"], filename, line_num=line_num, col=col)
+            offset += len(segment)
 
     def _check_bare_url(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check for bare URL in prose (H041)."""
@@ -1063,8 +1070,9 @@ class MdChecker:
     ) -> Generator[str, None, None]:
         """Check for double spaces (H009).
 
-        Uses original line so that removal of inline code does not create
-        false double space when segments are concatenated.
+        Scans the original line segment-by-segment so that:
+        - double spaces inside inline code are ignored;
+        - concatenating prose after stripping inline code cannot invent a false `  `.
         """
         if "  " not in line:
             return
@@ -1077,8 +1085,13 @@ class MdChecker:
         if line.strip().startswith("|"):
             return
 
-        col = line.index("  ") + 1
-        yield self._format_error("H009", self.RULES["H009"], filename, line_num=line_num, col=col)
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code and "  " in segment:
+                col = offset + segment.index("  ") + 1
+                yield self._format_error("H009", self.RULES["H009"], filename, line_num=line_num, col=col)
+                return
+            offset += len(segment)
 
     def _check_file_level_rules(
         self,
@@ -1228,12 +1241,27 @@ class MdChecker:
                 yield self._format_error("H020", error_msg, filename, line_num=line_num, col=3)
 
     def _check_image_not_at_line_start(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check that image Markdown `![` is at the start of the trimmed line (H025)."""
-        trimmed = line.strip()
-        if "![" not in trimmed or trimmed.find("![") == 0:
-            return
-        col = line.find("![") + 1
-        yield self._format_error("H025", self.RULES["H025"], filename, line_num=line_num, col=col)
+        """Check that image Markdown `![` is at the start of the trimmed line (H025).
+
+        Occurrences of `![` inside inline code are ignored.
+        """
+        leading = len(line) - len(line.lstrip())
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                start = 0
+                while True:
+                    pos = segment.find("![", start)
+                    if pos < 0:
+                        break
+                    abs_pos = offset + pos
+                    if abs_pos != leading:
+                        yield self._format_error(
+                            "H025", self.RULES["H025"], filename, line_num=line_num, col=abs_pos + 1
+                        )
+                        return
+                    start = pos + 2
+            offset += len(segment)
 
     def _check_incorrect_words(
         self, filename: Path, line: str, clean_line: str, line_num: int
@@ -1591,10 +1619,16 @@ class MdChecker:
         """Check that `№` is followed by a space (H027).
 
         Uses a regex lookahead to match `№` only when the next character exists and is not a space,
-        which naturally excludes `№` at the end of a line.
+        which naturally excludes `№` at the end of a line. Matches inside inline code are skipped.
         """
-        for match in re.finditer(r"\u2116(?=[^ ])", line):  # № followed by a non-space character
-            yield self._format_error("H027", self.RULES["H027"], filename, line_num=line_num, col=match.start() + 1)
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                for match in re.finditer(r"\u2116(?=[^ ])", segment):  # № followed by a non-space character
+                    yield self._format_error(
+                        "H027", self.RULES["H027"], filename, line_num=line_num, col=offset + match.start() + 1
+                    )
+            offset += len(segment)
 
     def _check_punctuation_before_closing_guillemet(
         self, filename: Path, line: str, clean_line: str, line_num: int
@@ -1928,13 +1962,29 @@ class MdChecker:
     def _check_unmatched_guillemets(
         self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for unmatched guillemets on a line (H043)."""
-        open_count = line.count("\u00ab")
-        close_count = line.count("\u00bb")
-        if open_count == close_count:
+        """Check for unmatched guillemets on a line (H043).
+
+        Guillemets inside inline code are ignored.
+        """
+        open_count = 0
+        close_count = 0
+        first_col: int | None = None
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                for i, char in enumerate(segment):
+                    if char == "\u00ab":
+                        open_count += 1
+                        if first_col is None:
+                            first_col = offset + i + 1
+                    elif char == "\u00bb":
+                        close_count += 1
+                        if first_col is None:
+                            first_col = offset + i + 1
+            offset += len(segment)
+        if open_count == close_count or first_col is None:
             return
-        col = line.index("\u00ab") + 1 if "\u00ab" in line else line.index("\u00bb") + 1
-        yield self._format_error("H043", self.RULES["H043"], filename, line_num=line_num, col=col)
+        yield self._format_error("H043", self.RULES["H043"], filename, line_num=line_num, col=first_col)
 
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '&ast;' (H024).
