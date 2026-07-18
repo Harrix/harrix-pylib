@@ -1195,7 +1195,7 @@ class MdChecker:
     def _check_html_tags(
         self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for HTML tags in content (H019). Exception: <details> and <summary> are allowed.
+        """Check for HTML tags in content (H019). Exception: `<details>` and `<summary>` are allowed.
 
         Skips inline code segments (e.g. `` `<file>...</file>` `` in backticks).
         """
