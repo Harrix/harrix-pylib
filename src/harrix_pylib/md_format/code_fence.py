@@ -8,6 +8,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
+_MIN_FENCE_LENGTH = 3
+
+
+def _fence_marker_for_content(content: str, *, marker: str = "`") -> str:
+    """Return the shortest fence of `marker` chars that can wrap `content`."""
+    return marker * max(_MIN_FENCE_LENGTH, _max_marker_run(content, marker) + 1)
+
 
 def _identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
     """Yield each line with a flag indicating fenced code-block membership."""
@@ -63,3 +70,16 @@ def _identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]
 
     if current_text:
         yield current_text, False
+
+
+def _max_marker_run(text: str, marker: str) -> int:
+    """Return the longest run of `marker` characters in `text`."""
+    max_run = 0
+    current = 0
+    for char in text:
+        if char == marker:
+            current += 1
+            max_run = max(max_run, current)
+        else:
+            current = 0
+    return max_run

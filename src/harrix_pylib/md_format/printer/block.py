@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from harrix_pylib.md_format.code_fence import _fence_marker_for_content
 from harrix_pylib.md_format.hard_break_format import _HardBreakStyles
 from harrix_pylib.md_format.prose_wrap import (
     _wrap_prose,
@@ -419,8 +420,10 @@ def _render_blockquote(
 def _render_fence(token: Token) -> str:
     """Render a fenced code block token to Markdown."""
     info = (token.info or "").strip()
-    fence = "```"
     content = token.content.strip("\n")
+    markup = token.markup or "```"
+    marker = markup[0] if markup else "`"
+    fence = _fence_marker_for_content(content, marker=marker)
     return f"{fence}{info}\n{content}\n{fence}\n"
 
 

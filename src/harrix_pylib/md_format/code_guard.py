@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from harrix_pylib.md_format.code_fence import _identify_code_blocks
+from harrix_pylib.md_format.code_fence import _fence_marker_for_content, _identify_code_blocks
 from harrix_pylib.md_format.text_lines import _join_lines, _make_placeholder, _split_lines
 
 if TYPE_CHECKING:
@@ -13,6 +14,8 @@ if TYPE_CHECKING:
 
 PLACEHOLDER_PREFIX = "HSKMDFMTCODE"
 _MIN_FENCED_BLOCK_LINES = 2
+_FENCE_OPEN_RE = re.compile(r"^(\s*)(`{3,}|~{3,})(.*)$")
+_FENCE_CLOSE_RE = re.compile(r"^(\s*)(`{3,}|~{3,})[ \t]*$")
 
 
 @dataclass(frozen=True)
@@ -65,13 +68,39 @@ def _extract_code_blocks(body: str) -> tuple[str, list[_CodeBlock]]:
 
 
 def _format_markdown_fence_block(block_lines: list[str], *, _options: _FormatOptions | None) -> list[str]:
-    """Return fenced blocks verbatim; do not recursively format `markdown` fences."""
-    return block_lines
+    """Normalize fence length; do not recursively format `markdown` fence bodies."""
+    return _normalize_fence_length(block_lines)
 
 
 def _leading_whitespace(line: str) -> str:
     """Return leading whitespace from a line."""
     return line[: len(line) - len(line.lstrip())]
+
+
+def _normalize_fence_length(block_lines: list[str]) -> list[str]:
+    """Shrink or grow fence markers to the shortest length that still wraps content.
+
+    Needed length is `max(3, longest_marker_run_in_content + 1)`. Extra backticks or
+    tildes on the opening/closing lines are removed; fences that are too short for
+    nested fences inside the body are lengthened.
+    """
+    if len(block_lines) < _MIN_FENCED_BLOCK_LINES:
+        return block_lines
+
+    open_match = _FENCE_OPEN_RE.match(block_lines[0])
+    close_match = _FENCE_CLOSE_RE.match(block_lines[-1])
+    if open_match is None or close_match is None:
+        return block_lines
+
+    open_indent, open_fence, info = open_match.group(1), open_match.group(2), open_match.group(3)
+    close_indent, close_fence = close_match.group(1), close_match.group(2)
+    marker = open_fence[0]
+    if close_fence[0] != marker:
+        return block_lines
+
+    content = "\n".join(block_lines[1:-1])
+    fence = _fence_marker_for_content(content, marker=marker)
+    return [f"{open_indent}{fence}{info}", *block_lines[1:-1], f"{close_indent}{fence}"]
 
 
 def _reindent_line(line: str, base_indent: str, current_indent: str) -> str:

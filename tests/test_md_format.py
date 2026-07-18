@@ -812,8 +812,27 @@ def test_format_markdown_content_trims_trailing_blank_line_inside_fenced_block()
         "````\n"
     )
     result = _format_markdown(source).replace("\r\n", "\n")
-    assert result.endswith("- `uv sync --upgrade` — update all project libraries.\n````\n")
-    assert "libraries.\n\n````" not in result
+    assert result.endswith("- `uv sync --upgrade` — update all project libraries.\n```\n")
+    assert "libraries.\n\n```" not in result
+    assert "````" not in result
+
+
+def test_format_markdown_content_shortens_unnecessary_long_fence() -> None:
+    source = "````python\nx = 2\n````\n"
+    result = _format_markdown(source, end_of_line="lf")
+    assert result == "```python\nx = 2\n```\n"
+
+
+def test_format_markdown_content_shortens_fence_when_nested_uses_fewer_backticks() -> None:
+    source = "`````python\nx = 2\n\n```text\ntext\n```\n`````\n"
+    result = _format_markdown(source, end_of_line="lf")
+    assert result == "````python\nx = 2\n\n```text\ntext\n```\n````\n"
+
+
+def test_format_markdown_content_keeps_fence_needed_for_nested_fence() -> None:
+    source = "````python\nx = 2\n\n```text\ntext\n```\n````\n"
+    result = _format_markdown(source, end_of_line="lf")
+    assert result == source
 
 
 def test_format_markdown_content_keeps_blank_line_in_empty_fenced_block() -> None:
