@@ -1118,6 +1118,27 @@ def test_md_checker() -> None:
         errors = checker.check(image_in_code_file, select={"H025"})
         assert not errors, "H025 must ignore ![ inside inline code"
 
+        # Several images in a row (badge line) must not trigger H025
+        image_row_file = temp_path / "image_row.md"
+        image_row_file.write_text(
+            "---\nlang: en\n---\n\n"
+            "![GitHub](https://img.shields.io/badge/GitHub-x-blue) "
+            "![License](https://img.shields.io/github/license/Harrix/x) "
+            "![PyPI](https://img.shields.io/pypi/v/x)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(image_row_file, select={"H025"})
+        assert not errors, "H025 must allow several images in a row"
+
+        # Image after prose must still trigger H025
+        image_after_prose_file = temp_path / "image_after_prose.md"
+        image_after_prose_file.write_text(
+            "---\nlang: en\n---\n\n![One](a.png) and ![Two](b.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(image_after_prose_file, select={"H025"})
+        assert any("H025" in e for e in errors)
+
         # =====================================================================
         # H031: Invalid or placeholder image alt text
         # =====================================================================

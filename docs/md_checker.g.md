@@ -55,7 +55,7 @@ Rules:
 - **H022** - Non-breaking space character found.
 - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
 - **H024** - Latin "x" or Cyrillic "x" used instead of multiplication sign "x".
-- **H025** - Image Markdown marker (exclamation + bracket) found not at start of line.
+- **H025** - Image Markdown not at start of line (several images in a row are allowed).
 - **H026** - Horizontal bar `―` (dialogue dash) should not be used.
 - **H027** - Space required after the numero sign (U+2116).
 - **H028** - Question mark followed by period `?.`.
@@ -145,6 +145,9 @@ class MdChecker:
 
     # Backslash in markdown link/image URL (H039)
     _BACKSLASH_PATH_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"\]\(([^)]*\\[^)]*)\)")
+
+    # Complete Markdown image (inline or reference) for H025
+    _IMAGE_MARKDOWN_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[[^\]]*\](?:\([^)]*\)|\[[^\]]*\])")
 
     # Bare URL in prose (H041)
     _BARE_URL_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<![(<\[])(https?://[^\s<>)\]]+)")
@@ -1258,27 +1261,39 @@ class MdChecker:
                 yield self._format_error("H020", error_msg, filename, line_num=line_num, col=3)
 
     def _check_image_not_at_line_start(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check that image Markdown `![` is at the start of the trimmed line (H025).
+        """Check that image Markdown starts the trimmed line (H025).
 
-        Occurrences of `![` inside inline code are ignored.
+        A line may contain several images in a row (e.g. badge rows), separated only by
+        whitespace. Occurrences of `![` inside inline code are ignored.
         """
-        leading = len(line) - len(line.lstrip())
-        offset = 0
+        masked_chars: list[str] = []
         for segment, in_code in h.md.identify_code_blocks_line(line):
-            if not in_code:
-                start = 0
-                while True:
-                    pos = segment.find("![", start)
-                    if pos < 0:
-                        break
-                    abs_pos = offset + pos
-                    if abs_pos != leading:
-                        yield self._format_error(
-                            "H025", self.RULES["H025"], filename, line_num=line_num, col=abs_pos + 1
-                        )
-                        return
-                    start = pos + 2
-            offset += len(segment)
+            masked_chars.append(" " * len(segment) if in_code else segment)
+        masked = "".join(masked_chars)
+
+        images = list(self._IMAGE_MARKDOWN_PATTERN.finditer(masked))
+        leading = len(line) - len(line.lstrip())
+
+        if not images:
+            bare = masked.find("![")
+            if bare >= 0 and bare != leading:
+                yield self._format_error("H025", self.RULES["H025"], filename, line_num=line_num, col=bare + 1)
+            return
+
+        if images[0].start() != leading:
+            yield self._format_error("H025", self.RULES["H025"], filename, line_num=line_num, col=images[0].start() + 1)
+            return
+
+        cursor = leading
+        for match in images:
+            if masked[cursor : match.start()].strip():
+                yield self._format_error("H025", self.RULES["H025"], filename, line_num=line_num, col=match.start() + 1)
+                return
+            cursor = match.end()
+
+        bare_after = masked.find("![", cursor)
+        if bare_after >= 0 and masked[cursor:bare_after].strip():
+            yield self._format_error("H025", self.RULES["H025"], filename, line_num=line_num, col=bare_after + 1)
 
     def _check_incorrect_words(
         self, filename: Path, line: str, clean_line: str, line_num: int
