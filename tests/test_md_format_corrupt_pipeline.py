@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import harrix_pylib as h
-from harrix_pylib.md_format import MarkdownFormatter
+from harrix_pylib.md_format import MdFormatter
 
 SOURCE = """---
 author: Anton Sergienko
@@ -34,8 +34,8 @@ def cleanup() -> None:
 def test_format_yaml_and_markdown_on_r_double_crlf_file(tmp_path: Path) -> None:
     path = tmp_path / "note.md"
     path.write_bytes(SOURCE.replace("\n", "\r\r\n").encode("utf-8"))
-    text = MarkdownFormatter.read_markdown_text(path)
-    formatted = MarkdownFormatter().format(h.md.format_yaml_content(text))
+    text = MdFormatter.read_markdown_text(path)
+    formatted = MdFormatter().format(h.md.format_yaml_content(text))
     data = formatted.encode("utf-8")
     assert data.count(b"\r\r\n") == 0
     assert "# Title\r\n\r\n## Sub" in formatted

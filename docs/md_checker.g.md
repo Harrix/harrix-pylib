@@ -1,84 +1,101 @@
-"""Module providing functionality for checking Markdown files for compliance with specified rules."""
+---
+author: Anton Sergienko
+author-email: anton.b.sergienko@gmail.com
+lang: en
+---
 
-import re
-from collections.abc import Generator
-from pathlib import Path
-from typing import ClassVar
-from urllib.parse import unquote
+# 📄 File `md_checker.py`
 
-import yaml
+<details>
+<summary>📖 Contents ⬇️</summary>
 
-import harrix_pylib as h
-from harrix_pylib.abbreviation_data import load_abbreviation_data, mask_abbreviations
+## Contents
 
+- [🏛️ Class `MdChecker`](#️-class-mdchecker)
+  - [⚙️ Method `__call__`](#️-method-__call__)
+  - [⚙️ Method `__init__`](#️-method-__init__)
+  - [⚙️ Method `check`](#️-method-check)
+  - [⚙️ Method `check_directory`](#️-method-check_directory)
+  - [⚙️ Method `find_markdown_files`](#️-method-find_markdown_files)
 
-class MarkdownChecker:
-    """Class for checking Markdown files for compliance with specified rules.
+</details>
 
-    Rules:
+## 🏛️ Class `MdChecker`
 
-    - **H001** - Presence of a space in the Markdown file name.
-    - **H002** - Presence of a space in the path to the Markdown file.
-    - **H003** - YAML is missing (except `README.md` and `LICENSE.md`).
-    - **H004** - The lang field is missing in YAML.
-    - **H005** - In YAML, lang is not set to `en` or `ru`.
-    - **H006** - Incorrect word form used (e.g., `markdown` instead of `Markdown`).
-    - **H007** - Incorrect code block language identifier.
-    - **H008** - Trailing whitespace at end of line.
-    - **H009** - Double spaces in line (not in code blocks).
-    - **H010** - Tab character found.
-    - **H011** - No empty line at end of file.
-    - **H012** - Two consecutive empty lines.
-    - **H013** - Missing colon before code block.
-    - **H014** - Missing colon before image.
-    - **H015** - Space before punctuation mark.
-    - **H016** - Incorrect dash/hyphen usage.
-    - **H017** - Three dots instead of ellipsis character.
-    - **H018** - Curly/straight quotes instead of angle quotes.
-    - **H019** - HTML tags in Markdown content.
-    - **H020** - Image caption starts with lowercase letter.
-    - **H021** - Lowercase letter after sentence-ending punctuation (dotted abbreviations from packaged
-      JSON databases are allowed; not gated by YAML `lang`).
-    - **H022** - Non-breaking space character found.
-    - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
-    - **H024** - Latin "x" or Cyrillic "x" used instead of multiplication sign "x".
-    - **H025** - Image Markdown marker (exclamation + bracket) found not at start of line.
-    - **H026** - Horizontal bar `―` (dialogue dash) should not be used.
-    - **H027** - Space required after the numero sign (U+2116).
-    - **H028** - Question mark followed by period `?.`.
-    - **H029** - Space required after colon in inline emphasis.
-    - **H030** - Colon outside inline emphasis (should be inside when line continues after colon).
-    - **H031** - Invalid or placeholder image alt text (empty, editor placeholder, or lowercase start).
-    - **H032** - Two consecutive dots (typo for period or incomplete ellipsis; `../` paths are allowed).
-    - **H033** - Unclosed fenced code block.
-    - **H034** - Code fence without language identifier.
-    - **H035** - Missing figure caption after image.
-    - **H036** - Missing space after `#` in ATX heading.
-    - **H037** - Skipped heading level (e.g. H1 to H3 without H2).
-    - **H038** - Multiple H1 headings in one file.
-    - **H039** - Backslash in local Markdown path.
-    - **H040** - `lang` field does not match document language.
-    - **H041** - Bare URL in text (not wrapped in `<>` or link).
-    - **H042** - Invisible Unicode character found.
-    - **H043** - Unmatched guillemet on line.
-    - **H044** - Missing space before `%` or `°` (Russian typography).
-    - **H045** - Broken relative Markdown link or image.
-    - **H046** - Wrong line endings (must match nearest `.gitattributes` `eol=`, else CRLF).
-    - **H047** - BOM at start of file.
-    - **H048** - Unicode replacement character U+FFFD found.
-    - **H049** - Mixed Latin and Cyrillic letters in one word.
-    - **H050** - Missing space after punctuation mark before a letter.
-    - **H051** - Malformed punctuation sequence.
-    - **H052** - Heading level deeper than H6.
-    - **H053** - Unbalanced `<details>` / `<summary>` tags.
-    - **H054** - Repeated adjacent word.
-    - **H055** - Broken internal fragment link.
-    - **H056** - Unbalanced inline code in table cell.
-    - **H057** - Trailing period at end of ATX heading.
-    - **H058** - Punctuation (`.`, `,`, `;`, `:`) immediately before a closing guillemet
-      (Russian typography; `!` / `?` / `…` before the closer are allowed; single-letter abbreviations).
+```python
+class MdChecker
+```
 
-    """
+Class for checking Markdown files for compliance with specified rules.
+
+Rules:
+
+- **H001** - Presence of a space in the Markdown file name.
+- **H002** - Presence of a space in the path to the Markdown file.
+- **H003** - YAML is missing (except `README.md` and `LICENSE.md`).
+- **H004** - The lang field is missing in YAML.
+- **H005** - In YAML, lang is not set to `en` or `ru`.
+- **H006** - Incorrect word form used (e.g., `markdown` instead of `Markdown`).
+- **H007** - Incorrect code block language identifier.
+- **H008** - Trailing whitespace at end of line.
+- **H009** - Double spaces in line (not in code blocks).
+- **H010** - Tab character found.
+- **H011** - No empty line at end of file.
+- **H012** - Two consecutive empty lines.
+- **H013** - Missing colon before code block.
+- **H014** - Missing colon before image.
+- **H015** - Space before punctuation mark.
+- **H016** - Incorrect dash/hyphen usage.
+- **H017** - Three dots instead of ellipsis character.
+- **H018** - Curly/straight quotes instead of angle quotes.
+- **H019** - HTML tags in Markdown content.
+- **H020** - Image caption starts with lowercase letter.
+- **H021** - Lowercase letter after sentence-ending punctuation (dotted abbreviations from packaged
+  JSON databases are allowed; not gated by YAML `lang`).
+- **H022** - Non-breaking space character found.
+- **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
+- **H024** - Latin "x" or Cyrillic "x" used instead of multiplication sign "x".
+- **H025** - Image Markdown marker (exclamation + bracket) found not at start of line.
+- **H026** - Horizontal bar `―` (dialogue dash) should not be used.
+- **H027** - Space required after the numero sign (U+2116).
+- **H028** - Question mark followed by period `?.`.
+- **H029** - Space required after colon in inline emphasis.
+- **H030** - Colon outside inline emphasis (should be inside when line continues after colon).
+- **H031** - Invalid or placeholder image alt text (empty, editor placeholder, or lowercase start).
+- **H032** - Two consecutive dots (typo for period or incomplete ellipsis; `../` paths are allowed).
+- **H033** - Unclosed fenced code block.
+- **H034** - Code fence without language identifier.
+- **H035** - Missing figure caption after image.
+- **H036** - Missing space after `#` in ATX heading.
+- **H037** - Skipped heading level (e.g. H1 to H3 without H2).
+- **H038** - Multiple H1 headings in one file.
+- **H039** - Backslash in local Markdown path.
+- **H040** - `lang` field does not match document language.
+- **H041** - Bare URL in text (not wrapped in `<>` or link).
+- **H042** - Invisible Unicode character found.
+- **H043** - Unmatched guillemet on line.
+- **H044** - Missing space before `%` or `°` (Russian typography).
+- **H045** - Broken relative Markdown link or image.
+- **H046** - Wrong line endings (must match nearest `.gitattributes` `eol=`, else CRLF).
+- **H047** - BOM at start of file.
+- **H048** - Unicode replacement character U+FFFD found.
+- **H049** - Mixed Latin and Cyrillic letters in one word.
+- **H050** - Missing space after punctuation mark before a letter.
+- **H051** - Malformed punctuation sequence.
+- **H052** - Heading level deeper than H6.
+- **H053** - Unbalanced `<details>` / `<summary>` tags.
+- **H054** - Repeated adjacent word.
+- **H055** - Broken internal fragment link.
+- **H056** - Unbalanced inline code in table cell.
+- **H057** - Trailing period at end of ATX heading.
+- **H058** - Punctuation (`.`, `,`, `;`, `:`) immediately before a closing guillemet
+  (Russian typography; `!` / `?` / `…` before the closer are allowed; single-letter abbreviations).
+
+<details>
+<summary>Code:</summary>
+
+````python
+class MdChecker:
 
     # Minimum length for a line to be treated as italic-only caption (e.g. _text_)
     _MIN_ITALIC_CAPTION_LEN: ClassVar[int] = 2
@@ -507,7 +524,7 @@ class MarkdownChecker:
         return self.check(filename, select=select, exclude_rules=exclude_rules)
 
     def __init__(self, project_root: Path | str | None = None) -> None:
-        """Initialize the MarkdownChecker with all available rules."""
+        """Initialize the MdChecker with all available rules."""
         self.all_rules = set(self.RULES.keys())
         self.project_root = self._determine_project_root(project_root)
 
@@ -2242,3 +2259,126 @@ class MarkdownChecker:
                 start = i + 1
         cells.append((line[start:], start))
         return cells
+````
+
+</details>
+
+### ⚙️ Method `__call__`
+
+```python
+def __call__(self, filename: Path | str) -> list[str]
+```
+
+Check Markdown file for compliance with specified rules.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def __call__(
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
+        return self.check(filename, select=select, exclude_rules=exclude_rules)
+```
+
+</details>
+
+### ⚙️ Method `__init__`
+
+```python
+def __init__(self, project_root: Path | str | None = None) -> None
+```
+
+Initialize the MdChecker with all available rules.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def __init__(self, project_root: Path | str | None = None) -> None:
+        self.all_rules = set(self.RULES.keys())
+        self.project_root = self._determine_project_root(project_root)
+```
+
+</details>
+
+### ⚙️ Method `check`
+
+```python
+def check(self, filename: Path | str) -> list[str]
+```
+
+Check Markdown file for compliance with specified rules.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def check(
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
+        filename = Path(filename)
+        active_rules = self._determine_active_rules(select, exclude_rules)
+        return list(self._check_all_rules(filename, active_rules))
+```
+
+</details>
+
+### ⚙️ Method `check_directory`
+
+```python
+def check_directory(self, directory: Path | str) -> dict[str, list[str]]
+```
+
+Check all Markdown files in directory for compliance with specified rules.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def check_directory(
+        self,
+        directory: Path | str,
+        *,
+        select: set[str] | None = None,
+        exclude_rules: set[str] | None = None,
+        additional_ignore_patterns: list[str] | None = None,
+    ) -> dict[str, list[str]]:
+        results = {}
+        for md_file in self.find_markdown_files(directory, additional_ignore_patterns):
+            errors = self.check(md_file, select=select, exclude_rules=exclude_rules)
+            if errors:
+                results[str(md_file)] = errors
+        return results
+```
+
+</details>
+
+### ⚙️ Method `find_markdown_files`
+
+```python
+def find_markdown_files(self, directory: Path | str, additional_ignore_patterns: list[str] | None = None) -> Generator[Path, None, None]
+```
+
+Find all Markdown files in directory, ignoring hidden folders.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def find_markdown_files(
+        self, directory: Path | str, additional_ignore_patterns: list[str] | None = None
+    ) -> Generator[Path, None, None]:
+        directory = Path(directory)
+        if not directory.is_dir():
+            return
+        if h.file.should_ignore_path(directory, additional_ignore_patterns):
+            return
+        for item in directory.iterdir():
+            if item.is_file() and item.suffix.lower() in {".md", ".markdown"}:
+                yield item
+            elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
+                yield from self.find_markdown_files(item, additional_ignore_patterns)
+```
+
+</details>

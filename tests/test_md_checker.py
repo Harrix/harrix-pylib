@@ -1,4 +1,4 @@
-"""Tests for the MarkdownChecker class."""
+"""Tests for the MdChecker class."""
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -8,9 +8,9 @@ import harrix_pylib as h
 EXPECTED_H007_ERRORS = 2
 
 
-def test_markdown_checker() -> None:
-    """Test MarkdownChecker for all rules and scenarios."""
-    checker = h.md_check.MarkdownChecker()
+def test_md_checker() -> None:
+    """Test MdChecker for all rules and scenarios."""
+    checker = h.md_check.MdChecker()
 
     with TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)

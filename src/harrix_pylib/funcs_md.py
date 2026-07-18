@@ -15,7 +15,7 @@ from requests import RequestException
 import harrix_pylib as h
 from harrix_pylib.md_format.code_fence import _identify_code_blocks as _md_identify_code_blocks
 from harrix_pylib.md_format.code_fence import _identify_code_blocks_line as _md_identify_code_blocks_line
-from harrix_pylib.md_format.formatter import MarkdownFormatter
+from harrix_pylib.md_format.formatter import MdFormatter
 from harrix_pylib.md_format.front_matter import _split_front_matter
 
 # Markdown ATX heading levels: H1-H6; TOC uses H2-H6
@@ -1188,9 +1188,7 @@ def format_markdown(
     - `str`: Status message.
 
     """
-    return MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format_file(
-        filename
-    )
+    return MdFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format_file(filename)
 
 
 def format_markdown_content(
@@ -1214,9 +1212,7 @@ def format_markdown_content(
     - `str`: Formatted Markdown text.
 
     """
-    return MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format(
-        markdown_text
-    )
+    return MdFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format(markdown_text)
 
 
 def format_markdown_folder(
@@ -1236,9 +1232,7 @@ def format_markdown_folder(
     - `str`: Newline-separated status messages.
 
     """
-    return MarkdownFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format_folder(
-        folder
-    )
+    return MdFormatter(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width).format_folder(folder)
 
 
 def format_quotes_as_markdown_content(markdown_text: str) -> str:
@@ -1340,7 +1334,7 @@ def format_yaml(filename: Path | str) -> str:
 
     """
     filename = Path(filename)
-    document = MarkdownFormatter.read_markdown_text(filename)
+    document = MdFormatter.read_markdown_text(filename)
     document_new = format_yaml_content(document)
 
     if document != document_new:
@@ -1378,7 +1372,7 @@ def format_yaml_content(markdown_text: str) -> str:
     ```
 
     """
-    markdown_text = MarkdownFormatter.normalize_line_endings(markdown_text.lstrip("\ufeff"))
+    markdown_text = MdFormatter.normalize_line_endings(markdown_text.lstrip("\ufeff"))
     yaml_md, content_md = split_yaml_content(markdown_text)
 
     # If no YAML front matter exists, return original text

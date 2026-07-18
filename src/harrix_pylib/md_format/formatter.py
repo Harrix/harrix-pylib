@@ -36,7 +36,7 @@ from harrix_pylib.md_format.task_list_format import _extract_task_list_markers
 _EMPTY_FENCE_RE = re.compile(r"(?m)^(?P<indent>[ \t]*)(?P<fence>`{3,}|~{3,})[ \t]*\n(?P=indent)(?P=fence)[ \t]*$")
 
 
-class MarkdownFormatter:
+class MdFormatter:
     """Format Markdown text inspired by Prettier Markdown parser."""
 
     def __call__(self, text: str) -> str:
@@ -50,7 +50,7 @@ class MarkdownFormatter:
         prose_wrap: str = "preserve",
         print_width: int = 80,
     ) -> None:
-        """Initialize the MarkdownFormatter.
+        """Initialize the MdFormatter.
 
         Args:
 
@@ -151,7 +151,7 @@ class MarkdownFormatter:
         data = path.read_bytes()
         if data.startswith(b"\xef\xbb\xbf"):
             data = data[3:]
-        return MarkdownFormatter.normalize_line_endings(data.decode("utf-8"))
+        return MdFormatter.normalize_line_endings(data.decode("utf-8"))
 
     def _needs_end_of_line_rewrite(self, raw: bytes) -> bool:
         """Return True when on-disk endings disagree with `end_of_line`."""
@@ -172,7 +172,7 @@ def _ensure_blank_line_in_empty_fences(body: str) -> str:
 
 def _format_with_options(text: str, options: _FormatOptions) -> str:
     """Run the full extract-parse-render-restore formatting pipeline."""
-    normalized = MarkdownFormatter.normalize_line_endings(text)
+    normalized = MdFormatter.normalize_line_endings(text)
     front_matter, body = _split_front_matter(normalized)
     if front_matter:
         front_matter = _compact_front_matter(front_matter)
@@ -229,7 +229,7 @@ def _format_with_options(text: str, options: _FormatOptions) -> str:
 
 def _normalize_end_of_line(text: str, end_of_line: str) -> str:
     """Convert normalized LF text to the requested line-ending style."""
-    normalized = MarkdownFormatter.normalize_line_endings(text)
+    normalized = MdFormatter.normalize_line_endings(text)
     if end_of_line == "lf":
         return normalized
     if end_of_line == "crlf":

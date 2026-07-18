@@ -1,4 +1,4 @@
-"""Load packaged abbreviation databases for MarkdownChecker (H006 / H021)."""
+"""Load packaged abbreviation databases for MdChecker (H006 / H021)."""
 
 from __future__ import annotations
 

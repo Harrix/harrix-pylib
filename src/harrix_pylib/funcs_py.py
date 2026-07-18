@@ -39,7 +39,7 @@ def check_python_docstring_markdown_errors(
     """Check docstring Markdown typography for Python sources; errors point at `.py` locations.
 
     Generates ephemeral docs (including private names when `include_private` is true), runs
-    MarkdownChecker, and remaps findings to Python path/line/column. Does not modify the project.
+    MdChecker, and remaps findings to Python path/line/column. Does not modify the project.
     """
     folder = Path(folder)
     src_folder = folder / "src"
@@ -48,7 +48,7 @@ def check_python_docstring_markdown_errors(
 
     # File-level / front-matter / EOF rules do not apply to ephemeral docstring extracts.
     exclude_rules = {"H001", "H002", "H003", "H004", "H005", "H011", "H046", "H047"}
-    checker = h.md_check.MarkdownChecker()
+    checker = h.md_check.MdChecker()
     errors: list[str] = []
 
     with tempfile.TemporaryDirectory(prefix="hsk-py-docstring-md-") as temp_dir:
@@ -928,7 +928,7 @@ def lint_and_fix_python_code(py_content: str) -> str:
 
 
 def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) -> str:
-    """Rewrite a MarkdownChecker error to the corresponding Python source location."""
+    """Rewrite a MdChecker error to the corresponding Python source location."""
     match = _MD_DOCS_CODE_RE.search(error)
     if match is None:
         return error

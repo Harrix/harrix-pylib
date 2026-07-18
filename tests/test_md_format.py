@@ -7,7 +7,7 @@ from typing import TypedDict
 
 import pytest
 
-from harrix_pylib.md_format import MarkdownFormatter
+from harrix_pylib.md_format import MdFormatter
 from harrix_pylib.md_format.front_matter import _prepend_markdown_header
 from harrix_pylib.md_format.table_format import _text_display_width
 
@@ -52,7 +52,7 @@ def _format_markdown(
     prose_wrap: str = "preserve",
     print_width: int = 80,
 ) -> str:
-    return MarkdownFormatter(
+    return MdFormatter(
         end_of_line=end_of_line,
         prose_wrap=prose_wrap,
         print_width=print_width,
@@ -503,21 +503,21 @@ def test_format_file_writes_requested_end_of_line(tmp_path: Path) -> None:
     source = "---\nlang: en\n---\n\n# Title\n\nParagraph.\n"
     lf_file = tmp_path / "lf.md"
     lf_file.write_text(source, encoding="utf-8", newline="\n")
-    MarkdownFormatter(end_of_line="lf").format_file(lf_file)
+    MdFormatter(end_of_line="lf").format_file(lf_file)
     lf_raw = lf_file.read_bytes()
     assert b"\r\n" not in lf_raw
     assert b"\n" in lf_raw
 
     crlf_file = tmp_path / "crlf.md"
     crlf_file.write_text(source, encoding="utf-8", newline="\n")
-    MarkdownFormatter(end_of_line="crlf").format_file(crlf_file)
+    MdFormatter(end_of_line="crlf").format_file(crlf_file)
     crlf_raw = crlf_file.read_bytes()
     assert b"\r\n" in crlf_raw
 
     # Content-identical after normalize: still rewrite CRLF → LF when requested
     crlf_to_lf = tmp_path / "crlf_to_lf.md"
     crlf_to_lf.write_bytes(b"---\r\nlang: en\r\n---\r\n\r\n# Title\r\n\r\nParagraph.\r\n")
-    msg = MarkdownFormatter(end_of_line="lf").format_file(crlf_to_lf)
+    msg = MdFormatter(end_of_line="lf").format_file(crlf_to_lf)
     assert "applied" in msg
     assert b"\r\n" not in crlf_to_lf.read_bytes()
 
@@ -547,13 +547,13 @@ def test_read_markdown_text_handles_r_double_crlf_on_disk(tmp_path: Path) -> Non
     source = "# Title\n\n## Sub\n"
     path = tmp_path / "note.md"
     path.write_bytes(source.replace("\n", "\r\r\n").encode("utf-8"))
-    result = _format_markdown(MarkdownFormatter.read_markdown_text(path))
+    result = _format_markdown(MdFormatter.read_markdown_text(path))
     assert result.count("\r\r\n") == 0
     assert "# Title\r\n\r\n## Sub" in result
 
 
 def test_markdown_formatter_callable_reuses_options() -> None:
-    formatter = MarkdownFormatter(end_of_line="lf")
+    formatter = MdFormatter(end_of_line="lf")
     assert formatter("# One\n") == "# One\n"
     assert formatter("# Two\n") == "# Two\n"
     assert formatter("# Three\n") == formatter.format("# Three\n")
@@ -562,14 +562,14 @@ def test_markdown_formatter_callable_reuses_options() -> None:
 def test_format_markdown_file(tmp_path: Path) -> None:
     source = tmp_path / "note.md"
     source.write_text("# Title\n\n", encoding="utf-8")
-    message = MarkdownFormatter().format_file(source)
+    message = MdFormatter().format_file(source)
     assert "applied" in message or "not changed" in message
 
 
 def test_format_markdown_folder(tmp_path: Path) -> None:
     (tmp_path / "one.md").write_text("# One\n", encoding="utf-8")
     (tmp_path / "two.md").write_text("# Two\n", encoding="utf-8")
-    result = MarkdownFormatter().format_folder(tmp_path)
+    result = MdFormatter().format_folder(tmp_path)
     assert "one.md" in result or "applied" in result.lower() or "not changed" in result.lower()
 
 

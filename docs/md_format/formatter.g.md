@@ -11,7 +11,7 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `MarkdownFormatter`](#️-class-markdownformatter)
+- [🏛️ Class `MdFormatter`](#️-class-mdformatter)
   - [⚙️ Method `__call__`](#️-method-__call__)
   - [⚙️ Method `__init__`](#️-method-__init__)
   - [⚙️ Method `format`](#️-method-format)
@@ -22,10 +22,10 @@ lang: en
 
 </details>
 
-## 🏛️ Class `MarkdownFormatter`
+## 🏛️ Class `MdFormatter`
 
 ```python
-class MarkdownFormatter
+class MdFormatter
 ```
 
 Format Markdown text inspired by Prettier Markdown parser.
@@ -34,7 +34,7 @@ Format Markdown text inspired by Prettier Markdown parser.
 <summary>Code:</summary>
 
 ```python
-class MarkdownFormatter:
+class MdFormatter:
 
     def __call__(self, text: str) -> str:
         """Format Markdown text."""
@@ -47,7 +47,7 @@ class MarkdownFormatter:
         prose_wrap: str = "preserve",
         print_width: int = 80,
     ) -> None:
-        """Initialize the MarkdownFormatter.
+        """Initialize the MdFormatter.
 
         Args:
 
@@ -148,7 +148,7 @@ class MarkdownFormatter:
         data = path.read_bytes()
         if data.startswith(b"\xef\xbb\xbf"):
             data = data[3:]
-        return MarkdownFormatter.normalize_line_endings(data.decode("utf-8"))
+        return MdFormatter.normalize_line_endings(data.decode("utf-8"))
 
     def _needs_end_of_line_rewrite(self, raw: bytes) -> bool:
         """Return True when on-disk endings disagree with `end_of_line`."""
@@ -188,7 +188,7 @@ def __call__(self, text: str) -> str:
 def __init__(self) -> None
 ```
 
-Initialize the MarkdownFormatter.
+Initialize the MdFormatter.
 
 Args:
 
@@ -357,7 +357,7 @@ def read_markdown_text(filename: Path | str) -> str:
         data = path.read_bytes()
         if data.startswith(b"\xef\xbb\xbf"):
             data = data[3:]
-        return MarkdownFormatter.normalize_line_endings(data.decode("utf-8"))
+        return MdFormatter.normalize_line_endings(data.decode("utf-8"))
 ```
 
 </details>

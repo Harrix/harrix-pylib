@@ -27,7 +27,7 @@ lang: en
   - [📄 File `funcs_md.py`](#-file-funcs_mdpy)
   - [📄 File `funcs_py.py`](#-file-funcs_pypy)
   - [📄 File `img_tools.py`](#-file-img_toolspy)
-  - [📄 File `markdown_checker.py`](#-file-markdown_checkerpy)
+  - [📄 File `md_checker.py`](#-file-md_checkerpy)
   - [📄 File `python_checker.py`](#-file-python_checkerpy)
   - [📄 File `formatter.py`](#-file-formatterpy)
   - [📄 File `optimizer.py`](#-file-optimizerpy)
@@ -235,7 +235,7 @@ Doc: [funcs_py.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs
 | 🔧 [`generate_md_docs_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-generate_md_docs_content)                                 | Generate Markdown documentation for a single Python file.                                   |
 | 🔧 [`generate_md_docs_content_with_source_map`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-generate_md_docs_content_with_source_map) | Generate Markdown docs for a Python file and a per-line map to Python source.               |
 | 🔧 [`lint_and_fix_python_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-lint_and_fix_python_code)                                 | Lints and fixes the provided Python code using the `ruff` formatter.                        |
-| 🔧 [`remap_markdown_docs_error`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-remap_markdown_docs_error)                               | Rewrite a MarkdownChecker error to the corresponding Python source location.                |
+| 🔧 [`remap_markdown_docs_error`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-remap_markdown_docs_error)                               | Rewrite a MdChecker error to the corresponding Python source location.                      |
 | 🔧 [`sort_py_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-sort_py_code)                                                         | Sorts the Python code in the given file by organizing classes, functions, and statements.   |
 
 ### 📄 File `img_tools.py`
@@ -252,13 +252,13 @@ Doc: [img_tools.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_
 | 🔧 [`process_animated_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_animated_avif)         | Optimize animated AVIF with avifdec and avifenc or ffmpeg.            |
 | 🔧 [`process_static_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_static_avif)             | Optimize static AVIF with ffmpeg.                                     |
 
-### 📄 File `markdown_checker.py`
+### 📄 File `md_checker.py`
 
-Doc: [markdown_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/markdown_checker.g.md)
+Doc: [md_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_checker.g.md)
 
-| Function/Class                                                                                                                   | Description                                                            |
-| -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| 🏛️ Class [`MarkdownChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/markdown_checker.g.md#️-class-markdownchecker) | Class for checking Markdown files for compliance with specified rules. |
+| Function/Class                                                                                                 | Description                                                            |
+| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 🏛️ Class [`MdChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_checker.g.md#️-class-mdchecker) | Class for checking Markdown files for compliance with specified rules. |
 
 ### 📄 File `python_checker.py`
 
@@ -272,9 +272,9 @@ Doc: [python_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs
 
 Doc: [md_format/formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/formatter.g.md)
 
-| Function/Class                                                                                                                          | Description                                                |
-| --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| 🏛️ Class [`MarkdownFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/formatter.g.md#️-class-markdownformatter) | Format Markdown text inspired by Prettier Markdown parser. |
+| Function/Class                                                                                                              | Description                                                |
+| --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 🏛️ Class [`MdFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/formatter.g.md#️-class-mdformatter) | Format Markdown text inspired by Prettier Markdown parser. |
 
 ### 📄 File `optimizer.py`
 
