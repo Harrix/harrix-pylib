@@ -246,7 +246,7 @@ def _render_table(
 def _source_table_columns_are_aligned(source_text: str) -> bool:
     """Return whether every table row has the same character width per column.
 
-    Uses ``len`` (source characters), not terminal display width, so emoji and
+    Uses `len` (source characters), not terminal display width, so emoji and
     similar glyphs that occupy two terminal columns do not falsely look misaligned.
     """
     lines = [line for line in source_text.splitlines() if line.strip().startswith("|")]

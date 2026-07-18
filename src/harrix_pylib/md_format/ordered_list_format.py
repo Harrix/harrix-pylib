@@ -60,7 +60,7 @@ def _is_blockquote_list_continuation_line(line: str) -> bool:
 
 
 def _is_git_diff_friendly_ordered_list(markers: list[int]) -> bool:
-    """Return whether ordered list markers should use git-diff-friendly ``1.`` suffixes."""
+    """Return whether ordered list markers should use git-diff-friendly `1.` suffixes."""
     if len(markers) < 2:
         return False
     if markers[1] != 1:

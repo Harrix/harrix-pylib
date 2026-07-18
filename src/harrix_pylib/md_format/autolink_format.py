@@ -29,7 +29,7 @@ def _extract_angle_autolinks(body: str) -> tuple[str, list[str]]:
     autolinks: list[str] = []
 
     def replace(match: re.Match[str]) -> str:
-        """``re.sub`` callback that stores an autolink and returns its placeholder."""
+        """`re.sub` callback that stores an autolink and returns its placeholder."""
         autolinks.append(_decode_angle_autolink(match.group(0)))
         return f"{PLACEHOLDER_PREFIX}{len(autolinks) - 1}"
 
@@ -42,7 +42,7 @@ def _restore_angle_autolinks(text: str, autolinks: list[str]) -> str:
         return text
 
     def replace(match: re.Match[str]) -> str:
-        """``re.sub`` callback that restores a stored autolink from its placeholder."""
+        """`re.sub` callback that restores a stored autolink from its placeholder."""
         index = int(match.group(1))
         if 0 <= index < len(autolinks):
             return autolinks[index]

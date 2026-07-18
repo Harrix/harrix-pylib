@@ -400,7 +400,7 @@ def _ordered_list_marker_target_width(
 
 
 def _ordered_marker_delimiter(line: str) -> str | None:
-    """Return ordered-list marker delimiter (``.`` or ``)``) from a source line."""
+    """Return ordered-list marker delimiter (`.` or `)`) from a source line."""
     match = re.match(r"^\s*\d+([.)])\s+", line)
     return match.group(1) if match else None
 
@@ -855,7 +855,7 @@ def _star_marker_becomes_dash(
     *,
     has_nested_bullets: bool,
 ) -> bool:
-    """Return whether ``*`` bullet markers should be normalized to ``-``."""
+    """Return whether `*` bullet markers should be normalized to `-`."""
     if has_nested_bullets:
         return True
     nested_dash_groups = sum(

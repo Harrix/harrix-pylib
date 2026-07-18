@@ -165,7 +165,7 @@ def _restore_delimited_blocks(
     blocks_by_index = {block.index: block for block in blocks}
 
     def replace(match: re.Match[str]) -> str:
-        """``re.sub`` callback that restores a delimited block from its placeholder."""
+        """`re.sub` callback that restores a delimited block from its placeholder."""
         block_index = int(match.group().removeprefix(prefix))
         block = blocks_by_index.get(block_index)
         if block is None:

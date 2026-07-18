@@ -20,7 +20,7 @@ def _alignment_separator(align: str) -> str:
 
 
 def _choose_emphasis_delimiter(markup: str, prev: str, next_text: str) -> str:
-    """Choose ``*`` or ``_`` for emphasis based on neighbor characters."""
+    """Choose `*` or `_` for emphasis based on neighbor characters."""
     if markup == "_":
         return "_"
     if prev and prev[-1] in "!∩╝ü" and next_text and next_text[0] in "!∩╝ü":

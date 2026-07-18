@@ -140,7 +140,7 @@ def apply_func(
     are ignored during processing.
     - Hidden files and folders (those with names starting with a dot) are ignored during processing.
     - Optional `skip_rel_prefixes` skips files whose path relative to the resolved root starts with one
-    of the given tuples (for example ``(("install", "dependencies"),)``).
+    of the given tuples (for example `(("install", "dependencies"),)`).
     - The function handles different return types from the `func` parameter:
       - If `None`: Shows a simple success message
       - If `str`: Appends the string to the success message
@@ -826,7 +826,7 @@ def rename_epub_file(filename: Path | str) -> str:
 
     This function reads an EPUB file and extracts author, title, and year information
     from its metadata (OPF file). The file is then renamed according to the pattern:
-    ``LastName FirstName - Title - Year.epub`` (year is optional).
+    `LastName FirstName - Title - Year.epub` (year is optional).
 
     If metadata extraction fails, the function attempts to transliterate the filename
     from English to Russian, assuming it might be a transliterated Russian title.
@@ -1009,7 +1009,7 @@ def rename_fb2_file(filename: Path | str) -> str:
 
     This function reads an FB2 file and extracts author, title, and year information
     from its XML metadata. The file is then renamed according to the pattern:
-    ``LastName FirstName - Title - Year.fb2`` (year is optional).
+    `LastName FirstName - Title - Year.fb2` (year is optional).
 
     If metadata extraction fails, the function attempts to transliterate the filename
     from English to Russian, assuming it might be a transliterated Russian title.
@@ -1479,7 +1479,7 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
     Note:
 
     - Only processes subdirectories, not the main directory itself.
-    - Looks for image files with extensions: ``.jpg``, ``.jpeg``, ``.png``, ``.avif``, ``.svg``
+    - Looks for image files with extensions: `.jpg`, `.jpeg`, `.png`, `.avif`, `.svg`
     - Will not overwrite existing 'featured-image' files.
 
     Example:
@@ -1552,7 +1552,7 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
 
     This function reads a PDF file and extracts author, title, and year information
     from its metadata. The file is then renamed according to the pattern:
-    ``LastName FirstName - Title - Year.pdf`` (year is optional).
+    `LastName FirstName - Title - Year.pdf` (year is optional).
 
     If metadata extraction fails, the function attempts to transliterate the filename
     from English to Russian, assuming it might be a transliterated Russian title.
@@ -1915,9 +1915,9 @@ def should_ignore_path(
 
     - `path` (`Path | str`): The path to check for ignoring.
     - `additional_patterns` (`list[str] | None`): Additional patterns to ignore. Defaults to `None`.
-    Patterns may be a single path segment (for example ``node_modules``) or several segments joined with
-    ``/`` (for example ``install/dependencies``); multi-segment patterns match any consecutive subsequence
-    of ``path.parts`` (including paths nested below that folder).
+    Patterns may be a single path segment (for example `node_modules`) or several segments joined with
+    `/` (for example `install/dependencies`); multi-segment patterns match any consecutive subsequence
+    of `path.parts` (including paths nested below that folder).
     - `is_ignore_hidden` (`bool`): Whether to ignore hidden files/folders (starting with dot). Defaults to `True`.
 
     Returns:

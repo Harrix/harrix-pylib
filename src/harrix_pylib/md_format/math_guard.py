@@ -14,7 +14,7 @@ _MATH_DELIMITER_RE = re.compile(r"^(\s*)\$\$\s*$")
 
 @dataclass(frozen=True)
 class _EmptyMathBlock:
-    """Stored empty ``$$`` block extracted from Markdown body."""
+    """Stored empty `$$` block extracted from Markdown body."""
 
     index: int
     lines: list[str]
@@ -52,7 +52,7 @@ def _extract_empty_math_blocks(body: str) -> tuple[str, list[_EmptyMathBlock]]:
 
 
 def _find_empty_math_block_close(lines: list[str], start: int, in_code: list[bool]) -> int | None:
-    """Return the closing line index of an empty ``$$`` block, if present."""
+    """Return the closing line index of an empty `$$` block, if present."""
     open_match = _MATH_DELIMITER_RE.match(lines[start])
     if open_match is None:
         return None

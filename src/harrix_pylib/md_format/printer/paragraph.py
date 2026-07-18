@@ -71,7 +71,7 @@ def _broken_wiki_link_source_paragraph(tokens: list[Token], index: int, source_l
 
     # Find a line that has an unclosed [[  (i.e. has [[ but no ]] after it)
     def _has_unclosed_wiki_open(line: str) -> bool:
-        """Return whether paragraph text contains an unclosed ``[[`` wiki opener."""
+        """Return whether paragraph text contains an unclosed `[[` wiki opener."""
         pos = line.find("[[")
         if pos < 0:
             return False
@@ -407,7 +407,7 @@ def _setext_heading_source_line(tokens: list[Token], index: int, source_lines: l
 
 
 def _should_wrap_prose(text: str, *, prefix: str, width: int) -> bool:
-    """Return whether paragraph prose should be wrapped to ``print_width``."""
+    """Return whether paragraph prose should be wrapped to `print_width`."""
     return _prose_display_width(prefix + text) > width
 
 

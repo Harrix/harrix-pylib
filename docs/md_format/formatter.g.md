@@ -61,8 +61,8 @@ class MarkdownFormatter:
     def format(self, text: str) -> str:
         """Format Markdown text.
 
-        ``prose_wrap`` matches Prettier: ``preserve`` (default), ``always``, or ``never``.
-        Line wrapping uses ``print_width`` only when ``prose_wrap`` is ``always``.
+        `prose_wrap` matches Prettier: `preserve` (default), `always`, or `never`.
+        Line wrapping uses `print_width` only when `prose_wrap` is `always`.
 
         Args:
 
@@ -116,9 +116,9 @@ class MarkdownFormatter:
     def normalize_line_endings(text: str) -> str:
         r"""Normalize mixed or corrupted line endings to LF.
 
-        Handles CRLF applied twice (``\r\r\n``), which otherwise becomes a blank
-        line between every source line after a two-step ``\r`` cleanup or
-        after ``pathlib.Path.read_text`` universal-newline translation.
+        Handles CRLF applied twice (`\r\r\n`), which otherwise becomes a blank
+        line between every source line after a two-step `\r` cleanup or
+        after `pathlib.Path.read_text` universal-newline translation.
 
         Args:
 
@@ -133,7 +133,7 @@ class MarkdownFormatter:
 
     @staticmethod
     def read_markdown_text(filename: Path | str) -> str:
-        r"""Read Markdown from disk without universal-newline mangling of ``\r\r\n``.
+        r"""Read Markdown from disk without universal-newline mangling of `\r\r\n`.
 
         Args:
 
@@ -151,7 +151,7 @@ class MarkdownFormatter:
         return MarkdownFormatter.normalize_line_endings(data.decode("utf-8"))
 
     def _needs_end_of_line_rewrite(self, raw: bytes) -> bool:
-        """Return True when on-disk endings disagree with ``end_of_line``."""
+        """Return True when on-disk endings disagree with `end_of_line`."""
         if b"\n" not in raw:
             return False
         has_crlf = b"\r\n" in raw

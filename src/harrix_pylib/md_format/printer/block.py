@@ -32,7 +32,7 @@ from harrix_pylib.md_format.printer.tokens import _find_close, _format_hr_markup
 
 
 def _blockquote_line_content(line: str) -> str:
-    """Return blockquote body text without leading ``>`` markers."""
+    """Return blockquote body text without leading `>` markers."""
     content = line.lstrip()
     while content.startswith(">"):
         content = content[1:]
@@ -41,7 +41,7 @@ def _blockquote_line_content(line: str) -> str:
 
 
 def _blockquote_line_depth(line: str) -> int:
-    """Return blockquote nesting depth from leading ``>`` markers."""
+    """Return blockquote nesting depth from leading `>` markers."""
     stripped = line.lstrip()
     depth = 0
     while stripped.startswith(">"):

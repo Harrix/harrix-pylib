@@ -36,9 +36,9 @@ def check_python_docstring_markdown_errors(
     *,
     include_private: bool = True,
 ) -> list[str]:
-    """Check docstring Markdown typography for Python sources; errors point at ``.py`` locations.
+    """Check docstring Markdown typography for Python sources; errors point at `.py` locations.
 
-    Generates ephemeral docs (including private names when ``include_private`` is true), runs
+    Generates ephemeral docs (including private names when `include_private` is true), runs
     MarkdownChecker, and remaps findings to Python path/line/column. Does not modify the project.
     """
     folder = Path(folder)
@@ -650,7 +650,7 @@ def generate_md_docs_content_with_source_map(
     """Generate Markdown docs for a Python file and a per-line map to Python source.
 
     Each entry in the returned map corresponds to one line of the Markdown content
-    (1-based Markdown line ``i`` maps to ``line_map[i - 1]``).
+    (1-based Markdown line `i` maps to `line_map[i - 1]`).
     """
     file_path = Path(file_path).resolve()
     with file_path.open(encoding="utf-8") as f:
@@ -1365,10 +1365,10 @@ def _should_document_name(name: str, *, include_private: bool) -> bool:
 
 
 def _strip_trailing_linter_comments(line: str) -> str:
-    """Remove trailing ``# noqa`` / ``# ignore:`` / ``# type: ignore`` / ``# ty: ignore`` tails.
+    """Remove trailing `# noqa` / `# ignore:` / `# type: ignore` / `# ty: ignore` tails.
 
     Only end-of-line suppressions after whitespace are stripped. Stacked tails
-    (``# noqa: RUF001  # ignore: HP001``) are removed repeatedly.
+    (`# noqa: RUF001  # ignore: HP001`) are removed repeatedly.
     """
     while True:
         updated = _TRAILING_LINTER_COMMENT_RE.sub("", line)
@@ -1420,8 +1420,8 @@ def _write_vscode_dev_terminal_config(project_path: Path) -> None:
 
 
 # Trailing harrix / ruff / ty / type-checker suppressions at end of a line.
-# ``file-ignore`` is matched before ``ignore``. Requires leading whitespace so mid-line
-# mentions like ``use # ignore: HP001`` are not treated as tails when more text follows;
+# `file-ignore` is matched before `ignore`. Requires leading whitespace so mid-line
+# mentions like `use # ignore: HP001` are not treated as tails when more text follows;
 # only end-of-line tails are removed.
 _TRAILING_LINTER_COMMENT_RE = re.compile(
     r"[ \t]+#\s*(?:"

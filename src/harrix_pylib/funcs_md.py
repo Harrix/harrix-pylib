@@ -543,8 +543,8 @@ def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> st
 def collect_subfolder_md(subfolder: Path, should_include_file: Callable[[Path], bool]) -> list[Path]:
     """Collect Markdown files from a subfolder for combine operations.
 
-    Prefers the named-folder layout ``Name/Name/Name.md``, then flat ``Name/Name.md``,
-    then falls back to a recursive search for all ``*.md`` files that pass the filter.
+    Prefers the named-folder layout `Name/Name/Name.md`, then flat `Name/Name.md`,
+    then falls back to a recursive search for all `*.md` files that pass the filter.
 
     Args:
 
@@ -558,7 +558,7 @@ def collect_subfolder_md(subfolder: Path, should_include_file: Callable[[Path], 
 
     Note:
 
-    - Used by `combine_markdown_files()` in recursive mode when no ``*.g.md`` file
+    - Used by `combine_markdown_files()` in recursive mode when no `*.g.md` file
     is present in the subfolder.
 
     Example:
@@ -2647,7 +2647,7 @@ def increase_heading_level_content(markdown_text: str) -> str:
 
     This function processes a Markdown text and increases the level of all headings
     (lines starting with '#') outside of code blocks by prepending an additional '#'.
-    Headings that are already H6 (six leading ``#``) are left unchanged so combining
+    Headings that are already H6 (six leading `#`) are left unchanged so combining
     notes never produces invalid H7+ headings.
 
     Args:
@@ -2697,7 +2697,7 @@ def increase_heading_level_content(markdown_text: str) -> str:
 def is_note_in_named_folder(md_path: Path) -> bool:
     """Check whether a Markdown path uses the named-folder layout.
 
-    A note is in named-folder layout when it is stored as ``Folder/Folder.md``,
+    A note is in named-folder layout when it is stored as `Folder/Folder.md`,
     where the folder name matches the file stem (case-insensitive comparison).
     This function checks path structure only and does not verify that the file exists.
 
@@ -2730,17 +2730,17 @@ def is_note_in_named_folder(md_path: Path) -> bool:
 def iter_note_md_in_folder(folder: Path | str, *, dir_name: str | None = None) -> Iterator[Path]:
     """Iterate scannable note Markdown files in a folder.
 
-    Yields flat ``*.md`` files in ``folder`` and ``Sub/Sub.md`` notes in immediate
+    Yields flat `*.md` files in `folder` and `Sub/Sub.md` notes in immediate
     subfolders (named-folder layout relative to the parent). Results are deduplicated
-    by stem (case-insensitive). Generated files (``*.g.md``, ``table.include.g.md``)
-    and short-summary files (``_{dir_name}*``) are excluded. Ignored subfolders
-    (for example ``.git``) are skipped via `h.file.should_ignore_path()`.
+    by stem (case-insensitive). Generated files (`*.g.md`, `table.include.g.md`)
+    and short-summary files (`_{dir_name}*`) are excluded. Ignored subfolders
+    (for example `.git`) are skipped via `h.file.should_ignore_path()`.
 
     Args:
 
     - `folder` (`Path | str`): Directory to scan for note files.
-    - `dir_name` (`str | None`): Folder name used to filter ``_{dir_name}*`` files.
-    Defaults to ``folder.name``.
+    - `dir_name` (`str | None`): Folder name used to filter `_{dir_name}*` files.
+    Defaults to `folder.name`.
 
     Returns:
 
@@ -2794,12 +2794,12 @@ def iter_note_md_in_folder(folder: Path | str, *, dir_name: str | None = None) -
 def named_note_md_path(parent: Path | str, stem: str) -> Path:
     """Build the canonical named-folder path for a note.
 
-    Returns ``parent/stem/stem.md``, the preferred layout for new notes and file moves.
+    Returns `parent/stem/stem.md`, the preferred layout for new notes and file moves.
 
     Args:
 
     - `parent` (`Path | str`): Directory that will contain the note folder.
-    - `stem` (`str`): Note name without the ``.md`` extension.
+    - `stem` (`str`): Note name without the `.md` extension.
 
     Returns:
 
@@ -2822,14 +2822,14 @@ def named_note_md_path(parent: Path | str, stem: str) -> Path:
 def note_md_path(parent: Path | str, stem: str) -> Path:
     """Resolve the path to an existing note, preferring the named-folder layout.
 
-    The library supports two layouts: named-folder ``parent/stem/stem.md`` (canonical)
-    and flat ``parent/stem.md``. When both files exist, the named-folder path
+    The library supports two layouts: named-folder `parent/stem/stem.md` (canonical)
+    and flat `parent/stem.md`. When both files exist, the named-folder path
     is returned. When neither exists, the named-folder path is returned for creation.
 
     Args:
 
     - `parent` (`Path | str`): Directory that contains the note or note folder.
-    - `stem` (`str`): Note name without the ``.md`` extension.
+    - `stem` (`str`): Note name without the `.md` extension.
 
     Returns:
 
@@ -3200,9 +3200,9 @@ def replace_section_content(
 def resolve_md_path(path: Path | str) -> Path:
     """Resolve a Markdown path to an existing file, including named-folder layout.
 
-    If ``path`` points to an existing file, it is returned unchanged. If ``path`` ends
-    with ``.md`` but does not exist, the function tries the named-folder layout
-    ``parent/stem/stem.md``. Otherwise the original path is returned.
+    If `path` points to an existing file, it is returned unchanged. If `path` ends
+    with `.md` but does not exist, the function tries the named-folder layout
+    `parent/stem/stem.md`. Otherwise the original path is returned.
 
     Args:
 

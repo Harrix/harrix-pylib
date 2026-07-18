@@ -27,7 +27,7 @@ def config_load(filename: str, *, is_temp: bool = False, resolve_snippets: bool 
     - `filename` (`str`): Path to the JSON configuration file. Defaults to `None`.
     - `is_temp` (`bool`): If `True`, load the temporary config file (`config-temp.json`)
     instead of the main config file. Defaults to `False`.
-    - `resolve_snippets` (`bool`): If `True`, replace ``snippet:path`` string values with
+    - `resolve_snippets` (`bool`): If `True`, replace `snippet:path` string values with
     file contents. Defaults to `True`. Use `False` when you need the on-disk JSON as stored.
 
     Returns:
@@ -169,11 +169,11 @@ def config_update_value(key: str, value: object, filename: str, *, is_temp: bool
 
 
 def get_preferred_end_of_line(path: Path | str) -> EndOfLine:
-    """Return preferred line endings from the nearest ``.gitattributes``.
+    """Return preferred line endings from the nearest `.gitattributes`.
 
-    Walks up from ``path`` looking for ``.gitattributes``. Matching rules that set
-    ``eol=lf`` or ``eol=crlf`` win (later rules override earlier ones). If no EOL
-    attribute applies, returns ``crlf`` (the Markdown tooling default).
+    Walks up from `path` looking for `.gitattributes`. Matching rules that set
+    `eol=lf` or `eol=crlf` win (later rules override earlier ones). If no EOL
+    attribute applies, returns `crlf` (the Markdown tooling default).
 
     Args:
 
@@ -181,7 +181,7 @@ def get_preferred_end_of_line(path: Path | str) -> EndOfLine:
 
     Returns:
 
-    - `EndOfLine`: ``"lf"`` or ``"crlf"``.
+    - `EndOfLine`: `"lf"` or `"crlf"`.
 
     Example:
 
@@ -400,8 +400,8 @@ def run_powershell_script_as_admin(commands: str) -> str:
     Note:
 
     - This function creates temporary files to store the script and its output, which are deleted after execution.
-    - Multiline scripts are written to a ``.ps1`` file as-is (not joined with ``;``), so block syntax is preserved.
-    - The launcher uses ``Start-Process -Verb RunAs -Wait`` so execution finishes before the output file is read.
+    - Multiline scripts are written to a `.ps1` file as-is (not joined with `;`), so block syntax is preserved.
+    - The launcher uses `Start-Process -Verb RunAs -Wait` so execution finishes before the output file is read.
 
     Examples:
 
@@ -606,7 +606,7 @@ def _config_load_raw(filename: str, *, is_temp: bool = False) -> dict:
 
 
 def _eol_from_gitattributes(attributes_file: Path, rel_posix: str) -> EndOfLine | None:
-    """Return the last ``eol=`` value that matches ``rel_posix``, if any."""
+    """Return the last `eol=` value that matches `rel_posix`, if any."""
     found: EndOfLine | None = None
     try:
         lines = attributes_file.read_text(encoding="utf-8").splitlines()

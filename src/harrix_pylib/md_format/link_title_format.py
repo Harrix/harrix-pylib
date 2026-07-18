@@ -57,7 +57,7 @@ def _canonicalize_link_title_content(content: str) -> str:
 
 
 def _decode_magical_quote_apostrophe_paren_inner(inner: str) -> str | None:
-    """Decode CommonMark magical ``'"')'`` title inner text."""
+    """Decode CommonMark magical `'"')'` title inner text."""
     if inner in _MAGICAL_TITLE_INNERS:
         return _QUOTE_APOSTROPHE_PAREN
     return None
@@ -175,7 +175,7 @@ def _is_closing_quoted_title_delimiter(text: str, index: int) -> bool:
 
 
 def _is_escaped_at(text: str, index: int) -> bool:
-    """Return whether ``@`` at ``index`` is escaped by a backslash."""
+    """Return whether `@` at `index` is escaped by a backslash."""
     backslashes = 0
     position = index - 1
     while position >= 0 and text[position] == "\\":
@@ -236,7 +236,7 @@ def _scan_inline_links(
 
 
 def _scan_inline_links_in_plain_text(body: str, handler: Callable[[str, str, str], str]) -> str:
-    """Scan plain text for inline links and rebuild matches with ``handler``."""
+    """Scan plain text for inline links and rebuild matches with `handler`."""
     parts: list[str] = []
     last = 0
     while last < len(body):

@@ -42,7 +42,7 @@ def _decode_percent_encoded_url(url: str) -> str:
 
 
 def _decode_unicode_percent_sequences(text: str) -> str:
-    """Decode percent-encoded UTF-8 text while preserving ASCII encodings like ``%3E``."""
+    """Decode percent-encoded UTF-8 text while preserving ASCII encodings like `%3E`."""
     result: list[str] = []
     index = 0
     while index < len(text):

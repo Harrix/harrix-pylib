@@ -697,7 +697,7 @@ def test_strip_trailing_linter_comments() -> None:
 def test_generate_md_docs_strips_trailing_linter_comments_outside_fences() -> None:
     content = (
         "def public_function() -> None:\n"
-        '    """Allow abbreviations like ``т. д.``.  # ignore: HP001\n'  # ignore: HP001
+        '    """Allow abbreviations like `т. д.`.  # ignore: HP001\n'  # ignore: HP001
         "\n"
         "    Example:\n"
         "\n"
@@ -715,8 +715,8 @@ def test_generate_md_docs_strips_trailing_linter_comments_outside_fences() -> No
         test_file.write_text(content, encoding="utf8")
         md = h.py.generate_md_docs_content(str(test_file))
 
-        assert "Allow abbreviations like ``т. д.``." in md  # ignore: HP001
-        assert "Allow abbreviations like ``т. д.``.  # ignore: HP001" not in md  # ignore: HP001
+        assert "Allow abbreviations like `т. д.`." in md  # ignore: HP001
+        assert "Allow abbreviations like `т. д.`.  # ignore: HP001" not in md  # ignore: HP001
         assert 'text = "т. д."  # ignore: HP001' in md  # ignore: HP001
         assert "# noqa: E501" in md
         assert "Mention ``# ignore: HP001`` in prose." in md

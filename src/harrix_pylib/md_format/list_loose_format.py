@@ -114,7 +114,7 @@ def _line_indent(line: str) -> int:
 
 
 def _parent_list_marker_line(lines: list[str], from_index: int, base_indent: int) -> str | None:
-    """Return the nearest same-level list marker line above ``from_index``."""
+    """Return the nearest same-level list marker line above `from_index`."""
     index = from_index
     while index >= 0:
         line = lines[index]

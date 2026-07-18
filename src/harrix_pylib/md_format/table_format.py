@@ -60,7 +60,7 @@ def _text_display_width(text: str) -> int:
 
 
 def _unwrap_spurious_table_rows(body: str) -> str:
-    r"""Turn ``| long prose | | |`` rows back into plain paragraphs."""
+    r"""Turn `| long prose | | |` rows back into plain paragraphs."""
     min_spurious_width = 3
     lines = body.split("\n")
     result: list[str] = []

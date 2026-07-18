@@ -65,7 +65,7 @@ def _extract_code_blocks(body: str) -> tuple[str, list[_CodeBlock]]:
 
 
 def _format_markdown_fence_block(block_lines: list[str], *, _options: _FormatOptions | None) -> list[str]:
-    """Return fenced blocks verbatim; do not recursively format ``markdown`` fences."""
+    """Return fenced blocks verbatim; do not recursively format `markdown` fences."""
     return block_lines
 
 
@@ -75,7 +75,7 @@ def _leading_whitespace(line: str) -> str:
 
 
 def _reindent_line(line: str, base_indent: str, current_indent: str) -> str:
-    """Reindent a code line from ``base_indent`` to ``current_indent``."""
+    """Reindent a code line from `base_indent` to `current_indent`."""
     if not line.strip():
         return line
     if base_indent and line.startswith(base_indent):

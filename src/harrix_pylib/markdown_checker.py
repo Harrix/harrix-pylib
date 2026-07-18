@@ -22,7 +22,7 @@ class MarkdownChecker:
     - **H003** - YAML is missing (except `README.md` and `LICENSE.md`).
     - **H004** - The lang field is missing in YAML.
     - **H005** - In YAML, lang is not set to `en` or `ru`.
-    - **H006** - Incorrect word form used (e.g., ``markdown`` instead of ``Markdown``).
+    - **H006** - Incorrect word form used (e.g., `markdown` instead of `Markdown`).
     - **H007** - Incorrect code block language identifier.
     - **H008** - Trailing whitespace at end of line.
     - **H009** - Double spaces in line (not in code blocks).
@@ -38,52 +38,52 @@ class MarkdownChecker:
     - **H019** - HTML tags in Markdown content.
     - **H020** - Image caption starts with lowercase letter.
     - **H021** - Lowercase letter after sentence-ending punctuation (dotted abbreviations from packaged
-      JSON databases are allowed; not gated by YAML ``lang``).
+      JSON databases are allowed; not gated by YAML `lang`).
     - **H022** - Non-breaking space character found.
     - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
     - **H024** - Latin "x" or Cyrillic "x" used instead of multiplication sign "x".
     - **H025** - Image Markdown marker (exclamation + bracket) found not at start of line.
-    - **H026** - Horizontal bar ``―`` (dialogue dash) should not be used.
+    - **H026** - Horizontal bar `―` (dialogue dash) should not be used.
     - **H027** - Space required after the numero sign (U+2116).
-    - **H028** - Question mark followed by period ``?.``.
+    - **H028** - Question mark followed by period `?.`.
     - **H029** - Space required after colon in inline emphasis.
     - **H030** - Colon outside inline emphasis (should be inside when line continues after colon).
     - **H031** - Invalid or placeholder image alt text (empty, editor placeholder, or lowercase start).
-    - **H032** - Two consecutive dots (typo for period or incomplete ellipsis; ``../`` paths are allowed).
+    - **H032** - Two consecutive dots (typo for period or incomplete ellipsis; `../` paths are allowed).
     - **H033** - Unclosed fenced code block.
     - **H034** - Code fence without language identifier.
     - **H035** - Missing figure caption after image.
-    - **H036** - Missing space after ``#`` in ATX heading.
+    - **H036** - Missing space after `#` in ATX heading.
     - **H037** - Skipped heading level (e.g. H1 to H3 without H2).
     - **H038** - Multiple H1 headings in one file.
     - **H039** - Backslash in local Markdown path.
-    - **H040** - ``lang`` field does not match document language.
-    - **H041** - Bare URL in text (not wrapped in ``<>`` or link).
+    - **H040** - `lang` field does not match document language.
+    - **H041** - Bare URL in text (not wrapped in `<>` or link).
     - **H042** - Invisible Unicode character found.
     - **H043** - Unmatched guillemet on line.
-    - **H044** - Missing space before ``%`` or ``°`` (Russian typography).
+    - **H044** - Missing space before `%` or `°` (Russian typography).
     - **H045** - Broken relative Markdown link or image.
-    - **H046** - Wrong line endings (must match nearest ``.gitattributes`` ``eol=``, else CRLF).
+    - **H046** - Wrong line endings (must match nearest `.gitattributes` `eol=`, else CRLF).
     - **H047** - BOM at start of file.
     - **H048** - Unicode replacement character U+FFFD found.
     - **H049** - Mixed Latin and Cyrillic letters in one word.
     - **H050** - Missing space after punctuation mark before a letter.
     - **H051** - Malformed punctuation sequence.
     - **H052** - Heading level deeper than H6.
-    - **H053** - Unbalanced ``<details>`` / ``<summary>`` tags.
+    - **H053** - Unbalanced `<details>` / `<summary>` tags.
     - **H054** - Repeated adjacent word.
     - **H055** - Broken internal fragment link.
     - **H056** - Unbalanced inline code in table cell.
     - **H057** - Trailing period at end of ATX heading.
-    - **H058** - Punctuation (``.``, ``,``, ``;``, ``:``) immediately before a closing guillemet
-      (Russian typography; ``!`` / ``?`` / ``…`` before the closer are allowed; single-letter abbreviations).
+    - **H058** - Punctuation (`.`, `,`, `;`, `:`) immediately before a closing guillemet
+      (Russian typography; `!` / `?` / `…` before the closer are allowed; single-letter abbreviations).
 
     """
 
     # Minimum length for a line to be treated as italic-only caption (e.g. _text_)
     _MIN_ITALIC_CAPTION_LEN: ClassVar[int] = 2
 
-    # Length of empty single-line display math ``$$$$``; real content must be longer
+    # Length of empty single-line display math `$$$$`; real content must be longer
     _EMPTY_SINGLE_LINE_DISPLAY_MATH_LEN: ClassVar[int] = 4
 
     # Markers that suppress colon-before-code/image warnings (shared between H013 and H014 checks)
@@ -109,7 +109,7 @@ class MarkdownChecker:
     # Filenames exempt from H003 (YAML is missing)
     _H003_EXEMPT_FILENAMES: ClassVar[frozenset[str]] = frozenset({"README.MD", "LICENSE.MD"})
 
-    # Image caption patterns generated by ``generate_image_captions`` (H035)
+    # Image caption patterns generated by `generate_image_captions` (H035)
     _IMAGE_CAPTION_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
         r"^_\s*(?:Figure\s+\d+:|Рисунок\s+\d+\s+—).+_$"  # ignore: HP001
     )
@@ -120,7 +120,7 @@ class MarkdownChecker:
     # ATX heading with level (H037, H038, H057)
     _ATX_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(#{1,6})\s+(.*)$")
 
-    # Trailing closed-ATX hashes (H057): ``## Title ##``
+    # Trailing closed-ATX hashes (H057): `## Title ##`
     _ATX_CLOSING_HASHES_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"\s+#+\s*$")
 
     # ATX heading deeper than H6 (H052); space after hashes optional
@@ -153,7 +153,7 @@ class MarkdownChecker:
     _MISSING_SPACE_AFTER_PUNCT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"([,;!?])(?=[^\W\d_])", re.UNICODE)
 
     # Malformed punctuation sequences (H051).
-    # Word+``.,`` requires 6+ letters so short abbrevs like ``напр.,`` / ``ул.,`` are ignored.  # ignore: HP001
+    # Word+`.,` requires 6+ letters so short abbrevs like `напр.,` / `ул.,` are ignored.  # ignore: HP001
     _MALFORMED_PUNCT_SEQUENCE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
         r"(?::\.|(?:[»\"”'])\.,|(?:[^\W\d_]{6,})\.,)",
         re.UNICODE,
@@ -161,15 +161,15 @@ class MarkdownChecker:
     _MALFORMED_TIME_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*#{1,6}\s+\d{1,2}(?:;:|::)\d{2}\s*$")
 
     # Punctuation before closing guillemet (H058). Period only after 2+ letters so
-    # single-letter abbreviations like ``т. д.»`` / ``т. е.»`` are ignored.  # noqa: RUF003  # ignore: HP001
+    # single-letter abbreviations like `т. д.»` / `т. е.»` are ignored.  # noqa: RUF003  # ignore: HP001
     _PUNCT_BEFORE_CLOSING_GUILLEMET_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
         r"(?:[^\W\d_]{2,}\.|[,;:])»",
         re.UNICODE,
     )
 
-    # Repeated adjacent word (H054); ignore short tokens like ``c c``.
+    # Repeated adjacent word (H054); ignore short tokens like `c c`.
     # Include hyphenated compounds (`well-known``) as one token so
-    # ``well well-known`` is not treated as a repeat of ``well``.
+    # `well well-known` is not treated as a repeat of `well`.
     _WORD_TOKEN_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"[^\W\d_]+(?:-[^\W\d_]+)*", re.UNICODE)
     _H054_MIN_WORD_LEN: ClassVar[int] = 3
 
@@ -187,7 +187,7 @@ class MarkdownChecker:
         ("\u2060", "word joiner"),
     )
 
-    # Minimum share of Cyrillic lines to flag lang mismatch for ``lang: en`` (H040)
+    # Minimum share of Cyrillic lines to flag lang mismatch for `lang: en` (H040)
     _H040_CYRILLIC_LINE_RATIO: ClassVar[float] = 0.3
 
     # Rule constants for easier maintenance
@@ -551,7 +551,7 @@ class MarkdownChecker:
                 yield from self.find_markdown_files(item, additional_ignore_patterns)
 
     def _build_display_math_line_indices(self, code_block_info: list) -> frozenset[int]:
-        """Return content-line indices that belong to display-math ``$$...$$`` blocks."""
+        """Return content-line indices that belong to display-math `$$...$$` blocks."""
         display_math_lines: set[int] = set()
         in_math = False
 
@@ -681,7 +681,7 @@ class MarkdownChecker:
     def _check_broken_internal_fragments(
         self, filename: Path, code_block_info: list, yaml_end_line: int
     ) -> Generator[str, None, None]:
-        """Check same-file ``#fragment`` links against generated heading IDs (H055)."""
+        """Check same-file `#fragment` links against generated heading IDs (H055)."""
         heading_ids = self._collect_heading_ids(code_block_info)
         resolved_self = filename.resolve()
 
@@ -998,7 +998,7 @@ class MarkdownChecker:
     ) -> Generator[str, None, None]:
         """Check for incorrect dash/hyphen usage (H016). Applies only to Markdown text, not YAML/code.
 
-        Exception: ``--`` at the start of blockquote attribution lines (e.g. ``> -- Author``).
+        Exception: `--` at the start of blockquote attribution lines (e.g. `> -- Author`).
         """
         # Single pass over segments: check for " - ", " − " (Unicode minus), and " -- "  # noqa: RUF003
         hyphen_found = False
@@ -1151,8 +1151,8 @@ class MarkdownChecker:
     def _check_heading_trailing_period(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check for trailing period at end of ATX heading (H057).
 
-        A final ``.`` is forbidden; ``?``, ``!``, and ``…`` are allowed. An internal
-        period before the last sentence is fine (e.g. ``Глава 5. Буди, буди!``).  # ignore: HP001
+        A final `.` is forbidden; `?`, `!`, and `…` are allowed. An internal
+        period before the last sentence is fine (e.g. `Глава 5. Буди, буди!`).  # ignore: HP001
         """
         match = self._ATX_HEADING_PATTERN.match(line)
         if not match:
@@ -1290,7 +1290,7 @@ class MarkdownChecker:
             yield self._format_error("H040", f"{self.RULES['H040']}: lang is ru but no Cyrillic text found", filename)
 
     def _check_line_endings(self, filename: Path) -> Generator[str, None, None]:
-        """Check line endings against preferred EOL from ``.gitattributes`` (H046)."""
+        """Check line endings against preferred EOL from `.gitattributes` (H046)."""
         preferred = h.dev.get_preferred_end_of_line(filename)
         raw = filename.read_bytes()
         if b"\n" not in raw:
@@ -1312,8 +1312,8 @@ class MarkdownChecker:
 
         Checks each non-inline-code segment separately so removed code (e.g.
         ``Optional. `"value"` stores``) does not falsely join a period with the
-        next word. Periods in ordered-list and section numbers (``1.``,
-        ``3.1.``) and known dotted abbreviations from packaged JSON databases
+        next word. Periods in ordered-list and section numbers (`1.`,
+        `3.1.`) and known dotted abbreviations from packaged JSON databases
         are ignored (abbreviations are masked before the scan).
         """
         pattern = r"[.!?]\s+([a-zа-яё])"  # noqa: RUF001  # ignore: HP001
@@ -1388,15 +1388,15 @@ class MarkdownChecker:
     def _check_missing_space_after_punctuation(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for missing space after ``,;!?`` before a letter (H050)."""
+        """Check for missing space after `,;!?` before a letter (H050)."""
         reported_cols: set[int] = set()
         for match in self._MISSING_SPACE_AFTER_PUNCT_PATTERN.finditer(clean_line):
             punct = match.group(1)
             next_char = clean_line[match.end()]
-            # Admonitions / callouts: ``[!NOTE]``, ``[!gallery]``, …
+            # Admonitions / callouts: `[!NOTE]`, `[!gallery]`, …
             if punct == "!" and match.start() > 0 and clean_line[match.start() - 1] == "[":
                 continue
-            # Exempt ASCII identifier-like joins such as ``1979a,b`` or ``x,y``.
+            # Exempt ASCII identifier-like joins such as `1979a,b` or `x,y`.
             if (
                 punct in ",;"
                 and match.start() > 0
@@ -1599,10 +1599,10 @@ class MarkdownChecker:
     def _check_punctuation_before_closing_guillemet(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for ``.``, ``,``, ``;``, ``:`` before closing guillemet (H058).
+        """Check for `.`, `,`, `;`, `:` before closing guillemet (H058).
 
         Only applies when the line contains Russian letters. Period is flagged only
-        after two or more letters so abbreviations like ``«и т. д.»`` are allowed.  # ignore: HP001
+        after two or more letters so abbreviations like `«и т. д.»` are allowed.  # ignore: HP001
         """
         if not re.search(r"[а-яА-ЯёЁ]", line):  # noqa: RUF001  # ignore: HP001
             return
@@ -1676,7 +1676,7 @@ class MarkdownChecker:
     ) -> Generator[str, None, None]:
         """Check for repeated adjacent words outside code (H054).
 
-        Only whitespace may separate the two words (so ``Notes-Notes`` is allowed).
+        Only whitespace may separate the two words (so `Notes-Notes` is allowed).
         Hyphenated compounds count as one token.
         """
         previous: str | None = None
@@ -1851,7 +1851,7 @@ class MarkdownChecker:
     def _check_two_dots(self, filename: Path, _line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
         """Check for exactly two consecutive dots (H032).
 
-        Does not match ``...`` (handled by H017) or ``../`` parent-directory paths.
+        Does not match `...` (handled by H017) or `../` parent-directory paths.
         """
         for match in self._TWO_DOTS_PATTERN.finditer(clean_line):
             error_msg = f'{self.RULES["H032"]}: ".." should be "." or "…"'
@@ -1860,7 +1860,7 @@ class MarkdownChecker:
     def _check_unbalanced_details_summary(
         self, filename: Path, code_block_info: list, yaml_end_line: int
     ) -> Generator[str, None, None]:
-        """Check nesting balance of ``<details>`` / ``<summary>`` (H053)."""
+        """Check nesting balance of `<details>` / `<summary>` (H053)."""
         details_depth = 0
         summary_depth = 0
         first_error_line: int | None = None
@@ -1902,7 +1902,7 @@ class MarkdownChecker:
     ) -> Generator[str, None, None]:
         r"""Check for unbalanced backticks inside Markdown table cells (H056).
 
-        Splits on unescaped ``|`` only so escaped pipes (``\\|`` inside
+        Splits on unescaped `|` only so escaped pipes (`\\|` inside
         `` `a \\| b` ``) stay inside one cell and do not trigger this rule.
         """
         stripped = line.strip()
@@ -1914,7 +1914,7 @@ class MarkdownChecker:
                 continue
             if cell_index == len(cells) - 1 and not cell.strip():
                 break
-            # Skip alignment rows like ``| --- | :---: |``
+            # Skip alignment rows like `| --- | :---: |`
             if re.fullmatch(r"\s*:?-{3,}:?\s*", cell):
                 continue
             if cell.count("`") % 2 == 1:
@@ -2012,8 +2012,8 @@ class MarkdownChecker:
     def _collect_heading_ids(self, code_block_info: list) -> set[str]:
         """Collect GitHub-style heading IDs from ATX headings outside fenced code.
 
-        IDs are stored percent-decoded so fragments like ``#️-technologies`` (raw
-        U+FE0F) match slugs that ``generate_id`` emits as ``%EF%B8%8F-technologies``.
+        IDs are stored percent-decoded so fragments like `#️-technologies` (raw
+        U+FE0F) match slugs that `generate_id` emits as `%EF%B8%8F-technologies`.
         """
         existing_ids: set[str] = set()
         heading_ids: set[str] = set()
@@ -2053,7 +2053,7 @@ class MarkdownChecker:
         """Return the path/URL part of a Markdown link destination, without title.
 
         A title is stripped only when it uses CommonMark quoting
-        (``path "title"``, ``path 'title'``, or ``path (title)``).
+        (`path "title"`, `path 'title'`, or `path (title)`).
         """
         url = raw.strip()
         if not url:
@@ -2153,7 +2153,7 @@ class MarkdownChecker:
 
     @staticmethod
     def _is_escaped_table_pipe(line: str, index: int) -> bool:
-        """Return True if ``line[index]`` is a pipe escaped by an odd run of backslashes."""
+        """Return True if `line[index]` is a pipe escaped by an odd run of backslashes."""
         n = 0
         j = index - 1
         while j >= 0 and line[j] == "\\":
@@ -2163,7 +2163,7 @@ class MarkdownChecker:
 
     @staticmethod
     def _is_h021_allowed_period(segment: str, period_pos: int) -> bool:
-        """Return True if punctuation at ``period_pos`` is not a sentence-ending period for H021.
+        """Return True if punctuation at `period_pos` is not a sentence-ending period for H021.
 
         Dotted abbreviations are masked before this check; remaining exceptions are
         ordered-list / section numbers (digit before the period).
@@ -2171,12 +2171,12 @@ class MarkdownChecker:
         return period_pos > 0 and segment[period_pos - 1].isdigit()
 
     def _is_horizontal_rule(self, line: str) -> bool:
-        """Return True if the line is a Markdown horizontal rule (``---``, ``***``, ``___``)."""
+        """Return True if the line is a Markdown horizontal rule (`---`, `***`, `___`)."""
         return bool(self._HORIZONTAL_RULE_PATTERN.match(line.strip()))
 
     @staticmethod
     def _is_hyphenated_identifier_fragment(text: str, start: int, end: int) -> bool:
-        """Return True if span is part of a hyphenated identifier (e.g. ``markdown-it``, ``git-diff-friendly``)."""
+        """Return True if span is part of a hyphenated identifier (e.g. `markdown-it`, `git-diff-friendly`)."""
         if start > 0 and text[start - 1] == "-":
             return True
         return end < len(text) and text[end] == "-"
@@ -2206,8 +2206,8 @@ class MarkdownChecker:
     def _paragraph_last_char(self, line: str) -> tuple[str, int]:
         """Return last meaningful character and its 1-based column for colon checks.
 
-        Trailing Markdown emphasis markers (``*``, ``_``) are ignored so lines like
-        ``**Title:**`` are treated as ending with ``:``.
+        Trailing Markdown emphasis markers (`*`, `_`) are ignored so lines like
+        `**Title:**` are treated as ending with `:`.
         """
         stripped = line.rstrip()
         end = len(stripped)

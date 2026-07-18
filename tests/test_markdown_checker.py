@@ -1751,7 +1751,7 @@ def test_markdown_checker() -> None:
         errors = checker.check(hyphenated_repeat_file, select={"H054"})
         assert not errors
 
-        # ``что что-то``: second token is a hyphenated compound, not a repeat
+        # `что что-то`: second token is a hyphenated compound, not a repeat
         compound_after_word_file = temp_path / "compound_after_word.md"
         compound_after_word_file.write_text(
             "---\nlang: ru\n---\n\nОзначает ли это, что что-то имеет статус?\n",
