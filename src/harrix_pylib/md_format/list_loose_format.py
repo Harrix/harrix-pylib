@@ -104,7 +104,7 @@ def _extract_list_layouts(body: str, tight_code_indices: set[int] | None = None)
 
 
 def _is_ordered_list_line(line: str) -> bool:
-    """Return True when the line starts an ordered list item (not bullet)."""
+    """Return `True` when the line starts an ordered list item (not bullet)."""
     return bool(re.match(r"^\s*\d+[.)]\s", line))
 
 

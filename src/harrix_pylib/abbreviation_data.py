@@ -26,7 +26,7 @@ class AbbreviationData:
 
 
 def is_spaced_multipart(form: str) -> bool:
-    """Return True if form is a multi-part dotted abbrev with spaces (H006 candidate)."""
+    """Return `True` if form is a multi-part dotted abbrev with spaces (H006 candidate)."""
     if "." not in form or " " not in form:
         return False
     # Space after a period, or space before a dotted token

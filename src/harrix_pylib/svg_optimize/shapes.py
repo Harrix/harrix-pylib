@@ -41,7 +41,7 @@ def _circle_to_path(elem: etree._Element) -> str | None:
 
 
 def _convert_shapes(root: etree._Element) -> bool:
-    """Convert basic shapes to paths. Returns True if any conversion happened."""
+    """Convert basic shapes to paths. Returns `True` if any conversion happened."""
     changed = False
     for elem in list(root.iter()):
         if elem.tag not in CONVERTIBLE:

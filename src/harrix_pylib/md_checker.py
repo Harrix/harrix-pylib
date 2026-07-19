@@ -41,7 +41,7 @@ class MdChecker:
       JSON databases are allowed; not gated by YAML `lang`).
     - **H022** - Non-breaking space character found.
     - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
-    - **H024** - Latin "x" or Cyrillic "x" used instead of multiplication sign "x".
+    - **H024** - Latin `x` or Cyrillic `x` used instead of multiplication sign `x`.
     - **H025** - Image Markdown not at start of line (several images in a row are allowed).
     - **H026** - Horizontal bar `―` (dialogue dash) should not be used.
     - **H027** - Space required after the numero sign (U+2116).
@@ -1075,7 +1075,7 @@ class MdChecker:
 
         Scans the original line segment-by-segment so that:
         - double spaces inside inline code are ignored;
-        - concatenating prose after stripping inline code cannot invent a false `  `.
+        - concatenating prose after stripping inline code cannot invent a `False` `  `.
         """
         if "  " not in line:
             return
@@ -1354,7 +1354,7 @@ class MdChecker:
         """Check for lowercase letter after sentence-ending punctuation (H021).
 
         Checks each non-inline-code segment separately so removed code (e.g.
-        ``Optional. `"value"` stores``) does not falsely join a period with the
+        ``Optional. `value` stores``) does not falsely join a period with the
         next word. Periods in ordered-list and section numbers (`1.`,
         `3.1.`) and known dotted abbreviations from packaged JSON databases
         are ignored (abbreviations are masked before the scan).
@@ -1858,7 +1858,7 @@ class MdChecker:
         """Check for space before punctuation marks (H015).
 
         Uses original line so that removal of inline code (e.g. `word`:)
-        does not create false ` :` when segments are concatenated.
+        does not create `False` ` :` when segments are concatenated.
         Matches inside inline code (e.g. `cd ..`) are skipped.
         """
         code_ranges: list[tuple[int, int]] = []
@@ -2002,11 +2002,11 @@ class MdChecker:
         yield self._format_error("H043", self.RULES["H043"], filename, line_num=line_num, col=first_col)
 
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '&ast;' (H024).
+        """Check for Latin `x` or Cyrillic `x` used instead of multiplication sign '&ast;' (H024).
 
         Only checks text outside inline code and outside link URLs.
-        Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C);
-        'x' + digit(s) when not after digit (e.g. PCIe x4, x16).
+        Exceptions: `x86` and `x64`; digit + `x` + space (e.g. 2x Type-C);
+        `x` + digit(s) when not after digit (e.g. PCIe x4, x16).
         """
         link_url_ranges = self._get_link_url_ranges(line)
         offset = 0
@@ -2195,7 +2195,7 @@ class MdChecker:
     # =========================================================================
 
     def _image_alt_text_issue(self, alt: str) -> str | None:
-        """Return H031 issue description for invalid alt text, or None if alt text is acceptable."""
+        """Return H031 issue description for invalid alt text, or `None` if alt text is acceptable."""
         stripped = alt.strip()
         if not stripped:
             return "empty alt text"
@@ -2207,7 +2207,7 @@ class MdChecker:
 
     @staticmethod
     def _is_blockquote_attribution_line(line: str) -> bool:
-        """Return True if line is a blockquote attribution (e.g. `> -- Author`)."""
+        """Return `True` if line is a blockquote attribution (e.g. `> -- Author`)."""
         stripped = line.lstrip()
         if not stripped.startswith(">"):
             return False
@@ -2218,7 +2218,7 @@ class MdChecker:
 
     @staticmethod
     def _is_escaped_table_pipe(line: str, index: int) -> bool:
-        """Return True if `line[index]` is a pipe escaped by an odd run of backslashes."""
+        """Return `True` if `line[index]` is a pipe escaped by an odd run of backslashes."""
         n = 0
         j = index - 1
         while j >= 0 and line[j] == "\\":
@@ -2228,7 +2228,7 @@ class MdChecker:
 
     @staticmethod
     def _is_h021_allowed_period(segment: str, period_pos: int) -> bool:
-        """Return True if punctuation at `period_pos` is not a sentence-ending period for H021.
+        """Return `True` if punctuation at `period_pos` is not a sentence-ending period for H021.
 
         Dotted abbreviations are masked before this check; remaining exceptions are
         ordered-list / section numbers (digit before the period).
@@ -2236,26 +2236,26 @@ class MdChecker:
         return period_pos > 0 and segment[period_pos - 1].isdigit()
 
     def _is_horizontal_rule(self, line: str) -> bool:
-        """Return True if the line is a Markdown horizontal rule (`---`, `***`, `___`)."""
+        """Return `True` if the line is a Markdown horizontal rule (`---`, `***`, `___`)."""
         return bool(self._HORIZONTAL_RULE_PATTERN.match(line.strip()))
 
     @staticmethod
     def _is_hyphenated_identifier_fragment(text: str, start: int, end: int) -> bool:
-        """Return True if span is part of a hyphenated identifier (e.g. `markdown-it`, `git-diff-friendly`)."""
+        """Return `True` if span is part of a hyphenated identifier (e.g. `markdown-it`, `git-diff-friendly`)."""
         if start > 0 and text[start - 1] == "-":
             return True
         return end < len(text) and text[end] == "-"
 
     @staticmethod
     def _is_identifier_like_link_label(label: str) -> bool:
-        """Return True if link label looks like a package/URL identifier, not prose."""
+        """Return `True` if link label looks like a package/URL identifier, not prose."""
         stripped = label.strip()
         if not stripped or " " in stripped:
             return False
         return any(c in stripped for c in "-._")
 
     def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
-        """Return True if position pos in line is inside a table cell that contains only a hyphen."""
+        """Return `True` if position pos in line is inside a table cell that contains only a hyphen."""
         parts = line.split("|")
         min_count_parts = 2
         if len(parts) < min_count_parts:
@@ -2287,7 +2287,7 @@ class MdChecker:
         return "".join(segment for segment, in_code in h.md.identify_code_blocks_line(line) if not in_code)
 
     def _should_check_paragraph_end(self, line: str) -> bool:
-        """Return True if line is a regular paragraph that should end with colon before code/image."""
+        """Return `True` if line is a regular paragraph that should end with colon before code/image."""
         stripped = line.strip()
         return (
             bool(stripped)

@@ -66,7 +66,7 @@ def get_frame_rate(source: Path, project_root: Path) -> float:
 
 
 def is_avif_animated(source: Path, project_root: Path) -> bool:
-    """Return True if AVIF contains more than one frame."""
+    """Return `True` if AVIF contains more than one frame."""
     ffmpeg = _exe(project_root, "ffmpeg")
     output = _ffmpeg_output(source, ffmpeg)
     duration_match = re.search(r"Duration: (\d{2}):(\d{2}):(\d{2}\.\d+)", output)

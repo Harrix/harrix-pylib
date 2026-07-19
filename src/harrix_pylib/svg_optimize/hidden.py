@@ -64,7 +64,7 @@ def _is_zero_sized(elem: etree._Element) -> bool:
 
 
 def _remove_hidden(root: etree._Element, stylesheet: _StyleSheet) -> bool:
-    """Remove elements that are not rendered. Returns True if any element was removed."""
+    """Remove elements that are not rendered. Returns `True` if any element was removed."""
     removed = False
     for elem in list(root.iter()):
         if elem.tag not in SHAPE_TAGS and not _tag_endswith(elem.tag, "g"):

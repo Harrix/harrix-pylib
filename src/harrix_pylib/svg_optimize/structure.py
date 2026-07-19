@@ -116,7 +116,7 @@ def _merge_element_attrs(source: etree._Element, target: etree._Element) -> None
 
 
 def _optimize_structure(root: etree._Element) -> bool:
-    """Collapse groups and strip empty attributes. Returns True if anything changed."""
+    """Collapse groups and strip empty attributes. Returns `True` if anything changed."""
     changed = False
     changed |= _shorten_ids(root)
     changed |= _collapse_single_child_groups(root)

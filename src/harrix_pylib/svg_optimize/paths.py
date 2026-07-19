@@ -161,7 +161,7 @@ def _optimize_path_data(path_data: str) -> str:
 
 
 def _optimize_paths(root: etree._Element) -> bool:
-    """Optimize path d attributes. Returns True if any path changed."""
+    """Optimize path d attributes. Returns `True` if any path changed."""
     changed = False
     for elem in root.iter(f"{{{SVG_NS}}}path"):
         d = elem.get("d")

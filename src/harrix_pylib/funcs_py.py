@@ -39,7 +39,7 @@ def check_python_docstring_markdown_errors(
 ) -> list[str]:
     """Check docstring Markdown typography for Python sources; errors point at `.py` locations.
 
-    Generates ephemeral docs (including private names when `include_private` is true), runs
+    Generates ephemeral docs (including private names when `include_private` is `True`), runs
     MdChecker, and remaps findings to Python path/line/column. Does not modify the project.
     """
     folder = Path(folder)
@@ -90,7 +90,7 @@ def create_uv_new_library(library_name: str, folder: Path | str, editor: str = "
 
     - `str`: A string containing the result of the operations performed.
 
-    Structure "C:/projects/TestLibrary":
+    Structure `C:/projects/TestLibrary`:
 
     ```text
     ├─ .git
@@ -166,7 +166,7 @@ def create_uv_new_notebook(notebook_name: str, folder: Path | str, editor: str =
 
     - `str`: A string containing the result of the operations performed.
 
-    Structure "C:/projects/jupyter-notebook-01":
+    Structure `C:/projects/jupyter-notebook-01`:
 
     ```text
     ├─ .git
@@ -279,7 +279,7 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
     h.py.create_uv_new_project(project_name, path, "code")
     ```
 
-    Structure "C:/projects/TestProject":
+    Structure `C:/projects/TestProject`:
 
     ```text
     ├─ .git
@@ -973,7 +973,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
     Args:
 
     - `filename` (`str`): The path to the Python file that needs sorting.
-    - `is_use_ruff_format` (`bool`, optional): If True, use Ruff to format the sorted code. Defaults to `True`.
+    - `is_use_ruff_format` (`bool`, optional): If `True`, use Ruff to format the sorted code. Defaults to `True`.
 
     Returns:
 
@@ -1087,7 +1087,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         return (2, name)  # Regular methods/functions
 
     def _decorator_dependency_source_name(decorator_expr: cst.BaseExpression) -> str | None:
-        """If decorator looks like @Name.attr(...) then return Name; else None.
+        """If decorator looks like @Name.attr(...) then return Name; else `None`.
 
         This keeps runtime name resolution stable for decorator registration patterns
         (e.g. Click): `@group.command(...)` requires `group` to exist at import time.
