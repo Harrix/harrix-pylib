@@ -37,7 +37,7 @@ def config_load(filename: str, *, is_temp: bool = False, resolve_snippets: bool 
     Examples:
 
     ```python
-    import harrix-pylib as h
+    import harrix_pylib as h
 
     config = h.dev.config_load("config.json")
     ```

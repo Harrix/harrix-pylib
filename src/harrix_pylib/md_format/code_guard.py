@@ -83,6 +83,7 @@ def _normalize_fence_length(block_lines: list[str]) -> list[str]:
     Needed length is `max(3, longest_marker_run_in_content + 1)`. Extra backticks or
     tildes on the opening/closing lines are removed; fences that are too short for
     nested fences inside the body are lengthened.
+
     """
     if len(block_lines) < _MIN_FENCED_BLOCK_LINES:
         return block_lines

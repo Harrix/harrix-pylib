@@ -197,6 +197,7 @@ def _split_front_matter(markdown_text: str) -> tuple[str, str]:
     """Split YAML front matter from Markdown body.
 
     Returns front matter including `---` delimiters and the remaining body.
+
     """
     markdown_text = markdown_text.lstrip("\ufeff")
     if not markdown_text.startswith("---"):

@@ -136,6 +136,7 @@ def _prefer_source_table_block(source_text: str, formatted_text: str) -> str | N
 
     Alignment is checked after expanding autolink placeholders, because placeholders
     shorten cells and would make a correctly padded source look misaligned mid-format.
+
     """
     source_rows = _table_data_rows(_parse_table_rows_expanded(source_text))
     formatted_rows = _table_data_rows(_parse_table_rows(formatted_text))
@@ -248,6 +249,7 @@ def _source_table_columns_are_aligned(source_text: str) -> bool:
 
     Uses `len` (source characters), not terminal display width, so emoji and
     similar glyphs that occupy two terminal columns do not falsely look misaligned.
+
     """
     lines = [line for line in source_text.splitlines() if line.strip().startswith("|")]
     if len(lines) < 2:

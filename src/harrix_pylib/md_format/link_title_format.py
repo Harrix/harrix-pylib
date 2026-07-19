@@ -225,6 +225,7 @@ def _scan_inline_links(
     """Scan inline links and rebuild text with a per-link handler.
 
     Inline code spans are treated as opaque text and are never scanned for links.
+
     """
     parts: list[str] = []
     for segment, is_code in _identify_code_blocks_line(body):
