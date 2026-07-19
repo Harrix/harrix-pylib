@@ -94,7 +94,9 @@ class PyDocstringFormatter:
 
         """
         path = Path(filename)
-        original = path.read_text(encoding="utf-8")
+        raw = path.read_bytes()
+        had_crlf = b"\r\n" in raw or b"\r" in raw
+        original = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
         try:
             module = cst.parse_module(original)
         except Exception as e:
@@ -103,11 +105,14 @@ class PyDocstringFormatter:
         transformer = _DocstringMdFormatTransformer(self)
         updated = module.visit(transformer)
         new_code = updated.code
-        if new_code == original:
+        content_changed = new_code != original
+        if not content_changed and not had_crlf:
             if transformer.skipped:
                 return f"⚠️ File {path}: skipped {transformer.skipped} docstring(s); unchanged."
             return "File is not changed."
         path.write_text(new_code, encoding="utf-8", newline="\n")
+        if not content_changed and had_crlf:
+            return f"✅ File {path} line endings normalized to LF."
         skip_note = f" (skipped {transformer.skipped})" if transformer.skipped else ""
         return f"✅ File {path} docstring Markdown formatted.{skip_note}"
 

@@ -172,6 +172,26 @@ def example() -> None:
         assert _syntax_warnings(after) == []
 
 
+def test_py_docstring_formatter_normalizes_crlf_to_lf() -> None:
+    source = '''\
+def example() -> None:
+    """Plain summary without special chars.
+
+    Second paragraph.
+    """
+    return None
+'''
+    with TemporaryDirectory() as temp_dir:
+        path = Path(temp_dir) / "example.py"
+        path.write_bytes(source.replace("\n", "\r\n").encode("utf-8"))
+        assert b"\r\n" in path.read_bytes()
+        msg = h.py.PyDocstringFormatter().format_file(path)
+        after = path.read_bytes()
+        assert b"\r\n" not in after
+        assert after.count(b"\r") == 0
+        assert "LF" in msg or "formatted" in msg or "not changed" not in msg
+
+
 def test_py_docstring_formatter_keeps_non_raw_without_backslashes() -> None:
     with TemporaryDirectory() as temp_dir:
         path = Path(temp_dir) / "example.py"
