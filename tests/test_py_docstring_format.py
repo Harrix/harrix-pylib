@@ -9,6 +9,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import harrix_pylib as h
+from harrix_pylib.py_docstring_format import normalize_docstring_code_spans
 
 _NON_RAW_SOURCE = '''\
 def example(text: str) -> str:
@@ -57,6 +58,38 @@ def _syntax_warnings(source: str) -> list[str]:
 def _closing_quote_has_blank_before(source: str) -> bool:
     """Return whether a multiline docstring ends with a blank line before closing quotes."""
     return bool(re.search(r"\n\n[ \t]*(?:r)?(\"\"\"|''')", source))
+
+
+def test_normalize_docstring_code_spans_wraps_literals_and_quoted_idents() -> None:
+    text = (
+        "Return True if ready. Defaults to False.\n"
+        "\n"
+        "Requires 'transliterate'. Code `True` stays. Defaults to \"img\".\n"
+        "\n"
+        "```python\n"
+        "flag = True\n"
+        "```\n"
+    )
+    out = normalize_docstring_code_spans(text)
+    assert "Return `True` if ready. Defaults to `False`." in out
+    assert "Requires `transliterate`." in out
+    assert "Defaults to `img`." in out
+    assert "Code `True` stays." in out
+    assert "flag = True" in out
+
+
+def test_format_python_docstrings_normalizes_one_line_code_spans() -> None:
+    source = '''\
+def ready() -> bool:
+    """Return True if ready."""
+    return True
+'''
+    with TemporaryDirectory() as temp_dir:
+        path = Path(temp_dir) / "example.py"
+        path.write_text(source, encoding="utf-8")
+        h.py.format_python_docstrings(path)
+        after = path.read_text(encoding="utf-8")
+        assert '"""Return `True` if ready."""' in after
 
 
 def test_format_python_docstrings_restores_trailing_blank_and_args_shape() -> None:

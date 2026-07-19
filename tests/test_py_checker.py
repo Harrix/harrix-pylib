@@ -342,3 +342,58 @@ def func(a: int) -> int:
         )
         errors = checker.check(old_style_file_ignored_file)
         assert not any("HP002" in error for error in errors)
+
+        # Test HP003: Bare True/False/None in docstring prose
+        hp003_bare_file = temp_path / "hp003_bare.py"
+        hp003_bare_file.write_text(
+            '''def ready() -> bool:
+    """Return True if ready. Defaults to False."""
+    return True
+''',
+            encoding="utf-8",
+        )
+        errors = checker.check(hp003_bare_file, select={"HP003"})
+        hp003_bare_count = 2
+        assert len([e for e in errors if "HP003" in e]) >= hp003_bare_count
+
+        # Test HP003: Quoted identifier in docstring prose
+        hp003_quoted_file = temp_path / "hp003_quoted.py"
+        hp003_quoted_file.write_text(
+            '''def load() -> None:
+    """Requires 'transliterate' library."""
+    return None
+''',
+            encoding="utf-8",
+        )
+        errors = checker.check(hp003_quoted_file, select={"HP003"})
+        assert any("HP003" in error and "transliterate" in error for error in errors)
+
+        # Test HP003: Already backticked tokens are fine
+        hp003_ok_file = temp_path / "hp003_ok.py"
+        hp003_ok_file.write_text(
+            '''def ready() -> bool:
+    """Return `True` if ready. Defaults to `False`."""
+    return True
+''',
+            encoding="utf-8",
+        )
+        errors = checker.check(hp003_ok_file, select={"HP003"})
+        assert errors == []
+
+        # Test HP003: Code fences are ignored
+        hp003_fence_file = temp_path / "hp003_fence.py"
+        hp003_fence_file.write_text(
+            '''def demo() -> None:
+    """Show example.
+
+    ```python
+    flag = True
+    ```
+
+    """
+    return None
+''',
+            encoding="utf-8",
+        )
+        errors = checker.check(hp003_fence_file, select={"HP003"})
+        assert errors == []
