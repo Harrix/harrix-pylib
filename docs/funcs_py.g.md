@@ -55,7 +55,7 @@ def check_python_docstring_markdown_errors(folder: Path | str) -> list[str]
 
 Check docstring Markdown typography for Python sources; errors point at `.py` locations.
 
-Generates ephemeral docs (including private names when `include_private` is true), runs
+Generates ephemeral docs (including private names when `include_private` is `True`), runs
 MdChecker, and remaps findings to Python path/line/column. Does not modify the project.
 
 <details>
@@ -122,7 +122,7 @@ Returns:
 
 - `str`: A string containing the result of the operations performed.
 
-Structure "C:/projects/TestLibrary":
+Structure `C:/projects/TestLibrary`:
 
 ```text
 ├─ .git
@@ -209,7 +209,7 @@ Returns:
 
 - `str`: A string containing the result of the operations performed.
 
-Structure "C:/projects/jupyter-notebook-01":
+Structure `C:/projects/jupyter-notebook-01`:
 
 ```text
 ├─ .git
@@ -332,7 +332,7 @@ path = Path("C:/projects")
 h.py.create_uv_new_project(project_name, path, "code")
 ```
 
-Structure "C:/projects/TestProject":
+Structure `C:/projects/TestProject`:
 
 ```text
 ├─ .git
@@ -1108,7 +1108,7 @@ in a structured manner. The sorted code is then written back to the file.
 Args:
 
 - `filename` (`str`): The path to the Python file that needs sorting.
-- `is_use_ruff_format` (`bool`, optional): If True, use Ruff to format the sorted code. Defaults to `True`.
+- `is_use_ruff_format` (`bool`, optional): If `True`, use Ruff to format the sorted code. Defaults to `True`.
 
 Returns:
 
@@ -1208,13 +1208,15 @@ def _helper_function():
 def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
 
     def _get_sort_key(name: str) -> tuple[int, str]:
-        """Return a sort key for function/method names.
+        r"""Return a sort key for function/method names.
 
         Priority:
-        0. _init__ method - highest priority
+        0\. _init_\_ method - highest priority
+
         1. Other special methods (double underscore)
         2. Regular methods/functions
         3. Private methods/functions (single underscore)
+
         """
         if name == "_init__":
             return (0, name)  # _init__ always first
@@ -1225,10 +1227,11 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         return (2, name)  # Regular methods/functions
 
     def _decorator_dependency_source_name(decorator_expr: cst.BaseExpression) -> str | None:
-        """If decorator looks like @Name.attr(...) then return Name; else None.
+        """If decorator looks like @Name.attr(...) then return Name; else `None`.
 
         This keeps runtime name resolution stable for decorator registration patterns
         (e.g. Click): `@group.command(...)` requires `group` to exist at import time.
+
         """
         expr: cst.BaseExpression = decorator_expr
         if isinstance(expr, cst.Call):
@@ -1243,6 +1246,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         """Stable topological sort using `names` as tie-breaker.
 
         If a cycle exists, the remaining nodes are appended in the original order.
+
         """
         index: dict[str, int] = {name: i for i, name in enumerate(names)}
 

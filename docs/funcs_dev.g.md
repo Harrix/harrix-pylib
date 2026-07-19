@@ -46,7 +46,7 @@ Returns:
 Examples:
 
 ```python
-import harrix-pylib as h
+import harrix_pylib as h
 
 config = h.dev.config_load("config.json")
 ```
@@ -148,7 +148,7 @@ and saves the updated configuration back to the file.
 Args:
 
 - `key` (`str`): Configuration key to update. Supports nested keys using dot notation
-  (e.g., `"section.key"` for nested dictionaries).
+  (e.g., `section.key` for nested dictionaries).
 - `value` (`object`): New value to set for the configuration key.
 - `filename` (`str`): Path to the JSON configuration file.
 - `is_temp` (`bool`): If `True`, update the temporary config file (`config-temp.json`)
@@ -223,7 +223,7 @@ Args:
 
 Returns:
 
-- `EndOfLine`: `"lf"` or `"crlf"`.
+- `EndOfLine`: `lf` or `crlf`.
 
 Example:
 

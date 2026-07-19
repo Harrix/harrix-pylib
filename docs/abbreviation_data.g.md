@@ -50,7 +50,7 @@ class AbbreviationData:
 def is_spaced_multipart(form: str) -> bool
 ```
 
-Return True if form is a multi-part dotted abbrev with spaces (H006 candidate).
+Return `True` if form is a multi-part dotted abbrev with spaces (H006 candidate).
 
 <details>
 <summary>Code:</summary>

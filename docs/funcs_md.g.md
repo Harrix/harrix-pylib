@@ -490,7 +490,7 @@ Args:
 - `base_path` (`Path | str`): The path where the note will be added.
 - `name` (`str`): The name for the note file or folder.
 - `text` (`str`): The text content for the note.
-- `is_with_images` (`bool`): If true, creates folders for images.
+- `is_with_images` (`bool`): If `True`, creates folders for images.
 
 Returns:
 
@@ -1295,7 +1295,7 @@ Args:
 
 - `markdown_text` (`str`): The Markdown text containing image links.
 - `path_md` (`Path | str`): The path to the Markdown file or its directory.
-- `image_folder` (`str`, Defaults to "img"): The folder where images will be stored locally.
+- `image_folder` (`str`, Defaults to `img`): The folder where images will be stored locally.
 
 Returns:
 
@@ -2267,7 +2267,7 @@ def generate_short_note_toc_with_links(filename: Path | str) -> str
 Generate a separate Markdown file with only the Table of Contents (TOC) from a given Markdown file.
 
 This function reads a Markdown file, processes its content to create a TOC, and writes
-a new file with the ".short.g.md" extension containing only the TOC.
+a new file with the `.short.g.md` extension containing only the TOC.
 
 Args:
 
@@ -2446,8 +2446,8 @@ Returns:
 
 Notes:
 
-- The function looks for Markdown files with years in their names (e.g., "2023.md",
-  "Before-2013-(Cinema).md", "After_2024.md")
+- The function looks for Markdown files with years in their names (e.g., `2023.md`,
+  "Before-2013-(Cinema).md", `After_2024.md`)
 - Book entries are identified by second-level headings (## Title)
 - Ratings are extracted from headings in format "## Title: N" where N is a number
 - YAML frontmatter from the first processed file will be copied to the summary files
@@ -3602,7 +3602,7 @@ Args:
 
 - `filename` (`Path | str`): The path to the file where the section needs to be replaced.
 - `replace_content` (`str`): The content to replace the section with.
-- `title_section` (`str`, Defaults to `"## 📋 List of commands"`): The title of the section to be replaced.
+- `title_section` (`str`, Defaults to `## 📋 List of commands`): The title of the section to be replaced.
 
 Returns:
 
@@ -3658,7 +3658,7 @@ Args:
 
 - `markdown_text` (`str`): The Markdown text.
 - `replace_content` (`str`): The content to replace the section with.
-- `title_section` (`str`, Defaults to `"## 📋 List of commands"`): The title of the section to be replaced.
+- `title_section` (`str`, Defaults to `## 📋 List of commands`): The title of the section to be replaced.
 
 Returns:
 
@@ -3813,8 +3813,8 @@ If `False`, sorting is always performed. Defaults to `False`.
 
 Returns:
 
-- `str`: A message indicating whether the file was sorted and saved (`"✅ File {filename} applied."`)
-  or if no changes were made (`"File is not changed."`).
+- `str`: A message indicating whether the file was sorted and saved (`✅ File {filename} applied.`)
+  or if no changes were made (`File is not changed.`).
 
 Notes:
 
@@ -3992,10 +3992,10 @@ def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool
             return markdown_text
 
     def is_date_heading(section_text: str) -> datetime | None:
-        """Return datetime if the first line of the section (## XXX) is a date, otherwise None."""
+        """Return datetime if the first line of the section (## XXX) is a date, otherwise `None`."""
 
         def _try_parse_date(date_str: str, pattern: str) -> datetime | None:
-            """Try to parse a date string with a given pattern, return None if it fails."""
+            """Try to parse a date string with a given pattern, return `None` if it fails."""
             try:
                 # Special handling for year-only pattern
                 if pattern == "%Y":
@@ -4028,7 +4028,7 @@ def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool
         return None
 
     def is_top_section(section_text: str) -> bool:
-        """Return True if the section is marked as a top section."""
+        """Return `True` if the section is marked as a top section."""
         first_line = section_text.split("\n", 1)[0].strip()
         return "<!-- top-section -->" in first_line
 

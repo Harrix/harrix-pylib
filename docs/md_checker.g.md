@@ -54,7 +54,7 @@ Rules:
   JSON databases are allowed; not gated by YAML `lang`).
 - **H022** - Non-breaking space character found.
 - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
-- **H024** - Latin "x" or Cyrillic "x" used instead of multiplication sign "x".
+- **H024** - Latin `x` or Cyrillic `x` used instead of multiplication sign `x`.
 - **H025** - Image Markdown not at start of line (several images in a row are allowed).
 - **H026** - Horizontal bar `―` (dialogue dash) should not be used.
 - **H027** - Space required after the numero sign (U+2116).
@@ -686,6 +686,7 @@ class MdChecker:
         """Check for backslash in Markdown link/image paths (H039).
 
         Matches inside inline code are skipped.
+
         """
         offset = 0
         for segment, in_code in h.md.identify_code_blocks_line(line):
@@ -747,6 +748,7 @@ class MdChecker:
 
         Skips fenced code blocks and inline code. Decodes percent-encoded paths and
         strips optional link titles / angle-bracket destinations.
+
         """
         all_lines = content.splitlines()
         content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
@@ -915,11 +917,12 @@ class MdChecker:
             yield self._format_error("H014", error_msg, filename, line_num=line_num, col=col)
 
     def _check_colon_outside_emphasis(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for colon outside inline emphasis (H030).
+        r"""Check for colon outside inline emphasis (H030).
 
-        Colon after *, **, _, __, ~~ labels should be inside emphasis markers when
+        Colon after \*, \*\*, \_, __, ~~ labels should be inside emphasis markers when
         the same line continues after the colon. A trailing colon at end of line is allowed.
         Uses original line; matches inside inline code are skipped.
+
         """
         code_ranges: list[tuple[int, int]] = []
         pos = 0
@@ -1026,6 +1029,7 @@ class MdChecker:
         """Check for incorrect dash/hyphen usage (H016). Applies only to Markdown text, not YAML/code.
 
         Exception: `--` at the start of blockquote attribution lines (e.g. `> -- Author`).
+
         """
         # Single pass over segments: check for " - ", " − " (Unicode minus), and " -- "  # noqa: RUF003
         hyphen_found = False
@@ -1091,8 +1095,10 @@ class MdChecker:
         """Check for double spaces (H009).
 
         Scans the original line segment-by-segment so that:
+
         - double spaces inside inline code are ignored;
-        - concatenating prose after stripping inline code cannot invent a false `  `.
+        - concatenating prose after stripping inline code cannot invent a `False` `  `.
+
         """
         if "  " not in line:
             return
@@ -1185,7 +1191,8 @@ class MdChecker:
         """Check for trailing period at end of ATX heading (H057).
 
         A final `.` is forbidden; `?`, `!`, and `…` are allowed. An internal
-        period before the last sentence is fine (e.g. `Глава 5. Буди, буди!`).  # ignore: HP001
+        period before the last sentence is fine (e.g. `Глава 5. Буди, буди!`). # ignore: HP001
+
         """
         match = self._ATX_HEADING_PATTERN.match(line)
         if not match:
@@ -1214,6 +1221,7 @@ class MdChecker:
         """Check for HTML tags in content (H019). Exception: `<details>` and `<summary>` are allowed.
 
         Skips inline code segments (e.g. `` `<file>...</file>` `` in backticks).
+
         """
         offset = 0
         for segment, in_code in h.md.identify_code_blocks_line(line):
@@ -1265,6 +1273,7 @@ class MdChecker:
 
         A line may contain several images in a row (e.g. badge rows), separated only by
         whitespace. Occurrences of `![` inside inline code are ignored.
+
         """
         masked_chars: list[str] = []
         for segment, in_code in h.md.identify_code_blocks_line(line):
@@ -1371,10 +1380,11 @@ class MdChecker:
         """Check for lowercase letter after sentence-ending punctuation (H021).
 
         Checks each non-inline-code segment separately so removed code (e.g.
-        ``Optional. `"value"` stores``) does not falsely join a period with the
+        ``Optional. `value` stores``) does not falsely join a period with the
         next word. Periods in ordered-list and section numbers (`1.`,
         `3.1.`) and known dotted abbreviations from packaged JSON databases
         are ignored (abbreviations are masked before the scan).
+
         """
         pattern = r"[.!?]\s+([a-zа-яё])"  # noqa: RUF001  # ignore: HP001
 
@@ -1652,6 +1662,7 @@ class MdChecker:
 
         Uses a regex lookahead to match `№` only when the next character exists and is not a space,
         which naturally excludes `№` at the end of a line. Matches inside inline code are skipped.
+
         """
         offset = 0
         for segment, in_code in h.md.identify_code_blocks_line(line):
@@ -1668,7 +1679,8 @@ class MdChecker:
         """Check for `.`, `,`, `;`, `:` before closing guillemet (H058).
 
         Only applies when the line contains Russian letters. Period is flagged only
-        after two or more letters so abbreviations like `«и т. д.»` are allowed.  # ignore: HP001
+        after two or more letters so abbreviations like `«и т. д.»` are allowed. # ignore: HP001
+
         """
         if not re.search(r"[а-яА-ЯёЁ]", line):  # noqa: RUF001  # ignore: HP001
             return
@@ -1695,6 +1707,7 @@ class MdChecker:
 
         Only applies when line contains Russian letters; otherwise straight quotes "" are allowed.
         Exception: straight double quote after a digit is allowed (inch notation, e.g. 14", 15.6").
+
         """
         if not re.search(r"[а-яА-ЯёЁ]", line):  # noqa: RUF001  # ignore: HP001
             return
@@ -1744,6 +1757,7 @@ class MdChecker:
 
         Only whitespace may separate the two words (so `Notes-Notes` is allowed).
         Hyphenated compounds count as one token.
+
         """
         previous: str | None = None
         previous_start = 0
@@ -1773,10 +1787,12 @@ class MdChecker:
         """Check for capitalized Russian polite pronouns (H023). Use lowercase when addressing the reader.
 
         Exception: pronoun at sentence start is allowed:
+
         - after line start or after `.!?;`;
-        - after opening guillemet `«` (direct speech, e.g. `«Ваша задача»`);  # ignore: HP001
-        - after dash at line start (dialogue, e.g. `— Ваша работа хороша`).  # ignore: HP001
-        Yields at most one error per line.
+        - after opening guillemet `«` (direct speech, e.g. `«Ваша задача»`); # ignore: HP001
+        - after dash at line start (dialogue, e.g. `— Ваша работа хороша`). # ignore: HP001
+          Yields at most one error per line.
+
         """
         boundary_before = r"(?<![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001 # ignore: HP001
         boundary_after = r"(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001 # ignore: HP001
@@ -1832,10 +1848,11 @@ class MdChecker:
             previous_level = level
 
     def _check_space_after_emphasis_colon(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for missing space after colon in or after inline emphasis (H029).
+        r"""Check for missing space after colon in or after inline emphasis (H029).
 
-        Colon inside or after *, **, _, __, ~~ must be followed by a space before text.
+        Colon inside or after \*, \*\*, \_, __, ~~ must be followed by a space before text.
         Uses original line; matches inside inline code are skipped.
+
         """
         code_ranges: list[tuple[int, int]] = []
         pos = 0
@@ -1875,8 +1892,9 @@ class MdChecker:
         """Check for space before punctuation marks (H015).
 
         Uses original line so that removal of inline code (e.g. `word`:)
-        does not create false ` :` when segments are concatenated.
+        does not create `False` ` :` when segments are concatenated.
         Matches inside inline code (e.g. `cd ..`) are skipped.
+
         """
         code_ranges: list[tuple[int, int]] = []
         pos = 0
@@ -1918,6 +1936,7 @@ class MdChecker:
         """Check for exactly two consecutive dots (H032).
 
         Does not match `...` (handled by H017) or `../` parent-directory paths.
+
         """
         for match in self._TWO_DOTS_PATTERN.finditer(clean_line):
             error_msg = f'{self.RULES["H032"]}: ".." should be "." or "…"'
@@ -1970,6 +1989,7 @@ class MdChecker:
 
         Splits on unescaped `|` only so escaped pipes (`\\|` inside
         `` `a \\| b` ``) stay inside one cell and do not trigger this rule.
+
         """
         stripped = line.strip()
         if not stripped.startswith("|"):
@@ -1997,6 +2017,7 @@ class MdChecker:
         """Check for unmatched guillemets on a line (H043).
 
         Guillemets inside inline code are ignored.
+
         """
         open_count = 0
         close_count = 0
@@ -2019,11 +2040,12 @@ class MdChecker:
         yield self._format_error("H043", self.RULES["H043"], filename, line_num=line_num, col=first_col)
 
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for Latin 'x' or Cyrillic 'x' used instead of multiplication sign '&ast;' (H024).
+        r"""Check for Latin `x` or Cyrillic `x` used instead of multiplication sign '\*' (H024).
 
         Only checks text outside inline code and outside link URLs.
-        Exceptions: 'x86' and 'x64'; digit + 'x' + space (e.g. 2x Type-C);
-        'x' + digit(s) when not after digit (e.g. PCIe x4, x16).
+        Exceptions: `x86` and `x64`; digit + `x` + space (e.g. 2x Type-C);
+        `x` + digit(s) when not after digit (e.g. PCIe x4, x16).
+
         """
         link_url_ranges = self._get_link_url_ranges(line)
         offset = 0
@@ -2096,6 +2118,7 @@ class MdChecker:
 
         IDs are stored percent-decoded so fragments like `#️-technologies` (raw
         U+FE0F) match slugs that `generate_id` emits as `%EF%B8%8F-technologies`.
+
         """
         existing_ids: set[str] = set()
         heading_ids: set[str] = set()
@@ -2136,6 +2159,7 @@ class MdChecker:
 
         A title is stripped only when it uses CommonMark quoting
         (`path "title"`, `path 'title'`, or `path (title)`).
+
         """
         url = raw.strip()
         if not url:
@@ -2212,7 +2236,7 @@ class MdChecker:
     # =========================================================================
 
     def _image_alt_text_issue(self, alt: str) -> str | None:
-        """Return H031 issue description for invalid alt text, or None if alt text is acceptable."""
+        """Return H031 issue description for invalid alt text, or `None` if alt text is acceptable."""
         stripped = alt.strip()
         if not stripped:
             return "empty alt text"
@@ -2224,7 +2248,7 @@ class MdChecker:
 
     @staticmethod
     def _is_blockquote_attribution_line(line: str) -> bool:
-        """Return True if line is a blockquote attribution (e.g. `> -- Author`)."""
+        """Return `True` if line is a blockquote attribution (e.g. `> -- Author`)."""
         stripped = line.lstrip()
         if not stripped.startswith(">"):
             return False
@@ -2235,7 +2259,7 @@ class MdChecker:
 
     @staticmethod
     def _is_escaped_table_pipe(line: str, index: int) -> bool:
-        """Return True if `line[index]` is a pipe escaped by an odd run of backslashes."""
+        """Return `True` if `line[index]` is a pipe escaped by an odd run of backslashes."""
         n = 0
         j = index - 1
         while j >= 0 and line[j] == "\\":
@@ -2245,34 +2269,35 @@ class MdChecker:
 
     @staticmethod
     def _is_h021_allowed_period(segment: str, period_pos: int) -> bool:
-        """Return True if punctuation at `period_pos` is not a sentence-ending period for H021.
+        """Return `True` if punctuation at `period_pos` is not a sentence-ending period for H021.
 
         Dotted abbreviations are masked before this check; remaining exceptions are
         ordered-list / section numbers (digit before the period).
+
         """
         return period_pos > 0 and segment[period_pos - 1].isdigit()
 
     def _is_horizontal_rule(self, line: str) -> bool:
-        """Return True if the line is a Markdown horizontal rule (`---`, `***`, `___`)."""
+        """Return `True` if the line is a Markdown horizontal rule (`---`, `***`, `___`)."""
         return bool(self._HORIZONTAL_RULE_PATTERN.match(line.strip()))
 
     @staticmethod
     def _is_hyphenated_identifier_fragment(text: str, start: int, end: int) -> bool:
-        """Return True if span is part of a hyphenated identifier (e.g. `markdown-it`, `git-diff-friendly`)."""
+        """Return `True` if span is part of a hyphenated identifier (e.g. `markdown-it`, `git-diff-friendly`)."""
         if start > 0 and text[start - 1] == "-":
             return True
         return end < len(text) and text[end] == "-"
 
     @staticmethod
     def _is_identifier_like_link_label(label: str) -> bool:
-        """Return True if link label looks like a package/URL identifier, not prose."""
+        """Return `True` if link label looks like a package/URL identifier, not prose."""
         stripped = label.strip()
         if not stripped or " " in stripped:
             return False
         return any(c in stripped for c in "-._")
 
     def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
-        """Return True if position pos in line is inside a table cell that contains only a hyphen."""
+        """Return `True` if position pos in line is inside a table cell that contains only a hyphen."""
         parts = line.split("|")
         min_count_parts = 2
         if len(parts) < min_count_parts:
@@ -2290,6 +2315,7 @@ class MdChecker:
 
         Trailing Markdown emphasis markers (`*`, `_`) are ignored so lines like
         `**Title:**` are treated as ending with `:`.
+
         """
         stripped = line.rstrip()
         end = len(stripped)
@@ -2304,7 +2330,7 @@ class MdChecker:
         return "".join(segment for segment, in_code in h.md.identify_code_blocks_line(line) if not in_code)
 
     def _should_check_paragraph_end(self, line: str) -> bool:
-        """Return True if line is a regular paragraph that should end with colon before code/image."""
+        """Return `True` if line is a regular paragraph that should end with colon before code/image."""
         stripped = line.strip()
         return (
             bool(stripped)

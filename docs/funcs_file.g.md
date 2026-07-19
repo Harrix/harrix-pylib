@@ -51,7 +51,7 @@ Args:
 
 Returns:
 
-- `str`: A string where each line represents an action taken on a subfolder (e.g., "Fix subfolder_name").
+- `str`: A string where each line represents an action taken on a subfolder (e.g., `Fix subfolder_name`).
 
 Notes:
 
@@ -158,7 +158,7 @@ Args:
 
 - `path` (`Path | str`): The directory path where the files will be searched.
   If provided as a string, it will be converted to a Path object.
-- `ext` (`str`): The file extension to filter files. For example, ".txt".
+- `ext` (`str`): The file extension to filter files. For example, `.txt`.
 - `func` (`Callable`): A function that takes a single argument (the file path as a string)
   and performs an operation on the file. It may return a value.
 
@@ -262,7 +262,7 @@ def check_featured_image(path: Path | str) -> tuple[bool, str]
 Check for the presence of `featured_image.*` files in every child folder, not recursively.
 
 This function goes through each immediate subfolder of the given path and checks if there
-is at least one file with the name starting with "featured-image". If such a file is missing
+is at least one file with the name starting with `featured-image`. If such a file is missing
 in any folder, it logs this occurrence.
 
 Args:
@@ -325,7 +325,7 @@ Args:
 
 - `path` (`Path | str`): The directory path where the files will be searched.
   If provided as a string, it will be converted to a Path object.
-- `ext` (`str`): The file extension to filter files. For example, ".md".
+- `ext` (`str`): The file extension to filter files. For example, `.md`.
 - `func` (`Callable[[Path | str], list]`): A function that takes a file path and returns a list
   representing check results or errors.
 
@@ -1004,7 +1004,7 @@ Returns:
 Note:
 
 - The function modifies the filename in place if changes are made.
-- Requires 'transliterate' library for Russian transliteration.
+- Requires `transliterate` library for Russian transliteration.
 - Handles various EPUB metadata formats and encodings.
 
 Example:
@@ -1198,7 +1198,7 @@ Returns:
 Note:
 
 - The function modifies the filename in place if changes are made.
-- Requires 'transliterate' library for Russian transliteration.
+- Requires `transliterate` library for Russian transliteration.
 - Handles various FB2 metadata formats and encodings.
 
 Example:
@@ -1682,7 +1682,7 @@ def rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd(folder_path: Path | str) -> str:
 def rename_largest_images_to_featured(path: Path | str) -> str
 ```
 
-Find the largest image in each subdirectory of the given path and renames it to 'featured-image'.
+Find the largest image in each subdirectory of the given path and renames it to `featured-image`.
 
 Args:
 
@@ -1696,7 +1696,7 @@ Note:
 
 - Only processes subdirectories, not the main directory itself.
 - Looks for image files with extensions: `.jpg`, `.jpeg`, `.png`, `.avif`, `.svg`
-- Will not overwrite existing 'featured-image' files.
+- Will not overwrite existing `featured-image` files.
 
 Example:
 
@@ -1788,7 +1788,7 @@ If transliteration doesn't improve the filename, it remains unchanged.
 Args:
 
 - `filename` (`Path | str`): The path to the PDF file to be processed.
-- `is_verbose` (`bool`): If True, print detailed debug information. Default is False.
+- `is_verbose` (`bool`): If `True`, print detailed debug information. Default is `False`.
 
 Returns:
 
@@ -1797,8 +1797,8 @@ Returns:
 Note:
 
 - The function modifies the filename in place if changes are made.
-- Requires 'pypdf' library for PDF metadata extraction.
-- Requires 'transliterate' library for Russian transliteration.
+- Requires `pypdf` library for PDF metadata extraction.
+- Requires `transliterate` library for Russian transliteration.
 - Requires 'cryptography>=3.1' for encrypted PDF files.
 - Handles various PDF metadata formats and encodings.
 - Preserves Russian characters and avoids renaming if they would be lost.
@@ -2045,7 +2045,7 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
         return has_cyrillic(original) and not has_cyrillic(new)
 
     def validate_file(filename: Path) -> str | None:
-        """Validate file exists and is PDF. Returns error message or None."""
+        """Validate file exists and is PDF. Returns error message or `None`."""
         if not filename.exists():
             return f"❌ File {filename} does not exist."
 

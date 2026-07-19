@@ -25,6 +25,85 @@ _BARE_LITERAL_RE = re.compile(r"\b(True|False|None)\b")
 _QUOTED_CODE_RE = re.compile(r"""(['"])([A-Za-z_][\w.-]*)\1""")
 
 
+class _DocstringMdFormatTransformer(cst.CSTTransformer):
+    """Rewrite multiline docstring SimpleString nodes with formatted Markdown."""
+
+    def __init__(self) -> None:
+        """Initialize skip counter."""
+        super().__init__()
+        self.skipped = 0
+
+    def leave_ClassDef(  # noqa: N802
+        self,
+        original_node: cst.ClassDef,
+        updated_node: cst.ClassDef,  # noqa: ARG002
+    ) -> cst.ClassDef:
+        """Format class docstring if present."""
+        return self._format_indented_owner(updated_node)
+
+    def leave_FunctionDef(  # noqa: N802
+        self,
+        original_node: cst.FunctionDef,
+        updated_node: cst.FunctionDef,  # noqa: ARG002
+    ) -> cst.FunctionDef:
+        """Format function/method docstring if present."""
+        return self._format_indented_owner(updated_node)
+
+    def leave_Module(  # noqa: N802
+        self,
+        original_node: cst.Module,
+        updated_node: cst.Module,  # noqa: ARG002
+    ) -> cst.Module:
+        """Format module docstring if present."""
+        new_body = self._format_first_docstring_in_body(updated_node.body, content_indent="")
+        if new_body is None:
+            return updated_node
+        return updated_node.with_changes(body=new_body)
+
+    def _format_first_docstring_in_body(
+        self,
+        statements: Sequence[cst.BaseStatement],
+        *,
+        content_indent: str,
+    ) -> list[cst.BaseStatement] | None:
+        if not statements:
+            return None
+        first = statements[0]
+        string_node = _docstring_simple_string(first)
+        if string_node is None:
+            return None
+
+        if "\n" not in string_node.value:
+            new_string = _normalize_one_line_docstring_code_spans(string_node)
+        else:
+            inferred_indent = _content_indent_from_literal(string_node.value) or content_indent
+            new_string = _format_docstring_simple_string(string_node, content_indent=inferred_indent)
+            if new_string is None:
+                self.skipped += 1
+                return None
+
+        if new_string is None or new_string.value == string_node.value:
+            return None
+
+        if not isinstance(first, cst.SimpleStatementLine):
+            return None
+        expr = first.body[0]
+        if not isinstance(expr, cst.Expr):
+            return None
+        new_first = first.with_changes(body=[expr.with_changes(value=new_string)])
+        return [new_first, *list(statements[1:])]
+
+    def _format_indented_owner(self, updated_node: cst.ClassDef | cst.FunctionDef) -> cst.ClassDef | cst.FunctionDef:
+        body = updated_node.body
+        if not isinstance(body, cst.IndentedBlock):
+            return updated_node
+        indent = body.indent if isinstance(body.indent, str) else "    "
+        new_statements = self._format_first_docstring_in_body(body.body, content_indent=indent)
+        if new_statements is None:
+            return updated_node
+        return updated_node.with_changes(body=body.with_changes(body=new_statements))
+
+
 def format_python_docstrings(filename: Path | str) -> str:
     r"""Format Markdown inside Python docstrings in a file.
 
@@ -65,6 +144,22 @@ def format_python_docstrings(filename: Path | str) -> str:
     return f"✅ File {path} docstring Markdown formatted.{skip_note}"
 
 
+def iter_docstring_code_span_issues(text: str) -> Iterator[tuple[int, int, str]]:
+    """Yield `(line_index, col_1based, token)` for prose tokens that should use backticks."""
+    lines = text.split("\n")
+    for line_index, (line, in_fence) in enumerate(_identify_code_blocks(lines)):
+        if in_fence:
+            continue
+        offset = 0
+        for segment, in_code in _identify_code_blocks_line(line):
+            if not in_code:
+                for match in _QUOTED_CODE_RE.finditer(segment):
+                    yield line_index, offset + match.start() + 1, match.group(0)
+                for match in _BARE_LITERAL_RE.finditer(segment):
+                    yield line_index, offset + match.start() + 1, match.group(1)
+            offset += len(segment)
+
+
 def normalize_docstring_code_spans(text: str) -> str:
     """Wrap code tokens in backticks in docstring Markdown prose.
 
@@ -91,221 +186,6 @@ def normalize_docstring_code_spans(text: str) -> str:
     if text.endswith("\n") and not result.endswith("\n"):
         result += "\n"
     return result
-
-
-def iter_docstring_code_span_issues(text: str) -> Iterator[tuple[int, int, str]]:
-    """Yield `(line_index, col_1based, token)` for prose tokens that should use backticks."""
-    lines = text.split("\n")
-    for line_index, (line, in_fence) in enumerate(_identify_code_blocks(lines)):
-        if in_fence:
-            continue
-        offset = 0
-        for segment, in_code in _identify_code_blocks_line(line):
-            if not in_code:
-                for match in _QUOTED_CODE_RE.finditer(segment):
-                    yield line_index, offset + match.start() + 1, match.group(0)
-                for match in _BARE_LITERAL_RE.finditer(segment):
-                    yield line_index, offset + match.start() + 1, match.group(1)
-            offset += len(segment)
-
-
-def _normalize_prose_segment(segment: str) -> str:
-    """Normalize quoted identifiers and bare True/False/None in a prose segment."""
-    result = _QUOTED_CODE_RE.sub(lambda match: f"`{match.group(2)}`", segment)
-    return _BARE_LITERAL_RE.sub(lambda match: f"`{match.group(1)}`", result)
-
-
-class _DocstringMdFormatTransformer(cst.CSTTransformer):
-    """Rewrite multiline docstring SimpleString nodes with formatted Markdown."""
-
-    def __init__(self) -> None:
-        """Initialize skip counter."""
-        super().__init__()
-        self.skipped = 0
-
-    def leave_Module(  # noqa: N802
-        self, original_node: cst.Module, updated_node: cst.Module  # noqa: ARG002
-    ) -> cst.Module:
-        """Format module docstring if present."""
-        new_body = self._format_first_docstring_in_body(updated_node.body, content_indent="")
-        if new_body is None:
-            return updated_node
-        return updated_node.with_changes(body=new_body)
-
-    def leave_ClassDef(  # noqa: N802
-        self, original_node: cst.ClassDef, updated_node: cst.ClassDef  # noqa: ARG002
-    ) -> cst.ClassDef:
-        """Format class docstring if present."""
-        return self._format_indented_owner(updated_node)
-
-    def leave_FunctionDef(  # noqa: N802
-        self, original_node: cst.FunctionDef, updated_node: cst.FunctionDef  # noqa: ARG002
-    ) -> cst.FunctionDef:
-        """Format function/method docstring if present."""
-        return self._format_indented_owner(updated_node)
-
-    def _format_indented_owner(
-        self, updated_node: cst.ClassDef | cst.FunctionDef
-    ) -> cst.ClassDef | cst.FunctionDef:
-        body = updated_node.body
-        if not isinstance(body, cst.IndentedBlock):
-            return updated_node
-        indent = body.indent if isinstance(body.indent, str) else "    "
-        new_statements = self._format_first_docstring_in_body(body.body, content_indent=indent)
-        if new_statements is None:
-            return updated_node
-        return updated_node.with_changes(body=body.with_changes(body=new_statements))
-
-    def _format_first_docstring_in_body(
-        self,
-        statements: Sequence[cst.BaseStatement],
-        *,
-        content_indent: str,
-    ) -> list[cst.BaseStatement] | None:
-        if not statements:
-            return None
-        first = statements[0]
-        string_node = _docstring_simple_string(first)
-        if string_node is None:
-            return None
-
-        if "\n" not in string_node.value:
-            new_string = _normalize_one_line_docstring_code_spans(string_node)
-        else:
-            inferred_indent = _content_indent_from_literal(string_node.value) or content_indent
-            new_string = _format_docstring_simple_string(string_node, content_indent=inferred_indent)
-            if new_string is None:
-                self.skipped += 1
-                return None
-
-        if new_string is None or new_string.value == string_node.value:
-            return None
-
-        if not isinstance(first, cst.SimpleStatementLine):
-            return None
-        expr = first.body[0]
-        if not isinstance(expr, cst.Expr):
-            return None
-        new_first = first.with_changes(body=[expr.with_changes(value=new_string)])
-        return [new_first, *list(statements[1:])]
-
-
-def _docstring_simple_string(stmt: cst.BaseStatement) -> cst.SimpleString | None:
-    if not isinstance(stmt, cst.SimpleStatementLine):
-        return None
-    if len(stmt.body) != 1:
-        return None
-    expr = stmt.body[0]
-    if not isinstance(expr, cst.Expr) or not isinstance(expr.value, cst.SimpleString):
-        return None
-    return expr.value
-
-
-def _normalize_one_line_docstring_code_spans(string_node: cst.SimpleString) -> cst.SimpleString | None:
-    """Apply code-span normalization to a one-line docstring literal."""
-    prefix, quote = _literal_prefix_and_quote(string_node.value)
-    if any(char in prefix for char in _UNSUPPORTED_PREFIX_CHARS):
-        return None
-
-    content = _evaluate_string_literal(string_node.value)
-    if content is None or "\n" in content:
-        return None
-
-    new_content = normalize_docstring_code_spans(content)
-    if new_content == content:
-        return None
-
-    is_raw = "r" in prefix.lower()
-    if not is_raw and "\\" in new_content:
-        prefix = _ensure_raw_prefix(prefix)
-        is_raw = True
-
-    body = new_content if is_raw else _encode_non_raw_line(new_content, quote=quote)
-    if quote in body:
-        return None
-    return cst.SimpleString(value=f"{prefix}{quote}{body}{quote}")
-
-
-def _format_docstring_simple_string(
-    string_node: cst.SimpleString,
-    *,
-    content_indent: str,
-) -> cst.SimpleString | None:
-    prefix, quote = _literal_prefix_and_quote(string_node.value)
-    if quote not in _TRIPLE_QUOTES:
-        return None
-    if any(char in prefix for char in _UNSUPPORTED_PREFIX_CHARS):
-        return None
-
-    content = _evaluate_string_literal(string_node.value)
-    if content is None or "\n" not in content:
-        return None
-
-    cleaned = inspect.cleandoc(content)
-    formatter = MdFormatter(end_of_line="lf", prose_wrap="preserve")
-    formatted = formatter.format(cleaned + "\n")
-    formatted = normalize_docstring_code_spans(formatted)
-    # Docstrings need a blank content line before the closing quotes (unlike .md files).
-    formatted = formatted.rstrip("\n") + "\n\n"
-
-    if "\\" in formatted:
-        prefix = _ensure_raw_prefix(prefix)
-
-    try:
-        new_literal = _build_docstring_literal(
-            formatted,
-            prefix=prefix,
-            quote=quote,
-            content_indent=content_indent,
-        )
-    except ValueError:
-        return None
-    return cst.SimpleString(value=new_literal)
-
-
-def _ensure_raw_prefix(prefix: str) -> str:
-    """Return a string prefix that includes raw (`r` / `R`)."""
-    if "r" in prefix.lower():
-        return prefix
-    return f"r{prefix}"
-
-
-def _evaluate_string_literal(literal: str) -> str | None:
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", SyntaxWarning)
-        try:
-            value = ast.literal_eval(literal)
-        except (SyntaxError, ValueError):
-            return None
-    return value if isinstance(value, str) else None
-
-
-def _literal_prefix_and_quote(literal: str) -> tuple[str, str]:
-    match = _STRING_PREFIX_RE.match(literal)
-    prefix = match.group(0) if match else ""
-    rest = literal[len(prefix) :]
-    for quote in _TRIPLE_QUOTES:
-        if rest.startswith(quote):
-            return prefix, quote
-    if rest.startswith('"'):
-        return prefix, '"'
-    if rest.startswith("'"):
-        return prefix, "'"
-    msg = f"Unsupported string literal: {literal[:20]!r}"
-    raise ValueError(msg)
-
-
-def _content_indent_from_literal(literal: str) -> str:
-    """Infer indentation used on continuation lines inside a multiline literal."""
-    lines = literal.split("\n")
-    if len(lines) < _MIN_MULTILINE_LITERAL_LINES:
-        return ""
-    last = lines[-1]
-    for quote in _TRIPLE_QUOTES:
-        if last.endswith(quote):
-            return last[: -len(quote)]
-    match = re.match(r"^([ \t]*)\S", lines[1])
-    return match.group(1) if match else ""
 
 
 def _build_docstring_literal(
@@ -347,6 +227,30 @@ def _build_docstring_literal(
     return "\n".join(parts)
 
 
+def _content_indent_from_literal(literal: str) -> str:
+    """Infer indentation used on continuation lines inside a multiline literal."""
+    lines = literal.split("\n")
+    if len(lines) < _MIN_MULTILINE_LITERAL_LINES:
+        return ""
+    last = lines[-1]
+    for quote in _TRIPLE_QUOTES:
+        if last.endswith(quote):
+            return last[: -len(quote)]
+    match = re.match(r"^([ \t]*)\S", lines[1])
+    return match.group(1) if match else ""
+
+
+def _docstring_simple_string(stmt: cst.BaseStatement) -> cst.SimpleString | None:
+    if not isinstance(stmt, cst.SimpleStatementLine):
+        return None
+    if len(stmt.body) != 1:
+        return None
+    expr = stmt.body[0]
+    if not isinstance(expr, cst.Expr) or not isinstance(expr.value, cst.SimpleString):
+        return None
+    return expr.value
+
+
 def _encode_non_raw_line(line: str, *, quote: str) -> str:
     """Encode a logical line for a non-raw string literal.
 
@@ -362,3 +266,103 @@ def _encode_non_raw_line(line: str, *, quote: str) -> str:
     if single in line:
         return line.replace(single, f"\\{single}")
     return line
+
+
+def _ensure_raw_prefix(prefix: str) -> str:
+    """Return a string prefix that includes raw (`r` / `R`)."""
+    if "r" in prefix.lower():
+        return prefix
+    return f"r{prefix}"
+
+
+def _evaluate_string_literal(literal: str) -> str | None:
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", SyntaxWarning)
+        try:
+            value = ast.literal_eval(literal)
+        except (SyntaxError, ValueError):
+            return None
+    return value if isinstance(value, str) else None
+
+
+def _format_docstring_simple_string(
+    string_node: cst.SimpleString,
+    *,
+    content_indent: str,
+) -> cst.SimpleString | None:
+    prefix, quote = _literal_prefix_and_quote(string_node.value)
+    if quote not in _TRIPLE_QUOTES:
+        return None
+    if any(char in prefix for char in _UNSUPPORTED_PREFIX_CHARS):
+        return None
+
+    content = _evaluate_string_literal(string_node.value)
+    if content is None or "\n" not in content:
+        return None
+
+    cleaned = inspect.cleandoc(content)
+    formatter = MdFormatter(end_of_line="lf", prose_wrap="preserve")
+    formatted = formatter.format(cleaned + "\n")
+    formatted = normalize_docstring_code_spans(formatted)
+    # Docstrings need a blank content line before the closing quotes (unlike .md files).
+    formatted = formatted.rstrip("\n") + "\n\n"
+
+    if "\\" in formatted:
+        prefix = _ensure_raw_prefix(prefix)
+
+    try:
+        new_literal = _build_docstring_literal(
+            formatted,
+            prefix=prefix,
+            quote=quote,
+            content_indent=content_indent,
+        )
+    except ValueError:
+        return None
+    return cst.SimpleString(value=new_literal)
+
+
+def _literal_prefix_and_quote(literal: str) -> tuple[str, str]:
+    match = _STRING_PREFIX_RE.match(literal)
+    prefix = match.group(0) if match else ""
+    rest = literal[len(prefix) :]
+    for quote in _TRIPLE_QUOTES:
+        if rest.startswith(quote):
+            return prefix, quote
+    if rest.startswith('"'):
+        return prefix, '"'
+    if rest.startswith("'"):
+        return prefix, "'"
+    msg = f"Unsupported string literal: {literal[:20]!r}"
+    raise ValueError(msg)
+
+
+def _normalize_one_line_docstring_code_spans(string_node: cst.SimpleString) -> cst.SimpleString | None:
+    """Apply code-span normalization to a one-line docstring literal."""
+    prefix, quote = _literal_prefix_and_quote(string_node.value)
+    if any(char in prefix for char in _UNSUPPORTED_PREFIX_CHARS):
+        return None
+
+    content = _evaluate_string_literal(string_node.value)
+    if content is None or "\n" in content:
+        return None
+
+    new_content = normalize_docstring_code_spans(content)
+    if new_content == content:
+        return None
+
+    is_raw = "r" in prefix.lower()
+    if not is_raw and "\\" in new_content:
+        prefix = _ensure_raw_prefix(prefix)
+        is_raw = True
+
+    body = new_content if is_raw else _encode_non_raw_line(new_content, quote=quote)
+    if quote in body:
+        return None
+    return cst.SimpleString(value=f"{prefix}{quote}{body}{quote}")
+
+
+def _normalize_prose_segment(segment: str) -> str:
+    """Normalize quoted identifiers and bare `True`/`False`/`None` in a prose segment."""
+    result = _QUOTED_CODE_RE.sub(lambda match: f"`{match.group(2)}`", segment)
+    return _BARE_LITERAL_RE.sub(lambda match: f"`{match.group(1)}`", result)

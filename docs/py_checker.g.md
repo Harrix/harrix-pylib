@@ -32,6 +32,8 @@ Rules:
 
 - **HP001** - Presence of Russian letters in the code.
 - **HP002** - Old-style docstring formatting (non-Markdown style).
+- **HP003** - Code tokens in docstring prose should use backticks (not quotes or bare
+  `True` / `False` / `None`).
 
 Examples for ignore directives:
 
@@ -52,6 +54,7 @@ class PyChecker:
     RULES: ClassVar[dict[str, str]] = {
         "HP001": "Presence of Russian letters in the code",
         "HP002": "Old-style docstring formatting (non-Markdown style)",
+        "HP003": "Code token in docstring prose should use backticks",
     }
 
     # Comment pattern for ignoring checks on specific lines
@@ -84,7 +87,7 @@ class PyChecker:
         Args:
 
         - `project_root` (`Path | str | None`): Root directory of the project for relative path calculation.
-        If `None`, will try to find Git root or use current working directory. Defaults to `None`.
+          If `None`, will try to find Git root or use current working directory. Defaults to `None`.
 
         """
         self.all_rules = set(self.RULES.keys())
@@ -215,6 +218,51 @@ class PyChecker:
         if "HP002" in rules:
             yield from self._check_old_style_docstrings(filename, lines)
 
+        # Check HP003: Code tokens in docstring prose should use backticks
+        if "HP003" in rules:
+            yield from self._check_docstring_code_spans(filename, lines)
+
+    def _check_docstring_code_spans(self, filename: Path, lines: list[str]) -> Generator[str, None, None]:
+        """Check that docstring prose uses backticks for code tokens (HP003).
+
+        Args:
+
+        - `filename` (`Path`): Path to the Python file being checked.
+        - `lines` (`list[str]`): All lines from the file.
+
+        Yields:
+
+        - `str`: Error message for each code-token style issue found.
+
+        """
+        try:
+            tree = ast.parse("\n".join(lines))
+        except SyntaxError:
+            return
+
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module)):
+                continue
+            if not node.body:
+                continue
+            expr = node.body[0]
+            if not isinstance(expr, ast.Expr):
+                continue
+            docstring = ast.get_docstring(node, clean=False)
+            if docstring is None:
+                continue
+
+            start_line = expr.lineno
+            end_line = expr.end_lineno or start_line
+            chunk = lines[start_line - 1 : end_line]
+            body = self._docstring_source_body(chunk)
+            for line_offset, col, token in iter_docstring_code_span_issues(body):
+                line_num = start_line + line_offset
+                if 1 <= line_num <= len(lines) and self._should_ignore_line(lines[line_num - 1], "HP003"):
+                    continue
+                error_msg = f'{self.RULES["HP003"]}: "{token}"'
+                yield self._format_error("HP003", error_msg, filename, line_num=line_num, col=col)
+
     def _check_old_style_docstrings(self, filename: Path, lines: list[str]) -> Generator[str, None, None]:
         """Check for old-style docstring formatting.
 
@@ -333,6 +381,27 @@ class PyChecker:
         # Fallback to current working directory
         return Path.cwd()
 
+    @staticmethod
+    def _docstring_source_body(chunk_lines: list[str]) -> str:
+        """Return docstring text from source lines with opening/closing quotes removed."""
+        if not chunk_lines:
+            return ""
+        lines = list(chunk_lines)
+        first = lines[0]
+        quote = '"""' if '"""' in first else "'''" if "'''" in first else ""
+        if quote:
+            after_open = first.split(quote, 1)[1]
+            if quote in after_open:
+                return after_open.rsplit(quote, 1)[0]
+            lines[0] = after_open
+
+        last = lines[-1]
+        for candidate in ('"""', "'''"):
+            if candidate in last:
+                lines[-1] = last.split(candidate, 1)[0]
+                break
+        return "\n".join(lines)
+
     def _find_russian_letters_position(self, text: str) -> int:
         """Find the position of the first Russian letter in text (1-based).
 
@@ -353,7 +422,7 @@ class PyChecker:
 
         Args:
 
-        - `error_code` (`str`): The error code (e.g., "HP001").
+        - `error_code` (`str`): The error code (e.g., `HP001`).
         - `message` (`str`): Description of the error.
         - `filename` (`Path`): Path to the file where the error was found.
         - `line_num` (`int`): Line number where the error occurred. Defaults to `0`.

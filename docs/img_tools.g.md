@@ -102,7 +102,7 @@ def get_frame_rate(source: Path, project_root: Path) -> float:
 def is_avif_animated(source: Path, project_root: Path) -> bool
 ```
 
-Return True if AVIF contains more than one frame.
+Return `True` if AVIF contains more than one frame.
 
 <details>
 <summary>Code:</summary>

@@ -151,7 +151,7 @@ class MdFormatter:
         return MdFormatter.normalize_line_endings(data.decode("utf-8"))
 
     def _needs_end_of_line_rewrite(self, raw: bytes) -> bool:
-        """Return True when on-disk endings disagree with `end_of_line`."""
+        """Return `True` when on-disk endings disagree with `end_of_line`."""
         if b"\n" not in raw:
             return False
         has_crlf = b"\r\n" in raw

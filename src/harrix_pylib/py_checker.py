@@ -244,27 +244,6 @@ class PyChecker:
                 error_msg = f'{self.RULES["HP003"]}: "{token}"'
                 yield self._format_error("HP003", error_msg, filename, line_num=line_num, col=col)
 
-    @staticmethod
-    def _docstring_source_body(chunk_lines: list[str]) -> str:
-        """Return docstring text from source lines with opening/closing quotes removed."""
-        if not chunk_lines:
-            return ""
-        lines = list(chunk_lines)
-        first = lines[0]
-        quote = '"""' if '"""' in first else "'''" if "'''" in first else ""
-        if quote:
-            after_open = first.split(quote, 1)[1]
-            if quote in after_open:
-                return after_open.rsplit(quote, 1)[0]
-            lines[0] = after_open
-
-        last = lines[-1]
-        for candidate in ('"""', "'''"):
-            if candidate in last:
-                lines[-1] = last.split(candidate, 1)[0]
-                break
-        return "\n".join(lines)
-
     def _check_old_style_docstrings(self, filename: Path, lines: list[str]) -> Generator[str, None, None]:
         """Check for old-style docstring formatting.
 
@@ -382,6 +361,27 @@ class PyChecker:
 
         # Fallback to current working directory
         return Path.cwd()
+
+    @staticmethod
+    def _docstring_source_body(chunk_lines: list[str]) -> str:
+        """Return docstring text from source lines with opening/closing quotes removed."""
+        if not chunk_lines:
+            return ""
+        lines = list(chunk_lines)
+        first = lines[0]
+        quote = '"""' if '"""' in first else "'''" if "'''" in first else ""
+        if quote:
+            after_open = first.split(quote, 1)[1]
+            if quote in after_open:
+                return after_open.rsplit(quote, 1)[0]
+            lines[0] = after_open
+
+        last = lines[-1]
+        for candidate in ('"""', "'''"):
+            if candidate in last:
+                lines[-1] = last.split(candidate, 1)[0]
+                break
+        return "\n".join(lines)
 
     def _find_russian_letters_position(self, text: str) -> int:
         """Find the position of the first Russian letter in text (1-based).

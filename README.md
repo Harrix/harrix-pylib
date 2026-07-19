@@ -23,6 +23,7 @@
   - [📄 File `img_tools.py`](#-file-img_toolspy)
   - [📄 File `md_checker.py`](#-file-md_checkerpy)
   - [📄 File `py_checker.py`](#-file-py_checkerpy)
+  - [📄 File `py_docstring_format.py`](#-file-py_docstring_formatpy)
   - [📄 File `formatter.py`](#-file-formatterpy)
   - [📄 File `optimizer.py`](#-file-optimizerpy)
 - [📄 License](#-license)
@@ -90,14 +91,14 @@ print(md_clean)
 
 Doc: [abbreviation_data.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md)
 
-| Function/Class                                                                                                                               | Description                                                                     |
-| -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 🏛️ Class [`AbbreviationData`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#️-class-abbreviationdata)          | Compiled abbreviation data for H006 spacing and H021 masking.                   |
-| 🔧 [`is_spaced_multipart`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-is_spaced_multipart)       | Return True if form is a multi-part dotted abbrev with spaces (H006 candidate). |
-| 🔧 [`load_abbreviation_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-load_abbreviation_data) | Load RU+EN abbreviation JSON (always both; not gated by document lang).         |
-| 🔧 [`mask_abbreviations`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-mask_abbreviations)         | Replace known dotted abbreviations with same-length placeholders for H021.      |
-| 🔧 [`normalize_abbrev`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-normalize_abbrev)             | Normalize soft hyphens and trim whitespace.                                     |
-| 🔧 [`unspaced_variant`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-unspaced_variant)             | Collapse spaces that follow periods inside multi-part dotted abbreviations.     |
+| Function/Class                                                                                                                               | Description                                                                       |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 🏛️ Class [`AbbreviationData`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#️-class-abbreviationdata)          | Compiled abbreviation data for H006 spacing and H021 masking.                     |
+| 🔧 [`is_spaced_multipart`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-is_spaced_multipart)       | Return `True` if form is a multi-part dotted abbrev with spaces (H006 candidate). |
+| 🔧 [`load_abbreviation_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-load_abbreviation_data) | Load RU+EN abbreviation JSON (always both; not gated by document lang).           |
+| 🔧 [`mask_abbreviations`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-mask_abbreviations)         | Replace known dotted abbreviations with same-length placeholders for H021.        |
+| 🔧 [`normalize_abbrev`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-normalize_abbrev)             | Normalize soft hyphens and trim whitespace.                                       |
+| 🔧 [`unspaced_variant`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-unspaced_variant)             | Collapse spaces that follow periods inside multi-part dotted abbreviations.       |
 
 ### 📄 File `funcs_dev.py`
 
@@ -138,7 +139,7 @@ Doc: [funcs_file.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/fun
 | 🔧 [`rename_file_spaces_to_hyphens`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-rename_file_spaces_to_hyphens)                           | Rename file by replacing spaces with hyphens in the filename.                                     |
 | 🔧 [`rename_files_by_mapping`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-rename_files_by_mapping)                                       | Rename files recursively based on a mapping dictionary while respecting ignore patterns.          |
 | 🔧 [`rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-rename_files_date_dd_mm_yyyy_to_yyyy_mm_dd) | Rename files recursively by converting DD.MM.YYYY dates in filenames to YYYY.MM.DD.               |
-| 🔧 [`rename_largest_images_to_featured`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-rename_largest_images_to_featured)                   | Find the largest image in each subdirectory of the given path and renames it to 'featured-image'. |
+| 🔧 [`rename_largest_images_to_featured`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-rename_largest_images_to_featured)                   | Find the largest image in each subdirectory of the given path and renames it to `featured-image`. |
 | 🔧 [`rename_pdf_file`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-rename_pdf_file)                                                       | Rename PDF file based on metadata from file content.                                              |
 | 🔧 [`should_ignore_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-should_ignore_path)                                                 | Check if a path should be ignored based on common ignore patterns.                                |
 | 🔧 [`tree_view_folder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-tree_view_folder)                                                     | Generate a tree-like representation of folder contents.                                           |
@@ -240,7 +241,7 @@ Doc: [img_tools.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_
 | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
 | 🔧 [`convert_gif_mp4_to_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-convert_gif_mp4_to_avif)     | Convert GIF or MP4 to AVIF using ffmpeg.                              |
 | 🔧 [`get_frame_rate`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-get_frame_rate)                       | Detect frame rate from media file using ffmpeg output.                |
-| 🔧 [`is_avif_animated`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-is_avif_animated)                   | Return True if AVIF contains more than one frame.                     |
+| 🔧 [`is_avif_animated`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-is_avif_animated)                   | Return `True` if AVIF contains more than one frame.                   |
 | 🔧 [`optimize_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-optimize_avif)                         | Optimize AVIF using ffmpeg or avifdec/avifenc depending on animation. |
 | 🔧 [`optimize_image_with_tools`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-optimize_image_with_tools) | Optimize a raster image using ffmpeg, avifenc, or avifdec.            |
 | 🔧 [`process_animated_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_animated_avif)         | Optimize animated AVIF with avifdec and avifenc or ffmpeg.            |
@@ -261,6 +262,16 @@ Doc: [py_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_
 | Function/Class                                                                                                 | Description                                                          |
 | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | 🏛️ Class [`PyChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_checker.g.md#️-class-pychecker) | Class for checking Python files for compliance with specified rules. |
+
+### 📄 File `py_docstring_format.py`
+
+Doc: [py_docstring_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_docstring_format.g.md)
+
+| Function/Class                                                                                                                                                   | Description                                                                         |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| 🔧 [`format_python_docstrings`](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_docstring_format.g.md#-function-format_python_docstrings)               | Format Markdown inside Python docstrings in a file.                                 |
+| 🔧 [`iter_docstring_code_span_issues`](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_docstring_format.g.md#-function-iter_docstring_code_span_issues) | Yield `(line_index, col_1based, token)` for prose tokens that should use backticks. |
+| 🔧 [`normalize_docstring_code_spans`](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_docstring_format.g.md#-function-normalize_docstring_code_spans)   | Wrap code tokens in backticks in docstring Markdown prose.                          |
 
 ### 📄 File `formatter.py`
 

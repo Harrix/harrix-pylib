@@ -41,6 +41,7 @@ def check_python_docstring_markdown_errors(
 
     Generates ephemeral docs (including private names when `include_private` is `True`), runs
     MdChecker, and remaps findings to Python path/line/column. Does not modify the project.
+
     """
     folder = Path(folder)
     src_folder = folder / "src"
@@ -261,7 +262,6 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
     - `ruff format` — format the project's Python files.
     - `ruff check` — lint the project's Python files.
     - `uv python install 3.13` + `uv python pin 3.13` + `uv sync` — switch to a different Python version.
-
     ```
 
     Returns:
@@ -342,9 +342,11 @@ def extract_functions_and_classes(
     - `is_add_link_demo` (`bool`): Whether to add a link to the documentation demo. Defaults to `True`.
     - `domain` (`str`): The domain for the documentation link. Defaults to an empty string.
     - `src_folder` (`Path | str | None`): The project's `src` folder used to build nested `.g.md` paths. Defaults to
+
     `None`.
+
     - `include_private` (`bool`): Whether to include private names (starting with `_`, except magic dunders).
-    Defaults to `False`.
+      Defaults to `False`.
 
     Returns:
 
@@ -487,13 +489,13 @@ def generate_md_docs(
     Args:
 
     - `folder` (`Path | str`): The path to the project folder, can be either a `Path` object or a string. Defaults to
-    the current directory if not specified.
+      the current directory if not specified.
     - `beginning_of_md` (`str`): The content to prepend to each documentation file. This could include headers
-    or other Markdown formatting.
+      or other Markdown formatting.
     - `domain` (`str`): The domain or context in which the project is used, which might influence how
-    documentation is generated or formatted.
+      documentation is generated or formatted.
     - `include_private` (`bool`): Whether to include private names (starting with `_`, except magic dunders).
-    Defaults to `False`.
+      Defaults to `False`.
     - `docs_folder` (`Path | str | None`): Output folder for generated `.g.md` files. Defaults to `folder / "docs"`.
     - `update_readme` (`bool`): Whether to update `## 📚 List of functions` in README. Defaults to `True`.
     - `copy_root_md` (`bool`): Whether to copy root `*.md` files into the docs folder. Defaults to `True`.
@@ -501,7 +503,7 @@ def generate_md_docs(
     Returns:
 
     - `str`: A string containing a summary of the operations performed, with each line indicating which file
-    was processed or created.
+      was processed or created.
 
     Example:
 
@@ -620,14 +622,14 @@ def generate_md_docs_content(file_path: Path | str, *, include_private: bool = F
     Args:
 
     - `file_path` (`Path | str`): The path to the Python file to be documented, can be either
-    a `Path` object or a string.
+      a `Path` object or a string.
     - `include_private` (`bool`): Whether to include private names (starting with `_`, except magic dunders).
-    Defaults to `False`.
+      Defaults to `False`.
 
     Returns:
 
     - `str`: A Markdown string containing documentation for the file, including its classes, methods,
-    and functions with their signatures, docstrings, and implementation details.
+      and functions with their signatures, docstrings, and implementation details.
 
     Example:
 
@@ -652,6 +654,7 @@ def generate_md_docs_content_with_source_map(
 
     Each entry in the returned map corresponds to one line of the Markdown content
     (1-based Markdown line `i` maps to `line_map[i - 1]`).
+
     """
     file_path = Path(file_path).resolve()
     with file_path.open(encoding="utf-8") as f:
@@ -983,9 +986,9 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
 
     - This function uses `libcst` for parsing and manipulating Python ASTs.
     - Sorting prioritizes initial non-class, non-function statements, followed by sorted classes,
-    then sorted functions, and finally any trailing statements.
+      then sorted functions, and finally any trailing statements.
     - Within classes, `_init__` method is placed first among methods, followed by other methods
-    sorted alphabetically, with single underscore methods at the end.
+      sorted alphabetically, with single underscore methods at the end.
     - Functions and methods starting with single underscore are placed after regular ones.
 
     Example:
@@ -994,7 +997,6 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         import harrix_pylib as h
 
         h.py.sort_py_code("C:/projects/project/main.py", is_use_ruff_format=True)
-
     ```
 
     Before sorting:
@@ -1070,13 +1072,15 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
     '''
 
     def _get_sort_key(name: str) -> tuple[int, str]:
-        """Return a sort key for function/method names.
+        r"""Return a sort key for function/method names.
 
         Priority:
-        0. _init__ method - highest priority
+        0\. _init_\_ method - highest priority
+
         1. Other special methods (double underscore)
         2. Regular methods/functions
         3. Private methods/functions (single underscore)
+
         """
         if name == "_init__":
             return (0, name)  # _init__ always first
@@ -1091,6 +1095,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
 
         This keeps runtime name resolution stable for decorator registration patterns
         (e.g. Click): `@group.command(...)` requires `group` to exist at import time.
+
         """
         expr: cst.BaseExpression = decorator_expr
         if isinstance(expr, cst.Call):
@@ -1105,6 +1110,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         """Stable topological sort using `names` as tie-breaker.
 
         If a cycle exists, the remaining nodes are appended in the original order.
+
         """
         index: dict[str, int] = {name: i for i, name in enumerate(names)}
 
@@ -1370,6 +1376,7 @@ def _strip_trailing_linter_comments(line: str) -> str:
 
     Only end-of-line suppressions after whitespace are stripped. Stacked tails
     (`# noqa: RUF001  # ignore: HP001`) are removed repeatedly.
+
     """
     while True:
         updated = _TRAILING_LINTER_COMMENT_RE.sub("", line)
