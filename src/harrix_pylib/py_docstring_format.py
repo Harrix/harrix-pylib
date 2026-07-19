@@ -7,7 +7,7 @@ import inspect
 import re
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 import libcst as cst
 
@@ -16,6 +16,8 @@ from harrix_pylib.md_format.code_fence import _identify_code_blocks, _identify_c
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
+
+_OwnerT = TypeVar("_OwnerT", cst.ClassDef, cst.FunctionDef)
 
 _STRING_PREFIX_RE = re.compile(r"^[rRuUbBfF]*")
 _TRIPLE_QUOTES = ('"""', "'''")
@@ -254,7 +256,7 @@ class _DocstringMdFormatTransformer(cst.CSTTransformer):
         new_first = first.with_changes(body=[expr.with_changes(value=new_string)])
         return [new_first, *list(statements[1:])]
 
-    def _format_indented_owner(self, updated_node: cst.ClassDef | cst.FunctionDef) -> cst.ClassDef | cst.FunctionDef:
+    def _format_indented_owner(self, updated_node: _OwnerT) -> _OwnerT:
         body = updated_node.body
         if not isinstance(body, cst.IndentedBlock):
             return updated_node

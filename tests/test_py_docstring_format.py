@@ -132,7 +132,9 @@ def test_py_docstring_formatter_adds_r_prefix_for_md_escapes() -> None:
         assert r"\\*" not in after
 
         module = ast.parse(after)
-        docstring = ast.get_docstring(module.body[0])
+        first = module.body[0]
+        assert isinstance(first, ast.FunctionDef)
+        docstring = ast.get_docstring(first)
         assert docstring is not None
         assert "_private" in docstring or r"\_private" in docstring or "private" in docstring
 
