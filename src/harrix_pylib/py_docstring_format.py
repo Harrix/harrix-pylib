@@ -12,25 +12,30 @@ from typing import TYPE_CHECKING
 import libcst as cst
 
 from harrix_pylib.md_format import MdFormatter
+from harrix_pylib.md_format.code_fence import _identify_code_blocks, _identify_code_blocks_line
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 
 _STRING_PREFIX_RE = re.compile(r"^[rRuUbBfF]*")
 _TRIPLE_QUOTES = ('"""', "'''")
 _UNSUPPORTED_PREFIX_CHARS = frozenset("fbFB")
 _MIN_MULTILINE_LITERAL_LINES = 2
+_BARE_LITERAL_RE = re.compile(r"\b(True|False|None)\b")
+_QUOTED_CODE_RE = re.compile(r"""(['"])([A-Za-z_][\w.-]*)\1""")
 
 
 def format_python_docstrings(filename: Path | str) -> str:
-    r"""Format Markdown inside multiline Python docstrings in a file.
+    r"""Format Markdown inside Python docstrings in a file.
 
-    Uses `MdFormatter` on docstring bodies, then writes them back so that:
+    Uses `MdFormatter` on multiline docstring bodies, then writes them back so that:
 
     - Multiline docstrings keep a blank line before the closing quotes
     - When the formatted body contains backslashes, the literal gets an `r`
       prefix (D301) and Markdown escapes are written as single `\` in source
-    - One-line docstrings are left unchanged
+    - Code tokens in prose (`True` / `False` / `None`, and quoted identifiers) use
+      backticks; fenced and inline code are left unchanged
+    - One-line docstrings only get code-token backtick normalization
 
     Args:
 
@@ -58,6 +63,56 @@ def format_python_docstrings(filename: Path | str) -> str:
     path.write_text(new_code, encoding="utf-8", newline="\n")
     skip_note = f" (skipped {transformer.skipped})" if transformer.skipped else ""
     return f"✅ File {path} docstring Markdown formatted.{skip_note}"
+
+
+def normalize_docstring_code_spans(text: str) -> str:
+    """Wrap code tokens in backticks in docstring Markdown prose.
+
+    Outside fenced and inline code:
+
+    - Bare `True`, `False`, and `None` become `` `True` `` / `` `False` `` / `` `None` ``
+    - Quoted identifiers like `'name'` or `"HP001"` become `` `name` `` / `` `HP001` ``
+
+    """
+    lines = text.split("\n")
+    out_lines: list[str] = []
+    for line, in_fence in _identify_code_blocks(lines):
+        if in_fence:
+            out_lines.append(line)
+            continue
+        parts: list[str] = []
+        for segment, in_code in _identify_code_blocks_line(line):
+            if in_code:
+                parts.append(segment)
+            else:
+                parts.append(_normalize_prose_segment(segment))
+        out_lines.append("".join(parts))
+    result = "\n".join(out_lines)
+    if text.endswith("\n") and not result.endswith("\n"):
+        result += "\n"
+    return result
+
+
+def iter_docstring_code_span_issues(text: str) -> Iterator[tuple[int, int, str]]:
+    """Yield `(line_index, col_1based, token)` for prose tokens that should use backticks."""
+    lines = text.split("\n")
+    for line_index, (line, in_fence) in enumerate(_identify_code_blocks(lines)):
+        if in_fence:
+            continue
+        offset = 0
+        for segment, in_code in _identify_code_blocks_line(line):
+            if not in_code:
+                for match in _QUOTED_CODE_RE.finditer(segment):
+                    yield line_index, offset + match.start() + 1, match.group(0)
+                for match in _BARE_LITERAL_RE.finditer(segment):
+                    yield line_index, offset + match.start() + 1, match.group(1)
+            offset += len(segment)
+
+
+def _normalize_prose_segment(segment: str) -> str:
+    """Normalize quoted identifiers and bare True/False/None in a prose segment."""
+    result = _QUOTED_CODE_RE.sub(lambda match: f"`{match.group(2)}`", segment)
+    return _BARE_LITERAL_RE.sub(lambda match: f"`{match.group(1)}`", result)
 
 
 class _DocstringMdFormatTransformer(cst.CSTTransformer):
@@ -113,15 +168,17 @@ class _DocstringMdFormatTransformer(cst.CSTTransformer):
         string_node = _docstring_simple_string(first)
         if string_node is None:
             return None
-        if "\n" not in string_node.value:
-            return None
 
-        inferred_indent = _content_indent_from_literal(string_node.value) or content_indent
-        new_string = _format_docstring_simple_string(string_node, content_indent=inferred_indent)
-        if new_string is None:
-            self.skipped += 1
-            return None
-        if new_string.value == string_node.value:
+        if "\n" not in string_node.value:
+            new_string = _normalize_one_line_docstring_code_spans(string_node)
+        else:
+            inferred_indent = _content_indent_from_literal(string_node.value) or content_indent
+            new_string = _format_docstring_simple_string(string_node, content_indent=inferred_indent)
+            if new_string is None:
+                self.skipped += 1
+                return None
+
+        if new_string is None or new_string.value == string_node.value:
             return None
 
         if not isinstance(first, cst.SimpleStatementLine):
@@ -144,6 +201,31 @@ def _docstring_simple_string(stmt: cst.BaseStatement) -> cst.SimpleString | None
     return expr.value
 
 
+def _normalize_one_line_docstring_code_spans(string_node: cst.SimpleString) -> cst.SimpleString | None:
+    """Apply code-span normalization to a one-line docstring literal."""
+    prefix, quote = _literal_prefix_and_quote(string_node.value)
+    if any(char in prefix for char in _UNSUPPORTED_PREFIX_CHARS):
+        return None
+
+    content = _evaluate_string_literal(string_node.value)
+    if content is None or "\n" in content:
+        return None
+
+    new_content = normalize_docstring_code_spans(content)
+    if new_content == content:
+        return None
+
+    is_raw = "r" in prefix.lower()
+    if not is_raw and "\\" in new_content:
+        prefix = _ensure_raw_prefix(prefix)
+        is_raw = True
+
+    body = new_content if is_raw else _encode_non_raw_line(new_content, quote=quote)
+    if quote in body:
+        return None
+    return cst.SimpleString(value=f"{prefix}{quote}{body}{quote}")
+
+
 def _format_docstring_simple_string(
     string_node: cst.SimpleString,
     *,
@@ -162,6 +244,7 @@ def _format_docstring_simple_string(
     cleaned = inspect.cleandoc(content)
     formatter = MdFormatter(end_of_line="lf", prose_wrap="preserve")
     formatted = formatter.format(cleaned + "\n")
+    formatted = normalize_docstring_code_spans(formatted)
     # Docstrings need a blank content line before the closing quotes (unlike .md files).
     formatted = formatted.rstrip("\n") + "\n\n"
 
