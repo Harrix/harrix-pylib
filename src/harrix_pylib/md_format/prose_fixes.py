@@ -132,6 +132,25 @@ def _apply_checker_prose_fixes(text: str, *, lang: str = "") -> str:
     return output
 
 
+def _extract_url_regions(line: str) -> tuple[str, list[str]]:
+    """Replace link destinations and angle autolinks with placeholders."""
+    stored: list[str] = []
+
+    def keep(text: str) -> str:
+        stored.append(text)
+        return f"{_URL_PLACEHOLDER_PREFIX}{len(stored) - 1}"
+
+    def repl_dest(match: re.Match[str]) -> str:
+        return f"]({keep(match.group(1))})"
+
+    def repl_angle(match: re.Match[str]) -> str:
+        return keep(match.group(0))
+
+    masked = _LINK_DESTINATION_RE.sub(repl_dest, line)
+    masked = _ANGLE_AUTOLINK_RE.sub(repl_angle, masked)
+    return masked, stored
+
+
 def _fix_atx_heading_space(line: str) -> str:
     """Insert space after ATX hashes when missing (H036)."""
     match = _ATX_HEADING_NO_SPACE_PATTERN.match(line)
@@ -397,12 +416,16 @@ def _fix_prose_line(line: str, *, lang: str) -> str:
     line = _fix_atx_heading_space(line)  # H036
     line = _fix_heading_trailing_period(line)  # H057
     line = _fix_image_alt_capitalization(line)  # H020
+
+    # Protect link/image destinations and angle autolinks from typography fixes
+    # (H050 would turn `?logo=` into `? logo=` and break shields.io badges).
+    line, url_parts = _extract_url_regions(line)
+
     line = _map_non_code(line, _fix_incorrect_words)  # H006
     line = _map_non_code(line, _fix_ellipsis)  # H017
     line = _map_non_code(line, _fix_horizontal_bar)  # H026
     line = _map_non_code(line, _fix_question_mark_period)  # H028
     line = _map_non_code(line, _fix_numero_space)  # H027
-    line = _map_non_code(line, _fix_backslash_paths)  # H039
     line = _fix_space_before_punctuation(line)  # H015
     line = _fix_dash_usage(line)  # H016
     line = _fix_multiplication_sign(line)  # H024
@@ -415,7 +438,9 @@ def _fix_prose_line(line: str, *, lang: str) -> str:
         line = _fix_russian_polite_pronouns(line)  # H023
     if _CYRILLIC_PATTERN.search(line):
         line = _map_non_code(line, _fix_punctuation_before_closing_guillemet)  # H058
-    return line
+
+    line = _restore_url_regions(line, url_parts)
+    return _map_non_code(line, _fix_backslash_paths)  # H039 (paths only)
 
 
 def _fix_punctuation_before_closing_guillemet(segment: str) -> str:
@@ -639,6 +664,26 @@ def _normalize_en_and_em_dashes(segment: str) -> str:
                 continue
         i += 1
     return "".join(chars)
+
+
+def _restore_url_regions(line: str, stored: list[str]) -> str:
+    """Restore placeholders created by `_extract_url_regions`."""
+    if not stored:
+        return line
+
+    def replacer(match: re.Match[str]) -> str:
+        index = int(match.group(1))
+        if 0 <= index < len(stored):
+            return stored[index]
+        return match.group(0)
+
+    return _URL_PLACEHOLDER_TOKEN_RE.sub(replacer, line)
+
+
+_URL_PLACEHOLDER_PREFIX = "HSKPROSEURL"
+_LINK_DESTINATION_RE = re.compile(r"\]\(([^)]*)\)")
+_ANGLE_AUTOLINK_RE = re.compile(r"<(https?://[^>\s]+)>")
+_URL_PLACEHOLDER_TOKEN_RE = re.compile(rf"{_URL_PLACEHOLDER_PREFIX}(\d+)")
 
 
 _LIST_MARKER_HYPHEN_PATTERN = re.compile(r"^(?:\s*>\s*)*\s*-")

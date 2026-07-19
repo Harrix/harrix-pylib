@@ -8,6 +8,7 @@ import pytest
 
 from harrix_pylib.md_checker import MdChecker
 from harrix_pylib.md_format import MdFormatter
+from harrix_pylib.py_docstring_format import PyDocstringFormatter
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -92,9 +93,20 @@ def test_formatter_can_disable_prose_fixes() -> None:
 
 
 def test_py_docstring_formatter_inherits_prose_fixes() -> None:
-    from harrix_pylib.py_docstring_format import PyDocstringFormatter
-
     source = 'def f():\n    """Yes - no. Wait...\n\n    """\n'
     result = PyDocstringFormatter().format(source)
     assert "—" in result
     assert "…" in result
+
+
+def test_formatter_preserves_shields_io_query_string() -> None:
+    """H050 must not insert a space after `?` inside link destinations."""
+    source = (
+        "![GitHub](https://img.shields.io/badge/GitHub-harrix--pyssg-blue?logo=github) "
+        "![GitHub](https://img.shields.io/github/license/Harrix/harrix-pyssg) "
+        "![PyPI](https://img.shields.io/pypi/v/harrix-pyssg)\n"
+    )
+    result = _format(source)
+    assert "?logo=github" in result
+    assert "? logo=" not in result
+    assert "? Logo=" not in result
