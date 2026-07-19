@@ -38,6 +38,7 @@ class PyDocstringFormatter:
         end_of_line: str = "lf",
         prose_wrap: str = "preserve",
         print_width: int = 80,
+        apply_prose_fixes: bool = True,
     ) -> None:
         """Initialize the docstring formatter.
 
@@ -48,12 +49,15 @@ class PyDocstringFormatter:
         - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`).
           Defaults to `preserve`.
         - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
+        - `apply_prose_fixes` (`bool`): Apply mechanical MdChecker autofixes inside docstring
+          Markdown. Defaults to `True`.
 
         """
         self.md_formatter = MdFormatter(
             end_of_line=end_of_line,
             prose_wrap=prose_wrap,
             print_width=print_width,
+            apply_prose_fixes=apply_prose_fixes,
         )
 
     def format(self, source: str) -> str:

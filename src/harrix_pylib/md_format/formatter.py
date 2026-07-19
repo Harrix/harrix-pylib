@@ -29,6 +29,7 @@ from harrix_pylib.md_format.options import _FormatOptions
 from harrix_pylib.md_format.ordered_list_format import _extract_ordered_list_marker_groups
 from harrix_pylib.md_format.parser import _get_markdown_parser
 from harrix_pylib.md_format.printer import _render_tokens
+from harrix_pylib.md_format.prose_fixes import _apply_checker_prose_fixes
 from harrix_pylib.md_format.reference_format import _extract_reference_blocks, _restore_reference_blocks
 from harrix_pylib.md_format.table_format import _ensure_blank_line_after_tables, _unwrap_spurious_table_rows
 from harrix_pylib.md_format.task_list_format import _extract_task_list_markers
@@ -49,6 +50,7 @@ class MdFormatter:
         end_of_line: str = "crlf",
         prose_wrap: str = "preserve",
         print_width: int = 80,
+        apply_prose_fixes: bool = True,
     ) -> None:
         """Initialize the MdFormatter.
 
@@ -57,9 +59,16 @@ class MdFormatter:
         - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
         - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
         - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
+        - `apply_prose_fixes` (`bool`): Apply mechanical MdChecker autofixes (typography, H006-H058
+          subset). Defaults to `True`.
 
         """
-        self.options = _FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
+        self.options = _FormatOptions(
+            end_of_line=end_of_line,
+            prose_wrap=prose_wrap,
+            print_width=print_width,
+            apply_prose_fixes=apply_prose_fixes,
+        )
 
     def format(self, text: str) -> str:
         """Format Markdown text.
@@ -176,6 +185,11 @@ def _format_with_options(text: str, options: _FormatOptions) -> str:
     front_matter, body = _split_front_matter(normalized)
     if front_matter:
         front_matter = _compact_front_matter(front_matter)
+        front_matter = front_matter.replace("\u00a0", " ")
+    if options.apply_prose_fixes:
+        # Run before parse/render so source-preserving paths keep fixed prose and
+        # emphasis/link markup is not yet escaped or rewritten.
+        body = _apply_checker_prose_fixes(body, lang=_lang_from_front_matter(front_matter))
     body = _ensure_blank_line_in_empty_fences(body)
     body, empty_math_blocks = _extract_empty_math_blocks(body)
     body, ignore_blocks = _extract_ignore_blocks(body)
@@ -225,6 +239,17 @@ def _format_with_options(text: str, options: _FormatOptions) -> str:
         result = _join_front_matter(front_matter, rendered_body) if front_matter else rendered_body
     result = _trim_trailing_blank_lines(result)
     return _normalize_end_of_line(result, options.end_of_line)
+
+
+def _lang_from_front_matter(front_matter: str) -> str:
+    """Return YAML `lang` from compacted front matter text."""
+    if not front_matter:
+        return ""
+    for line in front_matter.splitlines():
+        match = re.match(r"^lang:\s*[\"']?([^\s\"'#]+)", line.strip())
+        if match:
+            return match.group(1)
+    return ""
 
 
 def _normalize_end_of_line(text: str, end_of_line: str) -> str:

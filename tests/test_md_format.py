@@ -36,12 +36,15 @@ class _FixtureFormatKwargs(TypedDict):
     end_of_line: str
     prose_wrap: str
     print_width: int
+    apply_prose_fixes: bool
 
 
 _FIXTURE_FORMAT_KWARGS: _FixtureFormatKwargs = {
     "end_of_line": "lf",
     "prose_wrap": "always",
     "print_width": 80,
+    # Upstream Prettier fixtures are not Harrix house-style (MdChecker) prose.
+    "apply_prose_fixes": False,
 }
 
 
@@ -51,11 +54,13 @@ def _format_markdown(
     end_of_line: str = "crlf",
     prose_wrap: str = "preserve",
     print_width: int = 80,
+    apply_prose_fixes: bool = False,
 ) -> str:
     return MdFormatter(
         end_of_line=end_of_line,
         prose_wrap=prose_wrap,
         print_width=print_width,
+        apply_prose_fixes=apply_prose_fixes,
     ).format(text)
 
 

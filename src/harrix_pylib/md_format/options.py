@@ -15,6 +15,7 @@ class _FormatOptions:
     end_of_line: str = "crlf"
     prose_wrap: str = "preserve"
     print_width: int = DEFAULT_PRINT_WIDTH
+    apply_prose_fixes: bool = True
 
     def __post_init__(self) -> None:
         """Validate formatter options after initialization."""
