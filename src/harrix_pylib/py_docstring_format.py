@@ -25,34 +25,182 @@ _BARE_LITERAL_RE = re.compile(r"\b(True|False|None)\b")
 _QUOTED_CODE_RE = re.compile(r"""(['"])([A-Za-z_][\w.-]*)\1""")
 
 
-class _DocstringMdFormatTransformer(cst.CSTTransformer):
-    """Rewrite multiline docstring SimpleString nodes with formatted Markdown."""
+class PyDocstringFormatter:
+    """Format Markdown inside Python docstrings, similar to `MdFormatter` for `.md` files."""
 
-    def __init__(self) -> None:
-        """Initialize skip counter."""
+    def __call__(self, filename: Path | str) -> str:
+        """Format docstrings in a Python file in place."""
+        return self.format_file(filename)
+
+    def __init__(
+        self,
+        *,
+        end_of_line: str = "lf",
+        prose_wrap: str = "preserve",
+        print_width: int = 80,
+    ) -> None:
+        """Initialize the docstring formatter.
+
+        Args:
+
+        - `end_of_line` (`str`): Line ending style passed to `MdFormatter` for docstring
+          bodies (`crlf` or `lf`). Defaults to `lf` (matches typical Python sources).
+        - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`).
+          Defaults to `preserve`.
+        - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
+
+        """
+        self.md_formatter = MdFormatter(
+            end_of_line=end_of_line,
+            prose_wrap=prose_wrap,
+            print_width=print_width,
+        )
+
+    def format(self, source: str) -> str:
+        """Format Markdown inside docstrings in Python source text.
+
+        Args:
+
+        - `source` (`str`): Python source code.
+
+        Returns:
+
+        - `str`: Source with formatted docstrings (unchanged when nothing applies).
+
+        """
+        module = cst.parse_module(source)
+        transformer = _DocstringMdFormatTransformer(self)
+        return module.visit(transformer).code
+
+    def format_file(self, filename: Path | str) -> str:
+        r"""Format Markdown inside Python docstrings in a file.
+
+        Uses `MdFormatter` on multiline docstring bodies, then writes them back so that:
+
+        - Multiline docstrings keep a blank line before the closing quotes
+        - When the formatted body contains backslashes, the literal gets an `r`
+          prefix (D301) and Markdown escapes are written as single `\` in source
+        - Code tokens in prose (`True` / `False` / `None`, and quoted identifiers) use
+          backticks; fenced and inline code are left unchanged
+        - One-line docstrings only get code-token backtick normalization
+
+        Args:
+
+        - `filename` (`Path | str`): Path to the Python file to update.
+
+        Returns:
+
+        - `str`: Status message.
+
+        """
+        path = Path(filename)
+        original = path.read_text(encoding="utf-8")
+        try:
+            module = cst.parse_module(original)
+        except Exception as e:
+            return f"⚠️ Skip {path}: parse error: {e}"
+
+        transformer = _DocstringMdFormatTransformer(self)
+        updated = module.visit(transformer)
+        new_code = updated.code
+        if new_code == original:
+            if transformer.skipped:
+                return f"⚠️ File {path}: skipped {transformer.skipped} docstring(s); unchanged."
+            return "File is not changed."
+        path.write_text(new_code, encoding="utf-8", newline="\n")
+        skip_note = f" (skipped {transformer.skipped})" if transformer.skipped else ""
+        return f"✅ File {path} docstring Markdown formatted.{skip_note}"
+
+    def format_folder(self, folder: Path | str) -> str:
+        """Recursively format docstrings in Python files in a folder.
+
+        Args:
+
+        - `folder` (`Path | str`): Directory containing Python files.
+
+        Returns:
+
+        - `str`: Newline-separated status messages.
+
+        """
+        from harrix_pylib import funcs_file  # noqa: PLC0415
+
+        return funcs_file.apply_func(folder, ".py", self.format_file)
+
+    @staticmethod
+    def iter_code_span_issues(text: str) -> Iterator[tuple[int, int, str]]:
+        """Yield `(line_index, col_1based, token)` for prose tokens that should use backticks."""
+        lines = text.split("\n")
+        for line_index, (line, in_fence) in enumerate(_identify_code_blocks(lines)):
+            if in_fence:
+                continue
+            offset = 0
+            for segment, in_code in _identify_code_blocks_line(line):
+                if not in_code:
+                    for match in _QUOTED_CODE_RE.finditer(segment):
+                        yield line_index, offset + match.start() + 1, match.group(0)
+                    for match in _BARE_LITERAL_RE.finditer(segment):
+                        yield line_index, offset + match.start() + 1, match.group(1)
+                offset += len(segment)
+
+    @staticmethod
+    def normalize_code_spans(text: str) -> str:
+        """Wrap code tokens in backticks in docstring Markdown prose.
+
+        Outside fenced and inline code:
+
+        - Bare `True`, `False`, and `None` become `` `True` `` / `` `False` `` / `` `None` ``
+        - Quoted identifiers like `'name'` or `"HP001"` become `` `name` `` / `` `HP001` ``
+
+        """
+        lines = text.split("\n")
+        out_lines: list[str] = []
+        for line, in_fence in _identify_code_blocks(lines):
+            if in_fence:
+                out_lines.append(line)
+                continue
+            parts: list[str] = []
+            for segment, in_code in _identify_code_blocks_line(line):
+                if in_code:
+                    parts.append(segment)
+                else:
+                    parts.append(_normalize_prose_segment(segment))
+            out_lines.append("".join(parts))
+        result = "\n".join(out_lines)
+        if text.endswith("\n") and not result.endswith("\n"):
+            result += "\n"
+        return result
+
+
+class _DocstringMdFormatTransformer(cst.CSTTransformer):
+    """Rewrite docstring SimpleString nodes with formatted Markdown."""
+
+    def __init__(self, formatter: PyDocstringFormatter) -> None:
+        """Initialize with parent formatter and skip counter."""
         super().__init__()
+        self.formatter = formatter
         self.skipped = 0
 
     def leave_ClassDef(  # noqa: N802
         self,
-        original_node: cst.ClassDef,
-        updated_node: cst.ClassDef,  # noqa: ARG002
+        original_node: cst.ClassDef,  # noqa: ARG002
+        updated_node: cst.ClassDef,
     ) -> cst.ClassDef:
         """Format class docstring if present."""
         return self._format_indented_owner(updated_node)
 
     def leave_FunctionDef(  # noqa: N802
         self,
-        original_node: cst.FunctionDef,
-        updated_node: cst.FunctionDef,  # noqa: ARG002
+        original_node: cst.FunctionDef,  # noqa: ARG002
+        updated_node: cst.FunctionDef,
     ) -> cst.FunctionDef:
         """Format function/method docstring if present."""
         return self._format_indented_owner(updated_node)
 
     def leave_Module(  # noqa: N802
         self,
-        original_node: cst.Module,
-        updated_node: cst.Module,  # noqa: ARG002
+        original_node: cst.Module,  # noqa: ARG002
+        updated_node: cst.Module,
     ) -> cst.Module:
         """Format module docstring if present."""
         new_body = self._format_first_docstring_in_body(updated_node.body, content_indent="")
@@ -77,7 +225,11 @@ class _DocstringMdFormatTransformer(cst.CSTTransformer):
             new_string = _normalize_one_line_docstring_code_spans(string_node)
         else:
             inferred_indent = _content_indent_from_literal(string_node.value) or content_indent
-            new_string = _format_docstring_simple_string(string_node, content_indent=inferred_indent)
+            new_string = _format_docstring_simple_string(
+                string_node,
+                md_formatter=self.formatter.md_formatter,
+                content_indent=inferred_indent,
+            )
             if new_string is None:
                 self.skipped += 1
                 return None
@@ -102,90 +254,6 @@ class _DocstringMdFormatTransformer(cst.CSTTransformer):
         if new_statements is None:
             return updated_node
         return updated_node.with_changes(body=body.with_changes(body=new_statements))
-
-
-def format_python_docstrings(filename: Path | str) -> str:
-    r"""Format Markdown inside Python docstrings in a file.
-
-    Uses `MdFormatter` on multiline docstring bodies, then writes them back so that:
-
-    - Multiline docstrings keep a blank line before the closing quotes
-    - When the formatted body contains backslashes, the literal gets an `r`
-      prefix (D301) and Markdown escapes are written as single `\` in source
-    - Code tokens in prose (`True` / `False` / `None`, and quoted identifiers) use
-      backticks; fenced and inline code are left unchanged
-    - One-line docstrings only get code-token backtick normalization
-
-    Args:
-
-    - `filename` (`Path | str`): Path to the Python file to update.
-
-    Returns:
-
-    - `str`: Status message.
-
-    """
-    path = Path(filename)
-    original = path.read_text(encoding="utf-8")
-    try:
-        module = cst.parse_module(original)
-    except Exception as e:
-        return f"⚠️ Skip {path}: parse error: {e}"
-
-    transformer = _DocstringMdFormatTransformer()
-    updated = module.visit(transformer)
-    new_code = updated.code
-    if new_code == original:
-        if transformer.skipped:
-            return f"⚠️ File {path}: skipped {transformer.skipped} docstring(s); unchanged."
-        return "File is not changed."
-    path.write_text(new_code, encoding="utf-8", newline="\n")
-    skip_note = f" (skipped {transformer.skipped})" if transformer.skipped else ""
-    return f"✅ File {path} docstring Markdown formatted.{skip_note}"
-
-
-def iter_docstring_code_span_issues(text: str) -> Iterator[tuple[int, int, str]]:
-    """Yield `(line_index, col_1based, token)` for prose tokens that should use backticks."""
-    lines = text.split("\n")
-    for line_index, (line, in_fence) in enumerate(_identify_code_blocks(lines)):
-        if in_fence:
-            continue
-        offset = 0
-        for segment, in_code in _identify_code_blocks_line(line):
-            if not in_code:
-                for match in _QUOTED_CODE_RE.finditer(segment):
-                    yield line_index, offset + match.start() + 1, match.group(0)
-                for match in _BARE_LITERAL_RE.finditer(segment):
-                    yield line_index, offset + match.start() + 1, match.group(1)
-            offset += len(segment)
-
-
-def normalize_docstring_code_spans(text: str) -> str:
-    """Wrap code tokens in backticks in docstring Markdown prose.
-
-    Outside fenced and inline code:
-
-    - Bare `True`, `False`, and `None` become `` `True` `` / `` `False` `` / `` `None` ``
-    - Quoted identifiers like `'name'` or `"HP001"` become `` `name` `` / `` `HP001` ``
-
-    """
-    lines = text.split("\n")
-    out_lines: list[str] = []
-    for line, in_fence in _identify_code_blocks(lines):
-        if in_fence:
-            out_lines.append(line)
-            continue
-        parts: list[str] = []
-        for segment, in_code in _identify_code_blocks_line(line):
-            if in_code:
-                parts.append(segment)
-            else:
-                parts.append(_normalize_prose_segment(segment))
-        out_lines.append("".join(parts))
-    result = "\n".join(out_lines)
-    if text.endswith("\n") and not result.endswith("\n"):
-        result += "\n"
-    return result
 
 
 def _build_docstring_literal(
@@ -260,7 +328,7 @@ def _encode_non_raw_line(line: str, *, quote: str) -> str:
     Markdown fences.
 
     """
-    if len(quote) >= 3:
+    if quote in _TRIPLE_QUOTES:
         return line
     single = quote[0]
     if single in line:
@@ -288,8 +356,10 @@ def _evaluate_string_literal(literal: str) -> str | None:
 def _format_docstring_simple_string(
     string_node: cst.SimpleString,
     *,
+    md_formatter: MdFormatter,
     content_indent: str,
 ) -> cst.SimpleString | None:
+    """Format a multiline docstring SimpleString with Markdown + code-span rules."""
     prefix, quote = _literal_prefix_and_quote(string_node.value)
     if quote not in _TRIPLE_QUOTES:
         return None
@@ -301,9 +371,8 @@ def _format_docstring_simple_string(
         return None
 
     cleaned = inspect.cleandoc(content)
-    formatter = MdFormatter(end_of_line="lf", prose_wrap="preserve")
-    formatted = formatter.format(cleaned + "\n")
-    formatted = normalize_docstring_code_spans(formatted)
+    formatted = md_formatter.format(cleaned + "\n")
+    formatted = PyDocstringFormatter.normalize_code_spans(formatted)
     # Docstrings need a blank content line before the closing quotes (unlike .md files).
     formatted = formatted.rstrip("\n") + "\n\n"
 
@@ -347,7 +416,7 @@ def _normalize_one_line_docstring_code_spans(string_node: cst.SimpleString) -> c
     if content is None or "\n" in content:
         return None
 
-    new_content = normalize_docstring_code_spans(content)
+    new_content = PyDocstringFormatter.normalize_code_spans(content)
     if new_content == content:
         return None
 

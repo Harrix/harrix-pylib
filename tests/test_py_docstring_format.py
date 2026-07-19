@@ -9,7 +9,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import harrix_pylib as h
-from harrix_pylib.py_docstring_format import normalize_docstring_code_spans
+from harrix_pylib.py_docstring_format import PyDocstringFormatter
 
 _NON_RAW_SOURCE = '''\
 def example(text: str) -> str:
@@ -60,7 +60,7 @@ def _closing_quote_has_blank_before(source: str) -> bool:
     return bool(re.search(r"\n\n[ \t]*(?:r)?(\"\"\"|''')", source))
 
 
-def test_normalize_docstring_code_spans_wraps_literals_and_quoted_idents() -> None:
+def test_normalize_code_spans_wraps_literals_and_quoted_idents() -> None:
     text = (
         "Return True if ready. Defaults to False.\n"
         "\n"
@@ -70,7 +70,7 @@ def test_normalize_docstring_code_spans_wraps_literals_and_quoted_idents() -> No
         "flag = True\n"
         "```\n"
     )
-    out = normalize_docstring_code_spans(text)
+    out = PyDocstringFormatter.normalize_code_spans(text)
     assert "Return `True` if ready. Defaults to `False`." in out
     assert "Requires `transliterate`." in out
     assert "Defaults to `img`." in out
@@ -78,7 +78,17 @@ def test_normalize_docstring_code_spans_wraps_literals_and_quoted_idents() -> No
     assert "flag = True" in out
 
 
-def test_format_python_docstrings_normalizes_one_line_code_spans() -> None:
+def test_py_docstring_formatter_format_source() -> None:
+    source = '''\
+def ready() -> bool:
+    """Return True if ready."""
+    return True
+'''
+    after = PyDocstringFormatter().format(source)
+    assert '"""Return `True` if ready."""' in after
+
+
+def test_py_docstring_formatter_normalizes_one_line_code_spans() -> None:
     source = '''\
 def ready() -> bool:
     """Return True if ready."""
@@ -87,16 +97,16 @@ def ready() -> bool:
     with TemporaryDirectory() as temp_dir:
         path = Path(temp_dir) / "example.py"
         path.write_text(source, encoding="utf-8")
-        h.py.format_python_docstrings(path)
+        PyDocstringFormatter().format_file(path)
         after = path.read_text(encoding="utf-8")
         assert '"""Return `True` if ready."""' in after
 
 
-def test_format_python_docstrings_restores_trailing_blank_and_args_shape() -> None:
+def test_py_docstring_formatter_restores_trailing_blank_and_args_shape() -> None:
     with TemporaryDirectory() as temp_dir:
         path = Path(temp_dir) / "example.py"
         path.write_text(_NON_RAW_SOURCE, encoding="utf-8")
-        h.py.format_python_docstrings(path)
+        h.py.PyDocstringFormatter().format_file(path)
         after = path.read_text(encoding="utf-8")
 
         assert _syntax_warnings(after) == []
@@ -107,11 +117,11 @@ def test_format_python_docstrings_restores_trailing_blank_and_args_shape() -> No
         )
 
 
-def test_format_python_docstrings_adds_r_prefix_for_md_escapes() -> None:
+def test_py_docstring_formatter_adds_r_prefix_for_md_escapes() -> None:
     with TemporaryDirectory() as temp_dir:
         path = Path(temp_dir) / "example.py"
         path.write_text(_NON_RAW_SOURCE, encoding="utf-8")
-        h.py.format_python_docstrings(path)
+        h.py.PyDocstringFormatter().format_file(path)
         after = path.read_text(encoding="utf-8")
 
         assert _syntax_warnings(after) == []
@@ -127,11 +137,11 @@ def test_format_python_docstrings_adds_r_prefix_for_md_escapes() -> None:
         assert "_private" in docstring or r"\_private" in docstring or "private" in docstring
 
 
-def test_format_python_docstrings_keeps_raw_prefix() -> None:
+def test_py_docstring_formatter_keeps_raw_prefix() -> None:
     with TemporaryDirectory() as temp_dir:
         path = Path(temp_dir) / "example.py"
         path.write_text(_RAW_SOURCE, encoding="utf-8")
-        h.py.format_python_docstrings(path)
+        h.py.PyDocstringFormatter().format_file(path)
         after = path.read_text(encoding="utf-8")
 
         assert _syntax_warnings(after) == []
@@ -139,7 +149,7 @@ def test_format_python_docstrings_keeps_raw_prefix() -> None:
         assert r"\_" in after or "_private" in after
 
 
-def test_format_python_docstrings_keeps_quotes_in_code_fences() -> None:
+def test_py_docstring_formatter_keeps_quotes_in_code_fences() -> None:
     source = '''\
 def example() -> None:
     """Show path example.
@@ -154,7 +164,7 @@ def example() -> None:
     with TemporaryDirectory() as temp_dir:
         path = Path(temp_dir) / "example.py"
         path.write_text(source, encoding="utf-8")
-        h.py.format_python_docstrings(path)
+        h.py.PyDocstringFormatter().format_file(path)
         after = path.read_text(encoding="utf-8")
 
         assert 'md_folder = "C:/GitHub/harrix.dev/content"' in after
@@ -162,11 +172,11 @@ def example() -> None:
         assert _syntax_warnings(after) == []
 
 
-def test_format_python_docstrings_keeps_non_raw_without_backslashes() -> None:
+def test_py_docstring_formatter_keeps_non_raw_without_backslashes() -> None:
     with TemporaryDirectory() as temp_dir:
         path = Path(temp_dir) / "example.py"
         path.write_text(_PLAIN_SOURCE, encoding="utf-8")
-        h.py.format_python_docstrings(path)
+        h.py.PyDocstringFormatter().format_file(path)
         after = path.read_text(encoding="utf-8")
 
         assert _syntax_warnings(after) == []

@@ -267,11 +267,9 @@ Doc: [py_checker.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_
 
 Doc: [py_docstring_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_docstring_format.g.md)
 
-| Function/Class                                                                                                                                                   | Description                                                                         |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| 🔧 [`format_python_docstrings`](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_docstring_format.g.md#-function-format_python_docstrings)               | Format Markdown inside Python docstrings in a file.                                 |
-| 🔧 [`iter_docstring_code_span_issues`](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_docstring_format.g.md#-function-iter_docstring_code_span_issues) | Yield `(line_index, col_1based, token)` for prose tokens that should use backticks. |
-| 🔧 [`normalize_docstring_code_spans`](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_docstring_format.g.md#-function-normalize_docstring_code_spans)   | Wrap code tokens in backticks in docstring Markdown prose.                          |
+| Function/Class                                                                                                                                | Description                                                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| 🏛️ Class [`PyDocstringFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_docstring_format.g.md#️-class-pydocstringformatter) | Format Markdown inside Python docstrings, similar to `MdFormatter` for `.md` files. |
 
 ### 📄 File `formatter.py`
 

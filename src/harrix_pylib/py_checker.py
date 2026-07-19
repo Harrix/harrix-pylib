@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import ClassVar
 
 import harrix_pylib as h
-from harrix_pylib.py_docstring_format import iter_docstring_code_span_issues
+from harrix_pylib.py_docstring_format import PyDocstringFormatter
 
 
 class PyChecker:
@@ -237,7 +237,7 @@ class PyChecker:
             end_line = expr.end_lineno or start_line
             chunk = lines[start_line - 1 : end_line]
             body = self._docstring_source_body(chunk)
-            for line_offset, col, token in iter_docstring_code_span_issues(body):
+            for line_offset, col, token in PyDocstringFormatter.iter_code_span_issues(body):
                 line_num = start_line + line_offset
                 if 1 <= line_num <= len(lines) and self._should_ignore_line(lines[line_num - 1], "HP003"):
                     continue

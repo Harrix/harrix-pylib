@@ -17,7 +17,7 @@ import libcst as cst
 
 import harrix_pylib as h
 from harrix_pylib.md_format.front_matter import _prepend_markdown_header
-from harrix_pylib.py_docstring_format import format_python_docstrings as format_python_docstrings
+from harrix_pylib.py_docstring_format import PyDocstringFormatter as PyDocstringFormatter  # noqa: PLC0414
 
 _MD_DOCS_CODE_RE = re.compile(r": ([A-Z]+\d+) (.*)$")
 _MIN_ERROR_LOCATION_PARTS = 2
