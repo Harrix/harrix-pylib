@@ -348,7 +348,16 @@ def _build_docstring_literal(
 
 
 def _encode_non_raw_line(line: str, *, quote: str) -> str:
-    """Encode a logical line for a non-raw triple-quoted string literal."""
+    """Encode a logical line for a non-raw string literal.
+
+    Triple-quoted docstrings may contain unescaped `"` or `'` matching the
+    outer quote character; only the full delimiter is banned (checked by the
+    caller). Escaping every matching quote would corrupt code examples inside
+    Markdown fences.
+
+    """
+    if len(quote) >= 3:
+        return line
     single = quote[0]
     if single in line:
         return line.replace(single, f"\\{single}")

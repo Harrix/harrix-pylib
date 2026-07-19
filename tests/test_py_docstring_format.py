@@ -139,6 +139,29 @@ def test_format_python_docstrings_keeps_raw_prefix() -> None:
         assert r"\_" in after or "_private" in after
 
 
+def test_format_python_docstrings_keeps_quotes_in_code_fences() -> None:
+    source = '''\
+def example() -> None:
+    """Show path example.
+
+    ```python
+    md_folder = "C:/GitHub/harrix.dev/content"
+    ```
+
+    """
+    return None
+'''
+    with TemporaryDirectory() as temp_dir:
+        path = Path(temp_dir) / "example.py"
+        path.write_text(source, encoding="utf-8")
+        h.py.format_python_docstrings(path)
+        after = path.read_text(encoding="utf-8")
+
+        assert 'md_folder = "C:/GitHub/harrix.dev/content"' in after
+        assert '\\"' not in after
+        assert _syntax_warnings(after) == []
+
+
 def test_format_python_docstrings_keeps_non_raw_without_backslashes() -> None:
     with TemporaryDirectory() as temp_dir:
         path = Path(temp_dir) / "example.py"
