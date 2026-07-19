@@ -4,6 +4,7 @@ Runs before the Prettier-style parse/render pipeline so source-preserving paths
 keep fixed prose. Skips fenced and inline code the same way as MdChecker
 (H006, H007, H015-H017, H020-H024, H026-H030, H036, H039, H042, H044, H050,
 H057, H058).
+
 """
 
 from __future__ import annotations
@@ -99,22 +100,6 @@ _PRONOUN_BOUNDARY_BEFORE = r"(?<![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001  #
 _PRONOUN_BOUNDARY_AFTER = r"(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001  # ignore: HP001
 
 
-@lru_cache(maxsize=1)
-def _incorrect_word_patterns() -> dict[str, tuple[re.Pattern[str], str]]:
-    """Load H006 patterns from MdChecker (shared source of truth)."""
-    from harrix_pylib.md_checker import MdChecker  # noqa: PLC0415
-
-    return MdChecker._INCORRECT_WORD_PATTERNS  # noqa: SLF001
-
-
-@lru_cache(maxsize=1)
-def _h021_abbrev_mask_pattern() -> re.Pattern[str] | None:
-    """Load H021 abbreviation mask from MdChecker."""
-    from harrix_pylib.md_checker import MdChecker  # noqa: PLC0415
-
-    return MdChecker._H021_ABBREV_MASK_PATTERN  # noqa: SLF001
-
-
 def _apply_checker_prose_fixes(text: str, *, lang: str = "") -> str:
     """Apply mechanical MdChecker autofixes to Markdown body text.
 
@@ -147,164 +132,6 @@ def _apply_checker_prose_fixes(text: str, *, lang: str = "") -> str:
     return output
 
 
-def _fix_fence_or_code_line(line: str) -> str:
-    """Fix fence language ids (H007) and NBSP (H022) inside fenced regions."""
-    line = line.replace("\u00a0", " ")
-    match = _FENCE_OPEN_PATTERN.match(line)
-    if not match:
-        return line
-    language = match.group(4)
-    correct = _INCORRECT_LANGUAGES.get(language)
-    if correct is None:
-        return line
-    return f"{match.group(1)}{match.group(2)}{match.group(3)}{correct}{match.group(5)}"
-
-
-def _fix_prose_line(line: str, *, lang: str) -> str:
-    """Apply all prose autofixes to one non-fenced Markdown line."""
-    line = line.replace("\u00a0", " ")  # H022
-    for char in _INVISIBLE_CHARACTERS:
-        line = line.replace(char, "")  # H042
-
-    line = _fix_atx_heading_space(line)  # H036
-    line = _fix_heading_trailing_period(line)  # H057
-    line = _fix_image_alt_capitalization(line)  # H020
-    line = _map_non_code(line, _fix_incorrect_words)  # H006
-    line = _map_non_code(line, _fix_ellipsis)  # H017
-    line = _map_non_code(line, _fix_horizontal_bar)  # H026
-    line = _map_non_code(line, _fix_question_mark_period)  # H028
-    line = _map_non_code(line, _fix_numero_space)  # H027
-    line = _map_non_code(line, _fix_backslash_paths)  # H039
-    line = _fix_space_before_punctuation(line)  # H015
-    line = _fix_dash_usage(line)  # H016
-    line = _fix_multiplication_sign(line)  # H024
-    line = _fix_emphasis_colon_outside(line)  # H030 (before H029)
-    line = _fix_emphasis_colon_space(line)  # H029
-    line = _fix_lowercase_after_punctuation(line)  # H021
-    line = _map_non_code(line, _fix_missing_space_after_punctuation)  # H050
-    if lang == "ru":
-        line = _map_non_code(line, _fix_space_before_percent_or_degree)  # H044
-        line = _fix_russian_polite_pronouns(line)  # H023
-    if _CYRILLIC_PATTERN.search(line):
-        line = _map_non_code(line, _fix_punctuation_before_closing_guillemet)  # H058
-    return line
-
-
-def _map_non_code(line: str, transform: Callable[[str], str]) -> str:
-    """Apply `transform` to non-inline-code segments only."""
-    return "".join(segment if in_code else transform(segment) for segment, in_code in _identify_code_blocks_line(line))
-
-
-def _inline_code_ranges(line: str) -> list[tuple[int, int]]:
-    """Return 0-based ranges of inline code spans on a line."""
-    ranges: list[tuple[int, int]] = []
-    pos = 0
-    for segment, in_code in _identify_code_blocks_line(line):
-        if in_code:
-            ranges.append((pos, pos + len(segment)))
-        pos += len(segment)
-    return ranges
-
-
-def _inside_ranges(offset: int, ranges: list[tuple[int, int]]) -> bool:
-    """Return whether `offset` lies inside any half-open range."""
-    return any(start <= offset < end for start, end in ranges)
-
-
-def _mask_urls_and_html(text: str) -> str:
-    """Mask link destinations and HTML tags with same-length spaces (H006 scope)."""
-
-    def mask_dest(match: re.Match[str]) -> str:
-        return "](" + (" " * (len(match.group(0)) - 3)) + ")"
-
-    def mask_html(match: re.Match[str]) -> str:
-        return "<" + (" " * (len(match.group(0)) - 2)) + ">"
-
-    masked = re.sub(r"\]\([^)]*\)", mask_dest, text)
-    return re.sub(r"<[^>]*>", mask_html, masked)
-
-
-def _fix_incorrect_words(segment: str) -> str:
-    """Replace incorrect word forms (H006), skipping URLs and HTML."""
-    working = segment
-    for pattern, correct in _incorrect_word_patterns().values():
-        masked = _mask_urls_and_html(working)
-        matches = [
-            match for match in pattern.finditer(masked) if not _is_hyphenated_identifier_fragment(masked, *match.span())
-        ]
-        for match in reversed(matches):
-            start, end = match.span()
-            if working[start:end] != match.group(0):
-                continue
-            working = f"{working[:start]}{correct}{working[end:]}"
-    return working
-
-
-def _fix_ellipsis(segment: str) -> str:
-    """Replace `...` with ellipsis (H017)."""
-    return segment.replace("...", "…")
-
-
-def _fix_horizontal_bar(segment: str) -> str:
-    """Replace horizontal bar with em dash (H026)."""
-    return segment.replace("\u2015", "—")
-
-
-def _fix_question_mark_period(segment: str) -> str:
-    """Replace `?.` with `?` (H028)."""
-    return segment.replace("?.", "?")
-
-
-def _fix_numero_space(segment: str) -> str:
-    """Insert space after № when missing (H027)."""
-    return _NUMERO_PATTERN.sub("№ ", segment)
-
-
-def _fix_backslash_paths(segment: str) -> str:
-    """Normalize backslashes in local Markdown destinations (H039)."""
-    return _BACKSLASH_PATH_PATTERN.sub(lambda match: f"]({match.group(1).replace(chr(92), '/')})", segment)
-
-
-def _fix_space_before_percent_or_degree(segment: str) -> str:
-    """Insert space before `%` / `°` after a digit (H044)."""
-    return _PERCENT_DEGREE_PATTERN.sub(r"\1 \2", segment)
-
-
-def _fix_punctuation_before_closing_guillemet(segment: str) -> str:
-    """Move `. , ; :` after closing guillemet (H058)."""
-
-    def replacer(match: re.Match[str]) -> str:
-        punct_run = match.group(1)
-        # `слово.»` → `слово».` ; `,»` → `»,`
-        if punct_run.endswith(".") and len(punct_run) > 1:
-            return f"{punct_run[:-1]}»."
-        return f"»{punct_run}"
-
-    return _PUNCT_BEFORE_CLOSING_GUILLEMET_PATTERN.sub(replacer, segment)
-
-
-def _fix_missing_space_after_punctuation(segment: str) -> str:
-    """Insert missing space after `,;!?` before a letter (H050)."""
-
-    def replacer(match: re.Match[str]) -> str:
-        punct = match.group(1)
-        next_char = segment[match.end()]
-        if punct == "!" and match.start() > 0 and segment[match.start() - 1] == "[":
-            return match.group(0)
-        if (
-            punct in ",;"
-            and match.start() > 0
-            and segment[match.start() - 1].isascii()
-            and segment[match.start() - 1].isalnum()
-            and next_char.isascii()
-            and next_char.isalpha()
-        ):
-            return match.group(0)
-        return f"{punct} "
-
-    return _MISSING_SPACE_AFTER_PUNCT_PATTERN.sub(replacer, segment)
-
-
 def _fix_atx_heading_space(line: str) -> str:
     """Insert space after ATX hashes when missing (H036)."""
     match = _ATX_HEADING_NO_SPACE_PATTERN.match(line)
@@ -313,86 +140,9 @@ def _fix_atx_heading_space(line: str) -> str:
     return f"{match.group(1)} {match.group(2)}"
 
 
-def _fix_heading_trailing_period(line: str) -> str:
-    """Remove trailing period from ATX headings (H057)."""
-    match = _ATX_HEADING_PATTERN.match(line)
-    if not match:
-        return line
-    hashes, title = match.group(1), match.group(2)
-    working = title
-    closing = ""
-    closing_match = _ATX_CLOSING_HASHES_PATTERN.search(working)
-    if closing_match:
-        closing = closing_match.group(0)
-        working = working[: closing_match.start()]
-    top_section = ""
-    for marker in (" <!-- top-section -->", "<!-- top-section -->"):
-        if marker in working:
-            working = working.replace(marker, "", 1)
-            top_section = marker if marker.startswith(" ") else f" {marker}"
-            break
-    stripped = working.rstrip()
-    if not stripped or stripped.endswith(("...", "…")) or not stripped.endswith("."):
-        return line
-    fixed_title = stripped[:-1].rstrip()
-    trailing_ws = working[len(stripped) :]
-    return f"{hashes} {fixed_title}{trailing_ws}{top_section}{closing}"
-
-
-def _fix_image_alt_capitalization(line: str) -> str:
-    """Capitalize lowercase-starting image alt text (H020)."""
-    stripped = line.lstrip()
-    indent = line[: len(line) - len(stripped)]
-    if not stripped.startswith("!["):
-        return line
-    match = _IMAGE_ALT_PATTERN.match(stripped)
-    if not match:
-        return line
-    caption = match.group(1)
-    if not caption or not caption[0].isalpha() or not caption[0].islower():
-        return line
-    fixed = f"{caption[0].upper()}{caption[1:]}"
-    return f"{indent}![{fixed}]{stripped[match.end() :]}"
-
-
-def _fix_space_before_punctuation(line: str) -> str:
-    """Remove spaces before punctuation marks (H015)."""
-    code_ranges = _inline_code_ranges(line)
-
-    def replace_outside_code(pattern: re.Pattern[str], replacement: str, text: str) -> str:
-        pieces: list[str] = []
-        last = 0
-        for match in pattern.finditer(text):
-            if _inside_ranges(match.start(), code_ranges):
-                continue
-            pieces.append(text[last : match.start()])
-            pieces.append(replacement)
-            last = match.end()
-        pieces.append(text[last:])
-        return "".join(pieces)
-
-    for pattern, replacement in _SPACE_BEFORE_PUNCT_PATTERNS:
-        line = replace_outside_code(pattern, replacement, line)
-
-    if " !" in line:
-        pos_found = 0
-        while True:
-            pos_found = line.find(" !", pos_found)
-            if pos_found < 0:
-                break
-            if (
-                not _inside_ranges(pos_found, code_ranges)
-                and not any(line[pos_found:].startswith(exc) for exc in _H015_BANG_EXCEPTIONS)
-                and not line.strip().startswith("!")
-            ):
-                line = f"{line[:pos_found]}!{line[pos_found + 2 :]}"
-                code_ranges = _inline_code_ranges(line)
-                continue
-            pos_found += 2
-    return line
-
-
-_LIST_MARKER_HYPHEN_PATTERN = re.compile(r"^(?:\s*>\s*)*\s*-")
+def _fix_backslash_paths(segment: str) -> str:
+    """Normalize backslashes in local Markdown destinations (H039)."""
+    return _BACKSLASH_PATH_PATTERN.sub(lambda match: f"]({match.group(1).replace(chr(92), '/')})", segment)
 
 
 def _fix_dash_usage(line: str) -> str:
@@ -432,40 +182,159 @@ def _fix_dash_usage(line: str) -> str:
     return "".join(parts)
 
 
-def _normalize_en_and_em_dashes(segment: str) -> str:
-    """Fix en dashes outside digit ranges and em-dash spacing."""
-    chars = list(segment)
-    i = 0
-    while i < len(chars):
-        char = chars[i]
-        if char == "–":  # noqa: RUF001
-            before = chars[i - 1] if i > 0 else ""
-            after = chars[i + 1] if i + 1 < len(chars) else ""
-            if not (before.isdigit() and after.isdigit()):
-                # Non-digit en dash becomes spaced em dash.
-                left = "" if before == " " else " "
-                right = "" if after == " " else " "
-                replacement = f"{left}—{right}"
-                chars[i : i + 1] = list(replacement)
-                i += len(replacement)
+def _fix_ellipsis(segment: str) -> str:
+    """Replace `...` with ellipsis (H017)."""
+    return segment.replace("...", "…")
+
+
+def _fix_emphasis_colon_outside(line: str) -> str:
+    """Move colon inside emphasis markers when line continues (H030)."""
+    code_ranges = _inline_code_ranges(line)
+
+    def replacer(match: re.Match[str]) -> str:
+        if _inside_ranges(match.start(), code_ranges):
+            return match.group(0)
+        if not line[match.end() :].strip():
+            return match.group(0)
+        open_m, inner, close_m = match.group(1), match.group(2), match.group(3)
+        return f"{open_m}{inner}:{close_m}"
+
+    for pattern in _EMPHASIS_COLON_OUTSIDE_PATTERNS:
+        line = pattern.sub(replacer, line)
+        code_ranges = _inline_code_ranges(line)
+    return line
+
+
+def _fix_emphasis_colon_space(line: str) -> str:
+    """Insert space after emphasis colon when missing (H029)."""
+    code_ranges = _inline_code_ranges(line)
+
+    def replacer(match: re.Match[str]) -> str:
+        if _inside_ranges(match.start(), code_ranges):
+            return match.group(0)
+        return f"{match.group(1)} "
+
+    for pattern in _EMPHASIS_COLON_NO_SPACE_PATTERNS:
+        line = pattern.sub(replacer, line)
+        code_ranges = _inline_code_ranges(line)
+    return line
+
+
+def _fix_fence_or_code_line(line: str) -> str:
+    """Fix fence language ids (H007) and NBSP (H022) inside fenced regions."""
+    line = line.replace("\u00a0", " ")
+    match = _FENCE_OPEN_PATTERN.match(line)
+    if not match:
+        return line
+    language = match.group(4)
+    correct = _INCORRECT_LANGUAGES.get(language)
+    if correct is None:
+        return line
+    return f"{match.group(1)}{match.group(2)}{match.group(3)}{correct}{match.group(5)}"
+
+
+def _fix_heading_trailing_period(line: str) -> str:
+    """Remove trailing period from ATX headings (H057)."""
+    match = _ATX_HEADING_PATTERN.match(line)
+    if not match:
+        return line
+    hashes, title = match.group(1), match.group(2)
+    working = title
+    closing = ""
+    closing_match = _ATX_CLOSING_HASHES_PATTERN.search(working)
+    if closing_match:
+        closing = closing_match.group(0)
+        working = working[: closing_match.start()]
+    top_section = ""
+    for marker in (" <!-- top-section -->", "<!-- top-section -->"):
+        if marker in working:
+            working = working.replace(marker, "", 1)
+            top_section = marker if marker.startswith(" ") else f" {marker}"
+            break
+    stripped = working.rstrip()
+    if not stripped or stripped.endswith(("...", "…")) or not stripped.endswith("."):
+        return line
+    fixed_title = stripped[:-1].rstrip()
+    trailing_ws = working[len(stripped) :]
+    return f"{hashes} {fixed_title}{trailing_ws}{top_section}{closing}"
+
+
+def _fix_horizontal_bar(segment: str) -> str:
+    """Replace horizontal bar with em dash (H026)."""
+    return segment.replace("\u2015", "—")
+
+
+def _fix_image_alt_capitalization(line: str) -> str:
+    """Capitalize lowercase-starting image alt text (H020)."""
+    stripped = line.lstrip()
+    indent = line[: len(line) - len(stripped)]
+    if not stripped.startswith("!["):
+        return line
+    match = _IMAGE_ALT_PATTERN.match(stripped)
+    if not match:
+        return line
+    caption = match.group(1)
+    if not caption or not caption[0].isalpha() or not caption[0].islower():
+        return line
+    fixed = f"{caption[0].upper()}{caption[1:]}"
+    return f"{indent}![{fixed}]{stripped[match.end() :]}"
+
+
+def _fix_incorrect_words(segment: str) -> str:
+    """Replace incorrect word forms (H006), skipping URLs and HTML."""
+    working = segment
+    for pattern, correct in _incorrect_word_patterns().values():
+        masked = _mask_urls_and_html(working)
+        matches = [
+            match for match in pattern.finditer(masked) if not _is_hyphenated_identifier_fragment(masked, *match.span())
+        ]
+        for match in reversed(matches):
+            start, end = match.span()
+            if working[start:end] != match.group(0):
                 continue
-        elif char == "—":
-            before = chars[i - 1] if i > 0 else " "
-            after = chars[i + 1] if i + 1 < len(chars) else " "
-            if i == 0:
-                if after != " ":
-                    chars[i : i + 1] = list("— ")
-                    i += 2
-                    continue
-            elif not (before == " " and after == " "):
-                left = "" if before == " " else " "
-                right = "" if after == " " else " "
-                replacement = f"{left}—{right}"
-                chars[i : i + 1] = list(replacement)
-                i += len(replacement)
+            working = f"{working[:start]}{correct}{working[end:]}"
+    return working
+
+
+def _fix_lowercase_after_punctuation(line: str) -> str:
+    """Capitalize lowercase letters after sentence-ending punctuation (H021)."""
+    mask_pattern = _h021_abbrev_mask_pattern()
+    parts: list[str] = []
+    for segment, in_code in _identify_code_blocks_line(line):
+        if in_code:
+            parts.append(segment)
+            continue
+        masked = mask_abbreviations(segment, mask_pattern)
+        chars = list(segment)
+        for match in _H021_PATTERN.finditer(masked):
+            if _is_h021_allowed_period(masked, match.start()):
                 continue
-        i += 1
-    return "".join(chars)
+            letter_index = match.start(3)
+            chars[letter_index] = chars[letter_index].upper()
+        parts.append("".join(chars))
+    return "".join(parts)
+
+
+def _fix_missing_space_after_punctuation(segment: str) -> str:
+    """Insert missing space after `,;!?` before a letter (H050)."""
+
+    def replacer(match: re.Match[str]) -> str:
+        punct = match.group(1)
+        next_char = segment[match.end()]
+        if punct == "!" and match.start() > 0 and segment[match.start() - 1] == "[":
+            return match.group(0)
+        if (
+            punct in ",;"
+            and match.start() > 0
+            and segment[match.start() - 1].isascii()
+            and segment[match.start() - 1].isalnum()
+            and next_char.isascii()
+            and next_char.isalpha()
+        ):
+            return match.group(0)
+        return f"{punct} "
+
+    return _MISSING_SPACE_AFTER_PUNCT_PATTERN.sub(replacer, segment)
 
 
 def _fix_multiplication_sign(line: str) -> str:
@@ -514,56 +383,57 @@ def _fix_multiplication_sign(line: str) -> str:
     return "".join(parts)
 
 
-def _fix_emphasis_colon_outside(line: str) -> str:
-    """Move colon inside emphasis markers when line continues (H030)."""
-    code_ranges = _inline_code_ranges(line)
+def _fix_numero_space(segment: str) -> str:
+    """Insert space after № when missing (H027)."""
+    return _NUMERO_PATTERN.sub("№ ", segment)
 
-    def replacer(match: re.Match[str]) -> str:
-        if _inside_ranges(match.start(), code_ranges):
-            return match.group(0)
-        if not line[match.end() :].strip():
-            return match.group(0)
-        open_m, inner, close_m = match.group(1), match.group(2), match.group(3)
-        return f"{open_m}{inner}:{close_m}"
 
-    for pattern in _EMPHASIS_COLON_OUTSIDE_PATTERNS:
-        line = pattern.sub(replacer, line)
-        code_ranges = _inline_code_ranges(line)
+def _fix_prose_line(line: str, *, lang: str) -> str:
+    """Apply all prose autofixes to one non-fenced Markdown line."""
+    line = line.replace("\u00a0", " ")  # H022
+    for char in _INVISIBLE_CHARACTERS:
+        line = line.replace(char, "")  # H042
+
+    line = _fix_atx_heading_space(line)  # H036
+    line = _fix_heading_trailing_period(line)  # H057
+    line = _fix_image_alt_capitalization(line)  # H020
+    line = _map_non_code(line, _fix_incorrect_words)  # H006
+    line = _map_non_code(line, _fix_ellipsis)  # H017
+    line = _map_non_code(line, _fix_horizontal_bar)  # H026
+    line = _map_non_code(line, _fix_question_mark_period)  # H028
+    line = _map_non_code(line, _fix_numero_space)  # H027
+    line = _map_non_code(line, _fix_backslash_paths)  # H039
+    line = _fix_space_before_punctuation(line)  # H015
+    line = _fix_dash_usage(line)  # H016
+    line = _fix_multiplication_sign(line)  # H024
+    line = _fix_emphasis_colon_outside(line)  # H030 (before H029)
+    line = _fix_emphasis_colon_space(line)  # H029
+    line = _fix_lowercase_after_punctuation(line)  # H021
+    line = _map_non_code(line, _fix_missing_space_after_punctuation)  # H050
+    if lang == "ru":
+        line = _map_non_code(line, _fix_space_before_percent_or_degree)  # H044
+        line = _fix_russian_polite_pronouns(line)  # H023
+    if _CYRILLIC_PATTERN.search(line):
+        line = _map_non_code(line, _fix_punctuation_before_closing_guillemet)  # H058
     return line
 
 
-def _fix_emphasis_colon_space(line: str) -> str:
-    """Insert space after emphasis colon when missing (H029)."""
-    code_ranges = _inline_code_ranges(line)
+def _fix_punctuation_before_closing_guillemet(segment: str) -> str:
+    """Move `. , ; :` after closing guillemet (H058)."""
 
     def replacer(match: re.Match[str]) -> str:
-        if _inside_ranges(match.start(), code_ranges):
-            return match.group(0)
-        return f"{match.group(1)} "
+        punct_run = match.group(1)
+        # `слово.»` → `слово».` ; `,»` → `»,`
+        if punct_run.endswith(".") and len(punct_run) > 1:
+            return f"{punct_run[:-1]}»."
+        return f"»{punct_run}"
 
-    for pattern in _EMPHASIS_COLON_NO_SPACE_PATTERNS:
-        line = pattern.sub(replacer, line)
-        code_ranges = _inline_code_ranges(line)
-    return line
+    return _PUNCT_BEFORE_CLOSING_GUILLEMET_PATTERN.sub(replacer, segment)
 
 
-def _fix_lowercase_after_punctuation(line: str) -> str:
-    """Capitalize lowercase letters after sentence-ending punctuation (H021)."""
-    mask_pattern = _h021_abbrev_mask_pattern()
-    parts: list[str] = []
-    for segment, in_code in _identify_code_blocks_line(line):
-        if in_code:
-            parts.append(segment)
-            continue
-        masked = mask_abbreviations(segment, mask_pattern)
-        chars = list(segment)
-        for match in _H021_PATTERN.finditer(masked):
-            if _is_h021_allowed_period(masked, match.start()):
-                continue
-            letter_index = match.start(3)
-            chars[letter_index] = chars[letter_index].upper()
-        parts.append("".join(chars))
-    return "".join(parts)
+def _fix_question_mark_period(segment: str) -> str:
+    """Replace `?.` with `?` (H028)."""
+    return segment.replace("?.", "?")
 
 
 def _fix_russian_polite_pronouns(line: str) -> str:
@@ -598,12 +468,86 @@ def _fix_russian_polite_pronouns(line: str) -> str:
     return line
 
 
+def _fix_space_before_percent_or_degree(segment: str) -> str:
+    """Insert space before `%` / `°` after a digit (H044)."""
+    return _PERCENT_DEGREE_PATTERN.sub(r"\1 \2", segment)
+
+
+def _fix_space_before_punctuation(line: str) -> str:
+    """Remove spaces before punctuation marks (H015)."""
+    code_ranges = _inline_code_ranges(line)
+
+    def replace_outside_code(pattern: re.Pattern[str], replacement: str, text: str) -> str:
+        pieces: list[str] = []
+        last = 0
+        for match in pattern.finditer(text):
+            if _inside_ranges(match.start(), code_ranges):
+                continue
+            pieces.append(text[last : match.start()])
+            pieces.append(replacement)
+            last = match.end()
+        pieces.append(text[last:])
+        return "".join(pieces)
+
+    for pattern, replacement in _SPACE_BEFORE_PUNCT_PATTERNS:
+        line = replace_outside_code(pattern, replacement, line)
+
+    if " !" in line:
+        pos_found = 0
+        while True:
+            pos_found = line.find(" !", pos_found)
+            if pos_found < 0:
+                break
+            if (
+                not _inside_ranges(pos_found, code_ranges)
+                and not any(line[pos_found:].startswith(exc) for exc in _H015_BANG_EXCEPTIONS)
+                and not line.strip().startswith("!")
+            ):
+                line = f"{line[:pos_found]}!{line[pos_found + 2 :]}"
+                code_ranges = _inline_code_ranges(line)
+                continue
+            pos_found += 2
+    return line
+
+
 def _get_link_url_ranges(line: str) -> set[int]:
     """Return 0-based positions inside Markdown link/image destinations."""
     positions: set[int] = set()
     for match in re.finditer(r"\]\([^)]*\)", line):
         positions.update(range(match.start() + 2, match.end() - 1))
     return positions
+
+
+@lru_cache(maxsize=1)
+def _h021_abbrev_mask_pattern() -> re.Pattern[str] | None:
+    """Load H021 abbreviation mask from MdChecker."""
+    from harrix_pylib.md_checker import MdChecker  # noqa: PLC0415
+
+    return MdChecker._H021_ABBREV_MASK_PATTERN  # noqa: SLF001
+
+
+@lru_cache(maxsize=1)
+def _incorrect_word_patterns() -> dict[str, tuple[re.Pattern[str], str]]:
+    """Load H006 patterns from MdChecker (shared source of truth)."""
+    from harrix_pylib.md_checker import MdChecker  # noqa: PLC0415
+
+    return MdChecker._INCORRECT_WORD_PATTERNS  # noqa: SLF001
+
+
+def _inline_code_ranges(line: str) -> list[tuple[int, int]]:
+    """Return 0-based ranges of inline code spans on a line."""
+    ranges: list[tuple[int, int]] = []
+    pos = 0
+    for segment, in_code in _identify_code_blocks_line(line):
+        if in_code:
+            ranges.append((pos, pos + len(segment)))
+        pos += len(segment)
+    return ranges
+
+
+def _inside_ranges(offset: int, ranges: list[tuple[int, int]]) -> bool:
+    """Return whether `offset` lies inside any half-open range."""
+    return any(start <= offset < end for start, end in ranges)
 
 
 def _is_blockquote_attribution_line(line: str) -> bool:
@@ -641,3 +585,60 @@ def _is_table_cell_only_dash(line: str, pos: int) -> bool:
             return part.strip() == "-"
         start = end + 1
     return False
+
+
+def _map_non_code(line: str, transform: Callable[[str], str]) -> str:
+    """Apply `transform` to non-inline-code segments only."""
+    return "".join(segment if in_code else transform(segment) for segment, in_code in _identify_code_blocks_line(line))
+
+
+def _mask_urls_and_html(text: str) -> str:
+    """Mask link destinations and HTML tags with same-length spaces (H006 scope)."""
+
+    def mask_dest(match: re.Match[str]) -> str:
+        return "](" + (" " * (len(match.group(0)) - 3)) + ")"
+
+    def mask_html(match: re.Match[str]) -> str:
+        return "<" + (" " * (len(match.group(0)) - 2)) + ">"
+
+    masked = re.sub(r"\]\([^)]*\)", mask_dest, text)
+    return re.sub(r"<[^>]*>", mask_html, masked)
+
+
+def _normalize_en_and_em_dashes(segment: str) -> str:
+    """Fix en dashes outside digit ranges and em-dash spacing."""
+    chars = list(segment)
+    i = 0
+    while i < len(chars):
+        char = chars[i]
+        if char == "–":  # noqa: RUF001
+            before = chars[i - 1] if i > 0 else ""
+            after = chars[i + 1] if i + 1 < len(chars) else ""
+            if not (before.isdigit() and after.isdigit()):
+                # Non-digit en dash becomes spaced em dash.
+                left = "" if before == " " else " "
+                right = "" if after == " " else " "
+                replacement = f"{left}—{right}"
+                chars[i : i + 1] = list(replacement)
+                i += len(replacement)
+                continue
+        elif char == "—":
+            before = chars[i - 1] if i > 0 else " "
+            after = chars[i + 1] if i + 1 < len(chars) else " "
+            if i == 0:
+                if after != " ":
+                    chars[i : i + 1] = list("— ")
+                    i += 2
+                    continue
+            elif not (before == " " and after == " "):
+                left = "" if before == " " else " "
+                right = "" if after == " " else " "
+                replacement = f"{left}—{right}"
+                chars[i : i + 1] = list(replacement)
+                i += len(replacement)
+                continue
+        i += 1
+    return "".join(chars)
+
+
+_LIST_MARKER_HYPHEN_PATTERN = re.compile(r"^(?:\s*>\s*)*\s*-")

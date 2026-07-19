@@ -46,6 +46,7 @@ class MdFormatter:
         end_of_line: str = "crlf",
         prose_wrap: str = "preserve",
         print_width: int = 80,
+        apply_prose_fixes: bool = True,
     ) -> None:
         """Initialize the MdFormatter.
 
@@ -54,9 +55,16 @@ class MdFormatter:
         - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
         - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
         - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
+        - `apply_prose_fixes` (`bool`): Apply mechanical MdChecker autofixes (typography, H006-H058
+          subset). Defaults to `True`.
 
         """
-        self.options = _FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
+        self.options = _FormatOptions(
+            end_of_line=end_of_line,
+            prose_wrap=prose_wrap,
+            print_width=print_width,
+            apply_prose_fixes=apply_prose_fixes,
+        )
 
     def format(self, text: str) -> str:
         """Format Markdown text.
@@ -195,6 +203,8 @@ Args:
 - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
 - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
 - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
+- `apply_prose_fixes` (`bool`): Apply mechanical MdChecker autofixes (typography, H006-H058
+  subset). Defaults to `True`.
 
 <details>
 <summary>Code:</summary>
@@ -206,8 +216,14 @@ def __init__(
         end_of_line: str = "crlf",
         prose_wrap: str = "preserve",
         print_width: int = 80,
+        apply_prose_fixes: bool = True,
     ) -> None:
-        self.options = _FormatOptions(end_of_line=end_of_line, prose_wrap=prose_wrap, print_width=print_width)
+        self.options = _FormatOptions(
+            end_of_line=end_of_line,
+            prose_wrap=prose_wrap,
+            print_width=print_width,
+            apply_prose_fixes=apply_prose_fixes,
+        )
 ```
 
 </details>

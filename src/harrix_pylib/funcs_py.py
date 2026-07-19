@@ -1075,7 +1075,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         r"""Return a sort key for function/method names.
 
         Priority:
-        0\. _init_\_ method - highest priority
+        0\. _init_\_ method — highest priority
 
         1. Other special methods (double underscore)
         2. Regular methods/functions
@@ -1091,7 +1091,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
         return (2, name)  # Regular methods/functions
 
     def _decorator_dependency_source_name(decorator_expr: cst.BaseExpression) -> str | None:
-        """If decorator looks like @Name.attr(...) then return Name; else `None`.
+        """If decorator looks like @Name.attr(…) then return Name; else `None`.
 
         This keeps runtime name resolution stable for decorator registration patterns
         (e.g. Click): `@group.command(...)` requires `group` to exist at import time.

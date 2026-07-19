@@ -3,7 +3,7 @@
 ![Featured image](https://raw.githubusercontent.com/Harrix/harrix-pylib/refs/heads/main/img/featured-image.svg)
 
 🐍 Common **Python functions (3.11+)** library for my projects for
-[my projects](https://github.com/Harrix?tab=repositories).
+[my projects](https://github.com/Harrix? tab=repositories).
 
 <details>
 <summary>📖 Contents ⬇️</summary>
@@ -31,7 +31,7 @@
 
 </details>
 
-![GitHub](https://img.shields.io/badge/GitHub-harrix--pylib-blue?logo=github) ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
+![GitHub](https://img.shields.io/badge/GitHub-harrix--pylib-blue? logo=github) ![GitHub](https://img.shields.io/github/license/Harrix/harrix-pylib) ![PyPI](https://img.shields.io/pypi/v/harrix-pylib)
 
 GitHub: <https://github.com/Harrix/harrix-pylib>
 
