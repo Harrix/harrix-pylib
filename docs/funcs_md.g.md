@@ -821,7 +821,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
                 combined_dict[key] = [current_value, value]
 
     def should_include_file(file_path: Path) -> bool:
-        """Check if a markdown file should be included in processing."""
+        """Check if a Markdown file should be included in processing."""
         if file_path.suffix != ".md":
             return False
 
@@ -1028,7 +1028,7 @@ print(result)
 def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_md_files: bool = True) -> str:
 
     def should_include_file(file_path: Path) -> bool:
-        """Check if a markdown file should be included in processing."""
+        """Check if a Markdown file should be included in processing."""
         if file_path.suffix != ".md":
             return False
 

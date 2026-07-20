@@ -1,4 +1,4 @@
-"""Harrix PyLib - Common Python functions library for my projects."""
+"""Harrix PyLib — Common Python functions library for my projects."""
 
 from harrix_pylib import funcs_dev as dev
 from harrix_pylib import funcs_file as file

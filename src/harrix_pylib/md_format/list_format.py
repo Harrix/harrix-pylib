@@ -1,4 +1,4 @@
-"""List line preprocessing for markdown formatting."""
+"""List line preprocessing for Markdown formatting."""
 
 from __future__ import annotations
 

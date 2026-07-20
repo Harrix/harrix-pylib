@@ -1,4 +1,4 @@
-"""Protect fenced code blocks from markdown formatting."""
+"""Protect fenced code blocks from Markdown formatting."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Markdown formatting inspired by Prettier markdown parser."""
+"""Markdown formatting inspired by Prettier Markdown parser."""
 
 from harrix_pylib.md_format.formatter import MdFormatter
 

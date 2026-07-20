@@ -407,21 +407,6 @@ def _format_docstring_simple_string(
     return cst.SimpleString(value=new_literal)
 
 
-def _literal_prefix_and_quote(literal: str) -> tuple[str, str]:
-    match = _STRING_PREFIX_RE.match(literal)
-    prefix = match.group(0) if match else ""
-    rest = literal[len(prefix) :]
-    for quote in _TRIPLE_QUOTES:
-        if rest.startswith(quote):
-            return prefix, quote
-    if rest.startswith('"'):
-        return prefix, '"'
-    if rest.startswith("'"):
-        return prefix, "'"
-    msg = f"Unsupported string literal: {literal[:20]!r}"
-    raise ValueError(msg)
-
-
 def _format_one_line_docstring(
     string_node: cst.SimpleString,
     *,
@@ -456,6 +441,21 @@ def _format_one_line_docstring(
     if quote in body:
         return None
     return cst.SimpleString(value=f"{prefix}{quote}{body}{quote}")
+
+
+def _literal_prefix_and_quote(literal: str) -> tuple[str, str]:
+    match = _STRING_PREFIX_RE.match(literal)
+    prefix = match.group(0) if match else ""
+    rest = literal[len(prefix) :]
+    for quote in _TRIPLE_QUOTES:
+        if rest.startswith(quote):
+            return prefix, quote
+    if rest.startswith('"'):
+        return prefix, '"'
+    if rest.startswith("'"):
+        return prefix, "'"
+    msg = f"Unsupported string literal: {literal[:20]!r}"
+    raise ValueError(msg)
 
 
 def _normalize_prose_segment(segment: str) -> str:

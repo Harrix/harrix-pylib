@@ -1,4 +1,4 @@
-"""Protect empty block-math regions from markdown formatting."""
+"""Protect empty block-math regions from Markdown formatting."""
 
 from __future__ import annotations
 
