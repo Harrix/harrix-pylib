@@ -437,7 +437,7 @@ def _fix_missing_space_after_punctuation(segment: str) -> str:
 
 
 def _fix_multiplication_sign(line: str) -> str:
-    """Replace Latin/Cyrillic `x` used as multiply with the multiplication sign `×` (H024)."""
+    """Replace Latin/Cyrillic `x` used as multiply with the multiplication sign (H024)."""
     link_url_ranges = _get_link_url_ranges(line)
     parts: list[str] = []
     offset = 0
