@@ -555,6 +555,73 @@ def test_md_checker() -> None:
         assert not [e for e in errors if "H014" in e], "H014 must not fire before multi-badge row"
 
         # =====================================================================
+        # H059: Missing colon before list
+        # =====================================================================
+        no_colon_list_file = temp_path / "no_colon_list.md"
+        no_colon_list_file.write_text(
+            "---\nlang: ru\n---\n\nМедицинские изделия и принадлежности\n\n- Вата\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(no_colon_list_file, select={"H059"})
+        assert any("H059" in e for e in errors)
+
+        colon_list_file = temp_path / "colon_list.md"
+        colon_list_file.write_text(
+            "---\nlang: ru\n---\n\nМедицинские изделия и принадлежности:\n\n- Вата\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(colon_list_file, select={"H059"})
+        assert not errors
+
+        heading_before_list_file = temp_path / "heading_before_list.md"
+        heading_before_list_file.write_text(
+            "---\nlang: en\n---\n\n## Supplies\n\n- Cotton\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(heading_before_list_file, select={"H059"})
+        assert not errors
+
+        image_before_list_file = temp_path / "image_before_list.md"
+        image_before_list_file.write_text(
+            "---\nlang: en\n---\n\n![Alt](image.png)\n\n- Item\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(image_before_list_file, select={"H059"})
+        assert not errors
+
+        admonition_before_list_file = temp_path / "admonition_before_list.md"
+        admonition_before_list_file.write_text(
+            "---\nlang: en\n---\n\nText [!NOTE]\n\n- Item\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(admonition_before_list_file, select={"H059"})
+        assert not errors
+
+        list_before_list_file = temp_path / "list_before_list.md"
+        list_before_list_file.write_text(
+            "---\nlang: en\n---\n\n- Item one\n\n- Item two\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(list_before_list_file, select={"H059"})
+        assert not [e for e in errors if "H059" in e], "H059 must not fire between blank-separated list items"
+
+        no_colon_ordered_list_file = temp_path / "no_colon_ordered_list.md"
+        no_colon_ordered_list_file.write_text(
+            "---\nlang: en\n---\n\nHere are the steps\n\n1. First\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(no_colon_ordered_list_file, select={"H059"})
+        assert any("H059" in e for e in errors)
+
+        bold_colon_list_file = temp_path / "bold_colon_list.md"
+        bold_colon_list_file.write_text(
+            "---\nlang: en\n---\n\n**Supplies:**\n\n- Cotton\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(bold_colon_list_file, select={"H059"})
+        assert not errors
+
+        # =====================================================================
         # H015: Space before punctuation
         # =====================================================================
         space_punct_file = temp_path / "space_punct.md"
@@ -1905,5 +1972,6 @@ def test_md_checker() -> None:
         assert "H055" in checker.all_rules
         assert "H056" in checker.all_rules
         assert "H057" in checker.all_rules
+        assert "H059" in checker.all_rules
         assert "H033" in checker.all_rules
         assert checker.all_rules == set(checker.RULES.keys())

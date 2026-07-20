@@ -77,6 +77,7 @@ class MdChecker:
     - **H057** - Trailing period at end of ATX heading.
     - **H058** - Punctuation (`.`, `,`, `;`, `:`) immediately before a closing guillemet
       (Russian typography; `!` / `?` / `…` before the closer are allowed; single-letter abbreviations).
+    - **H059** - Missing colon before list.
 
     """
 
@@ -86,7 +87,7 @@ class MdChecker:
     # Length of empty single-line display math `$$$$`; real content must be longer
     _EMPTY_SINGLE_LINE_DISPLAY_MATH_LEN: ClassVar[int] = 4
 
-    # Markers that suppress colon-before-code/image warnings (shared between H013 and H014 checks)
+    # Markers that suppress colon-before-code/image/list warnings (H013, H014, H059)
     _COLON_SKIP_MARKERS: ClassVar[tuple[str, ...]] = (
         "[!DETAILS]",
         "[!WARNING]",
@@ -253,12 +254,15 @@ class MdChecker:
         "H056": "Unbalanced inline code in table cell",
         "H057": "Trailing period at end of ATX heading",
         "H058": "Punctuation before closing guillemet",
+        "H059": "Missing colon before list",
     }
 
     _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
     _TWO_DOTS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<!\.)\.\.(?![\./])")
     _MATH_DELIMITER_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*\$\$\s*$")
     _HORIZONTAL_RULE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(?:\*\s*){3,}$|^(?:-\s*){3,}$|^(?:_\s*){3,}$")
+    # Bullet (`- `, `* `, `+ `) or ordered (`1. `, `1) `) list item start (H059)
+    _LIST_ITEM_START_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^[-*+]\s|^\d+[.)]\s")
 
     # Patterns for H029: colon inside or after inline emphasis without following space
     _EMPHASIS_COLON_NO_SPACE_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
@@ -898,6 +902,48 @@ class MdChecker:
         if last_char != ":":
             error_msg = f'{self.RULES["H014"]}: last char is "{last_char}"'
             yield self._format_error("H014", error_msg, filename, line_num=line_num, col=col)
+
+    def _check_colon_before_list(
+        self,
+        filename: Path,
+        line: str,
+        line_num: int,
+        content_lines: list[str],
+        line_index: int,
+        *,
+        display_math_lines: frozenset[int],
+    ) -> Generator[str, None, None]:
+        """Check for missing colon before list (H059)."""
+        if line_index + 2 >= len(content_lines):
+            return
+        if not self._should_check_paragraph_end(line):
+            return
+
+        if line_index in display_math_lines:
+            return
+
+        next_line = content_lines[line_index + 1]
+        next_next_line = content_lines[line_index + 2]
+
+        # Check pattern: non-empty line, empty line, list item
+        if not (next_line.strip() == "" and self._LIST_ITEM_START_PATTERN.match(next_next_line.strip())):
+            return
+
+        stripped = line.strip()
+        # Skip list item: blank-separated list items do not require a colon
+        if self._LIST_ITEM_START_PATTERN.match(stripped):
+            return
+
+        last_char, col = self._paragraph_last_char(line)
+
+        if any(marker in line for marker in self._COLON_SKIP_MARKERS):
+            return
+        if stripped.startswith("<"):
+            return
+
+        if last_char != ":":
+            error_msg = f'{self.RULES["H059"]}: last char is "{last_char}"'
+            yield self._format_error("H059", error_msg, filename, line_num=line_num, col=col)
 
     def _check_colon_outside_emphasis(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         r"""Check for colon outside inline emphasis (H030).
@@ -1548,6 +1594,11 @@ class MdChecker:
 
         if "H014" in rules:
             yield from self._check_colon_before_image(
+                filename, line, line_num, content_lines, line_index, display_math_lines=display_math_lines
+            )
+
+        if "H059" in rules:
+            yield from self._check_colon_before_list(
                 filename, line, line_num, content_lines, line_index, display_math_lines=display_math_lines
             )
 
@@ -2326,7 +2377,7 @@ class MdChecker:
         return "".join(segment for segment, in_code in h.md.identify_code_blocks_line(line) if not in_code)
 
     def _should_check_paragraph_end(self, line: str) -> bool:
-        """Return `True` if line is a regular paragraph that should end with colon before code/image."""
+        """Return `True` if line is a regular paragraph that should end with colon before code/image/list."""
         stripped = line.strip()
         return (
             bool(stripped)
