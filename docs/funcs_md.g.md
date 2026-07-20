@@ -1006,7 +1006,7 @@ Note:
   1. The folder directly contains at least 2 Markdown files, or
   2. The folder and its subfolders together contain at least 2 Markdown files.
 - Folders are processed from the deepest level up, allowing parent folders to use
-  already combined .g.md files from subfolders.
+  already combined `g.md` files from subfolders.
 
 Example:
 

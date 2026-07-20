@@ -1313,11 +1313,14 @@ class MdChecker:
                 start, end = match.span()
                 if self._is_hyphenated_identifier_fragment(clean_line, start, end):
                     continue
+                if self._is_file_extension_fragment(clean_line, start, end):
+                    continue
                 line_match = next(
                     (
                         m
                         for m in pattern.finditer(line)
                         if not self._is_hyphenated_identifier_fragment(line, m.start(), m.end())
+                        and not self._is_file_extension_fragment(line, m.start(), m.end())
                     ),
                     None,
                 )
@@ -2266,6 +2269,16 @@ class MdChecker:
             n += 1
             j -= 1
         return n % 2 == 1
+
+    @staticmethod
+    def _is_file_extension_fragment(text: str, start: int, _end: int) -> bool:
+        """Return `True` if span is a file extension after a dotted filename stem (e.g. `recover.sql`)."""
+        dot_index = start - 1
+        stem_index = start - 2
+        if stem_index < 0 or text[dot_index] != ".":
+            return False
+        prev = text[stem_index]
+        return prev.isalnum() or prev == "_"
 
     @staticmethod
     def _is_h021_allowed_period(segment: str, period_pos: int) -> bool:

@@ -5,6 +5,10 @@ keep fixed prose. Skips fenced and inline code the same way as MdChecker
 (H006, H007, H015-H017, H020-H024, H026-H030, H036, H039, H042, H044, H050,
 H057, H058).
 
+Bare filenames and paths (for example `config.json`, `src/app/recover.sql`) are
+wrapped in inline code before H006 so file extensions are not uppercased.
+A leading-dot mention like `.g.md` becomes `` `g.md` `` (not `` .`g.md` ``).
+
 """
 
 from __future__ import annotations
@@ -99,6 +103,62 @@ _SPACE_BEFORE_PUNCT_PATTERNS = (
 _PRONOUN_BOUNDARY_BEFORE = r"(?<![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001  # ignore: HP001
 _PRONOUN_BOUNDARY_AFTER = r"(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001  # ignore: HP001
 
+# File extensions wrapped as inline code before H006 so `recover.sql` stays lowercase.
+_FILE_PATH_EXTENSIONS = frozenset(
+    {
+        "apk",
+        "bat",
+        "cfg",
+        "cpp",
+        "css",
+        "csv",
+        "dll",
+        "exe",
+        "go",
+        "h",
+        "hpp",
+        "html",
+        "ini",
+        "java",
+        "js",
+        "json",
+        "jsx",
+        "kt",
+        "lock",
+        "log",
+        "md",
+        "odf",
+        "odt",
+        "pdf",
+        "php",
+        "ps1",
+        "py",
+        "qml",
+        "rs",
+        "sh",
+        "sql",
+        "svg",
+        "swift",
+        "toml",
+        "ts",
+        "tsv",
+        "tsx",
+        "txt",
+        "xml",
+        "yaml",
+        "yml",
+    }
+)
+_FILE_PATH_EXT_ALT = "|".join(sorted(_FILE_PATH_EXTENSIONS, key=lambda item: (-len(item), item)))
+# Group 1: leading-dot mention `.g.md` (capture without the leading `.`).
+# Group 2: normal basename/path `config.json`, `../recover.sql`, `src/a.py`.
+_BARE_FILENAME_PATTERN = re.compile(
+    rf"(?:(?<!\S)\.((?:[\w.-]+[/\\])*[\w][\w.-]*\.(?:{_FILE_PATH_EXT_ALT}))"
+    rf"|(?<![A-Za-z0-9_`.])(?:[A-Za-z]:[/\\])?(?:(?:[\w.-]+|\.\.)[/\\])*[\w][\w.-]*\.(?:{_FILE_PATH_EXT_ALT}))"
+    rf"(?!\.[A-Za-z0-9_])(?![A-Za-z0-9_])",
+    re.IGNORECASE,
+)
+
 
 def _apply_checker_prose_fixes(text: str, *, lang: str = "") -> str:
     """Apply mechanical MdChecker autofixes to Markdown body text.
@@ -162,6 +222,23 @@ def _fix_atx_heading_space(line: str) -> str:
 def _fix_backslash_paths(segment: str) -> str:
     """Normalize backslashes in local Markdown destinations (H039)."""
     return _BACKSLASH_PATH_PATTERN.sub(lambda match: f"]({match.group(1).replace(chr(92), '/')})", segment)
+
+
+def _fix_bare_filenames_to_inline_code(segment: str) -> str:
+    """Wrap bare filenames and paths in backticks before H006 uppercase fixes.
+
+    Leading-dot mentions like `.g.md` become `` `g.md` `` so H015 cannot glue the
+    leftover period onto the previous word (`combined .` → `combined.`).
+
+    """
+
+    def replacer(match: re.Match[str]) -> str:
+        leading_dot_name = match.group(1)
+        if leading_dot_name is not None:
+            return f"`{leading_dot_name}`"
+        return f"`{match.group(0)}`"
+
+    return _BARE_FILENAME_PATTERN.sub(replacer, segment)
 
 
 def _fix_dash_usage(line: str) -> str:
@@ -305,7 +382,10 @@ def _fix_incorrect_words(segment: str) -> str:
     for pattern, correct in _incorrect_word_patterns().values():
         masked = _mask_urls_and_html(working)
         matches = [
-            match for match in pattern.finditer(masked) if not _is_hyphenated_identifier_fragment(masked, *match.span())
+            match
+            for match in pattern.finditer(masked)
+            if not _is_hyphenated_identifier_fragment(masked, *match.span())
+            and not _is_file_extension_fragment(masked, *match.span())
         ]
         for match in reversed(matches):
             start, end = match.span()
@@ -421,6 +501,8 @@ def _fix_prose_line(line: str, *, lang: str) -> str:
     # (H050 would turn `?logo=` into `? logo=` and break shields.io badges).
     line, url_parts = _extract_url_regions(line)
 
+    # Wrap bare filenames/paths before H006 so extensions are not uppercased.
+    line = _map_non_code(line, _fix_bare_filenames_to_inline_code)
     line = _map_non_code(line, _fix_incorrect_words)  # H006
     line = _map_non_code(line, _fix_ellipsis)  # H017
     line = _map_non_code(line, _fix_horizontal_bar)  # H026
@@ -584,6 +666,16 @@ def _is_blockquote_attribution_line(line: str) -> bool:
     while content.lstrip().startswith(">"):
         content = content.lstrip()[1:].lstrip()
     return content.startswith("--")
+
+
+def _is_file_extension_fragment(text: str, start: int, _end: int) -> bool:
+    """Return `True` if span is a file extension after a dotted filename stem."""
+    dot_index = start - 1
+    stem_index = start - 2
+    if stem_index < 0 or text[dot_index] != ".":
+        return False
+    prev = text[stem_index]
+    return prev.isalnum() or prev == "_"
 
 
 def _is_h021_allowed_period(segment: str, period_pos: int) -> bool:

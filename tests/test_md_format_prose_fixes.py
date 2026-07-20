@@ -110,3 +110,52 @@ def test_formatter_preserves_shields_io_query_string() -> None:
     assert "?logo=github" in result
     assert "? logo=" not in result
     assert "? Logo=" not in result
+
+
+def test_formatter_wraps_bare_filenames_before_h006(tmp_path: Path) -> None:
+    """Bare filenames/paths become inline code so H006 does not uppercase extensions."""
+    source = (
+        "Quick launcher settings from config.json.\n\n"
+        "Open recover.sql if missing.\n\n"
+        "See src/app/config.json for details.\n\n"
+        "Keep `already.sql` as is.\n\n"
+        "already combined .g.md files from subfolders.\n\n"
+        "Use sql and json in prose.\n"
+    )
+    result = _format(source)
+    assert "`config.json`" in result
+    assert "`recover.sql`" in result
+    assert "`src/app/config.json`" in result
+    assert "`already.sql`" in result
+    assert "combined `g.md` files" in result
+    assert "combined.`g.md`" not in result
+    assert "recover.SQL" not in result
+    assert "config.JSON" not in result
+    assert "SQL" in result
+    assert "JSON" in result
+    assert not _checker_errors(tmp_path, result, {"H006"}), result
+
+
+def test_checker_skips_file_extension_fragments(tmp_path: Path) -> None:
+    """H006 must not flag extensions inside bare filenames before formatting."""
+    source = "Create from recover.sql if missing.\n"
+    assert not _checker_errors(tmp_path, source, {"H006"}), source
+
+
+def test_py_docstring_formatter_wraps_filenames() -> None:
+    """Docstring prose wraps filenames before H006 uppercase."""
+    source = (
+        "def f():\n"
+        '    """Quick launcher settings from config.json."""\n\n'
+        "def g():\n"
+        '    """Open the SQLite file from app config (create from recover.sql if missing)."""\n\n'
+        "def h():\n"
+        '    """already combined .g.md files from subfolders."""\n'
+    )
+    result = PyDocstringFormatter().format(source)
+    assert "`config.json`" in result
+    assert "`recover.sql`" in result
+    assert "combined `g.md` files" in result
+    assert "combined.`g.md`" not in result
+    assert "recover.SQL" not in result
+    assert "config.JSON" not in result

@@ -1284,7 +1284,7 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
 
 
 def _append_readme_title_and_cli(project_path: Path, name: str, cli_commands: str, res: str) -> str:
-    """Append title and CLI commands section to README.md."""
+    """Append title and CLI commands section to `README.md`."""
     readme_path = project_path / "README.md"
     try:
         with readme_path.open("a", encoding="utf-8") as file:
