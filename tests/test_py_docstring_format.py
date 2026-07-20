@@ -102,6 +102,26 @@ def ready() -> bool:
         assert '"""Return `True` if ready."""' in after
 
 
+def test_py_docstring_formatter_applies_prose_fixes_on_one_line() -> None:
+    source = '''\
+def edit() -> None:
+    """Edit an existing markdown entry - use the form."""
+    return None
+'''
+    with TemporaryDirectory() as temp_dir:
+        path = Path(temp_dir) / "example.py"
+        path.write_text(source, encoding="utf-8")
+        PyDocstringFormatter().format_file(path)
+        after = path.read_text(encoding="utf-8")
+        assert '"""Edit an existing Markdown entry — use the form."""' in after
+        # Still a single-line docstring (opening and closing quotes on one line).
+        assert re.search(
+            r'^\s+"""Edit an existing Markdown entry — use the form\."""\s*$',
+            after,
+            re.MULTILINE,
+        )
+
+
 def test_py_docstring_formatter_restores_trailing_blank_and_args_shape() -> None:
     with TemporaryDirectory() as temp_dir:
         path = Path(temp_dir) / "example.py"

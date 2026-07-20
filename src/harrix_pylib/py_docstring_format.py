@@ -13,6 +13,7 @@ import libcst as cst
 
 from harrix_pylib.md_format import MdFormatter
 from harrix_pylib.md_format.code_fence import _identify_code_blocks, _identify_code_blocks_line
+from harrix_pylib.md_format.prose_fixes import _apply_checker_prose_fixes
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -88,7 +89,8 @@ class PyDocstringFormatter:
           prefix (D301) and Markdown escapes are written as single `\` in source
         - Code tokens in prose (`True` / `False` / `None`, and quoted identifiers) use
           backticks; fenced and inline code are left unchanged
-        - One-line docstrings only get code-token backtick normalization
+        - One-line docstrings get the same prose fixes and code-span normalization, but
+          stay on a single physical line between the opening and closing quotes
 
         Args:
 
@@ -233,7 +235,10 @@ class _DocstringMdFormatTransformer(cst.CSTTransformer):
             return None
 
         if "\n" not in string_node.value:
-            new_string = _normalize_one_line_docstring_code_spans(string_node)
+            new_string = _format_one_line_docstring(
+                string_node,
+                md_formatter=self.formatter.md_formatter,
+            )
         else:
             inferred_indent = _content_indent_from_literal(string_node.value) or content_indent
             new_string = _format_docstring_simple_string(
@@ -417,8 +422,12 @@ def _literal_prefix_and_quote(literal: str) -> tuple[str, str]:
     raise ValueError(msg)
 
 
-def _normalize_one_line_docstring_code_spans(string_node: cst.SimpleString) -> cst.SimpleString | None:
-    """Apply code-span normalization to a one-line docstring literal."""
+def _format_one_line_docstring(
+    string_node: cst.SimpleString,
+    *,
+    md_formatter: MdFormatter,
+) -> cst.SimpleString | None:
+    """Apply prose fixes and code-span rules to a one-line docstring; keep one line."""
     prefix, quote = _literal_prefix_and_quote(string_node.value)
     if any(char in prefix for char in _UNSUPPORTED_PREFIX_CHARS):
         return None
@@ -427,7 +436,14 @@ def _normalize_one_line_docstring_code_spans(string_node: cst.SimpleString) -> c
     if content is None or "\n" in content:
         return None
 
-    new_content = PyDocstringFormatter.normalize_code_spans(content)
+    new_content = content
+    if md_formatter.options.apply_prose_fixes:
+        new_content = _apply_checker_prose_fixes(new_content)
+    new_content = PyDocstringFormatter.normalize_code_spans(new_content)
+    # Keep a single physical line inside """...""" (prose fixes are line-based).
+    if "\n" in new_content:
+        new_content = " ".join(part.strip() for part in new_content.splitlines() if part.strip())
+    new_content = new_content.strip()
     if new_content == content:
         return None
 
