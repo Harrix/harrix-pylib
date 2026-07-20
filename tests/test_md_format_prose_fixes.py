@@ -112,6 +112,16 @@ def test_formatter_preserves_shields_io_query_string() -> None:
     assert "? Logo=" not in result
 
 
+def test_formatter_preserves_lowercase_after_incl_abbrev(tmp_path: Path) -> None:
+    """H021 must not capitalize after English abbreviations like `incl.`."""
+    source = "Harrix PY rules and docstring Markdown check (incl. private; errors point at file).\n"
+    assert _checker_errors(tmp_path, source, {"H021"}) == []
+    result = _format(source)
+    assert "incl. private" in result
+    assert "incl. Private" not in result
+    assert not _checker_errors(tmp_path, result, {"H021"}), result
+
+
 def test_formatter_wraps_bare_filenames_before_h006(tmp_path: Path) -> None:
     """Bare filenames/paths become inline code so H006 does not uppercase extensions."""
     source = (

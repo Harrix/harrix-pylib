@@ -12,6 +12,8 @@ def test_load_abbreviation_data_classifies_forms() -> None:
     data = load_abbreviation_data()
     assert "т. е." in data.all_forms
     assert "e.g." in data.all_forms
+    assert "incl." in data.all_forms
+    assert "excl." in data.all_forms
     assert "т. е." in data.dotted_forms
     assert "т. е." in data.spaced_forms
     assert "англ." in data.dotted_forms
