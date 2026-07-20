@@ -77,7 +77,8 @@ class MdChecker:
     - **H057** - Trailing period at end of ATX heading.
     - **H058** - Punctuation (`.`, `,`, `;`, `:`) immediately before a closing guillemet
       (Russian typography; `!` / `?` / `…` before the closer are allowed; single-letter abbreviations).
-    - **H059** - Missing colon before list.
+    - **H059** - Missing colon before list (sentence-ending punctuation is allowed;
+      list items and their continuations are skipped).
 
     """
 
@@ -263,6 +264,8 @@ class MdChecker:
     _HORIZONTAL_RULE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(?:\*\s*){3,}$|^(?:-\s*){3,}$|^(?:_\s*){3,}$")
     # Bullet (`- `, `* `, `+ `) or ordered (`1. `, `1) `) list item start (H059)
     _LIST_ITEM_START_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^[-*+]\s|^\d+[.)]\s")
+    # Valid paragraph endings before a list (H059); `.` keeps docstring summaries D400-compatible
+    _LIST_INTRO_END_CHARS: ClassVar[frozenset[str]] = frozenset({":", ".", "!", "?", "…"})
 
     # Patterns for H029: colon inside or after inline emphasis without following space
     _EMPHASIS_COLON_NO_SPACE_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
@@ -913,7 +916,14 @@ class MdChecker:
         *,
         display_math_lines: frozenset[int],
     ) -> Generator[str, None, None]:
-        """Check for missing colon before list (H059)."""
+        """Check for missing colon before list (H059).
+
+        Requires `:` before a list when the preceding line is an unfinished phrase.
+        Sentence-ending punctuation (`.`, `!`, `?`, `…`) is allowed so docstring
+        summaries can stay D400-compatible. List items and indented continuations
+        are skipped (loose lists with blank lines between items).
+
+        """
         if line_index + 2 >= len(content_lines):
             return
         if not self._should_check_paragraph_end(line):
@@ -930,8 +940,8 @@ class MdChecker:
             return
 
         stripped = line.strip()
-        # Skip list item: blank-separated list items do not require a colon
-        if self._LIST_ITEM_START_PATTERN.match(stripped):
+        # Skip list items and their continuations (loose lists with blank lines)
+        if self._is_in_list_context(content_lines, line_index):
             return
 
         last_char, col = self._paragraph_last_char(line)
@@ -941,7 +951,7 @@ class MdChecker:
         if stripped.startswith("<"):
             return
 
-        if last_char != ":":
+        if last_char not in self._LIST_INTRO_END_CHARS:
             error_msg = f'{self.RULES["H059"]}: last char is "{last_char}"'
             yield self._format_error("H059", error_msg, filename, line_num=line_num, col=col)
 
@@ -2342,6 +2352,23 @@ class MdChecker:
         if not stripped or " " in stripped:
             return False
         return any(c in stripped for c in "-._")
+
+    def _is_in_list_context(self, content_lines: list[str], line_index: int) -> bool:
+        """Return `True` if the line is a list item or an indented continuation of one."""
+        idx = line_index
+        while idx >= 0:
+            line = content_lines[idx]
+            stripped = line.strip()
+            if not stripped:
+                return False
+            if self._LIST_ITEM_START_PATTERN.match(stripped):
+                return True
+            # Indented continuation of a previous list item
+            if line[:1] in {" ", "\t"}:
+                idx -= 1
+                continue
+            return False
+        return False
 
     def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
         """Return `True` if position pos in line is inside a table cell that contains only a hyphen."""

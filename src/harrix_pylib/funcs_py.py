@@ -342,9 +342,7 @@ def extract_functions_and_classes(
     - `is_add_link_demo` (`bool`): Whether to add a link to the documentation demo. Defaults to `True`.
     - `domain` (`str`): The domain for the documentation link. Defaults to an empty string.
     - `src_folder` (`Path | str | None`): The project's `src` folder used to build nested `.g.md` paths. Defaults to
-
-    `None`.
-
+      `None`.
     - `include_private` (`bool`): Whether to include private names (starting with `_`, except magic dunders).
       Defaults to `False`.
 

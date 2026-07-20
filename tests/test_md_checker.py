@@ -599,11 +599,33 @@ def test_md_checker() -> None:
 
         list_before_list_file = temp_path / "list_before_list.md"
         list_before_list_file.write_text(
-            "---\nlang: en\n---\n\n- Item one\n\n- Item two\n",
+            "---\nlang: en\n---\n\n- Item one\n\n- Item two\n\n- Item three\n",
             encoding="utf-8",
         )
         errors = checker.check(list_before_list_file, select={"H059"})
         assert not [e for e in errors if "H059" in e], "H059 must not fire between blank-separated list items"
+
+        # Multi-line list item (indented continuation) before blank + next item
+        list_continuation_file = temp_path / "list_continuation.md"
+        list_continuation_file.write_text(
+            "---\nlang: en\n---\n\n- First item with\n  continuation text\n\n- Second item\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(list_continuation_file, select={"H059"})
+        assert not [e for e in errors if "H059" in e], "H059 must not fire on list item continuations"
+
+        # Sentence-ending period before list (docstring summary / D400) must not require colon
+        period_before_list_file = temp_path / "period_before_list.md"
+        period_before_list_file.write_text(
+            "---\nlang: en\n---\n\n"
+            "Generate two summary files for a directory of year-based Markdown files.\n"
+            "\n"
+            "1. `table.include.g.md` - A statistical table\n"
+            "2. `_[directory_name].short.g.md` - A hierarchical list\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(period_before_list_file, select={"H059"})
+        assert not [e for e in errors if "H059" in e], "H059 must allow period before list (D400)"
 
         no_colon_ordered_list_file = temp_path / "no_colon_ordered_list.md"
         no_colon_ordered_list_file.write_text(

@@ -707,9 +707,7 @@ Args:
 - `path` (`Path | str`): The root folder path to start the listing from.
 - `is_ignore_hidden_folders` (`bool`): If `True`, hidden folders and files (starting with a dot or
   matching common ignore patterns like `.git`, `__pycache__`, `node_modules`, etc.) are ignored.
-
-Defaults to `False`.
-
+  Defaults to `False`.
 - `is_only_files` (`bool`): If `True`, only files from the current directory are listed without
   entering subdirectories. Defaults to `False`.
 
@@ -2152,10 +2150,8 @@ Args:
 - `path` (`Path | str`): The path to check for ignoring.
 - `additional_patterns` (`list[str] | None`): Additional patterns to ignore. Defaults to `None`.
   Patterns may be a single path segment (for example `node_modules`) or several segments joined with
-
-`/` (for example `install/dependencies`); multi-segment patterns match any consecutive subsequence
-of `path.parts` (including paths nested below that folder).
-
+  `/` (for example `install/dependencies`); multi-segment patterns match any consecutive subsequence
+  of `path.parts` (including paths nested below that folder).
 - `is_ignore_hidden` (`bool`): Whether to ignore hidden files/folders (starting with dot). Defaults to `True`.
 
 Returns:
