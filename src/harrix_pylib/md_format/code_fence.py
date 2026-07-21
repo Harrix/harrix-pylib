@@ -37,6 +37,12 @@ def _identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
 
 def _identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
     """Parse a single Markdown line into text and inline-code segments."""
+    # Most prose lines have no backticks; avoid the character-by-character scan.
+    if "`" not in markdown_line:
+        if markdown_line:
+            yield markdown_line, False
+        return
+
     current_text = ""
     in_code = False
     backtick_count = 0

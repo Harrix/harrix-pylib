@@ -109,6 +109,12 @@ class PyDocstringFormatter:
         path = Path(filename)
         raw = path.read_bytes()
         original = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+
+        # Cheap ast precheck: skip libcst when no docstring would change.
+        needs_format = _source_needs_docstring_format(original, md_formatter=self.md_formatter)
+        if needs_format is False:
+            return "File is not changed."
+
         try:
             module = cst.parse_module(original)
         except Exception as e:
@@ -308,6 +314,12 @@ def format_file(self, filename: Path | str) -> str:
         path = Path(filename)
         raw = path.read_bytes()
         original = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+
+        # Cheap ast precheck: skip libcst when no docstring would change.
+        needs_format = _source_needs_docstring_format(original, md_formatter=self.md_formatter)
+        if needs_format is False:
+            return "File is not changed."
+
         try:
             module = cst.parse_module(original)
         except Exception as e:

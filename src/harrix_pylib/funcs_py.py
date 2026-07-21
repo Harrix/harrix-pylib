@@ -969,7 +969,7 @@ def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) 
     return f"{loc.path}:{loc.line}:{py_col}: {code} {message}"
 
 
-def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
+def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> str:
     r'''Sorts the Python code in the given file by organizing classes, functions, and statements.
 
     This function reads a Python file, parses it, sorts classes and functions alphabetically,
@@ -1280,9 +1280,16 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
 
     if is_use_ruff_format:
         new_code = lint_and_fix_python_code(new_code)
+        if new_code == code:
+            return "File is not changed."
+    # When skipping per-file ruff, compare against libcst round-trip so
+    # on-disk ruff formatting alone does not force a rewrite.
+    elif new_code == module.code:
+        return "File is not changed."
 
     # Write the sorted code back to the file (LF endings; avoid Windows CRLF translation).
     Path(filename).write_text(new_code, encoding="utf-8", newline="\n")
+    return f"✅ File {filename} sorted."
 
 
 def _append_readme_title_and_cli(project_path: Path, name: str, cli_commands: str, res: str) -> str:

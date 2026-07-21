@@ -227,6 +227,21 @@ def _fix_backslash_paths(segment: str) -> str:
     return _BACKSLASH_PATH_PATTERN.sub(lambda match: f"]({match.group(1).replace(chr(92), '/')})", segment)
 
 
+def _fix_bare_filenames_and_cheap_typography(segment: str) -> str:
+    """Wrap bare filenames, then apply cheap H017/H026/H028/H027 typography fixes."""
+    if "." in segment or "/" in segment or "\\" in segment:
+        segment = _fix_bare_filenames_to_inline_code(segment)
+    if "..." in segment:
+        segment = _fix_ellipsis(segment)  # H017
+    if "\u2015" in segment:
+        segment = _fix_horizontal_bar(segment)  # H026
+    if "?." in segment:
+        segment = _fix_question_mark_period(segment)  # H028
+    if "\u2116" in segment:
+        segment = _fix_numero_space(segment)  # H027
+    return segment
+
+
 def _fix_bare_filenames_to_inline_code(segment: str) -> str:
     """Wrap bare filenames and paths in backticks before H006 uppercase fixes.
 
@@ -252,12 +267,15 @@ def _fix_bare_filenames_to_inline_code(segment: str) -> str:
 
 def _fix_dash_usage(line: str) -> str:
     """Normalize hyphen / en dash / em dash usage (H016)."""
+    if not any(marker in line for marker in (" - ", " -- ", "–", "—", " \u2212 ")):
+        return line
+
     list_hyphen_positions = {match.end() - 1 for match in _LIST_MARKER_HYPHEN_PATTERN.finditer(line)}
     keep_double_dash = _is_blockquote_attribution_line(line)
 
     parts = []
     offset = 0
-    for segment, in_code in _identify_code_blocks_line(line):
+    for segment, in_code in _line_code_segments(line):
         if in_code:
             parts.append(segment)
         else:
@@ -294,6 +312,9 @@ def _fix_ellipsis(segment: str) -> str:
 
 def _fix_emphasis_colon_outside(line: str) -> str:
     """Move colon inside emphasis markers when line continues (H030)."""
+    if ":" not in line or not any(marker in line for marker in ("*", "_", "~")):
+        return line
+
     code_ranges = _inline_code_ranges(line)
 
     def replacer(match: re.Match[str]) -> str:
@@ -305,13 +326,18 @@ def _fix_emphasis_colon_outside(line: str) -> str:
         return f"{open_m}{inner}:{close_m}"
 
     for pattern in _EMPHASIS_COLON_OUTSIDE_PATTERNS:
-        line = pattern.sub(replacer, line)
-        code_ranges = _inline_code_ranges(line)
+        new_line = pattern.sub(replacer, line)
+        if new_line != line:
+            line = new_line
+            code_ranges = _inline_code_ranges(line)
     return line
 
 
 def _fix_emphasis_colon_space(line: str) -> str:
     """Insert space after emphasis colon when missing (H029)."""
+    if ":" not in line or not any(marker in line for marker in ("*", "_", "~")):
+        return line
+
     code_ranges = _inline_code_ranges(line)
 
     def replacer(match: re.Match[str]) -> str:
@@ -320,8 +346,10 @@ def _fix_emphasis_colon_space(line: str) -> str:
         return f"{match.group(1)} "
 
     for pattern in _EMPHASIS_COLON_NO_SPACE_PATTERNS:
-        line = pattern.sub(replacer, line)
-        code_ranges = _inline_code_ranges(line)
+        new_line = pattern.sub(replacer, line)
+        if new_line != line:
+            line = new_line
+            code_ranges = _inline_code_ranges(line)
     return line
 
 
@@ -386,36 +414,57 @@ def _fix_image_alt_capitalization(line: str) -> str:
 
 
 def _fix_incorrect_words(segment: str) -> str:
-    """Replace incorrect word forms (H006), skipping URLs and HTML.
+    r"""Replace incorrect word forms (H006), skipping URLs and HTML.
 
-    Uses one URL/HTML mask and one longest-first multi-pattern scan instead of
-    masking and scanning once per dictionary entry (~445 patterns).
+    Pure word tokens use a dict lookup after one `\w+` scan. Phrases and
+    punctuated forms (abbreviations with dots, `e-mail`, `c++`, …) use a
+    smaller longest-first combined regex, and only when the segment contains
+    characters that those patterns need.
 
     """
-    pattern, replacements = _h006_combined_pattern()
-    if not replacements:
+    word_map, phrase_pattern, phrase_replacements = _h006_lookup_tables()
+    if not word_map and not phrase_replacements:
         return segment
 
-    masked = _mask_urls_and_html(segment)
-    matches = [
+    masked = _mask_urls_and_html(segment) if "](" in segment or "<" in segment else segment
+    working = segment
+
+    # Phrase / punctuated forms first (longest-first), when relevant.
+    if phrase_replacements and _needs_h006_phrase_scan(masked):
+        matches = [
+            match
+            for match in phrase_pattern.finditer(masked)
+            if not _is_hyphenated_identifier_fragment(masked, *match.span())
+            and not _is_file_extension_fragment(masked, *match.span())
+        ]
+        for match in reversed(matches):
+            start, end = match.span()
+            incorrect = match.group(0)
+            if working[start:end] != incorrect:
+                continue
+            correct = phrase_replacements.get(incorrect)
+            if correct is None:
+                continue
+            working = f"{working[:start]}{correct}{working[end:]}"
+        if working != segment:
+            masked = _mask_urls_and_html(working) if "](" in working or "<" in working else working
+
+    if not word_map:
+        return working
+
+    word_matches = [
         match
-        for match in pattern.finditer(masked)
-        if not _is_hyphenated_identifier_fragment(masked, *match.span())
+        for match in _H006_WORD_TOKEN_PATTERN.finditer(masked)
+        if match.group(0) in word_map
+        and not _is_hyphenated_identifier_fragment(masked, *match.span())
         and not _is_file_extension_fragment(masked, *match.span())
     ]
-    if not matches:
-        return segment
-
-    working = segment
-    for match in reversed(matches):
+    for match in reversed(word_matches):
         start, end = match.span()
         incorrect = match.group(0)
         if working[start:end] != incorrect:
             continue
-        correct = replacements.get(incorrect)
-        if correct is None:
-            continue
-        working = f"{working[:start]}{correct}{working[end:]}"
+        working = f"{working[:start]}{word_map[incorrect]}{working[end:]}"
     return working
 
 
@@ -426,7 +475,7 @@ def _fix_lowercase_after_punctuation(line: str) -> str:
 
     mask_pattern = _h021_abbrev_mask_pattern()
     parts: list[str] = []
-    for segment, in_code in _identify_code_blocks_line(line):
+    for segment, in_code in _line_code_segments(line):
         if in_code:
             parts.append(segment)
             continue
@@ -466,10 +515,13 @@ def _fix_missing_space_after_punctuation(segment: str) -> str:
 
 def _fix_multiplication_sign(line: str) -> str:
     """Replace Latin/Cyrillic `x` used as multiply with the multiplication sign (H024)."""
+    if "x" not in line and "\u0445" not in line:  # ignore: HP001
+        return line
+
     link_url_ranges = _get_link_url_ranges(line)
     parts: list[str] = []
     offset = 0
-    for segment, in_code in _identify_code_blocks_line(line):
+    for segment, in_code in _line_code_segments(line):
         if in_code:
             parts.append(segment)
             offset += len(segment)
@@ -530,12 +582,9 @@ def _fix_prose_line(line: str, *, lang: str) -> str:
     line, url_parts = _extract_url_regions(line)
 
     # Wrap bare filenames/paths before H006 so extensions are not uppercased.
-    line = _map_non_code(line, _fix_bare_filenames_to_inline_code)
+    # Cheap typography fixes share one non-code pass to avoid repeated segmentation.
+    line = _map_non_code(line, _fix_bare_filenames_and_cheap_typography)
     line = _map_non_code(line, _fix_incorrect_words)  # H006
-    line = _map_non_code(line, _fix_ellipsis)  # H017
-    line = _map_non_code(line, _fix_horizontal_bar)  # H026
-    line = _map_non_code(line, _fix_question_mark_period)  # H028
-    line = _map_non_code(line, _fix_numero_space)  # H027
     line = _fix_space_before_punctuation(line)  # H015
     line = _fix_dash_usage(line)  # H016
     line = _fix_multiplication_sign(line)  # H024
@@ -610,6 +659,9 @@ def _fix_space_before_percent_or_degree(segment: str) -> str:
 
 def _fix_space_before_punctuation(line: str) -> str:
     """Remove spaces before punctuation marks (H015)."""
+    if not any(marker in line for marker in (" .", " ,", " ;", " :", " ?", " !")):
+        return line
+
     code_ranges = _inline_code_ranges(line)
 
     def replace_outside_code(pattern: re.Pattern[str], replacement: str, text: str) -> str:
@@ -654,30 +706,36 @@ def _get_link_url_ranges(line: str) -> set[int]:
 
 
 @lru_cache(maxsize=1)
-def _h006_combined_pattern() -> tuple[re.Pattern[str], dict[str, str]]:
-    r"""Build one longest-first H006 regex and incorrect→correct map.
+def _h006_lookup_tables() -> tuple[dict[str, str], re.Pattern[str], dict[str, str]]:
+    r"""Build H006 word map and phrase regex (shared with MdChecker dictionary).
 
-    Boundary rules match `MdChecker._INCORRECT_WORD_PATTERNS`: `\b` for pure
-    word tokens, Unicode lookaround for phrases / punctuated forms.
+    Pure `\w+` tokens use a dict lookup. Phrases / punctuated forms keep a
+    longest-first combined regex with Unicode lookaround boundaries.
 
     """
     patterns = _incorrect_word_patterns()
     if not patterns:
-        return re.compile(r"(?!)"), {}
+        return {}, re.compile(r"(?!)"), {}
 
-    items = sorted(patterns.items(), key=lambda item: len(item[0]), reverse=True)
-    replacements = {incorrect: correct for incorrect, (_pattern, correct) in items}
-    alternatives: list[str] = []
-    for incorrect, (_pattern, _correct) in items:
-        escaped = re.escape(incorrect)
+    word_map: dict[str, str] = {}
+    phrase_items: list[tuple[str, str]] = []
+    for incorrect, (_pattern, correct) in patterns.items():
         if re.fullmatch(r"[\w]+", incorrect):
-            alternatives.append(rf"\b{escaped}\b")
+            word_map[incorrect] = correct
         else:
-            alternatives.append(
-                rf"(?<![a-zA-Zа-яА-ЯёЁ0-9_]){escaped}(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001  # ignore: HP001
-            )
-    combined = re.compile("|".join(f"(?:{alt})" for alt in alternatives))
-    return combined, replacements
+            phrase_items.append((incorrect, correct))
+
+    phrase_items.sort(key=lambda item: len(item[0]), reverse=True)
+    phrase_replacements = dict(phrase_items)
+    if phrase_items:
+        alternatives = [
+            rf"(?<![a-zA-Zа-яА-ЯёЁ0-9_]){re.escape(incorrect)}(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001  # ignore: HP001
+            for incorrect, _correct in phrase_items
+        ]
+        phrase_pattern = re.compile("|".join(f"(?:{alt})" for alt in alternatives))
+    else:
+        phrase_pattern = re.compile(r"(?!)")
+    return word_map, phrase_pattern, phrase_replacements
 
 
 @lru_cache(maxsize=1)
@@ -700,7 +758,7 @@ def _inline_code_ranges(line: str) -> list[tuple[int, int]]:
     """Return 0-based ranges of inline code spans on a line."""
     ranges: list[tuple[int, int]] = []
     pos = 0
-    for segment, in_code in _identify_code_blocks_line(line):
+    for segment, in_code in _line_code_segments(line):
         if in_code:
             ranges.append((pos, pos + len(segment)))
         pos += len(segment)
@@ -759,9 +817,15 @@ def _is_table_cell_only_dash(line: str, pos: int) -> bool:
     return False
 
 
+@lru_cache(maxsize=16)
+def _line_code_segments(line: str) -> tuple[tuple[str, bool], ...]:
+    """Cache inline-code segmentation for a line (reused across prose fixes)."""
+    return tuple(_identify_code_blocks_line(line))
+
+
 def _map_non_code(line: str, transform: Callable[[str], str]) -> str:
     """Apply `transform` to non-inline-code segments only."""
-    return "".join(segment if in_code else transform(segment) for segment, in_code in _identify_code_blocks_line(line))
+    return "".join(segment if in_code else transform(segment) for segment, in_code in _line_code_segments(line))
 
 
 def _mask_urls_and_html(text: str) -> str:
@@ -775,6 +839,28 @@ def _mask_urls_and_html(text: str) -> str:
 
     masked = _LINK_DEST_MASK_RE.sub(mask_dest, text)
     return _HTML_TAG_MASK_RE.sub(mask_html, masked)
+
+
+def _needs_h006_phrase_scan(text: str) -> bool:
+    """Return whether a segment may contain punctuated / multi-word H006 keys."""
+    # Space-separated keys without dots/hyphens: "web документ", "web приложение".
+    if "web " in text.casefold():
+        return True
+    if not any(char in text for char in _H006_PHRASE_TRIGGER_CHARS):
+        return False
+    # Most phrase keys are Russian dotted abbreviations; skip that large regex for
+    # ASCII-only segments that only contain dots from paths / versions / code.
+    if _CYRILLIC_PATTERN.search(text):
+        return True
+    lowered = text.casefold()
+    return (
+        any(char in text for char in "-+#")
+        or "node." in lowered
+        or "e-mail" in lowered
+        or "p.s." in lowered
+        or "op.cit" in lowered
+        or "loc.cit" in lowered
+    )
 
 
 def _normalize_en_and_em_dashes(segment: str) -> str:
@@ -833,6 +919,9 @@ _ANGLE_AUTOLINK_RE = re.compile(r"<(https?://[^>\s]+)>")
 _URL_PLACEHOLDER_TOKEN_RE = re.compile(rf"{_URL_PLACEHOLDER_PREFIX}(\d+)")
 _LINK_DEST_MASK_RE = re.compile(r"\]\([^)]*\)")
 _HTML_TAG_MASK_RE = re.compile(r"<[^>]*>")
-
+_H006_WORD_TOKEN_PATTERN = re.compile(r"\w+", re.UNICODE)
+# Characters that appear in punctuated H006 keys (abbreviations, e-mail, c++, …).
+# Space alone is not a trigger: almost every prose line has spaces.
+_H006_PHRASE_TRIGGER_CHARS = frozenset(".-+#")
 
 _LIST_MARKER_HYPHEN_PATTERN = re.compile(r"^(?:\s*>\s*)*\s*-")

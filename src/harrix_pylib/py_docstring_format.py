@@ -104,6 +104,12 @@ class PyDocstringFormatter:
         path = Path(filename)
         raw = path.read_bytes()
         original = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+
+        # Cheap ast precheck: skip libcst when no docstring would change.
+        needs_format = _source_needs_docstring_format(original, md_formatter=self.md_formatter)
+        if needs_format is False:
+            return "File is not changed."
+
         try:
             module = cst.parse_module(original)
         except Exception as e:
@@ -439,6 +445,45 @@ def _format_one_line_docstring(
     return cst.SimpleString(value=f"{prefix}{quote}{body}{quote}")
 
 
+def _iter_docstring_literals(source: str) -> list[str] | None:
+    """Return raw docstring literal texts via ast, or `None` if inconclusive."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return None
+
+    literals: list[str] = []
+
+    def add_from_body(body: Sequence[ast.stmt]) -> bool:
+        if not body:
+            return True
+        first = body[0]
+        if not isinstance(first, ast.Expr):
+            return True
+        value = first.value
+        # Docstrings are string constants; reject joins / f-strings / bytes.
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            segment = ast.get_source_segment(source, value)
+            if segment is None:
+                return False
+            literals.append(segment)
+            return True
+        if isinstance(value, ast.Constant) and isinstance(value.value, bytes):
+            return True
+        # JoinedStr / unexpected expression — let libcst decide.
+        if isinstance(value, ast.JoinedStr):
+            return False
+        return True
+
+    if not add_from_body(tree.body):
+        return None
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            if not add_from_body(node.body):
+                return None
+    return literals
+
+
 def _literal_prefix_and_quote(literal: str) -> tuple[str, str]:
     match = _STRING_PREFIX_RE.match(literal)
     prefix = match.group(0) if match else ""
@@ -458,3 +503,40 @@ def _normalize_prose_segment(segment: str) -> str:
     """Normalize quoted identifiers and bare `True`/`False`/`None` in a prose segment."""
     result = _QUOTED_CODE_RE.sub(lambda match: f"`{match.group(2)}`", segment)
     return _BARE_LITERAL_RE.sub(lambda match: f"`{match.group(1)}`", result)
+
+
+def _source_needs_docstring_format(source: str, *, md_formatter: MdFormatter) -> bool | None:
+    """Return whether libcst formatting is needed.
+
+    - `False`: no docstring would change (skip libcst)
+    - `True`: at least one docstring would change
+    - `None`: inconclusive; run libcst
+
+    """
+    literals = _iter_docstring_literals(source)
+    if literals is None:
+        return None
+    if not literals:
+        return False
+
+    for literal in literals:
+        try:
+            prefix, _quote = _literal_prefix_and_quote(literal)
+        except ValueError:
+            return None
+        if any(char in prefix for char in _UNSUPPORTED_PREFIX_CHARS):
+            continue
+
+        string_node = cst.SimpleString(value=literal)
+        if "\n" not in literal:
+            new_string = _format_one_line_docstring(string_node, md_formatter=md_formatter)
+        else:
+            inferred_indent = _content_indent_from_literal(literal)
+            new_string = _format_docstring_simple_string(
+                string_node,
+                md_formatter=md_formatter,
+                content_indent=inferred_indent,
+            )
+        if new_string is not None and new_string.value != literal:
+            return True
+    return False
