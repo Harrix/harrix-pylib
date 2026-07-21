@@ -1412,9 +1412,8 @@ def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> None:
     if is_use_ruff_format:
         new_code = lint_and_fix_python_code(new_code)
 
-    # Write the sorted code back to the file
-    with Path(filename).open("w", encoding="utf-8") as f:
-        f.write(new_code)
+    # Write the sorted code back to the file (LF endings; avoid Windows CRLF translation).
+    Path(filename).write_text(new_code, encoding="utf-8", newline="\n")
 ```
 
 </details>
