@@ -66,6 +66,7 @@ def check_python_docstring_markdown_errors(
     folder: Path | str,
     *,
     include_private: bool = True,
+    show_progress: bool = True,
 ) -> list[str]:
     folder = Path(folder)
     src_folder = folder / "src"
@@ -77,11 +78,15 @@ def check_python_docstring_markdown_errors(
     checker = h.md_check.MdChecker()
     errors: list[str] = []
 
+    py_files = [
+        py_file
+        for py_file in sorted(src_folder.rglob("*.py"))
+        if py_file.is_file() and not py_file.stem.startswith("__")
+    ]
+
     with tempfile.TemporaryDirectory(prefix="hsk-py-docstring-md-") as temp_dir:
         temp_root = Path(temp_dir)
-        for py_file in sorted(src_folder.rglob("*.py")):
-            if not py_file.is_file() or py_file.stem.startswith("__"):
-                continue
+        for py_file in h.file.iter_with_progress(py_files, show_progress=show_progress):
             with py_file.open(encoding="utf-8") as source_file:
                 tree = ast.parse(source_file.read(), filename=str(py_file))
             if not _has_documented_entities(tree, include_private=include_private):

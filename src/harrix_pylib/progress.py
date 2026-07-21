@@ -1,0 +1,175 @@
+"""Terminal progress bar for long file-processing loops (stderr, TTY only)."""
+
+from __future__ import annotations
+
+import sys
+from typing import TYPE_CHECKING, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
+    from typing import TextIO
+
+T = TypeVar("T")
+
+_DEFAULT_WIDTH = 40
+_FULL_REDRAW_TOTAL = 200
+
+
+class ProgressBar:
+    """In-place progress bar written to a stream (default: stderr when it is a TTY)."""
+
+    def __init__(
+        self,
+        total: int,
+        *,
+        stream: TextIO | None = None,
+        enabled: bool | None = None,
+        width: int = _DEFAULT_WIDTH,
+    ) -> None:
+        """Create a progress bar.
+
+        Args:
+
+        - `total` (`int`): Total items.
+        - `stream` (`TextIO | None`): Output stream. Defaults to `sys.stderr`.
+        - `enabled` (`bool | None`): Force on/off. Defaults to `stream.isatty()` and `total > 0`.
+        - `width` (`int`): Bar width. Defaults to `40`.
+
+        """
+        self.total = max(0, total)
+        self.width = width
+        self.stream: TextIO = stream if stream is not None else sys.stderr
+        if enabled is None:
+            enabled = bool(getattr(self.stream, "isatty", lambda: False)()) and self.total > 0
+        self.enabled = bool(enabled) and self.total > 0
+        self.done = 0
+        self._last_len = 0
+        self._use_ascii = False
+
+    def finish(self) -> None:
+        """Draw 100% and end with a newline so following stdout output is clean."""
+        if not self.enabled:
+            return
+        self.done = self.total
+        self._write_line(self.total)
+        try:
+            self.stream.write("\n")
+            self.stream.flush()
+        except OSError:
+            return
+        self._last_len = 0
+
+    def update(self, done: int | None = None) -> None:
+        """Set or increment progress and redraw when appropriate."""
+        if not self.enabled:
+            return
+        if done is None:
+            self.done += 1
+        else:
+            self.done = max(0, done)
+        if not self._should_redraw(self.done):
+            return
+        self._write_line(self.done)
+
+    def _should_redraw(self, done: int) -> bool:
+        if done <= 1 or done >= self.total:
+            return True
+        if self.total < _FULL_REDRAW_TOTAL:
+            return True
+        step = max(1, self.total // 100)
+        return done % step == 0
+
+    def _write_line(self, done: int) -> None:
+        renderer = render_progress_ascii if self._use_ascii else render_progress
+        line = renderer(done, self.total, width=self.width)
+        try:
+            padded = line if len(line) >= self._last_len else line + (" " * (self._last_len - len(line)))
+            self.stream.write("\r" + padded)
+            self.stream.flush()
+            self._last_len = len(line)
+        except UnicodeEncodeError:
+            self._use_ascii = True
+            line = render_progress_ascii(done, self.total, width=self.width)
+            try:
+                padded = line if len(line) >= self._last_len else line + (" " * (self._last_len - len(line)))
+                self.stream.write("\r" + padded)
+                self.stream.flush()
+                self._last_len = len(line)
+            except OSError:
+                self.enabled = False
+        except OSError:
+            self.enabled = False
+
+
+def iter_with_progress(
+    items: Sequence[T],
+    *,
+    show_progress: bool = True,
+    stream: TextIO | None = None,
+    width: int = _DEFAULT_WIDTH,
+) -> Iterator[T]:
+    """Yield items while updating a progress bar.
+
+    When `show_progress` is `True`, the bar is shown only if the stream is a TTY.
+    When `show_progress` is `False`, iteration is silent.
+
+    """
+    total = len(items)
+    enabled = False if not show_progress else None
+    bar = ProgressBar(total, stream=stream, enabled=enabled, width=width)
+    try:
+        for index, item in enumerate(items, start=1):
+            yield item
+            bar.update(index)
+    finally:
+        bar.finish()
+
+
+def render_progress(done: int, total: int, *, width: int = _DEFAULT_WIDTH) -> str:
+    """Return a single-line progress string.
+
+    Args:
+
+    - `done` (`int`): Number of completed items.
+    - `total` (`int`): Total number of items.
+    - `width` (`int`): Bar width in characters. Defaults to `40`.
+
+    Returns:
+
+    - `str`: e.g. `Progress: |████░░░░| 2/8 (25%)`.
+
+    """
+    safe_done = max(0, done)
+    safe_total = max(0, total)
+    if safe_total <= 0:
+        pct = 100
+        filled = width
+        display_done = 0
+        display_total = 0
+    else:
+        display_done = min(safe_done, safe_total)
+        display_total = safe_total
+        pct = min(100, int(100 * display_done / safe_total))
+        filled = min(width, round(width * display_done / safe_total))
+    empty = width - filled
+    bar = ("█" * filled) + ("░" * empty)
+    return f"Progress: |{bar}| {display_done}/{display_total} ({pct}%)"
+
+
+def render_progress_ascii(done: int, total: int, *, width: int = _DEFAULT_WIDTH) -> str:
+    """ASCII fallback when the stream cannot encode block characters."""
+    safe_done = max(0, done)
+    safe_total = max(0, total)
+    if safe_total <= 0:
+        pct = 100
+        filled = width
+        display_done = 0
+        display_total = 0
+    else:
+        display_done = min(safe_done, safe_total)
+        display_total = safe_total
+        pct = min(100, int(100 * display_done / safe_total))
+        filled = min(width, round(width * display_done / safe_total))
+    empty = width - filled
+    bar = ("=" * filled) + ("-" * empty)
+    return f"Progress: |{bar}| {display_done}/{display_total} ({pct}%)"

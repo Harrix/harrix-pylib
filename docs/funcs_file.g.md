@@ -161,6 +161,8 @@ Args:
 - `ext` (`str`): The file extension to filter files. For example, `.txt`.
 - `func` (`Callable`): A function that takes a single argument (the file path as a string)
   and performs an operation on the file. It may return a value.
+- `show_progress` (`bool`): Show a stderr progress bar when the stream is a TTY.
+  Defaults to `True`.
 
 Returns:
 
@@ -186,6 +188,8 @@ Note:
   - If other `str`: Appends the string to the success message
   - If `list`: Formats each item in the list as a bullet point
   - For other types: Converts to string and appends to the success message
+- While files are processed, a progress bar may be drawn on stderr; result lines are returned
+  only after processing finishes (callers typically print them afterward).
 
 Example:
 
@@ -218,6 +222,7 @@ def apply_func(
     skip_rel_prefixes: tuple[tuple[str, ...], ...] | None = None,
     skip_name_endswith: tuple[str, ...] | None = None,
     skip_file: Callable[[Path], bool] | None = None,
+    show_progress: bool = True,
 ) -> str:
     list_lines = []
     unchanged_count = 0
@@ -237,42 +242,45 @@ def apply_func(
         parts = rel.parts
         return any(len(parts) >= len(pref) and parts[: len(pref)] == pref for pref in skip_rel_prefixes)
 
+    files: list[Path] = []
     for file_path in folder_path.rglob(f"*{ext}"):
-        # Check if file should be processed
-        if file_path.is_file():
-            try:
-                rel_to_root = file_path.relative_to(folder_path)
-            except ValueError:
-                continue
-            if _rel_matches_skip(rel_to_root):
-                continue
-            if skip_name_endswith and file_path.name.endswith(skip_name_endswith):
-                continue
-            if skip_file is not None and skip_file(file_path):
-                continue
-            if should_ignore_path(rel_to_root):
-                continue
+        if not file_path.is_file():
+            continue
+        try:
+            rel_to_root = file_path.relative_to(folder_path)
+        except ValueError:
+            continue
+        if _rel_matches_skip(rel_to_root):
+            continue
+        if skip_name_endswith and file_path.name.endswith(skip_name_endswith):
+            continue
+        if skip_file is not None and skip_file(file_path):
+            continue
+        if should_ignore_path(rel_to_root):
+            continue
+        files.append(file_path)
 
-            try:
-                result = func(str(file_path))
-                if result is None:
-                    list_lines.append(f"✅ File {file_path.name} is applied.")
-                elif isinstance(result, str):
-                    if _is_unchanged_result(result):
-                        unchanged_count += 1
-                    else:
-                        list_lines.append(f"✅ File {file_path.name} is applied: {result}")
-                elif isinstance(result, list):
-                    if not result:  # Empty list
-                        list_lines.append(f"✅ File {file_path.name} is applied.")
-                    else:
-                        list_lines.append(f"✅ File {file_path.name} is applied:")
-                        list_lines.extend([f"  - {item}" for item in result])
+    for file_path in iter_with_progress(files, show_progress=show_progress):
+        try:
+            result = func(str(file_path))
+            if result is None:
+                list_lines.append(f"✅ File {file_path.name} is applied.")
+            elif isinstance(result, str):
+                if _is_unchanged_result(result):
+                    unchanged_count += 1
                 else:
                     list_lines.append(f"✅ File {file_path.name} is applied: {result}")
-            except OSError as e:
-                # Catching specific exceptions that are likely to occur
-                list_lines.append(f"❌ File {file_path.name} is not applied: {e!s}")
+            elif isinstance(result, list):
+                if not result:  # Empty list
+                    list_lines.append(f"✅ File {file_path.name} is applied.")
+                else:
+                    list_lines.append(f"✅ File {file_path.name} is applied:")
+                    list_lines.extend([f"  - {item}" for item in result])
+            else:
+                list_lines.append(f"✅ File {file_path.name} is applied: {result}")
+        except OSError as e:
+            # Catching specific exceptions that are likely to occur
+            list_lines.append(f"❌ File {file_path.name} is not applied: {e!s}")
 
     if unchanged_count > 0:
         list_lines.append(f"ℹ️ {unchanged_count} file(s) not changed.")  # noqa: RUF001
@@ -357,6 +365,8 @@ Args:
 - `ext` (`str`): The file extension to filter files. For example, `.md`.
 - `func` (`Callable[[Path | str], list]`): A function that takes a file path and returns a list
   representing check results or errors.
+- `show_progress` (`bool`): Show a stderr progress bar when the stream is a TTY.
+  Defaults to `True`.
 
 Returns:
 
@@ -390,26 +400,35 @@ for error in all_errors:
 <summary>Code:</summary>
 
 ```python
-def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -> list:
+def check_func(
+    path: Path | str,
+    ext: str,
+    func: Callable[[Path | str], list],
+    *,
+    show_progress: bool = True,
+) -> list:
     list_checkers = []
     folder_path = Path(path).resolve()
 
+    files: list[Path] = []
     for file_path in folder_path.rglob(f"*{ext}"):
-        # Check if file should be processed
-        if file_path.is_file():
-            try:
-                rel_to_root = file_path.relative_to(folder_path)
-            except ValueError:
-                continue
-            if should_ignore_path(rel_to_root):
-                continue
+        if not file_path.is_file():
+            continue
+        try:
+            rel_to_root = file_path.relative_to(folder_path)
+        except ValueError:
+            continue
+        if should_ignore_path(rel_to_root):
+            continue
+        files.append(file_path)
 
-            try:
-                result = func(str(file_path))
-                if result is not None and result:
-                    list_checkers.extend(result)
-            except OSError as e:
-                list_checkers.append(f"❌ File {file_path.name} is not checked: {e!s}")
+    for file_path in iter_with_progress(files, show_progress=show_progress):
+        try:
+            result = func(str(file_path))
+            if result is not None and result:
+                list_checkers.extend(result)
+        except OSError as e:
+            list_checkers.append(f"❌ File {file_path.name} is not checked: {e!s}")
 
     return list_checkers
 ```

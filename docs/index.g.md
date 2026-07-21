@@ -28,6 +28,7 @@ lang: en
   - [📄 File `funcs_py.py`](#-file-funcs_pypy)
   - [📄 File `img_tools.py`](#-file-img_toolspy)
   - [📄 File `md_checker.py`](#-file-md_checkerpy)
+  - [📄 File `progress.py`](#-file-progresspy)
   - [📄 File `py_checker.py`](#-file-py_checkerpy)
   - [📄 File `py_docstring_format.py`](#-file-py_docstring_formatpy)
   - [📄 File `formatter.py`](#-file-formatterpy)
@@ -260,6 +261,17 @@ Doc: [`md_checker.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/m
 | Function/Class                                                                                                 | Description                                                            |
 | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | 🏛️ Class [`MdChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_checker.g.md#️-class-mdchecker) | Class for checking Markdown files for compliance with specified rules. |
+
+### 📄 File `progress.py`
+
+Doc: [`progress.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md)
+
+| Function/Class                                                                                                                    | Description                                                                   |
+| --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 🏛️ Class [`ProgressBar`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md#️-class-progressbar)                  | In-place progress bar written to a stream (default: stderr when it is a TTY). |
+| 🔧 [`iter_with_progress`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md#-function-iter_with_progress)       | Yield items while updating a progress bar.                                    |
+| 🔧 [`render_progress`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md#-function-render_progress)             | Return a single-line progress string.                                         |
+| 🔧 [`render_progress_ascii`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md#-function-render_progress_ascii) | ASCII fallback when the stream cannot encode block characters.                |
 
 ### 📄 File `py_checker.py`
 
