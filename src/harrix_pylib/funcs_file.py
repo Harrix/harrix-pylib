@@ -134,7 +134,9 @@ def apply_func(
 
     Returns:
 
-    - `str`: A newline-separated string of messages indicating the success or failure of applying `func` to each file.
+    - `str`: A newline-separated string of messages indicating the success or failure of applying `func`
+      to each file. Files that return exactly `File is not changed.` are omitted from per-file lines;
+      a single summary line reports how many were unchanged.
 
     Note:
 
@@ -149,7 +151,8 @@ def apply_func(
       `True` (for example combined `_*.g.md` dumps).
     - The function handles different return types from the `func` parameter:
       - If `None`: Shows a simple success message
-      - If `str`: Appends the string to the success message
+      - If `str` equal to `File is not changed.`: Counted only in the end-of-run summary
+      - If other `str`: Appends the string to the success message
       - If `list`: Formats each item in the list as a bullet point
       - For other types: Converts to string and appends to the success message
 
@@ -174,6 +177,7 @@ def apply_func(
 
     """
     list_lines = []
+    unchanged_count = 0
     folder_path = Path(path).resolve()
 
     def _rel_matches_skip(rel: Path) -> bool:
@@ -203,7 +207,10 @@ def apply_func(
                 if result is None:
                     list_lines.append(f"✅ File {file_path.name} is applied.")
                 elif isinstance(result, str):
-                    list_lines.append(f"✅ File {file_path.name} is applied: {result}")
+                    if result.strip() == "File is not changed.":
+                        unchanged_count += 1
+                    else:
+                        list_lines.append(f"✅ File {file_path.name} is applied: {result}")
                 elif isinstance(result, list):
                     if not result:  # Empty list
                         list_lines.append(f"✅ File {file_path.name} is applied.")
@@ -215,6 +222,9 @@ def apply_func(
             except OSError as e:
                 # Catching specific exceptions that are likely to occur
                 list_lines.append(f"❌ File {file_path.name} is not applied: {e!s}")
+
+    if unchanged_count > 0:
+        list_lines.append(f"ℹ️ {unchanged_count} file(s) not changed.")  # noqa: RUF001
 
     return "\n".join(list_lines)
 

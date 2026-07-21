@@ -575,7 +575,12 @@ def test_format_markdown_folder(tmp_path: Path) -> None:
     (tmp_path / "one.md").write_text("# One\n", encoding="utf-8")
     (tmp_path / "two.md").write_text("# Two\n", encoding="utf-8")
     result = MdFormatter().format_folder(tmp_path)
-    assert "one.md" in result or "applied" in result.lower() or "not changed" in result.lower()
+    assert (
+        "one.md" in result
+        or "two.md" in result
+        or "applied" in result.lower()
+        or "file(s) not changed" in result.lower()
+    )
 
 
 def test_format_markdown_content_preserves_code_block_lines() -> None:

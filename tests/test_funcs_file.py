@@ -101,6 +101,45 @@ def test_apply_func() -> None:
     assert result == "TEXT OTHER"
 
 
+def test_apply_func_suppresses_unchanged_with_summary() -> None:
+    def maybe_change(filename: Path | str) -> str:
+        path = Path(filename)
+        if path.name == "changed.txt":
+            path.write_text("CHANGED", encoding="utf8")
+            return "✅ File changed."
+        return "File is not changed."
+
+    with TemporaryDirectory() as temp_folder:
+        root = Path(temp_folder)
+        (root / "changed.txt").write_text("old", encoding="utf8")
+        (root / "same1.txt").write_text("a", encoding="utf8")
+        (root / "same2.txt").write_text("b", encoding="utf8")
+        output = h.file.apply_func(root, ".txt", maybe_change)
+
+    assert "changed.txt" in output
+    assert "same1.txt" not in output
+    assert "same2.txt" not in output
+    assert "File is not changed." not in output
+    assert "ℹ️ 2 file(s) not changed." in output  # noqa: RUF001
+    assert output.count("\n") == 1  # one change line + summary
+
+
+def test_apply_func_all_unchanged_summary_only() -> None:
+    def never_change(_filename: Path | str) -> str:
+        return "File is not changed."
+
+    with TemporaryDirectory() as temp_folder:
+        root = Path(temp_folder)
+        (root / "a.txt").write_text("a", encoding="utf8")
+        (root / "b.txt").write_text("b", encoding="utf8")
+        (root / "c.txt").write_text("c", encoding="utf8")
+        output = h.file.apply_func(root, ".txt", never_change)
+
+    assert output == "ℹ️ 3 file(s) not changed."  # noqa: RUF001
+    assert "a.txt" not in output
+    assert "is applied" not in output
+
+
 def test_check_featured_image() -> None:
     folder = h.dev.get_project_root() / "tests/data/check_featured_image/folder_correct"
     assert h.file.check_featured_image(folder)[0]
