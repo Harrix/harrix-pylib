@@ -194,12 +194,14 @@ def example() -> None:
         assert _syntax_warnings(after) == []
 
 
-def test_py_docstring_formatter_normalizes_crlf_to_lf() -> None:
+def test_py_docstring_formatter_skips_eol_only_rewrite() -> None:
+    """Do not rewrite a file solely to convert CRLF to LF when docstrings are unchanged."""
     source = '''\
 def example() -> None:
     """Plain summary without special chars.
 
     Second paragraph.
+
     """
     return None
 '''
@@ -207,11 +209,33 @@ def example() -> None:
         path = Path(temp_dir) / "example.py"
         path.write_bytes(source.replace("\n", "\r\n").encode("utf-8"))
         assert b"\r\n" in path.read_bytes()
+        # Format once with LF so docstring body matches formatter output.
+        path.write_text(source, encoding="utf-8", newline="\n")
+        h.py.PyDocstringFormatter().format_file(path)
+        stable = path.read_text(encoding="utf-8")
+        path.write_bytes(stable.replace("\n", "\r\n").encode("utf-8"))
+        msg = h.py.PyDocstringFormatter().format_file(path)
+        assert msg == "File is not changed."
+        assert b"\r\n" in path.read_bytes()
+
+
+def test_py_docstring_formatter_writes_lf_when_content_changes() -> None:
+    """When docstrings change, persist the file with LF even if input used CRLF."""
+    source = '''\
+def example() -> None:
+    """Plain summary without special chars.
+    Second paragraph.
+    """
+    return None
+'''
+    with TemporaryDirectory() as temp_dir:
+        path = Path(temp_dir) / "example.py"
+        path.write_bytes(source.replace("\n", "\r\n").encode("utf-8"))
         msg = h.py.PyDocstringFormatter().format_file(path)
         after = path.read_bytes()
+        assert "formatted" in msg
         assert b"\r\n" not in after
         assert after.count(b"\r") == 0
-        assert "LF" in msg or "formatted" in msg or "not changed" not in msg
 
 
 def test_py_docstring_formatter_keeps_non_raw_without_backslashes() -> None:
