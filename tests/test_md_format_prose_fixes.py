@@ -152,6 +152,65 @@ def test_checker_skips_file_extension_fragments(tmp_path: Path) -> None:
     assert not _checker_errors(tmp_path, source, {"H006"}), source
 
 
+def test_h006_longest_wins_and_multiple_replacements() -> None:
+    """Single-pass H006: several dictionary hits on one line; abbrev spacing."""
+    source = "Use latex and html together with markdown notes.\n"
+    result = _format(source)
+    assert "LaTeX" in result
+    assert "HTML" in result
+    assert "Markdown" in result
+
+    abbrev_source = "Это, т.е. срочно.\n"  # ignore: HP001
+    abbrev_result = _format(abbrev_source)
+    assert "т. е." in abbrev_result  # ignore: HP001
+    assert "т.е." not in abbrev_result  # ignore: HP001
+
+
+def test_h006_skips_urls_and_html() -> None:
+    """H006 must not rewrite tokens inside link destinations or HTML tags."""
+    source = "See [docs](https://example.com/markdown) and <span class='markdown'>x</span>.\n"
+    result = _format(source)
+    assert "](https://example.com/markdown)" in result
+    assert "<span class='markdown'>" in result
+
+
+def test_format_folder_formats_all_md_including_g_md(tmp_path: Path) -> None:
+    """format_folder formats normal .md and generated *.g.md files alike."""
+    note = tmp_path / "note.md"
+    docs_dump = tmp_path / "action_output_bus.g.md"
+    combine_dump = tmp_path / "_Notes.g.md"
+    short_generated = tmp_path / "notes.short.g.md"
+
+    note.write_text("Use markdown daily.\n", encoding="utf-8", newline="\n")
+    docs_dump.write_text(
+        "- [🏛️ Class `X`](#%EF%B8%8F-class-x)\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    combine_dump.write_text("Use markdown daily.\n", encoding="utf-8", newline="\n")
+    short_generated.write_text("Use markdown daily.\n", encoding="utf-8", newline="\n")
+
+    result = MdFormatter(end_of_line="lf").format_folder(tmp_path)
+
+    assert "Markdown" in note.read_text(encoding="utf-8")
+    docs_text = docs_dump.read_text(encoding="utf-8")
+    assert "%EF%B8%8F" not in docs_text
+    assert "\ufe0f" in docs_text
+    assert "Markdown" in combine_dump.read_text(encoding="utf-8")
+    assert "Markdown" in short_generated.read_text(encoding="utf-8")
+    assert "action_output_bus.g.md" in result
+    assert "_Notes.g.md" in result
+    assert "notes.short.g.md" in result
+
+
+def test_format_file_still_formats_explicit_g_md(tmp_path: Path) -> None:
+    """Explicit format_file on a .g.md path still applies prose fixes."""
+    generated = tmp_path / "_Notes.g.md"
+    generated.write_text("Use markdown daily.\n", encoding="utf-8", newline="\n")
+    MdFormatter(end_of_line="lf").format_file(generated)
+    assert "Markdown" in generated.read_text(encoding="utf-8")
+
+
 def test_py_docstring_formatter_wraps_filenames() -> None:
     """Docstring prose wraps filenames before H006 uppercase."""
     source = (

@@ -119,6 +119,8 @@ def apply_func(
     func: Callable,
     *,
     skip_rel_prefixes: tuple[tuple[str, ...], ...] | None = None,
+    skip_name_endswith: tuple[str, ...] | None = None,
+    skip_file: Callable[[Path], bool] | None = None,
 ) -> str:
     """Recursively apply a function to all files with a specified extension in a directory.
 
@@ -141,6 +143,10 @@ def apply_func(
     - Hidden files and folders (those with names starting with a dot) are ignored during processing.
     - Optional `skip_rel_prefixes` skips files whose path relative to the resolved root starts with one
       of the given tuples (for example `(("install", "dependencies"),)`).
+    - Optional `skip_name_endswith` skips files whose name ends with one of the given suffixes
+      (for example `(".short.g.md",)` for short TOC dumps).
+    - Optional `skip_file` is called with each candidate `Path` and skips the file when it returns
+      `True` (for example combined `_*.g.md` dumps).
     - The function handles different return types from the `func` parameter:
       - If `None`: Shows a simple success message
       - If `str`: Appends the string to the success message
@@ -184,6 +190,10 @@ def apply_func(
             except ValueError:
                 continue
             if _rel_matches_skip(rel_to_root):
+                continue
+            if skip_name_endswith and file_path.name.endswith(skip_name_endswith):
+                continue
+            if skip_file is not None and skip_file(file_path):
                 continue
             if should_ignore_path(rel_to_root):
                 continue

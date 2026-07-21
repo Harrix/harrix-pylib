@@ -377,33 +377,52 @@ def _fix_image_alt_capitalization(line: str) -> str:
 
 
 def _fix_incorrect_words(segment: str) -> str:
-    """Replace incorrect word forms (H006), skipping URLs and HTML."""
+    """Replace incorrect word forms (H006), skipping URLs and HTML.
+
+    Uses one URL/HTML mask and one longest-first multi-pattern scan instead of
+    masking and scanning once per dictionary entry (~445 patterns).
+
+    """
+    pattern, replacements = _h006_combined_pattern()
+    if not replacements:
+        return segment
+
+    masked = _mask_urls_and_html(segment)
+    matches = [
+        match
+        for match in pattern.finditer(masked)
+        if not _is_hyphenated_identifier_fragment(masked, *match.span())
+        and not _is_file_extension_fragment(masked, *match.span())
+    ]
+    if not matches:
+        return segment
+
     working = segment
-    for pattern, correct in _incorrect_word_patterns().values():
-        masked = _mask_urls_and_html(working)
-        matches = [
-            match
-            for match in pattern.finditer(masked)
-            if not _is_hyphenated_identifier_fragment(masked, *match.span())
-            and not _is_file_extension_fragment(masked, *match.span())
-        ]
-        for match in reversed(matches):
-            start, end = match.span()
-            if working[start:end] != match.group(0):
-                continue
-            working = f"{working[:start]}{correct}{working[end:]}"
+    for match in reversed(matches):
+        start, end = match.span()
+        incorrect = match.group(0)
+        if working[start:end] != incorrect:
+            continue
+        correct = replacements.get(incorrect)
+        if correct is None:
+            continue
+        working = f"{working[:start]}{correct}{working[end:]}"
     return working
 
 
 def _fix_lowercase_after_punctuation(line: str) -> str:
     """Capitalize lowercase letters after sentence-ending punctuation (H021)."""
+    if not any(char in line for char in ".!?"):
+        return line
+
     mask_pattern = _h021_abbrev_mask_pattern()
     parts: list[str] = []
     for segment, in_code in _identify_code_blocks_line(line):
         if in_code:
             parts.append(segment)
             continue
-        masked = mask_abbreviations(segment, mask_pattern)
+        # Abbreviation masking is only needed when the segment has periods.
+        masked = mask_abbreviations(segment, mask_pattern) if "." in segment else segment
         chars = list(segment)
         for match in _H021_PATTERN.finditer(masked):
             if _is_h021_allowed_period(masked, match.start()):
@@ -626,6 +645,33 @@ def _get_link_url_ranges(line: str) -> set[int]:
 
 
 @lru_cache(maxsize=1)
+def _h006_combined_pattern() -> tuple[re.Pattern[str], dict[str, str]]:
+    r"""Build one longest-first H006 regex and incorrect→correct map.
+
+    Boundary rules match `MdChecker._INCORRECT_WORD_PATTERNS`: `\b` for pure
+    word tokens, Unicode lookaround for phrases / punctuated forms.
+
+    """
+    patterns = _incorrect_word_patterns()
+    if not patterns:
+        return re.compile(r"(?!)"), {}
+
+    items = sorted(patterns.items(), key=lambda item: len(item[0]), reverse=True)
+    replacements = {incorrect: correct for incorrect, (_pattern, correct) in items}
+    alternatives: list[str] = []
+    for incorrect, (_pattern, _correct) in items:
+        escaped = re.escape(incorrect)
+        if re.fullmatch(r"[\w]+", incorrect):
+            alternatives.append(rf"\b{escaped}\b")
+        else:
+            alternatives.append(
+                rf"(?<![a-zA-Zа-яА-ЯёЁ0-9_]){escaped}(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001  # ignore: HP001
+            )
+    combined = re.compile("|".join(f"(?:{alt})" for alt in alternatives))
+    return combined, replacements
+
+
+@lru_cache(maxsize=1)
 def _h021_abbrev_mask_pattern() -> re.Pattern[str] | None:
     """Load H021 abbreviation mask from MdChecker."""
     from harrix_pylib.md_checker import MdChecker  # noqa: PLC0415
@@ -718,8 +764,8 @@ def _mask_urls_and_html(text: str) -> str:
     def mask_html(match: re.Match[str]) -> str:
         return "<" + (" " * (len(match.group(0)) - 2)) + ">"
 
-    masked = re.sub(r"\]\([^)]*\)", mask_dest, text)
-    return re.sub(r"<[^>]*>", mask_html, masked)
+    masked = _LINK_DEST_MASK_RE.sub(mask_dest, text)
+    return _HTML_TAG_MASK_RE.sub(mask_html, masked)
 
 
 def _normalize_en_and_em_dashes(segment: str) -> str:
@@ -776,6 +822,8 @@ _URL_PLACEHOLDER_PREFIX = "HSKPROSEURL"
 _LINK_DESTINATION_RE = re.compile(r"\]\(([^)]*)\)")
 _ANGLE_AUTOLINK_RE = re.compile(r"<(https?://[^>\s]+)>")
 _URL_PLACEHOLDER_TOKEN_RE = re.compile(rf"{_URL_PLACEHOLDER_PREFIX}(\d+)")
+_LINK_DEST_MASK_RE = re.compile(r"\]\([^)]*\)")
+_HTML_TAG_MASK_RE = re.compile(r"<[^>]*>")
 
 
 _LIST_MARKER_HYPHEN_PATTERN = re.compile(r"^(?:\s*>\s*)*\s*-")
