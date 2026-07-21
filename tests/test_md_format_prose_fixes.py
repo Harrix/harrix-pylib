@@ -146,6 +146,17 @@ def test_formatter_wraps_bare_filenames_before_h006(tmp_path: Path) -> None:
     assert not _checker_errors(tmp_path, result, {"H006"}), result
 
 
+def test_formatter_keeps_node_js_as_product_name(tmp_path: Path) -> None:
+    """Node.js is a product name: do not wrap; rewrite bare node.js via H006."""
+    source = "Install Node.js first.\n\nAlso support node.js on Windows.\n\nOpen src/node.js for the script.\n"
+    result = _format(source)
+    assert "Install Node.js first." in result
+    assert "Also support Node.js on Windows." in result
+    assert "`Node.js`" not in result
+    assert "`src/node.js`" in result
+    assert not _checker_errors(tmp_path, result, {"H006"}), result
+
+
 def test_checker_skips_file_extension_fragments(tmp_path: Path) -> None:
     """H006 must not flag extensions inside bare filenames before formatting."""
     source = "Create from recover.sql if missing.\n"

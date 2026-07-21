@@ -1514,6 +1514,11 @@ def test_md_checker() -> None:
         assert any("H006" in e and "typescript" in e for e in errors)
         assert any("H006" in e and "json" in e for e in errors)
 
+        node_js_file = temp_path / "node_js.md"
+        node_js_file.write_text("---\nlang: en\n---\n\nInstall node.js today.\n", encoding="utf-8")
+        errors = checker.check(node_js_file, select={"H006"})
+        assert any("H006" in e and "node.js" in e for e in errors)
+
         # =====================================================================
         # H040: lang field does not match document language
         # =====================================================================

@@ -7,6 +7,7 @@ H057, H058).
 
 Bare filenames and paths (for example `config.json`, `src/app/recover.sql`) are
 wrapped in inline code before H006 so file extensions are not uppercased.
+Product names that look like files (for example Node.js) are left as prose.
 A leading-dot mention like `.g.md` becomes `` `g.md` `` (not `` .`g.md` ``).
 
 """
@@ -150,6 +151,8 @@ _FILE_PATH_EXTENSIONS = frozenset(
     }
 )
 _FILE_PATH_EXT_ALT = "|".join(sorted(_FILE_PATH_EXTENSIONS, key=lambda item: (-len(item), item)))
+# Product names that look like `name.ext` but are not files (skip backtick wrap).
+_BARE_FILENAME_PRODUCT_BASENAMES = frozenset({"node.js"})
 # Group 1: leading-dot mention `.g.md` (capture without the leading `.`).
 # Group 2: normal basename/path `config.json`, `../recover.sql`, `src/a.py`.
 _BARE_FILENAME_PATTERN = re.compile(
@@ -230,13 +233,19 @@ def _fix_bare_filenames_to_inline_code(segment: str) -> str:
     Leading-dot mentions like `.g.md` become `` `g.md` `` so H015 cannot glue the
     leftover period onto the previous word (`combined .` → `combined.`).
 
+    Product names such as `Node.js` are left unwrapped (not a file). Paths like
+    `src/node.js` are still wrapped.
+
     """
 
     def replacer(match: re.Match[str]) -> str:
         leading_dot_name = match.group(1)
         if leading_dot_name is not None:
             return f"`{leading_dot_name}`"
-        return f"`{match.group(0)}`"
+        matched = match.group(0)
+        if "/" not in matched and "\\" not in matched and matched.casefold() in _BARE_FILENAME_PRODUCT_BASENAMES:
+            return matched
+        return f"`{matched}`"
 
     return _BARE_FILENAME_PATTERN.sub(replacer, segment)
 
