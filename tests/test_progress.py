@@ -22,6 +22,7 @@ def test_progress_bar_writes_to_stream() -> None:
     stream = StringIO()
     # Force-enable even though StringIO is not a TTY.
     bar = ProgressBar(4, stream=stream, enabled=True, width=10)
+    assert "0/4 (0%)" in stream.getvalue()
     bar.update(1)
     bar.update(2)
     bar.finish()
@@ -29,6 +30,26 @@ def test_progress_bar_writes_to_stream() -> None:
     assert "1/4" in text
     assert "4/4 (100%)" in text
     assert text.endswith("\n")
+
+
+def test_iter_with_progress_shows_zero_before_first_item() -> None:
+    """Bar must show 0/N when the first item is yielded (before it is processed)."""
+
+    class _TtyStringIO(StringIO):
+        def isatty(self) -> bool:  # noqa: PLR6301
+            return True
+
+    items = ["slow", "fast"]
+    tty_stream = _TtyStringIO()
+    it = iter_with_progress(items, show_progress=True, stream=tty_stream)
+    # First next() builds ProgressBar (0/N) then yields; update(1) runs only after resume.
+    assert next(it) == "slow"
+    assert "0/2 (0%)" in tty_stream.getvalue()
+    assert "1/2" not in tty_stream.getvalue()
+    assert next(it) == "fast"
+    assert "1/2" in tty_stream.getvalue()
+    assert list(it) == []
+    assert "2/2 (100%)" in tty_stream.getvalue()
 
 
 def test_iter_with_progress_disabled() -> None:

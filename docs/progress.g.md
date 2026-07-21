@@ -29,6 +29,8 @@ class ProgressBar
 
 In-place progress bar written to a stream (default: stderr when it is a TTY).
 
+When enabled, draws `0/total` immediately so the bar is visible before the first item finishes.
+
 <details>
 <summary>Code:</summary>
 
@@ -43,7 +45,7 @@ class ProgressBar:
         enabled: bool | None = None,
         width: int = _DEFAULT_WIDTH,
     ) -> None:
-        """Create a progress bar.
+        """Create a progress bar and draw the initial `0/total` line when enabled.
 
         Args:
 
@@ -62,6 +64,8 @@ class ProgressBar:
         self.done = 0
         self._last_len = 0
         self._use_ascii = False
+        if self.enabled:
+            self._write_line(0)
 
     def finish(self) -> None:
         """Draw 100% and end with a newline so following stdout output is clean."""
@@ -126,7 +130,7 @@ class ProgressBar:
 def __init__(self, total: int) -> None
 ```
 
-Create a progress bar.
+Create a progress bar and draw the initial `0/total` line when enabled.
 
 Args:
 
@@ -156,6 +160,8 @@ def __init__(
         self.done = 0
         self._last_len = 0
         self._use_ascii = False
+        if self.enabled:
+            self._write_line(0)
 ```
 
 </details>
