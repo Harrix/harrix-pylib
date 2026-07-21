@@ -140,6 +140,31 @@ def test_apply_func_all_unchanged_summary_only() -> None:
     assert "is applied" not in output
 
 
+def test_apply_func_suppresses_left_unchanged_messages() -> None:
+    def rename_like(filename: Path | str) -> str:
+        path = Path(filename)
+        if path.name == "my file.txt":
+            return f"✅ File renamed: {path.name} → my-file.txt"
+        if path.name == "warn.txt":
+            return f"❗ File {path.name} left unchanged."
+        return f"📝 File {path.name} left unchanged (no spaces found)."
+
+    with TemporaryDirectory() as temp_folder:
+        root = Path(temp_folder)
+        (root / "my file.txt").write_text("x", encoding="utf8")
+        (root / "readme.txt").write_text("y", encoding="utf8")
+        (root / "notes.txt").write_text("z", encoding="utf8")
+        (root / "warn.txt").write_text("w", encoding="utf8")
+        output = h.file.apply_func(root, ".txt", rename_like)
+
+    assert "my file.txt" in output
+    assert "readme.txt" not in output
+    assert "notes.txt" not in output
+    assert "left unchanged (no spaces found)" not in output
+    assert "ℹ️ 2 file(s) not changed." in output  # noqa: RUF001
+    assert "❗ File warn.txt left unchanged." in output
+
+
 def test_check_featured_image() -> None:
     folder = h.dev.get_project_root() / "tests/data/check_featured_image/folder_correct"
     assert h.file.check_featured_image(folder)[0]

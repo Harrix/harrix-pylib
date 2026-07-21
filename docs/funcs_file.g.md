@@ -165,8 +165,8 @@ Args:
 Returns:
 
 - `str`: A newline-separated string of messages indicating the success or failure of applying `func`
-  to each file. Files that return exactly `File is not changed.` are omitted from per-file lines;
-  a single summary line reports how many were unchanged.
+  to each file. Unchanged results (`File is not changed.` or informational `left unchanged` messages)
+  are omitted from per-file lines; a single summary line reports how many were unchanged.
 
 Note:
 
@@ -181,7 +181,8 @@ Note:
   `True` (for example combined `_*.g.md` dumps).
 - The function handles different return types from the `func` parameter:
   - If `None`: Shows a simple success message
-  - If `str` equal to `File is not changed.`: Counted only in the end-of-run summary
+  - If unchanged `str` (`File is not changed.` or informational `left unchanged`): Counted only
+    in the end-of-run summary (errors/warnings with `❌` / `⚠️` / `❗` stay visible)
   - If other `str`: Appends the string to the success message
   - If `list`: Formats each item in the list as a bullet point
   - For other types: Converts to string and appends to the success message
@@ -222,6 +223,14 @@ def apply_func(
     unchanged_count = 0
     folder_path = Path(path).resolve()
 
+    def _is_unchanged_result(message: str) -> bool:
+        text = message.strip()
+        if text.startswith(("❌", "⚠️", "❗")):
+            return False
+        if text == "File is not changed.":
+            return True
+        return "left unchanged" in text
+
     def _rel_matches_skip(rel: Path) -> bool:
         if not skip_rel_prefixes:
             return False
@@ -249,7 +258,7 @@ def apply_func(
                 if result is None:
                     list_lines.append(f"✅ File {file_path.name} is applied.")
                 elif isinstance(result, str):
-                    if result.strip() == "File is not changed.":
+                    if _is_unchanged_result(result):
                         unchanged_count += 1
                     else:
                         list_lines.append(f"✅ File {file_path.name} is applied: {result}")
