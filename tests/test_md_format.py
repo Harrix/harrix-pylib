@@ -55,12 +55,14 @@ def _format_markdown(
     prose_wrap: str = "preserve",
     print_width: int = 80,
     apply_prose_fixes: bool = False,
+    format_math: bool = True,
 ) -> str:
     return MdFormatter(
         end_of_line=end_of_line,
         prose_wrap=prose_wrap,
         print_width=print_width,
         apply_prose_fixes=apply_prose_fixes,
+        format_math=format_math,
     ).format(text)
 
 
@@ -436,20 +438,21 @@ def test_format_markdown_content_keeps_multiple_trailing_empty_table_cells() -> 
 
 def test_format_markdown_content_formats_math() -> None:
     result = _format_markdown("$E=mc^2$\n")
-    assert "$E=mc^2$" in result
+    assert "$E = mc^2$" in result
     block = _format_markdown("$$\nx + y\n$$\n")
     assert "$$" in block
     assert "x + y" in block
 
 
-def test_format_markdown_content_preserves_block_math_inside_blockquote() -> None:
+def test_format_markdown_content_formats_block_math_inside_blockquote() -> None:
     source = "---\n\n> $$\n> x^{5+y}=\\frac{x+y_6}{\\sqrt{x+\\frac{1}{x}}}\n> $$\n"
+    expected = "---\n\n> $$\n> x^{5+y} = \\frac{x + y_6}{\\sqrt{x + \\frac{1}{x}}}\n> $$\n"
     result = _format_markdown(source, end_of_line="lf")
-    assert result == source
+    assert result == expected
     assert "> >" not in result
 
 
-def test_format_markdown_content_preserves_indentation_in_block_math() -> None:
+def test_format_markdown_content_formats_indentation_in_block_math() -> None:
     source = (
         "$$\n"
         "\\def\\arraystretch{1.5}\n"
@@ -468,7 +471,32 @@ def test_format_markdown_content_preserves_indentation_in_block_math() -> None:
         "\\end{bmatrix}\n"
         "$$\n"
     )
+    expected = (
+        "$$\n"
+        "\\def\\arraystretch{1.5}\n"
+        "\\begin{array}{c:c:c}\n"
+        "  a & b & c \\\\\n"
+        "  \\hline\n"
+        "  d & e & f \\\\\n"
+        "  \\hdashline\n"
+        "  g & h & i\n"
+        "\\end{array}\n"
+        "$$\n\n"
+        "$$\n"
+        "M = \\begin{bmatrix}\n"
+        "  1 & 2 & 1 \\\\\n"
+        "  3 & 0 & 1 \\\\\n"
+        "  0 & 2 & 4\n"
+        "\\end{bmatrix}\n"
+        "$$\n"
+    )
     result = _format_markdown(source, end_of_line="lf")
+    assert result == expected
+
+
+def test_format_markdown_content_can_disable_math_formatting() -> None:
+    source = "$$\n\\begin{bmatrix}\n  1 & 2\n\\end{bmatrix}\n$$\n"
+    result = _format_markdown(source, end_of_line="lf", format_math=False)
     assert result == source
 
 
@@ -488,7 +516,7 @@ def test_format_sample_fixture() -> None:
     before = _read_fixture("format_sample__before.md")
     result = _format_markdown(before)
     assert "[[wiki link]]" in result
-    assert "$E=mc^2$" in result
+    assert "$E = mc^2$" in result
     assert "| a   | b   |" in result
     assert "| 1   | 2   |" in result
     assert "# Title" in result

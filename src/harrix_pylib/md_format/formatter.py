@@ -51,6 +51,7 @@ class MdFormatter:
         prose_wrap: str = "preserve",
         print_width: int = 80,
         apply_prose_fixes: bool = True,
+        format_math: bool = True,
     ) -> None:
         """Initialize the MdFormatter.
 
@@ -61,6 +62,7 @@ class MdFormatter:
         - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
         - `apply_prose_fixes` (`bool`): Apply mechanical MdChecker autofixes (typography, H006-H058
           subset). Defaults to `True`.
+        - `format_math` (`bool`): Format TeX/LaTeX content inside `$...$` / `$$...$$`. Defaults to `True`.
 
         """
         self.options = _FormatOptions(
@@ -68,6 +70,7 @@ class MdFormatter:
             prose_wrap=prose_wrap,
             print_width=print_width,
             apply_prose_fixes=apply_prose_fixes,
+            format_math=format_math,
         )
 
     def format(self, text: str) -> str:

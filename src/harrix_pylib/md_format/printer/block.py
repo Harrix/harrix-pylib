@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 
 from harrix_pylib.md_format.code_fence import _fence_marker_for_content
 from harrix_pylib.md_format.hard_break_format import _HardBreakStyles
+from harrix_pylib.md_format.math_format import _format_math_content
+from harrix_pylib.md_format.printer.context import DEFAULT_OPTIONS
 from harrix_pylib.md_format.prose_wrap import (
     _wrap_prose,
 )
@@ -324,9 +326,9 @@ def _render_block(
     if token.type == "hr":
         return f"{_format_hr_markup(token.markup or '---', preserve=in_list_item)}\n", index + 1
     if token.type == "math_block":
-        return _render_math_block(token), index + 1
+        return _render_math_block(token, options=options), index + 1
     if token.type == "math_block_label":
-        return _render_math_block(token, label=token.info), index + 1
+        return _render_math_block(token, label=token.info, options=options), index + 1
     if token.type == "table_open":
         return _render_table(
             tokens,
@@ -456,10 +458,18 @@ def _render_indented_code_block(content: str) -> str:
     return "\n".join(f"    {line}" if line.strip() else "" for line in lines) + "\n"
 
 
-def _render_math_block(token: Token, *, label: str | None = None) -> str:
+def _render_math_block(
+    token: Token,
+    *,
+    label: str | None = None,
+    options: _FormatOptions | None = None,
+) -> str:
     """Render a block-math token to Markdown."""
+    fmt_options = options or DEFAULT_OPTIONS
     raw_content = token.content
     content = _normalize_math_block_content(raw_content)
+    if content and fmt_options.format_math:
+        content = _format_math_content(content, display=True)
     if not content:
         middle = _empty_math_middle_text(raw_content)
         if label:

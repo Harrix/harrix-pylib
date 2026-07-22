@@ -671,10 +671,11 @@ def _fix_russian_polite_pronouns(line: str) -> str:
             *,
             lower: str = word.lower(),
             ranges: list[tuple[int, int]] = code_ranges,
+            source: str = line,
         ) -> str:
             if (
                 _inside_ranges(match.start(), ranges)
-                or _is_russian_polite_pronoun_at_sentence_start(line, match.start())
+                or _is_russian_polite_pronoun_at_sentence_start(source, match.start())
                 or inside_guillemets(match.start())
             ):
                 return match.group(0)

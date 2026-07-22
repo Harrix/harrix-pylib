@@ -13,6 +13,7 @@ from harrix_pylib.md_format.link_destination_format import (
     _formatted_title_from_placeholder,
 )
 from harrix_pylib.md_format.link_title_format import _format_link_title
+from harrix_pylib.md_format.math_format import _format_math_content
 from harrix_pylib.md_format.printer import context as printer_context
 from harrix_pylib.md_format.printer.context import (
     DEFAULT_OPTIONS,
@@ -264,7 +265,10 @@ def _render_inline_token(
         return f"[[{_render_wiki_content(child.content)}]]", index + 1
     if child.type in {"math_inline", "math_inline_double"}:
         markup = child.markup or "$"
-        return f"{markup}{child.content}{markup}", index + 1
+        content = child.content
+        if fmt_options.format_math:
+            content = _format_math_content(content, display=False)
+        return f"{markup}{content}{markup}", index + 1
     if child.type == "html_inline":
         return child.content, index + 1
     if child.type == "image":
