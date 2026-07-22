@@ -52,6 +52,59 @@ def test_format_math_content_layouts_align_display() -> None:
     assert result == "\\begin{align*}\n  a &= b \\\\\n  c &= d\n\\end{align*}"
 
 
+def test_format_math_content_indents_nested_environments_by_depth() -> None:
+    source = (
+        r"\begin{minipage}{0.5\textwidth}"
+        "\n"
+        "equation:\n"
+        r"\begin{equation*}"
+        "\n"
+        "z_0 = d = 0\n"
+        r"\end{equation*}"
+        "\n"
+        "align:\n"
+        r"\begin{align*}"
+        "\n"
+        r"z_0 &= d = 0 \\"
+        "\n"
+        r"z_{n+1} &= z_n^2+c"
+        "\n"
+        r"\end{align*}"
+        "\n"
+        "eqnarray:\n"
+        r"\begin{eqnarray*}"
+        "\n"
+        r"z_0 &=& d = 0 \\"
+        "\n"
+        r"z_{n+1} &=& z_n^2+c"
+        "\n"
+        r"\end{eqnarray*}"
+        "\n"
+        r"\end{minipage}"
+    )
+    expected = (
+        "\\begin{minipage}{0.5\\textwidth}\n"
+        "  equation:\n"
+        "  \\begin{equation*}\n"
+        "    z_0 = d = 0\n"
+        "  \\end{equation*}\n"
+        "  align:\n"
+        "  \\begin{align*}\n"
+        "    z_0 &= d = 0 \\\\\n"
+        "    z_{n+1} &= z_n^2 + c\n"
+        "  \\end{align*}\n"
+        "  eqnarray:\n"
+        "  \\begin{eqnarray*}\n"
+        "    z_0 &=& d = 0 \\\\\n"
+        "    z_{n+1} &=& z_n^2 + c\n"
+        "  \\end{eqnarray*}\n"
+        "\\end{minipage}"
+    )
+    result = _format_math_content(source, display=True)
+    assert result == expected
+    assert _format_math_content(result, display=True) == result
+
+
 def test_format_math_content_inline_skips_environment_layout() -> None:
     source = r"\begin{bmatrix}1&2\\3&4\end{bmatrix}"
     result = _format_math_content(source, display=False)

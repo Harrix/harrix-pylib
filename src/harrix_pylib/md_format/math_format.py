@@ -55,7 +55,8 @@ _BINARY_COMMANDS = frozenset(
 )
 _CHAR_OPERATORS = frozenset({"+", "-", "=", "<", ">"})
 _UNARY_CHAR_OPS = frozenset({"+", "-"})
-_LAYOUT_ENVS = frozenset(
+# Environments whose bodies are split into rows/columns (`\\` / `&`).
+_ROW_ENVS = frozenset(
     {
         "align",
         "align*",
@@ -72,9 +73,11 @@ _LAYOUT_ENVS = frozenset(
         "cases",
     }
 )
+_INDENT_UNIT = "  "
 _BEGIN_RE = re.compile(r"\\begin\{([A-Za-z*]+)\}")
 _COMMAND_NAME_RE = re.compile(r"[A-Za-z]+|.")
 _PROTECTED_PLACEHOLDER_RE = re.compile(rf"{_PROTECTED_PREFIX}(\d+)")
+_HLINE_ROW_RE = re.compile(r"^(\\(?:hdashline|hline))\s*(.*)$", re.DOTALL)
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,19 +105,52 @@ def _apply_operator_spacing(content: str) -> str:
         if parts and not _ends_with_space() and not parts[-1].endswith("\n"):
             parts.append(" ")
 
-    for index, token in enumerate(tokens):
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
         if token.kind == "ws":
             if "\n" in token.value:
                 # Preserve line structure; collapse horizontal runs later via spacing rules.
                 newline_count = token.value.count("\n")
                 parts.append("\n" * newline_count)
+            index += 1
             continue
         if token.kind == "op" and token.value in _UNARY_CHAR_OPS and _is_unary_plus_minus(tokens, index):
             parts.append(token.value)
+            index += 1
             continue
         if token.kind == "op" and token.value in _UNARY_CHAR_OPS and _in_script(index):
             # Keep compact forms like x_{i-1} and x^{a+b}.
             parts.append(token.value)
+            index += 1
+            continue
+        if token.kind == "amp":
+            eq_index = index + 1
+            while eq_index < len(tokens) and tokens[eq_index].kind == "ws":
+                eq_index += 1
+            amp2_index = eq_index + 1
+            while amp2_index < len(tokens) and tokens[amp2_index].kind == "ws":
+                amp2_index += 1
+            # eqnarray alignment marker &=&
+            if (
+                eq_index < len(tokens)
+                and tokens[eq_index].kind == "op"
+                and tokens[eq_index].value == "="
+                and amp2_index < len(tokens)
+                and tokens[amp2_index].kind == "amp"
+            ):
+                _ensure_space()
+                parts.append("&=&")
+                index = amp2_index + 1
+                if _next_significant(tokens, amp2_index) is not None:
+                    parts.append(" ")
+                continue
+            nxt = _next_significant(tokens, index)
+            _ensure_space()
+            parts.append("&")
+            if nxt is not None and not (nxt.kind == "op" and nxt.value == "="):
+                parts.append(" ")
+            index += 1
             continue
         if token.kind in {"op", "binop"}:
             prev = _prev_significant(tokens, index)
@@ -123,24 +159,20 @@ def _apply_operator_spacing(content: str) -> str:
             parts.append(token.value)
             if _next_significant(tokens, index) is not None:
                 parts.append(" ")
-            continue
-        if token.kind == "amp":
-            _ensure_space()
-            parts.append("&")
-            nxt = _next_significant(tokens, index)
-            if nxt is not None and not (nxt.kind == "op" and nxt.value == "="):
-                parts.append(" ")
+            index += 1
             continue
         if token.kind == "command" and token.value == "\\\\":
             _ensure_space()
             parts.append("\\\\")
             if _next_significant(tokens, index) is not None:
                 parts.append(" ")
+            index += 1
             continue
         if token.kind == "comma":
             parts.append(",")
             if _next_significant(tokens, index) is not None:
                 parts.append(" ")
+            index += 1
             continue
         parts.append(token.value)
         # Control words must be separated from a following letter token: \lvert x
@@ -148,10 +180,36 @@ def _apply_operator_spacing(content: str) -> str:
             nxt = _next_significant(tokens, index)
             if nxt is not None and nxt.kind == "word":
                 parts.append(" ")
+        index += 1
     # Collapse runs of spaces but keep newlines.
     collapsed = re.sub(r"[^\S\n]+", " ", "".join(parts))
     collapsed = re.sub(r" +\n", "\n", collapsed)
     return re.sub(r"\n +", "\n", collapsed)
+
+
+def _consume_begin_args(content: str, start: int) -> int:
+    r"""Consume optional `[...]` / `{...}` arguments after `\begin{env}`."""
+    cursor = start
+    length = len(content)
+    while cursor < length:
+        while cursor < length and content[cursor] in {" ", "\t"}:
+            cursor += 1
+        if cursor >= length:
+            break
+        if content[cursor] == "[":
+            close = content.find("]", cursor + 1)
+            if close < 0:
+                break
+            cursor = close + 1
+            continue
+        if content[cursor] == "{":
+            close = _find_balanced_brace(content, cursor)
+            if close is None:
+                break
+            cursor = close + 1
+            continue
+        break
+    return cursor
 
 
 def _extract_protected_groups(content: str) -> tuple[str, list[str]]:
@@ -225,37 +283,43 @@ def _find_matching_end(content: str, start: int, env: str) -> int | None:
     return None
 
 
-def _format_environment_body(body: str) -> str:
-    """Format rows/columns inside a layout environment with 2-space indent."""
-    nested = _layout_environments(body.strip("\n"))
-    rows = _split_top_level(nested, "\\\\")
+def _format_environment_body(body: str, *, depth: int = 1) -> str:
+    """Format rows/columns inside a row-oriented environment at `depth` indent."""
+    rows = _split_top_level(body.strip("\n"), "\\\\")
     # Trailing \\ produces an empty final segment — drop it.
     if rows and not rows[-1].strip():
         rows = rows[:-1]
+    indent = _INDENT_UNIT * depth
     formatted_rows: list[str] = []
     for row_index, row in enumerate(rows):
         if not row.strip():
             formatted_rows.append("")
             continue
         add_break = row_index < len(rows) - 1
-        formatted_rows.extend(_format_environment_row(row, add_break=add_break))
+        formatted_rows.extend(_format_environment_row(row, add_break=add_break, indent=indent))
     while formatted_rows and formatted_rows[-1] == "":
         formatted_rows.pop()
     return "\n".join(formatted_rows)
 
 
-def _format_environment_row(row: str, *, add_break: bool) -> list[str]:
+def _format_environment_row(row: str, *, add_break: bool, indent: str) -> list[str]:
     r"""Format one environment row, peeling leading \hline/\hdashline markers."""
     stripped = row.strip()
     if not stripped:
         return [""]
     hline_match = _HLINE_ROW_RE.match(stripped)
     if hline_match:
-        lines = [f"  {hline_match.group(1)}"]
+        lines = [f"{indent}{hline_match.group(1)}"]
         rest = hline_match.group(2).strip()
         if rest:
-            lines.extend(_format_environment_row(rest, add_break=add_break))
+            lines.extend(_format_environment_row(rest, add_break=add_break, indent=indent))
         return lines
+    if "&=&" in stripped:
+        left, _, right = stripped.partition("&=&")
+        line = f"{left.strip()} &=& {right.strip()}".rstrip()
+        if add_break:
+            return [f"{indent}{line} \\\\"]
+        return [f"{indent}{line}"]
     cells = _split_top_level(stripped, "&")
     rebuilt: list[str] = []
     for cell_index, cell in enumerate(cells):
@@ -270,8 +334,8 @@ def _format_environment_row(row: str, *, add_break: bool) -> list[str]:
             rebuilt.append(f"& {text}")
     line = " ".join(rebuilt)
     if add_break:
-        return [f"  {line} \\\\"]
-    return [f"  {line}"]
+        return [f"{indent}{line} \\\\"]
+    return [f"{indent}{line}"]
 
 
 def _format_math_content(content: str, *, display: bool = False) -> str:
@@ -300,6 +364,24 @@ def _format_math_content(content: str, *, display: bool = False) -> str:
     return working
 
 
+def _indent_loose_text(text: str, depth: int) -> str:
+    """Indent non-environment text lines to `depth` (no-op at depth 0)."""
+    if not text:
+        return ""
+    if depth <= 0:
+        return text
+    indent = _INDENT_UNIT * depth
+    lines = text.split("\n")
+    out: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        out.append(f"{indent}{stripped}" if stripped else "")
+    result = "\n".join(out)
+    if text.endswith("\n") and not result.endswith("\n"):
+        result += "\n"
+    return result
+
+
 def _is_control_word(command: str) -> bool:
     r"""Return whether `command` is a TeX control word like \lvert (not \{)."""
     return len(command) > 1 and command.startswith("\\") and command[1:].isalpha()
@@ -325,44 +407,41 @@ def _is_unary_plus_minus(tokens: list[_Token], index: int) -> bool:
     return prev.kind == "command" and prev.value == "\\\\"
 
 
-def _layout_environments(content: str) -> str:
-    """Pretty-print supported multi-line math environments in display math."""
+def _layout_environments(content: str, *, depth: int = 0) -> str:
+    r"""Pretty-print all `\begin{...}` environments with indent by nesting depth."""
     parts: list[str] = []
     index = 0
     length = len(content)
     while index < length:
         match = _BEGIN_RE.search(content, index)
         if match is None:
-            parts.append(content[index:])
+            parts.append(_indent_loose_text(content[index:], depth))
             break
         env = match.group(1)
-        if env not in _LAYOUT_ENVS:
-            parts.append(content[index : match.end()])
-            index = match.end()
-            continue
         begin_start = match.start()
-        parts.append(content[index:begin_start])
-        # Optional argument after \begin{array}{...}
-        header_end = match.end()
-        cursor = header_end
-        while cursor < length and content[cursor] in {" ", "\t"}:
-            cursor += 1
-        if cursor < length and content[cursor] == "{":
-            arg_close = _find_balanced_brace(content, cursor)
-            if arg_close is not None:
-                header_end = arg_close + 1
-                cursor = header_end
+        parts.append(_indent_loose_text(content[index:begin_start], depth))
+        header_end = _consume_begin_args(content, match.end())
         end_marker = f"\\end{{{env}}}"
-        end_index = _find_matching_end(content, cursor, env)
+        end_index = _find_matching_end(content, header_end, env)
         if end_index is None:
-            parts.append(content[begin_start:header_end])
+            parts.append(_indent_loose_text(content[begin_start:header_end], depth))
             index = header_end
             continue
         body = content[header_end:end_index]
-        formatted_body = _format_environment_body(body)
         header = content[begin_start:header_end].strip()
-        parts.append(f"{header}\n{formatted_body}\n{end_marker}")
+        indent = _INDENT_UNIT * depth
+        if env in _ROW_ENVS:
+            formatted_body = _format_environment_body(body, depth=depth + 1)
+        else:
+            formatted_body = _layout_environments(body.strip("\n"), depth=depth + 1)
+        block = f"{indent}{header}\n"
+        if formatted_body.strip():
+            block += formatted_body.rstrip("\n") + "\n"
+        block += f"{indent}{end_marker}"
+        parts.append(block)
         index = end_index + len(end_marker)
+        if index < length and not content[index:].startswith("\n") and not block.endswith("\n"):
+            parts.append("\n")
     return "".join(parts)
 
 
@@ -651,6 +730,3 @@ def _tokenize(content: str) -> list[_Token]:
         tokens.append(_Token("other", char))
         index += 1
     return tokens
-
-
-_HLINE_ROW_RE = re.compile(r"^(\\(?:hdashline|hline))\s*(.*)$", re.DOTALL)
