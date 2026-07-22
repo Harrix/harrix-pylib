@@ -31,7 +31,7 @@ class MdChecker:
     - **H012** - Two consecutive empty lines.
     - **H013** - Missing colon before code block.
     - **H014** - Missing colon before image.
-    - **H015** - Space before punctuation mark.
+    - **H015** - Space before punctuation mark (text emoticons like `:)` / `;)` are allowed).
     - **H016** - Incorrect dash/hyphen usage.
     - **H017** - Three dots instead of ellipsis character.
     - **H018** - Curly/straight quotes instead of angle quotes.
@@ -1958,11 +1958,14 @@ class MdChecker:
         def _inside_inline_code(offset: int) -> bool:
             return any(start <= offset < end for start, end in code_ranges)
 
+        # Skip text emoticons (`:)`, `;-)`, `:D`, …); letter faces must not start a word.
+        emoticon_after_colon = r"(?:[-^])?(?:[)(*\\/|<>3@]|[DPpoOsS](?![a-zA-Z]))"
+        emoticon_after_semicolon = r"(?:[-^])?(?:[)(*\\/|<>]|[DPpo](?![a-zA-Z]))"
         patterns = [
             (r" \.(?![a-zA-Z0-9])", " ."),
             (r" ,", " ,"),
-            (r" ;", " ;"),
-            (r" :", " :"),
+            (rf" ;(?!{emoticon_after_semicolon})", " ;"),
+            (rf" :(?!{emoticon_after_colon})", " :"),
             (r" \?", " ?"),
         ]
 

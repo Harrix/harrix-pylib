@@ -695,6 +695,27 @@ def test_md_checker() -> None:
         errors = checker.check(wrong_dot_file, select={"H015"})
         assert any("H015" in e and " ." in e for e in errors)
 
+        # Space before text emoticons must not trigger H015
+        for i, content in enumerate(
+            [
+                "---\nlang: ru\n---\n\nВ этом :) Вообще.\n",
+                "---\nlang: en\n---\n\nHello ;) world.\n",
+                "---\nlang: en\n---\n\nGreat :-D news.\n",
+                "---\nlang: en\n---\n\nSad :( day.\n",
+                "---\nlang: en\n---\n\nWink ;-P now.\n",
+            ]
+        ):
+            emoticon_file = temp_path / f"emoticon_{i}.md"
+            emoticon_file.write_text(content, encoding="utf-8")
+            errors = checker.check(emoticon_file, select={"H015"})
+            assert not [e for e in errors if "H015" in e], f"H015 must not fire for emoticon in: {content!r}"
+
+        # Real space before colon/semicolon punctuation must still trigger H015
+        wrong_colon_still_file = temp_path / "wrong_colon_still.md"
+        wrong_colon_still_file.write_text("---\nlang: en\n---\n\nWrong :colon.\n", encoding="utf-8")
+        errors = checker.check(wrong_colon_still_file, select={"H015"})
+        assert any("H015" in e for e in errors)
+
         # =====================================================================
         # H016: Incorrect dash/hyphen usage
         # =====================================================================

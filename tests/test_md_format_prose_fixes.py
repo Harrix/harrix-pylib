@@ -30,6 +30,7 @@ def _checker_errors(tmp_path: Path, text: str, rules: set[str]) -> list[str]:
         ("Use markdown daily.\n", {"H006"}, "Markdown"),
         ("```py\nprint(1)\n```\n", {"H007"}, "```python"),
         ("Hello , world.\n", {"H015"}, "Hello, world."),
+        ("Wrong :colon.\n", {"H015"}, "Wrong:colon."),
         ("Yes - no.\n", {"H016"}, "Yes — no."),
         ("Wait...\n", {"H017"}, "Wait…"),
         ("![photo](a.png)\n", {"H020"}, "![Photo](a.png)"),
@@ -64,6 +65,19 @@ def test_formatter_fixes_russian_lang_gated_rules(tmp_path: Path) -> None:
     assert "вам" in result  # ignore: HP001
     assert "50 %" in result
     assert not _checker_errors(tmp_path, result, rules), result
+
+
+def test_formatter_preserves_space_before_text_emoticons() -> None:
+    cases = (
+        "этом :) Вообще",
+        "Hello ;) world.",
+        "Great :-D news.",
+        "Sad :( day.",
+        "Wink ;-P now.",
+    )
+    for snippet in cases:
+        result = _format(f"{snippet}\n")
+        assert snippet in result, result
 
 
 def test_formatter_skips_inline_and_fenced_code() -> None:
