@@ -25,6 +25,29 @@ _RAW_MARKDOWN_YAML_KEY = "raw-markdown"
 _H1_ATX_PATTERN = re.compile(r"^#\s+")
 
 
+class _IndentDumper(yaml.Dumper):
+    """YAML dumper that keeps sequence items indented under their parent key."""
+
+    def increase_indent(
+        self,
+        flow: bool = False,  # noqa: FBT001, FBT002
+        indentless: bool = False,  # noqa: FBT001, FBT002, ARG002
+    ) -> None:
+        return super().increase_indent(flow=flow, indentless=False)
+
+
+def _dump_yaml_indented(data: dict[str, Any], *, explicit_start: bool = False) -> str:
+    """Dump a YAML mapping with indented sequences (e.g. `tags:\\n  - a`)."""
+    return yaml.dump(
+        data,
+        Dumper=_IndentDumper,
+        sort_keys=False,
+        allow_unicode=True,
+        explicit_start=explicit_start,
+        default_flow_style=False,
+    )
+
+
 def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_content: str) -> tuple[str, Path]:
     r"""Add a new diary entry to the yearly Markdown file.
 
@@ -526,7 +549,7 @@ def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> st
     data_yaml[tuple_yaml_tag[0]] = tuple_yaml_tag[1]
 
     # Reconstruct YAML front matter
-    yaml_dumped = yaml.safe_dump(data_yaml, allow_unicode=True, sort_keys=False, default_flow_style=False)
+    yaml_dumped = _dump_yaml_indented(data_yaml)
     new_yaml_md = f"---\n{yaml_dumped}---"
 
     # Reconstruct document
@@ -799,8 +822,8 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
     folder_name = folder_path.name
     output_file = folder_path / f"_{folder_name}.g.md"
 
-    # Dump combined YAML
-    yaml_md = yaml.safe_dump(combined_yaml, allow_unicode=True, sort_keys=False)
+    # Dump combined YAML with indented sequences (same style as format_yaml).
+    yaml_md = _dump_yaml_indented(combined_yaml)
     final_content = ""
     if combined_yaml:
         final_content += f"---\n{yaml_md}---\n\n"
@@ -1435,25 +1458,7 @@ def format_yaml_content(markdown_text: str) -> str:
     if data_yaml is None:
         return markdown_text
 
-    class IndentDumper(yaml.Dumper):
-        def increase_indent(
-            self,
-            flow: bool = False,  # noqa: FBT001, FBT002
-            indentless: bool = False,  # noqa: FBT001, FBT002, ARG002
-        ) -> None:
-            return super().increase_indent(flow=flow, indentless=False)
-
-    yaml_md = (
-        yaml.dump(
-            data_yaml,
-            Dumper=IndentDumper,
-            sort_keys=False,
-            allow_unicode=True,
-            explicit_start=True,
-            default_flow_style=False,
-        )
-        + "---"
-    )
+    yaml_md = _dump_yaml_indented(data_yaml, explicit_start=True) + "---"
 
     return yaml_md + "\n\n" + content_md
 
@@ -3662,12 +3667,17 @@ def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool
     # 3) Sort sections
     if sections:
         sections = sort_logic(sections)
-        # Remove the last newline from the last section
-        sections[-1] = sections[-1].rstrip("\n")
 
-    # 4) Put everything back together
+    # 4) Put everything back together.
+    # After reordering, ensure a blank line between sections: the former last
+    # section has no trailing blank before EOF, and would otherwise glue onto
+    # the next heading (`text.\n## 2015` instead of `text.\n\n## 2015`).
     if not is_main_section:
-        markdown_text = yaml_md.strip() + "\n\n" + main_section + "".join(sections)
+        section_parts = [section.strip("\n") for section in sections]
+        joined_sections = "\n\n".join(section_parts)
+        main = main_section.rstrip("\n")
+        body = f"{main}\n\n{joined_sections}" if joined_sections else f"{main}\n"
+        markdown_text = yaml_md.strip() + "\n\n" + body
     else:
         # No headings encountered at all, return as is
         markdown_text = yaml_md.strip() + "\n" + main_section

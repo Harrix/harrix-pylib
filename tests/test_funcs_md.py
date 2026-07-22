@@ -566,6 +566,8 @@ This content should not appear in the final file."""
         assert "tags:" in content
         assert "python" in content
         assert "test" in content
+        assert "tags:\n  - " in content
+        assert "tags:\n- " not in content
 
         # Check that content was included
         assert "# Test Content" in content or "## Test Content" in content
@@ -573,6 +575,25 @@ This content should not appear in the final file."""
 
         # Check that the file with published: false was skipped
         assert "Should be skipped" not in content
+
+
+def test_combine_markdown_files_indents_yaml_sequences() -> None:
+    with TemporaryDirectory() as temp_dir:
+        folder_path = Path(temp_dir)
+        (folder_path / "a.md").write_text(
+            "---\nlang: en\ntags:\n  - python\n  - test\n---\n\n# A\n\nText.\n",
+            encoding="utf-8",
+        )
+        (folder_path / "b.md").write_text(
+            "---\nlang: en\ncategories:\n  - it\n---\n\n# B\n\nText.\n",
+            encoding="utf-8",
+        )
+        h.md.combine_markdown_files(folder_path)
+        content = (folder_path / f"_{folder_path.name}.g.md").read_text(encoding="utf-8")
+        assert "tags:\n  - python\n  - test\n" in content
+        assert "categories:\n  - it\n" in content
+        assert "tags:\n- " not in content
+        assert "categories:\n- " not in content
 
 
 def test_combine_markdown_files_raw_markdown_fences_body_and_strips_flag() -> None:
@@ -1917,6 +1938,21 @@ New list of commands:
 
     # Ensure the content was updated as expected
     assert updated_content == expected_content, "The file content was not updated correctly"
+
+
+def test_sort_sections_content_keeps_blank_line_between_reordered_sections() -> None:
+    """Year/date reorder must not glue paragraph text to the next heading."""
+    source = (
+        "---\nlang: ru\n---\n\n"
+        "# Text\n\n"
+        "## 2015\n\n"
+        "Older year text.\n\n"
+        "## 2026\n\n"
+        "Newer year ending.\n"
+    )
+    result = h.md.sort_sections_content(source)
+    assert "## 2026\n\nNewer year ending.\n\n## 2015\n" in result
+    assert "Newer year ending.\n## 2015" not in result
 
 
 def test_sort_sections() -> None:

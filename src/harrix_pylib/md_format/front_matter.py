@@ -123,11 +123,14 @@ def _format_yaml_block(block: _YamlBlock) -> str:
 
 
 def _format_yaml_line(line: str) -> str:
-    """Format one line inside a YAML block."""
+    """Format one line inside a YAML block, preserving list indentation."""
+    leading_ws = line[: len(line) - len(line.lstrip(" \t"))]
     stripped = line.strip()
     if stripped.startswith("-"):
         stripped = re.sub(r"^-\s+", "- ", stripped)
-    return re.sub(r":\s+", ": ", stripped)
+    else:
+        stripped = re.sub(r":\s+", ": ", stripped)
+    return f"{leading_ws}{stripped}"
 
 
 def _join_front_matter(front_matter: str, body: str) -> str:
