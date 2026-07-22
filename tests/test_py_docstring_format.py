@@ -137,6 +137,29 @@ def test_py_docstring_formatter_restores_trailing_blank_and_args_shape() -> None
         )
 
 
+def test_py_docstring_formatter_adds_r_prefix_on_one_line_with_backslash() -> None:
+    """D301: add `r` even when one-line docstring body text is otherwise unchanged."""
+    # Non-raw source uses `\\n` so the logical docstring keeps a literal backslash + n.
+    source = '''\
+def dump() -> str:
+    """Dump YAML (e.g. `tags:\\\\n  - a`)."""
+    return ""
+'''
+    with TemporaryDirectory() as temp_dir:
+        path = Path(temp_dir) / "example.py"
+        path.write_text(source, encoding="utf-8")
+        msg = h.py.PyDocstringFormatter().format_file(path)
+        after = path.read_text(encoding="utf-8")
+
+        assert "formatted" in msg
+        assert 'r"""Dump YAML (e.g. `tags:\\n  - a`)."""' in after
+        assert _syntax_warnings(after) == []
+        module = ast.parse(after)
+        first = module.body[0]
+        assert isinstance(first, ast.FunctionDef)
+        assert ast.get_docstring(first) == "Dump YAML (e.g. `tags:\\n  - a`)."
+
+
 def test_py_docstring_formatter_adds_r_prefix_for_md_escapes() -> None:
     with TemporaryDirectory() as temp_dir:
         path = Path(temp_dir) / "example.py"

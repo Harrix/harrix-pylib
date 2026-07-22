@@ -89,8 +89,9 @@ class PyDocstringFormatter:
           prefix (D301) and Markdown escapes are written as single `\` in source
         - Code tokens in prose (`True` / `False` / `None`, and quoted identifiers) use
           backticks; fenced and inline code are left unchanged
-        - One-line docstrings get the same prose fixes and code-span normalization, but
-          stay on a single physical line between the opening and closing quotes
+        - One-line docstrings get the same prose fixes, code-span normalization, and
+          D301 `r` prefix when needed, but stay on a single physical line between the
+          opening and closing quotes
 
         Args:
 
@@ -431,11 +432,12 @@ def _format_one_line_docstring(
     if "\n" in new_content:
         new_content = " ".join(part.strip() for part in new_content.splitlines() if part.strip())
     new_content = new_content.strip()
-    if new_content == content:
+    is_raw = "r" in prefix.lower()
+    needs_raw = not is_raw and "\\" in new_content
+    if new_content == content and not needs_raw:
         return None
 
-    is_raw = "r" in prefix.lower()
-    if not is_raw and "\\" in new_content:
+    if needs_raw:
         prefix = _ensure_raw_prefix(prefix)
         is_raw = True
 

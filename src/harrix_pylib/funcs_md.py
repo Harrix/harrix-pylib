@@ -3759,7 +3759,7 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
 
 
 def _dump_yaml_indented(data: dict[str, Any], *, explicit_start: bool = False) -> str:
-    """Dump a YAML mapping with indented sequences (e.g. `tags:\\n  - a`)."""
+    r"""Dump a YAML mapping with indented sequences (e.g. `tags:\n  - a`)."""
     return yaml.dump(
         data,
         Dumper=_IndentDumper,
