@@ -67,6 +67,28 @@ def test_formatter_fixes_russian_lang_gated_rules(tmp_path: Path) -> None:
     assert not _checker_errors(tmp_path, result, rules), result
 
 
+def test_formatter_preserves_russian_polite_pronouns_in_quotes() -> None:
+    blockquote = (
+        "---\nlang: ru\n---\n\n"
+        "> — Вы в состоянии объяснить этот невероятный результат? "
+        "Будьте добры, воспользуйтесь языком физики.\n>\n"
+        "> -- _Лю Цысинь, Задача трех тел_\n"
+    )
+    result = _format(blockquote)
+    assert "— Вы в состоянии" in result
+    assert "— вы в состоянии" not in result
+
+    speech = "---\nlang: ru\n---\n\nОн сказал: «Спасибо Вам за помощь».\n"
+    result = _format(speech)
+    assert "«Спасибо Вам за помощь»" in result
+    assert "вам" not in result
+
+    # Still lowercase mid-sentence address outside quotes.
+    prose = "---\nlang: ru\n---\n\nОбращаемся к Вам с предложением.\n"
+    result = _format(prose)
+    assert "к вам с предложением" in result
+
+
 def test_formatter_preserves_space_before_text_emoticons() -> None:
     cases = (
         "этом :) Вообще",

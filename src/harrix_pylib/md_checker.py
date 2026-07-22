@@ -40,7 +40,8 @@ class MdChecker:
     - **H021** - Lowercase letter after sentence-ending punctuation (dotted abbreviations from packaged
       JSON databases are allowed; not gated by YAML `lang`).
     - **H022** - Non-breaking space character found.
-    - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only).
+    - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only;
+      skipped in `>` blockquotes and inside «…»).
     - **H024** - Latin `x` or Cyrillic `x` used instead of multiplication sign `x`.
     - **H025** - Image Markdown not at start of line (several images in a row are allowed).
     - **H026** - Horizontal bar `―` (dialogue dash) should not be used.
@@ -1843,9 +1844,19 @@ class MdChecker:
         - after line start or after `.!?;`;
         - after opening guillemet `«` (direct speech, e.g. `«Ваша задача»`); # ignore: HP001
         - after dash at line start (dialogue, e.g. `— Ваша работа хороша`). # ignore: HP001
+
+        Also skipped entirely:
+
+        - blockquote lines (`> …`);
+
+        - pronouns inside «…» direct speech (e.g. `«Спасибо Вам»`). # ignore: HP001
+
           Yields at most one error per line.
 
         """
+        if re.match(r"^\s{0,3}>", line):
+            return
+
         boundary_before = r"(?<![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001 # ignore: HP001
         boundary_after = r"(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001 # ignore: HP001
 
@@ -1859,6 +1870,10 @@ class MdChecker:
         def inside_inline_code(offset: int) -> bool:
             return any(s <= offset < e for s, e in code_ranges)
 
+        def inside_guillemets(match_start: int) -> bool:
+            before = line[:match_start]
+            return before.count("\u00ab") > before.count("\u00bb")
+
         def at_sentence_start(match_start: int) -> bool:
             text_before = line[:match_start]
             stripped = text_before.strip()
@@ -1868,7 +1883,8 @@ class MdChecker:
                 return True
             if stripped.endswith("\u00ab"):  # After «
                 return True
-            return bool(re.match(r"^\s*[—\-]\s*$", text_before))  # Dialogue dash at line start
+            # Dialogue dash at line start, including after blockquote markers.
+            return bool(re.match(r"^(?:\s{0,3}>\s*)*[—\-]\s*$", text_before))
 
         for word in self.RUSSIAN_POLITE_PRONOUNS_CAPITALIZED:
             pattern = boundary_before + re.escape(word) + boundary_after
@@ -1876,6 +1892,8 @@ class MdChecker:
                 if inside_inline_code(match.start()):
                     continue
                 if at_sentence_start(match.start()):
+                    continue
+                if inside_guillemets(match.start()):
                     continue
                 error_msg = f'{self.RULES["H023"]}: use lowercase "{word.lower()}" when addressing reader'
                 yield self._format_error("H023", error_msg, filename, line_num=line_num, col=match.start() + 1)

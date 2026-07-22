@@ -625,7 +625,13 @@ def _fix_question_mark_period(segment: str) -> str:
 
 
 def _fix_russian_polite_pronouns(line: str) -> str:
-    """Lowercase Russian polite pronouns when not at sentence start (H023)."""
+    """Lowercase Russian polite pronouns when not at sentence start (H023).
+
+    Skips blockquote lines (`>`) and text inside «…» direct speech.
+
+    """
+    if re.match(r"^\s{0,3}>", line):
+        return line
 
     def at_sentence_start(match_start: int) -> bool:
         text_before = line[:match_start]
@@ -636,7 +642,12 @@ def _fix_russian_polite_pronouns(line: str) -> str:
             return True
         if stripped.endswith("\u00ab"):
             return True
-        return bool(re.match(r"^\s*[—\-]\s*$", text_before))
+        # Dialogue dash at line start, including after blockquote markers.
+        return bool(re.match(r"^(?:\s{0,3}>\s*)*[—\-]\s*$", text_before))
+
+    def inside_guillemets(match_start: int) -> bool:
+        before = line[:match_start]
+        return before.count("\u00ab") > before.count("\u00bb")
 
     for word in _RUSSIAN_POLITE_PRONOUNS_CAPITALIZED:
         pattern = re.compile(_PRONOUN_BOUNDARY_BEFORE + re.escape(word) + _PRONOUN_BOUNDARY_AFTER)
@@ -648,7 +659,11 @@ def _fix_russian_polite_pronouns(line: str) -> str:
             lower: str = word.lower(),
             ranges: list[tuple[int, int]] = code_ranges,
         ) -> str:
-            if _inside_ranges(match.start(), ranges) or at_sentence_start(match.start()):
+            if (
+                _inside_ranges(match.start(), ranges)
+                or at_sentence_start(match.start())
+                or inside_guillemets(match.start())
+            ):
                 return match.group(0)
             return lower
 

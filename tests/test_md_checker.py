@@ -1152,6 +1152,24 @@ def test_md_checker() -> None:
         errors = checker.check(ru_vy_dash_dialogue_file, select={"H023"})
         assert not errors
 
+        # Blockquote dialogue must not trigger H023
+        ru_vy_blockquote_file = temp_path / "ru_vy_blockquote.md"
+        ru_vy_blockquote_file.write_text(
+            "---\nlang: ru\n---\n\n> — Вы в состоянии объяснить этот невероятный результат?\n>\n> -- _Лю Цысинь_\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_vy_blockquote_file, select={"H023"})
+        assert not errors
+
+        # Pronoun inside «…» mid-speech must not trigger H023
+        ru_vy_inside_guillemets_file = temp_path / "ru_vy_inside_guillemets.md"
+        ru_vy_inside_guillemets_file.write_text(
+            "---\nlang: ru\n---\n\nОн сказал: «Спасибо Вам за помощь».\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_vy_inside_guillemets_file, select={"H023"})
+        assert not errors
+
         # =====================================================================
         # H024: Latin x or Cyrillic x instead of ×  # noqa: RUF003
         # =====================================================================
