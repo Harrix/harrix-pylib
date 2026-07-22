@@ -105,6 +105,61 @@ def test_format_math_content_indents_nested_environments_by_depth() -> None:
     assert _format_math_content(result, display=True) == result
 
 
+def test_format_math_content_wraps_left_right_around_environments() -> None:
+    source = (
+        r"\left( \begin{array}{ccc}"
+        "\n"
+        r"a & b & c \\"
+        "\n"
+        r"d & e & f \\"
+        "\n"
+        r"g & h & i"
+        "\n"
+        r"\end{array} \right)"
+    )
+    expected = (
+        "\\left(\n"
+        "  \\begin{array}{ccc}\n"
+        "    a & b & c \\\\\n"
+        "    d & e & f \\\\\n"
+        "    g & h & i\n"
+        "  \\end{array}\n"
+        "\\right)"
+    )
+    result = _format_math_content(source, display=True)
+    assert result == expected
+    assert _format_math_content(result, display=True) == result
+
+
+def test_format_math_content_wraps_left_lbrace_aligned() -> None:
+    source = r"=\left\lbrace \begin{aligned}11 \\ 22\end{aligned}\right."
+    expected = "= \\left\\lbrace\n  \\begin{aligned}\n    11 \\\\\n    22\n  \\end{aligned}\n\\right."
+    result = _format_math_content(source, display=True)
+    assert result == expected
+
+
+def test_format_math_content_keeps_compact_left_right_without_env() -> None:
+    assert _format_math_content(r"\left(x + y\right)", display=True) == r"\left(x + y\right)"
+
+
+def test_format_math_content_blank_line_between_sibling_environments() -> None:
+    source = (
+        r"\begin{equation*}"
+        "\n"
+        "a = 1\n"
+        r"\end{equation*}"
+        "\n"
+        r"\begin{equation*}"
+        "\n"
+        "b = 2\n"
+        r"\end{equation*}"
+    )
+    expected = "\\begin{equation*}\n  a = 1\n\\end{equation*}\n\n\\begin{equation*}\n  b = 2\n\\end{equation*}"
+    result = _format_math_content(source, display=True)
+    assert result == expected
+    assert _format_math_content(result, display=True) == result
+
+
 def test_format_math_content_inline_skips_environment_layout() -> None:
     source = r"\begin{bmatrix}1&2\\3&4\end{bmatrix}"
     result = _format_math_content(source, display=False)

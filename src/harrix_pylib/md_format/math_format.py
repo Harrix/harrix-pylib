@@ -283,6 +283,31 @@ def _find_matching_end(content: str, start: int, env: str) -> int | None:
     return None
 
 
+def _find_matching_right(content: str, body_start: int) -> tuple[int, int, str] | None:
+    r"""Find matching `\right...` for a `\left...` whose body starts at `body_start`."""
+    depth = 1
+    index = body_start
+    length = len(content)
+    while index < length:
+        if content.startswith("\\left", index) and not content.startswith("\\leftarrow", index):
+            left = _read_lr_command(content, index, "left")
+            if left is not None:
+                depth += 1
+                index = left[0]
+                continue
+        if content.startswith("\\right", index) and not content.startswith("\\rightarrow", index):
+            right = _read_lr_command(content, index, "right")
+            if right is not None:
+                depth -= 1
+                if depth == 0:
+                    end, text = right
+                    return index, end, text
+                index = right[0]
+                continue
+        index += 1
+    return None
+
+
 def _format_environment_body(body: str, *, depth: int = 1) -> str:
     """Format rows/columns inside a row-oriented environment at `depth` indent."""
     rows = _split_top_level(body.strip("\n"), "\\\\")
@@ -359,27 +384,9 @@ def _format_math_content(content: str, *, display: bool = False) -> str:
     working = _apply_operator_spacing(working)
     working = _restore_protected(working, protected)
     if display:
-        working = _layout_environments(working)
+        working = _layout_structures(working)
         working = "\n".join(line.rstrip() for line in working.splitlines())
     return working
-
-
-def _indent_loose_text(text: str, depth: int) -> str:
-    """Indent non-environment text lines to `depth` (no-op at depth 0)."""
-    if not text:
-        return ""
-    if depth <= 0:
-        return text
-    indent = _INDENT_UNIT * depth
-    lines = text.split("\n")
-    out: list[str] = []
-    for line in lines:
-        stripped = line.strip()
-        out.append(f"{indent}{stripped}" if stripped else "")
-    result = "\n".join(out)
-    if text.endswith("\n") and not result.endswith("\n"):
-        result += "\n"
-    return result
 
 
 def _is_control_word(command: str) -> bool:
@@ -407,41 +414,104 @@ def _is_unary_plus_minus(tokens: list[_Token], index: int) -> bool:
     return prev.kind == "command" and prev.value == "\\\\"
 
 
-def _layout_environments(content: str, *, depth: int = 0) -> str:
-    r"""Pretty-print all `\begin{...}` environments with indent by nesting depth."""
+def _layout_structures(content: str, *, depth: int = 0) -> str:
+    r"""Pretty-print `\begin{...}` and multiline `\left...\right` by nesting depth."""
+    return _prefix_indent(_layout_structures_root(content), depth)
+
+
+def _layout_structures_root(content: str) -> str:
+    r"""Layout structures with top-level items at indent depth 0."""
     parts: list[str] = []
     index = 0
     length = len(content)
     while index < length:
-        match = _BEGIN_RE.search(content, index)
-        if match is None:
-            parts.append(_indent_loose_text(content[index:], depth))
+        begin_match = _BEGIN_RE.search(content, index)
+        left_start: int | None = None
+        search_from = index
+        while search_from < length:
+            found = content.find("\\left", search_from)
+            if found < 0:
+                break
+            if _read_lr_command(content, found, "left") is not None:
+                left_start = found
+                break
+            search_from = found + 5
+
+        next_begin = begin_match.start() if begin_match is not None else None
+        use_left = left_start is not None and (next_begin is None or left_start < next_begin)
+
+        if not use_left and begin_match is None:
+            parts.append(content[index:])
             break
-        env = match.group(1)
-        begin_start = match.start()
-        parts.append(_indent_loose_text(content[index:begin_start], depth))
-        header_end = _consume_begin_args(content, match.end())
+
+        if use_left and left_start is not None:
+            left = _read_lr_command(content, left_start, "left")
+            if left is None:
+                parts.append(content[index : left_start + 5])
+                index = left_start + 5
+                continue
+            left_end, left_cmd = left
+            matched = _find_matching_right(content, left_end)
+            parts.append(content[index:left_start])
+            if matched is None:
+                parts.append(left_cmd)
+                index = left_end
+                continue
+            right_start, right_end, right_cmd = matched
+            body = content[left_end:right_start]
+            should_break = "\\begin" in body or "\n" in body.strip()
+            if should_break:
+                formatted_body = _layout_structures(body.strip("\n"), depth=1)
+                block = f"{left_cmd}\n"
+                if formatted_body.strip():
+                    block += formatted_body.rstrip("\n") + "\n"
+                block += right_cmd
+            else:
+                inner = _layout_structures_root(body.strip("\n")).strip() or body.strip()
+                block = f"{left_cmd}{inner}{right_cmd}"
+            parts.append(block)
+            index = right_end
+            sibling = _skip_interstitial_ws_before_begin(content, index)
+            if sibling is not None:
+                if parts and not parts[-1].endswith("\n"):
+                    parts.append("\n")
+                if parts and not parts[-1].endswith("\n\n"):
+                    parts.append("\n")
+                index = sibling
+            continue
+
+        if begin_match is None:
+            parts.append(content[index:])
+            break
+        env = begin_match.group(1)
+        begin_start = begin_match.start()
+        parts.append(content[index:begin_start])
+        header_end = _consume_begin_args(content, begin_match.end())
         end_marker = f"\\end{{{env}}}"
         end_index = _find_matching_end(content, header_end, env)
         if end_index is None:
-            parts.append(_indent_loose_text(content[begin_start:header_end], depth))
+            parts.append(content[begin_start:header_end])
             index = header_end
             continue
         body = content[header_end:end_index]
         header = content[begin_start:header_end].strip()
-        indent = _INDENT_UNIT * depth
         if env in _ROW_ENVS:
-            formatted_body = _format_environment_body(body, depth=depth + 1)
+            formatted_body = _format_environment_body(body, depth=1)
         else:
-            formatted_body = _layout_environments(body.strip("\n"), depth=depth + 1)
-        block = f"{indent}{header}\n"
+            formatted_body = _layout_structures(body.strip("\n"), depth=1)
+        block = f"{header}\n"
         if formatted_body.strip():
             block += formatted_body.rstrip("\n") + "\n"
-        block += f"{indent}{end_marker}"
+        block += end_marker
         parts.append(block)
         index = end_index + len(end_marker)
-        if index < length and not content[index:].startswith("\n") and not block.endswith("\n"):
-            parts.append("\n")
+        sibling = _skip_interstitial_ws_before_begin(content, index)
+        if sibling is not None:
+            if parts and not parts[-1].endswith("\n"):
+                parts.append("\n")
+            if parts and not parts[-1].endswith("\n\n"):
+                parts.append("\n")
+            index = sibling
     return "".join(parts)
 
 
@@ -523,6 +593,19 @@ def _normalize_left_right(content: str) -> str:
     return "".join(parts)
 
 
+def _prefix_indent(text: str, depth: int) -> str:
+    """Prefix every non-empty line with `depth` indent units."""
+    if not text or depth <= 0:
+        return text
+    indent = _INDENT_UNIT * depth
+    lines = text.split("\n")
+    out = [f"{indent}{line}" if line.strip() else "" for line in lines]
+    result = "\n".join(out)
+    if text.endswith("\n") and not result.endswith("\n"):
+        result += "\n"
+    return result
+
+
 def _prev_significant(tokens: list[_Token], index: int) -> _Token | None:
     """Return previous non-whitespace token before `index`."""
     cursor = index - 1
@@ -531,6 +614,26 @@ def _prev_significant(tokens: list[_Token], index: int) -> _Token | None:
             return tokens[cursor]
         cursor -= 1
     return None
+
+
+def _read_lr_command(content: str, start: int, which: str) -> tuple[int, str] | None:
+    r"""Read `\left`/`\right` plus delimiter; return end index and full command text."""
+    prefix = f"\\{which}"
+    if not content.startswith(prefix, start):
+        return None
+    cursor = start + len(prefix)
+    if cursor >= len(content):
+        return None
+    # Reject longer control words that share a prefix (\leftarrow, \rightarrow, ...).
+    if content[cursor].isalpha():
+        return None
+    if content[cursor] == "\\" and cursor + 1 < len(content):
+        esc_match = _COMMAND_NAME_RE.match(content, cursor + 1)
+        if esc_match is None:
+            return None
+        end = cursor + 1 + len(esc_match.group(0))
+        return end, content[start:end]
+    return cursor + 1, content[start : cursor + 1]
 
 
 def _restore_protected(content: str, protected: list[str]) -> str:
@@ -574,6 +677,17 @@ def _script_group_ranges(tokens: list[_Token]) -> list[tuple[int, int]]:
             continue
         index += 1
     return ranges
+
+
+def _skip_interstitial_ws_before_begin(content: str, index: int) -> int | None:
+    r"""If only whitespace remains before a sibling `\begin`, return index of that `\begin`."""
+    cursor = index
+    length = len(content)
+    while cursor < length and content[cursor] in {" ", "\t", "\n"}:
+        cursor += 1
+    if content.startswith("\\begin{", cursor):
+        return cursor
+    return None
 
 
 def _split_top_level(content: str, separator: str) -> list[str]:
