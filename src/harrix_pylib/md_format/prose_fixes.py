@@ -361,6 +361,15 @@ def _fix_emphasis_colon_space(line: str) -> str:
     return line
 
 
+def _fix_exclam_question_dots(segment: str) -> str:
+    """Normalize bad `?.`/`!.` / `?...`/`!...` / `?…`/`!…` to `?..`/`!..` (H028).
+
+    The rare Russian forms `?..` and `!..` are left unchanged.
+
+    """
+    return _H028_BAD_EXCLAM_QUESTION_DOTS_PATTERN.sub(r"\1..", segment)
+
+
 def _fix_fence_or_code_line(line: str) -> str:
     """Fix fence language ids (H007) and NBSP (H022) inside fenced regions."""
     line = line.replace("\u00a0", " ")
@@ -621,15 +630,6 @@ def _fix_punctuation_before_closing_guillemet(segment: str) -> str:
         return f"»{punct_run}"
 
     return _PUNCT_BEFORE_CLOSING_GUILLEMET_PATTERN.sub(replacer, segment)
-
-
-def _fix_exclam_question_dots(segment: str) -> str:
-    """Normalize bad `?.`/`!.` / `?...`/`!...` / `?…`/`!…` to `?..`/`!..` (H028).
-
-    The rare Russian forms `?..` and `!..` are left unchanged.
-
-    """
-    return _H028_BAD_EXCLAM_QUESTION_DOTS_PATTERN.sub(r"\1..", segment)
 
 
 def _fix_russian_polite_pronouns(line: str) -> str:

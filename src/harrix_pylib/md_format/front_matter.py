@@ -128,9 +128,12 @@ def _format_yaml_line(line: str) -> str:
     stripped = line.strip()
     if stripped.startswith("-"):
         stripped = re.sub(r"^-\s+", "- ", stripped)
-    else:
-        stripped = re.sub(r":\s+", ": ", stripped)
-    return f"{leading_ws}{stripped}"
+    # Normalize `key:   value` spacing on mapping lines and list mappings.
+    stripped = re.sub(r":\s+", ": ", stripped)
+    # Keep indent for list items and nested keys; drop accidental scalar padding.
+    if stripped.startswith("-") or (leading_ws and ":" in stripped):
+        return f"{leading_ws}{stripped}"
+    return stripped
 
 
 def _join_front_matter(front_matter: str, body: str) -> str:

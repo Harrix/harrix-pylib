@@ -954,11 +954,11 @@ Content here.
 
     md_after_expected = """---
 categories:
-- it
-- program
+  - it
+  - program
 tags:
-- VSCode
-- FAQ
+  - VSCode
+  - FAQ
 author: Anton Sergienko
 ---
 
@@ -1942,14 +1942,7 @@ New list of commands:
 
 def test_sort_sections_content_keeps_blank_line_between_reordered_sections() -> None:
     """Year/date reorder must not glue paragraph text to the next heading."""
-    source = (
-        "---\nlang: ru\n---\n\n"
-        "# Text\n\n"
-        "## 2015\n\n"
-        "Older year text.\n\n"
-        "## 2026\n\n"
-        "Newer year ending.\n"
-    )
+    source = "---\nlang: ru\n---\n\n# Text\n\n## 2015\n\nOlder year text.\n\n## 2026\n\nNewer year ending.\n"
     result = h.md.sort_sections_content(source)
     assert "## 2026\n\nNewer year ending.\n\n## 2015\n" in result
     assert "Newer year ending.\n## 2015" not in result

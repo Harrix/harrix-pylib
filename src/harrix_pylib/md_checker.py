@@ -159,9 +159,7 @@ class MdChecker:
     _MISSING_SPACE_AFTER_PUNCT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"([,;!?])(?=[^\W\d_])", re.UNICODE)
 
     # H028: `?.`/`!.` / `?...`/`!...` / `?…`/`!…` are wrong; `?..` / `!..` are allowed.
-    _H028_BAD_EXCLAM_QUESTION_DOTS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
-        r"([?!])(?:\.(?!\.)|\.{3,}|\u2026)"
-    )
+    _H028_BAD_EXCLAM_QUESTION_DOTS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"([?!])(?:\.(?!\.)|\.{3,}|\u2026)")
 
     # Malformed punctuation sequences (H051).
     # Word+`.,` requires 6+ letters so short abbrevs like `напр.,` / `ул.,` are ignored.  # ignore: HP001

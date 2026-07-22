@@ -36,18 +36,6 @@ class _IndentDumper(yaml.Dumper):
         return super().increase_indent(flow=flow, indentless=False)
 
 
-def _dump_yaml_indented(data: dict[str, Any], *, explicit_start: bool = False) -> str:
-    """Dump a YAML mapping with indented sequences (e.g. `tags:\\n  - a`)."""
-    return yaml.dump(
-        data,
-        Dumper=_IndentDumper,
-        sort_keys=False,
-        allow_unicode=True,
-        explicit_start=explicit_start,
-        default_flow_style=False,
-    )
-
-
 def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_content: str) -> tuple[str, Path]:
     r"""Add a new diary entry to the yearly Markdown file.
 
@@ -3768,6 +3756,18 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
 
     """
     return _split_front_matter(markdown_text)
+
+
+def _dump_yaml_indented(data: dict[str, Any], *, explicit_start: bool = False) -> str:
+    """Dump a YAML mapping with indented sequences (e.g. `tags:\\n  - a`)."""
+    return yaml.dump(
+        data,
+        Dumper=_IndentDumper,
+        sort_keys=False,
+        allow_unicode=True,
+        explicit_start=explicit_start,
+        default_flow_style=False,
+    )
 
 
 def _is_toc_details_open(lines: list[str], index: int) -> bool:
