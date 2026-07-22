@@ -843,7 +843,7 @@ def _mask_urls_and_html(text: str) -> str:
 
 def _needs_h006_phrase_scan(text: str) -> bool:
     """Return whether a segment may contain punctuated / multi-word H006 keys."""
-    # Space-separated keys without dots/hyphens: "web документ", "web приложение".
+    # Space-separated keys without dots/hyphens: "web документ", "web приложение". # ignore: HP001
     if "web " in text.casefold():
         return True
     if not any(char in text for char in _H006_PHRASE_TRIGGER_CHARS):
