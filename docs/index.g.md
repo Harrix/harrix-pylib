@@ -32,6 +32,7 @@ lang: en
   - [📄 File `py_checker.py`](#-file-py_checkerpy)
   - [📄 File `py_docstring_format.py`](#-file-py_docstring_formatpy)
   - [📄 File `formatter.py`](#-file-formatterpy)
+  - [📄 File `math_spans.py`](#-file-math_spanspy)
   - [📄 File `optimizer.py`](#-file-optimizerpy)
 - [📄 License](#-license)
 - [👤 Author](#-author)
@@ -297,6 +298,15 @@ Doc: [md_format/formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main
 | Function/Class | Description |
 |----------------|-------------|
 | 🏛️ Class [`MdFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/formatter.g.md#%EF%B8%8F-class-mdformatter) | Format Markdown text inspired by Prettier Markdown parser. |
+
+### 📄 File `math_spans.py`
+
+Doc: [md_format/math_spans.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/math_spans.g.md)
+
+| Function/Class | Description |
+|----------------|-------------|
+| 🔧 [`display_math_line_flags`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/math_spans.g.md#-function-display_math_line_flags) | Return per-line flags for display-math `$$...$$` regions (including delimiters). |
+| 🔧 [`iter_code_and_math_segments`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/math_spans.g.md#-function-iter_code_and_math_segments) | Yield `(segment, protected)` where protected is inline code or dollar-math. |
 
 ### 📄 File `optimizer.py`
 

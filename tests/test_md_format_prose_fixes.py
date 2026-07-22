@@ -140,6 +140,24 @@ def test_formatter_preserves_digit_en_dash_range() -> None:
     assert "2019\u20132020" in result
 
 
+def test_formatter_preserves_hyphens_inside_latex_math(tmp_path: Path) -> None:
+    """H016 must not turn LaTeX minus hyphens into em dashes inside `$` / `$$` math."""
+    source = (
+        "Prose uses 1 - 2.\n\n"
+        "$$\n"
+        "5\\left(-\\sqrt{1 - x^{2} - \\left(y - \\lvert x\\rvert\\right)^{2}}\\right),"
+        "\n"
+        "$$\n\n"
+        "Inline $a - b$ stays.\n"
+    )
+    result = _format(source)
+    assert "1 — 2" in result
+    assert "1 - x^{2} - \\left(y - \\lvert x\\rvert\\right)^{2}" in result
+    assert "$a - b$" in result
+    assert "\u2014" not in result.split("$$")[1]
+    assert not _checker_errors(tmp_path, result, {"H016"}), result
+
+
 def test_formatter_can_disable_prose_fixes() -> None:
     source = "Use markdown daily.\n"
     result = MdFormatter(end_of_line="lf", apply_prose_fixes=False).format(source)

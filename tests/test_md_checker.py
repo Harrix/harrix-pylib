@@ -769,6 +769,15 @@ def test_md_checker() -> None:
         errors = checker.check(inline_code_hyphen_file, select={"H016"})
         assert not any("H016" in e for e in errors), "H016 must not apply to inline code"
 
+        # H016 must NOT trigger inside LaTeX math
+        math_hyphen_file = temp_path / "math_hyphen.md"
+        math_hyphen_file.write_text(
+            "---\nlang: en\n---\n\n$$\n1 - x^{2}\n$$\n\nInline $a - b$.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(math_hyphen_file, select={"H016"})
+        assert not any("H016" in e for e in errors), "H016 must not apply inside LaTeX math"
+
         # H016 must NOT trigger for " - " inside table cell that is only hyphen (e.g. | - |)
         table_dash_cell_file = temp_path / "table_dash_cell.md"
         table_dash_cell_file.write_text(

@@ -1089,7 +1089,7 @@ class MdChecker:
                 )
 
     def _check_dash_usage(
-        self, filename: Path, line: str, clean_line: str, line_num: int
+        self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
         """Check for incorrect dash/hyphen usage (H016). Applies only to Markdown text, not YAML/code.
 
@@ -1100,59 +1100,63 @@ class MdChecker:
         hyphen_found = False
         minus_or_double_found = False
         offset = 0
-        for segment, in_code in h.md.identify_code_blocks_line(line):
-            if not in_code:
-                if not hyphen_found and " - " in segment and not segment.strip().startswith("-"):
-                    pos = offset + segment.find(" - ")
-                    if not ("|" in line and self._is_table_cell_only_dash(line, pos)):
-                        error_msg = f'{self.RULES["H016"]}: " - " should be " — " (em dash)'
-                        yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
-                        hyphen_found = True
+        protected_ranges: list[tuple[int, int]] = []
+        for segment, protected in iter_code_and_math_segments(h.md.identify_code_blocks_line(line)):
+            if protected:
+                protected_ranges.append((offset, offset + len(segment)))
+            elif not hyphen_found and " - " in segment and not segment.strip().startswith("-"):
+                pos = offset + segment.find(" - ")
+                if not ("|" in line and self._is_table_cell_only_dash(line, pos)):
+                    error_msg = f'{self.RULES["H016"]}: " - " should be " — " (em dash)'
+                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
+                    hyphen_found = True
 
-                if not minus_or_double_found:
-                    if " \u2212 " in segment:  # Unicode minus
-                        col = offset + segment.find(" \u2212 ") + 1
-                        error_msg = f'{self.RULES["H016"]}: " − " (minus) should be " — " (em dash)'  # noqa: RUF001
-                        yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
-                        minus_or_double_found = True
-                    elif " -- " in segment:
-                        if not self._is_blockquote_attribution_line(line):
-                            col = offset + segment.find(" -- ") + 1
-                            error_msg = f'{self.RULES["H016"]}: " -- " should be " — " (em dash)'
-                            yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
-                            minus_or_double_found = True
+            if not protected and not minus_or_double_found:
+                if " \u2212 " in segment:  # Unicode minus
+                    col = offset + segment.find(" \u2212 ") + 1
+                    error_msg = f'{self.RULES["H016"]}: " − " (minus) should be " — " (em dash)'  # noqa: RUF001
+                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
+                    minus_or_double_found = True
+                elif " -- " in segment and not self._is_blockquote_attribution_line(line):
+                    col = offset + segment.find(" -- ") + 1
+                    error_msg = f'{self.RULES["H016"]}: " -- " should be " — " (em dash)'
+                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col)
+                    minus_or_double_found = True
 
             offset += len(segment)
             if hyphen_found and minus_or_double_found:
                 break
 
-        # Check for en dash not between digits
-        if "–" in clean_line:  # noqa: RUF001
-            line_matches = list(re.finditer(r"–", line))  # noqa: RUF001
-            for i, match in enumerate(re.finditer(r"–", clean_line)):  # noqa: RUF001
-                pos = match.start()
-                before = clean_line[pos - 1] if pos > 0 else ""
-                after = clean_line[pos + 1] if pos + 1 < len(clean_line) else ""
-                if not (before.isdigit() and after.isdigit()):
-                    col_pos = line_matches[i].start() if i < len(line_matches) else pos
-                    error_msg = f'{self.RULES["H016"]}: en dash "–" should only be between digits'  # noqa: RUF001
-                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col_pos + 1)
+        def in_protected(pos: int) -> bool:
+            return any(start <= pos < end for start, end in protected_ranges)
 
-        # Check for em dash not surrounded by spaces
-        if "—" in clean_line:
-            line_matches = list(re.finditer(r"—", line))
-            for i, match in enumerate(re.finditer(r"—", clean_line)):
+        # Check for en dash not between digits (skip code/math)
+        if "–" in line:  # noqa: RUF001
+            for match in re.finditer(r"–", line):  # noqa: RUF001
                 pos = match.start()
-                before = clean_line[pos - 1] if pos > 0 else " "
-                after = clean_line[pos + 1] if pos + 1 < len(clean_line) else " "
-                col_pos = line_matches[i].start() if i < len(line_matches) else pos
+                if in_protected(pos):
+                    continue
+                before = line[pos - 1] if pos > 0 else ""
+                after = line[pos + 1] if pos + 1 < len(line) else ""
+                if not (before.isdigit() and after.isdigit()):
+                    error_msg = f'{self.RULES["H016"]}: en dash "–" should only be between digits'  # noqa: RUF001
+                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
+
+        # Check for em dash not surrounded by spaces (skip code/math)
+        if "—" in line:
+            for match in re.finditer(r"—", line):
+                pos = match.start()
+                if in_protected(pos):
+                    continue
+                before = line[pos - 1] if pos > 0 else " "
+                after = line[pos + 1] if pos + 1 < len(line) else " "
                 if pos == 0:
                     if after != " ":
                         error_msg = f'{self.RULES["H016"]}: em dash "—" at start should be followed by space'
-                        yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col_pos + 1)
+                        yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
                 elif not (before == " " and after == " "):
                     error_msg = f'{self.RULES["H016"]}: em dash "—" should have spaces around it'
-                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=col_pos + 1)
+                    yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
 
     def _check_double_spaces(
         self, filename: Path, line: str, _clean_line: str, line_num: int, content_lines: list[str], line_index: int
@@ -1641,7 +1645,7 @@ class MdChecker:
         if "H015" in rules:
             yield from self._check_space_before_punctuation(filename, line, clean_line, line_num)
 
-        if "H016" in rules and line_num >= yaml_end_line:
+        if "H016" in rules and line_num >= yaml_end_line and line_index not in display_math_lines:
             yield from self._check_dash_usage(filename, line, clean_line, line_num)
 
         if "H017" in rules and "..." in clean_line:

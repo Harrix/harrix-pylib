@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 
 from harrix_pylib.abbreviation_data import mask_abbreviations
 from harrix_pylib.md_format.code_fence import _identify_code_blocks, _identify_code_blocks_line
+from harrix_pylib.md_format.math_spans import display_math_line_flags, iter_code_and_math_segments
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -188,11 +189,16 @@ def _apply_checker_prose_fixes(text: str, *, lang: str = "") -> str:
         lines.pop()
 
     fence_info = list(_identify_code_blocks(lines))
+    in_code_flags = [in_fence for _line, in_fence in fence_info]
+    in_math_flags = display_math_line_flags(lines, in_code=in_code_flags)
     result: list[str] = []
 
-    for line, in_fence in fence_info:
+    for (line, in_fence), in_math in zip(fence_info, in_math_flags, strict=True):
         if in_fence:
             result.append(_fix_fence_or_code_line(line))
+        elif in_math:
+            # Keep TeX/LaTeX intact (hyphens, spaces, commands).
+            result.append(line)
         else:
             result.append(_fix_prose_line(line, lang=lang))
 
@@ -846,13 +852,13 @@ def _is_table_cell_only_dash(line: str, pos: int) -> bool:
 
 @lru_cache(maxsize=16)
 def _line_code_segments(line: str) -> tuple[tuple[str, bool], ...]:
-    """Cache inline-code segmentation for a line (reused across prose fixes)."""
-    return tuple(_identify_code_blocks_line(line))
+    """Cache protected segments (inline code + dollar-math) for a line."""
+    return tuple(iter_code_and_math_segments(_identify_code_blocks_line(line)))
 
 
 def _map_non_code(line: str, transform: Callable[[str], str]) -> str:
-    """Apply `transform` to non-inline-code segments only."""
-    return "".join(segment if in_code else transform(segment) for segment, in_code in _line_code_segments(line))
+    """Apply `transform` to non-code / non-math segments only."""
+    return "".join(segment if protected else transform(segment) for segment, protected in _line_code_segments(line))
 
 
 def _mask_urls_and_html(text: str) -> str:
