@@ -36,7 +36,7 @@ def test_iter_with_progress_shows_zero_before_first_item() -> None:
     """Bar must show 0/N when the first item is yielded (before it is processed)."""
 
     class _TtyStringIO(StringIO):
-        def isatty(self) -> bool:  # noqa: PLR6301
+        def isatty(self) -> bool:
             return True
 
     items = ["slow", "fast"]

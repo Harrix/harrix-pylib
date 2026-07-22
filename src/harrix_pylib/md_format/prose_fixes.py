@@ -267,7 +267,7 @@ def _fix_bare_filenames_to_inline_code(segment: str) -> str:
 
 def _fix_dash_usage(line: str) -> str:
     """Normalize hyphen / en dash / em dash usage (H016)."""
-    if not any(marker in line for marker in (" - ", " -- ", "–", "—", " \u2212 ")):
+    if not any(marker in line for marker in (" - ", " -- ", "–", "—", " \u2212 ")):  # noqa: RUF001
         return line
 
     list_hyphen_positions = {match.end() - 1 for match in _LIST_MARKER_HYPHEN_PATTERN.finditer(line)}

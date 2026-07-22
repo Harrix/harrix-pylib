@@ -471,16 +471,13 @@ def _iter_docstring_literals(source: str) -> list[str] | None:
         if isinstance(value, ast.Constant) and isinstance(value.value, bytes):
             return True
         # JoinedStr / unexpected expression — let libcst decide.
-        if isinstance(value, ast.JoinedStr):
-            return False
-        return True
+        return not isinstance(value, ast.JoinedStr)
 
     if not add_from_body(tree.body):
         return None
     for node in ast.walk(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            if not add_from_body(node.body):
-                return None
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and not add_from_body(node.body):
+            return None
     return literals
 
 

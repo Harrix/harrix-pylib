@@ -120,7 +120,7 @@ def test_apply_func_suppresses_unchanged_with_summary() -> None:
     assert "same1.txt" not in output
     assert "same2.txt" not in output
     assert "File is not changed." not in output
-    assert "ℹ️ 2 file(s) not changed." in output  # noqa: RUF001
+    assert "ℹ️ 2 file(s) not changed." in output
     assert output.count("\n") == 1  # one change line + summary
 
 
@@ -135,7 +135,7 @@ def test_apply_func_all_unchanged_summary_only() -> None:
         (root / "c.txt").write_text("c", encoding="utf8")
         output = h.file.apply_func(root, ".txt", never_change)
 
-    assert output == "ℹ️ 3 file(s) not changed."  # noqa: RUF001
+    assert output == "ℹ️ 3 file(s) not changed."
     assert "a.txt" not in output
     assert "is applied" not in output
 
@@ -161,7 +161,7 @@ def test_apply_func_suppresses_left_unchanged_messages() -> None:
     assert "readme.txt" not in output
     assert "notes.txt" not in output
     assert "left unchanged (no spaces found)" not in output
-    assert "ℹ️ 2 file(s) not changed." in output  # noqa: RUF001
+    assert "ℹ️ 2 file(s) not changed." in output
     assert "❗ File warn.txt left unchanged." in output
 
 
