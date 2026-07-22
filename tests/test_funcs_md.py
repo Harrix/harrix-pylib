@@ -575,6 +575,49 @@ This content should not appear in the final file."""
         assert "Should be skipped" not in content
 
 
+def test_combine_markdown_files_raw_markdown_fences_body_and_strips_flag() -> None:
+    with TemporaryDirectory() as temp_dir:
+        folder_path = Path(temp_dir)
+        (folder_path / "experiment.md").write_text(
+            "---\nlang: ru\nraw-markdown: true\ntags: [demo]\n---\n\n"
+            "# Experiment\n\n"
+            "Custom syntax with ```triple``` fences.\n",
+            encoding="utf-8",
+        )
+        (folder_path / "normal.md").write_text(
+            "---\nlang: ru\n---\n\n# Normal\n\nPlain text.\n",
+            encoding="utf-8",
+        )
+
+        result = h.md.combine_markdown_files(folder_path)
+        assert "✅ File" in result
+
+        content = (folder_path / f"_{folder_path.name}.g.md").read_text(encoding="utf-8")
+        assert "raw-markdown" not in content
+        assert "tags:" in content
+        assert "## Experiment" in content
+        assert "````\nCustom syntax with ```triple``` fences.\n````" in content
+        assert "## Normal" in content
+        assert "Plain text." in content
+
+
+def test_raw_markdown_skips_beautify_content_transforms() -> None:
+    source = (
+        "---\nlang: en\nraw-markdown: true\nsort-section: true\n---\n\n"
+        "# Title\n\n"
+        "## Zebra\n\nz\n\n"
+        "## Apple\n\na\n\n"
+        "![Alt](img/a.png)\n\n"
+        "Hello , world.\n"
+    )
+    assert h.md.is_raw_markdown_enabled(source)
+    assert h.md.sort_sections_content(source, is_sort_section_from_yaml=True) == source
+    assert h.md.generate_toc_with_links_content(source) == source
+    assert h.md.generate_image_captions_content(source) == source
+    assert h.md.format_yaml_content(source) == source
+    assert h.md_format.MdFormatter(end_of_line="lf").format(source) == source
+
+
 def test_combine_markdown_files_recursively() -> None:
     with TemporaryDirectory() as temp_dir:
         root_path = Path(temp_dir)

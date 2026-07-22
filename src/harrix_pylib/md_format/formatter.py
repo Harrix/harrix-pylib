@@ -85,6 +85,10 @@ class MdFormatter:
         - `str`: Formatted Markdown text.
 
         """
+        from harrix_pylib.funcs_md import is_raw_markdown_enabled  # noqa: PLC0415
+
+        if is_raw_markdown_enabled(text):
+            return text
         return _format_with_options(text, self.options)
 
     def format_file(self, filename: Path | str) -> str:
@@ -99,9 +103,13 @@ class MdFormatter:
         - `str`: Status message.
 
         """
+        from harrix_pylib.funcs_md import is_raw_markdown_enabled  # noqa: PLC0415
+
         path = Path(filename)
         raw = path.read_bytes()
         document = self.read_markdown_text(path)
+        if is_raw_markdown_enabled(document):
+            return f"Skipped {path}: raw-markdown."
         document_new = self.format(document)
         if document != document_new or self._needs_end_of_line_rewrite(raw):
             path.write_text(document_new, encoding="utf-8", newline="")

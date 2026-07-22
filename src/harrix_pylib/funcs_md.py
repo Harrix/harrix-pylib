@@ -21,6 +21,8 @@ from harrix_pylib.md_format.front_matter import _split_front_matter
 # Markdown ATX heading levels: H1-H6; TOC uses H2-H6
 _MIN_TOC_HEADING_LEVEL = 2
 _MAX_HEADING_LEVEL = 6
+_RAW_MARKDOWN_YAML_KEY = "raw-markdown"
+_H1_ATX_PATTERN = re.compile(r"^#\s+")
 
 
 def add_diary_entry_in_year(path_dream: Path | str, beginning_of_md: str, entry_content: str) -> tuple[str, Path]:
@@ -600,6 +602,9 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
     - Files with `.g.md` extension in the target folder will be deleted before processing.
     - Files with `*.include.g.md` extension will be included in processing.
     - Files with `published: false` in their YAML headers will be skipped.
+    - Files with `raw-markdown: true` keep body after the first ATX H1 inside a
+      fenced code block in the combined `.g.md`; the flag itself is not merged
+      into the combined YAML.
     - Heading levels in the content will be increased by one level.
     - Local links and image paths will be adjusted to maintain proper references.
     - The combined file will be named `_foldername.g.md`.
@@ -695,9 +700,12 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
         yaml_md, content_md = split_yaml_content(markdown_text)
 
         # Check published flag
+        data_yaml: dict[str, Any] = {}
         if yaml_md:
-            data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
-            published = data_yaml.get("published") if data_yaml and "published" in data_yaml else True
+            loaded = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+            if isinstance(loaded, dict):
+                data_yaml = loaded
+            published = data_yaml.get("published", True)
             if not published:
                 continue
 
@@ -705,11 +713,11 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
         content_md = remove_yaml_content(remove_toc_content(markdown_text))
 
         # Parse YAML and collect headers
-        if yaml_md:
-            data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
-            data_yaml_headers.append(data_yaml)
-        else:
-            data_yaml = {}
+        data_yaml_headers.append(data_yaml)
+
+        # Preserve experimental / nonstandard Markdown as a fenced block in .g.md.
+        if is_raw_markdown_enabled(data_yaml):
+            content_md = _wrap_content_after_first_h1(content_md)
 
         # Increase heading levels
         content_md = increase_heading_level_content(content_md)
@@ -768,7 +776,15 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
         combined_yaml["attribution"] = all_attributions
 
     # Fix final YAML
-    list_keys = ["related-id", "date", "update", "permalink", "permalink-source", "sort-section"]
+    list_keys = [
+        "related-id",
+        "date",
+        "update",
+        "permalink",
+        "permalink-source",
+        "sort-section",
+        _RAW_MARKDOWN_YAML_KEY,
+    ]
     for key in list_keys:
         combined_yaml.pop(key, None)
     if "lang" in combined_yaml and isinstance(combined_yaml["lang"], list):
@@ -1399,6 +1415,9 @@ def format_yaml_content(markdown_text: str) -> str:
     ```
 
     """
+    if is_raw_markdown_enabled(markdown_text):
+        return markdown_text
+
     markdown_text = MdFormatter.normalize_line_endings(markdown_text.lstrip("\ufeff"))
     yaml_md, content_md = split_yaml_content(markdown_text)
 
@@ -1863,6 +1882,9 @@ def generate_image_captions_content(markdown_text: str) -> str:
     ````
 
     """
+    if is_raw_markdown_enabled(markdown_text):
+        return markdown_text
+
     yaml_md, content_md = split_yaml_content(markdown_text)
 
     data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
@@ -2365,6 +2387,9 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
     ```
 
     """
+    if is_raw_markdown_enabled(markdown_text):
+        return markdown_text
+
     yaml_md, _ = split_yaml_content(markdown_text)
     data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
     if isinstance(data_yaml, dict) and data_yaml.get("contents") is False:
@@ -2708,6 +2733,44 @@ def increase_heading_level_content(markdown_text: str) -> str:
         else:
             new_lines.append(line)
     return "\n".join(new_lines)
+
+
+def is_raw_markdown_enabled(source: Path | str | dict[str, Any]) -> bool:
+    """Return whether YAML has `raw-markdown: true`.
+
+    When enabled, beautify steps leave the note unchanged, and combine wraps the
+    body after the first ATX H1 in a fenced code block for `.g.md` output.
+
+    Args:
+
+    - `source` (`Path | str | dict[str, Any]`): YAML dict, Markdown file path, or
+      Markdown text with front matter.
+
+    Returns:
+
+    - `bool`: `True` only when the flag is explicitly `true`.
+
+    """
+    if isinstance(source, dict):
+        return source.get(_RAW_MARKDOWN_YAML_KEY) is True
+
+    text: str
+    if isinstance(source, Path):
+        text = source.read_text(encoding="utf-8")
+    elif "\n" not in source:
+        path = Path(source)
+        text = path.read_text(encoding="utf-8") if path.is_file() else source
+    else:
+        text = source
+
+    yaml_md, _ = split_yaml_content(text)
+    if not yaml_md.strip():
+        return False
+    try:
+        data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+    except yaml.YAMLError:
+        return False
+    return isinstance(data_yaml, dict) and data_yaml.get(_RAW_MARKDOWN_YAML_KEY) is True
 
 
 def is_note_in_named_folder(md_path: Path) -> bool:
@@ -3412,6 +3475,9 @@ def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool
     ```
 
     """
+    if is_raw_markdown_enabled(markdown_text):
+        return markdown_text
+
     # If is_sort_section_from_yaml is True, check YAML for sort-section parameter
     if is_sort_section_from_yaml:
         yaml_md, _ = split_yaml_content(markdown_text)
@@ -3688,6 +3754,51 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
 
     """
     return _split_front_matter(markdown_text)
+
+
+def _max_backtick_run(text: str) -> int:
+    """Return the longest run of consecutive backticks in `text`."""
+    max_run = 0
+    current = 0
+    for char in text:
+        if char == "`":
+            current += 1
+            max_run = max(max_run, current)
+        else:
+            current = 0
+    return max_run
+
+
+def _wrap_content_after_first_h1(content: str) -> str:
+    """Wrap Markdown body after the first ATX H1 in a fenced code block.
+
+    The H1 stays outside the fence. If there is no H1, the whole content is
+    wrapped. Fence length is `max(3, longest_backtick_run + 1)`.
+
+    """
+    lines = content.split("\n")
+    h1_index: int | None = None
+    for index, line in enumerate(lines):
+        if _H1_ATX_PATTERN.match(line):
+            h1_index = index
+            break
+
+    if h1_index is None:
+        body = content.strip("\n")
+        if not body.strip():
+            return content
+        fence = "`" * max(3, _max_backtick_run(body) + 1)
+        return f"{fence}\n{body.rstrip()}\n{fence}"
+
+    heading = lines[h1_index]
+    body_lines = lines[h1_index + 1 :]
+    while body_lines and not body_lines[0].strip():
+        body_lines.pop(0)
+    body = "\n".join(body_lines).rstrip()
+    if not body.strip():
+        return heading
+    fence = "`" * max(3, _max_backtick_run(body) + 1)
+    return f"{heading}\n\n{fence}\n{body}\n{fence}"
 
 
 def _is_toc_details_open(lines: list[str], index: int) -> bool:
