@@ -1345,7 +1345,7 @@ def test_md_checker() -> None:
         assert not errors, "H027 must ignore № inside inline code"
 
         # =====================================================================
-        # H028: Incorrect ?. / ?... (use ?..)
+        # H028: Incorrect ?./!. / ?.../!... (use ?.. / !..)
         # =====================================================================
         qmark_period_file = temp_path / "qmark_period.md"
         qmark_period_file.write_text("---\nlang: en\n---\n\nReally?.\n", encoding="utf-8")
@@ -1357,7 +1357,17 @@ def test_md_checker() -> None:
         errors = checker.check(qmark_three_dots_file, select={"H028"})
         assert any("H028" in e for e in errors)
 
-        # Correct rare form ?.. must not trigger H028
+        bang_period_file = temp_path / "bang_period.md"
+        bang_period_file.write_text("---\nlang: ru\n---\n\nНеужели!.\n", encoding="utf-8")
+        errors = checker.check(bang_period_file, select={"H028"})
+        assert any("H028" in e for e in errors)
+
+        bang_three_dots_file = temp_path / "bang_three_dots.md"
+        bang_three_dots_file.write_text("---\nlang: ru\n---\n\nНеужели!... Ну да.\n", encoding="utf-8")
+        errors = checker.check(bang_three_dots_file, select={"H028"})
+        assert any("H028" in e for e in errors)
+
+        # Correct rare forms ?.. / !.. must not trigger H028
         qmark_two_dots_file = temp_path / "qmark_two_dots.md"
         qmark_two_dots_file.write_text(
             "---\nlang: ru\n---\n\n— Вот как?.. Ну и чему он у него учился?\n",
@@ -1366,9 +1376,17 @@ def test_md_checker() -> None:
         errors = checker.check(qmark_two_dots_file, select={"H028"})
         assert not errors
 
-        # Normal "?" or "." should not trigger H028
+        bang_two_dots_file = temp_path / "bang_two_dots.md"
+        bang_two_dots_file.write_text(
+            "---\nlang: ru\n---\n\n— Вот это да!.. Ну и ну.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(bang_two_dots_file, select={"H028"})
+        assert not errors
+
+        # Normal "?" / "!" or "." should not trigger H028
         normal_punct_file = temp_path / "normal_punct.md"
-        normal_punct_file.write_text("---\nlang: en\n---\n\nReally? Yes.\n", encoding="utf-8")
+        normal_punct_file.write_text("---\nlang: en\n---\n\nReally? Yes!\n", encoding="utf-8")
         errors = checker.check(normal_punct_file, select={"H028"})
         assert not errors
 

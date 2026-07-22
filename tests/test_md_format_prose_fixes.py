@@ -41,6 +41,8 @@ def _checker_errors(tmp_path: Path, text: str, rules: set[str]) -> list[str]:
         ("See №1.\n", {"H027"}, "See № 1."),
         ("Really?.\n", {"H028"}, "Really?.."),
         ("Вот как?... Ну.\n", {"H028"}, "Вот как?.. Ну."),
+        ("Неужели!.\n", {"H028"}, "Неужели!.."),
+        ("Неужели!... Ну.\n", {"H028"}, "Неужели!.. Ну."),
         ("**Note:**text\n", {"H029"}, "**Note:** text"),
         ("**Note**: text\n", {"H030"}, "**Note:** text"),
         ("##Title\n", {"H036"}, "## Title"),
@@ -96,6 +98,14 @@ def test_formatter_preserves_question_mark_two_dots() -> None:
     assert "?.." in result
     assert "?." not in result.replace("?..", "")
     assert "?..." not in result
+
+
+def test_formatter_preserves_exclamation_mark_two_dots() -> None:
+    source = "— Вот это да!.. Ну и ну.\n"
+    result = _format(source)
+    assert "!.." in result
+    assert "!." not in result.replace("!..", "")
+    assert "!..." not in result
 
 
 def test_formatter_preserves_space_before_text_emoticons() -> None:
