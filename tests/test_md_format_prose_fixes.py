@@ -8,6 +8,7 @@ import pytest
 
 from harrix_pylib.md_checker import MdChecker
 from harrix_pylib.md_format import MdFormatter
+from harrix_pylib.md_format.prose_fixes import _apply_checker_prose_fixes
 from harrix_pylib.py_docstring_format import PyDocstringFormatter
 
 if TYPE_CHECKING:
@@ -90,6 +91,30 @@ def test_formatter_preserves_russian_polite_pronouns_in_quotes() -> None:
     prose = "---\nlang: ru\n---\n\nОбращаемся к Вам с предложением.\n"
     result = _format(prose)
     assert "к вам с предложением" in result
+
+
+def test_formatter_preserves_russian_polite_pronouns_at_markdown_title_start() -> None:
+    """H023 must not lowercase Вы/Вам at list-link / heading title start."""
+    toc_line = "  - [Вам и не снилось...: 10](#вам-и-не-снилось-10)\n"  # ignore: HP001
+    toc_fixed = _apply_checker_prose_fixes(toc_line, lang="ru")
+    assert "[Вам и не снилось" in toc_fixed  # ignore: HP001
+    assert "[вам и не снилось" not in toc_fixed  # ignore: HP001
+
+    heading_fixed = _apply_checker_prose_fixes("## Вам сюда\n", lang="ru")  # ignore: HP001
+    assert "## Вам сюда" in heading_fixed  # ignore: HP001
+    assert "## вам сюда" not in heading_fixed  # ignore: HP001
+
+    # Mid-sentence link text is still an address → lowercase.
+    mid_fixed = _apply_checker_prose_fixes(
+        "Смотрите [Ваш вариант](https://example.com).\n",  # ignore: HP001
+        lang="ru",
+    )
+    assert "[ваш вариант]" in mid_fixed  # ignore: HP001
+
+    # Full formatter path keeps title capitalization too.
+    toc = "---\nlang: ru\n---\n\n" + toc_line
+    result = _format(toc)
+    assert "[Вам и не снилось" in result  # ignore: HP001
 
 
 def test_formatter_preserves_question_mark_two_dots() -> None:

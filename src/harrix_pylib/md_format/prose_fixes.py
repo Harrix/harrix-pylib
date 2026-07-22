@@ -111,6 +111,17 @@ _SPACE_BEFORE_PUNCT_PATTERNS = (
 )
 _PRONOUN_BOUNDARY_BEFORE = r"(?<![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001  # ignore: HP001
 _PRONOUN_BOUNDARY_AFTER = r"(?![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001  # ignore: HP001
+# Peel `[` / `![` / emphasis openers immediately before a pronoun (title/link start).
+_PRONOUN_INLINE_OPENER_TRAILING = re.compile(r"(?:!?\[|\*{1,3}|_{1,3}|~{2})$")
+# Line lead-in that is only Markdown structure (heading / list / task checkbox).
+_PRONOUN_MD_LEAD_ONLY = re.compile(
+    r"^\s*"
+    r"(?:>\s*)*"
+    r"(?:#{1,6}\s+)?"
+    r"(?:(?:[-*+]|\d+\.)\s+(?:\[[ xX]\]\s*)?)?"
+    r"$"
+)
+_PRONOUN_DIALOGUE_DASH_ONLY = re.compile(r"^\s*(?:>\s*)*[—\-]\s*$")
 
 # File extensions wrapped as inline code before H006 so `recover.sql` stays lowercase.
 _FILE_PATH_EXTENSIONS = frozenset(
@@ -647,18 +658,6 @@ def _fix_russian_polite_pronouns(line: str) -> str:
     if re.match(r"^\s{0,3}>", line):
         return line
 
-    def at_sentence_start(match_start: int) -> bool:
-        text_before = line[:match_start]
-        stripped = text_before.strip()
-        if not stripped:
-            return True
-        if re.search(r"[.!?]\s*$", text_before):
-            return True
-        if stripped.endswith("\u00ab"):
-            return True
-        # Dialogue dash at line start, including after blockquote markers.
-        return bool(re.match(r"^(?:\s{0,3}>\s*)*[—\-]\s*$", text_before))
-
     def inside_guillemets(match_start: int) -> bool:
         before = line[:match_start]
         return before.count("\u00ab") > before.count("\u00bb")
@@ -675,7 +674,7 @@ def _fix_russian_polite_pronouns(line: str) -> str:
         ) -> str:
             if (
                 _inside_ranges(match.start(), ranges)
-                or at_sentence_start(match.start())
+                or _is_russian_polite_pronoun_at_sentence_start(line, match.start())
                 or inside_guillemets(match.start())
             ):
                 return match.group(0)
@@ -834,6 +833,39 @@ def _is_hyphenated_identifier_fragment(text: str, start: int, end: int) -> bool:
     if start > 0 and text[start - 1] == "-":
         return True
     return end < len(text) and text[end] == "-"
+
+
+def _is_russian_polite_pronoun_at_sentence_start(line: str, match_start: int) -> bool:
+    """Return whether a capitalized polite pronoun may stay capitalized (H023).
+
+    Allowed at the start of a sentence or of Markdown title-like content:
+
+    - line / heading / list / task-item start (including `- [Title](#anchor)`);
+    - after `.!?` or opening «;
+    - after a dialogue dash at line start;
+    - after peeled opening `[` / `![` / emphasis markers that wrap the title.
+
+    Mid-sentence cases like `смотрите [Ваш вариант](url)` still return `False`.
+
+    """
+    text_before = line[:match_start]
+    peeled = text_before
+    while True:
+        updated = _PRONOUN_INLINE_OPENER_TRAILING.sub("", peeled)
+        if updated == peeled:
+            break
+        peeled = updated
+
+    stripped = peeled.strip()
+    if not stripped:
+        return True
+    if re.search(r"[.!?]\s*$", peeled):
+        return True
+    if stripped.endswith("\u00ab"):
+        return True
+    if _PRONOUN_DIALOGUE_DASH_ONLY.match(peeled):
+        return True
+    return bool(_PRONOUN_MD_LEAD_ONLY.match(peeled))
 
 
 def _is_table_cell_only_dash(line: str, pos: int) -> bool:

@@ -1179,6 +1179,32 @@ def test_md_checker() -> None:
         errors = checker.check(ru_vy_inside_guillemets_file, select={"H023"})
         assert not errors
 
+        # Pronoun at list-link / heading title start must not trigger H023
+        ru_vy_toc_title_file = temp_path / "ru_vy_toc_title.md"
+        ru_vy_toc_title_file.write_text(
+            "---\nlang: ru\n---\n\n  - [Вам и не снилось...: 10](#вам-и-не-снилось-10)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_vy_toc_title_file, select={"H023"})
+        assert not errors
+
+        ru_vy_heading_file = temp_path / "ru_vy_heading.md"
+        ru_vy_heading_file.write_text(
+            "---\nlang: ru\n---\n\n## Вам сюда\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_vy_heading_file, select={"H023"})
+        assert not errors
+
+        # Mid-sentence link text is still an address → H023
+        ru_vy_mid_link_file = temp_path / "ru_vy_mid_link.md"
+        ru_vy_mid_link_file.write_text(
+            "---\nlang: ru\n---\n\nСмотрите [Ваш вариант](https://example.com).\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_vy_mid_link_file, select={"H023"})
+        assert any("H023" in e for e in errors)
+
         # =====================================================================
         # H024: Latin x or Cyrillic x instead of ×  # noqa: RUF003
         # =====================================================================

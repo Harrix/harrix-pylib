@@ -11,6 +11,7 @@ import yaml
 import harrix_pylib as h
 from harrix_pylib.abbreviation_data import load_abbreviation_data, mask_abbreviations
 from harrix_pylib.md_format.math_spans import iter_code_and_math_segments
+from harrix_pylib.md_format.prose_fixes import _is_russian_polite_pronoun_at_sentence_start
 
 
 class MdChecker:
@@ -42,7 +43,7 @@ class MdChecker:
       JSON databases are allowed; not gated by YAML `lang`).
     - **H022** - Non-breaking space character found.
     - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only;
-      skipped in `>` blockquotes and inside «…»).
+      skipped in `>` blockquotes, inside «…», and at sentence / Markdown title start).
     - **H024** - Latin `x` or Cyrillic `x` used instead of multiplication sign `x`.
     - **H025** - Image Markdown not at start of line (several images in a row are allowed).
     - **H026** - Horizontal bar `―` (dialogue dash) should not be used.
@@ -1855,7 +1856,8 @@ class MdChecker:
 
         Exception: pronoun at sentence start is allowed:
 
-        - after line start or after `.!?;`;
+        - after line start or after `.!?`;
+        - after Markdown title lead-in (heading / list / `- [Title](#…)`);
         - after opening guillemet `«` (direct speech, e.g. `«Ваша задача»`); # ignore: HP001
         - after dash at line start (dialogue, e.g. `— Ваша работа хороша`). # ignore: HP001
 
@@ -1888,24 +1890,12 @@ class MdChecker:
             before = line[:match_start]
             return before.count("\u00ab") > before.count("\u00bb")
 
-        def at_sentence_start(match_start: int) -> bool:
-            text_before = line[:match_start]
-            stripped = text_before.strip()
-            if not stripped:
-                return True
-            if re.search(r"[.!?]\s*$", text_before):
-                return True
-            if stripped.endswith("\u00ab"):  # After «
-                return True
-            # Dialogue dash at line start, including after blockquote markers.
-            return bool(re.match(r"^(?:\s{0,3}>\s*)*[—\-]\s*$", text_before))
-
         for word in self.RUSSIAN_POLITE_PRONOUNS_CAPITALIZED:
             pattern = boundary_before + re.escape(word) + boundary_after
             for match in re.finditer(pattern, line):
                 if inside_inline_code(match.start()):
                     continue
-                if at_sentence_start(match.start()):
+                if _is_russian_polite_pronoun_at_sentence_start(line, match.start()):
                     continue
                 if inside_guillemets(match.start()):
                     continue
