@@ -17,6 +17,7 @@ class _FormatOptions:
     print_width: int = DEFAULT_PRINT_WIDTH
     apply_prose_fixes: bool = True
     format_math: bool = True
+    format_code_blocks: bool = True
 
     def __post_init__(self) -> None:
         """Validate formatter options after initialization."""

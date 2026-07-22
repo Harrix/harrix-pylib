@@ -198,6 +198,25 @@ def test_formatter_can_disable_math_formatting() -> None:
     assert "$a+b$" in result
 
 
+def test_formatter_formats_latex_fenced_code_blocks() -> None:
+    source = "```latex\n\\begin{bmatrix}1&2\\\\3&4\\end{bmatrix}\n```\n"
+    result = _format(source)
+    assert "```latex" in result
+    assert "  1 & 2 \\\\" in result
+    assert "  3 & 4" in result
+    assert _format(result) == result
+
+
+def test_formatter_can_disable_code_block_formatting() -> None:
+    source = "```latex\na+b=c\n```\n"
+    result = MdFormatter(
+        end_of_line="lf",
+        apply_prose_fixes=False,
+        format_code_blocks=False,
+    ).format(source)
+    assert "```latex\na+b=c\n```" in result.replace("\r\n", "\n")
+
+
 def test_formatter_math_formatting_is_idempotent() -> None:
     source = "$$\n\\begin{align*}a&=b\\\\c&=d\\end{align*}\n$$\n"
     once = _format(source)

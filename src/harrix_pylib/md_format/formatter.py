@@ -52,6 +52,7 @@ class MdFormatter:
         print_width: int = 80,
         apply_prose_fixes: bool = True,
         format_math: bool = True,
+        format_code_blocks: bool = True,
     ) -> None:
         """Initialize the MdFormatter.
 
@@ -63,6 +64,8 @@ class MdFormatter:
         - `apply_prose_fixes` (`bool`): Apply mechanical MdChecker autofixes (typography, H006-H058
           subset). Defaults to `True`.
         - `format_math` (`bool`): Format TeX/LaTeX content inside `$...$` / `$$...$$`. Defaults to `True`.
+        - `format_code_blocks` (`bool`): Format fenced code block bodies for supported languages
+          (currently `latex` / `tex`). Defaults to `True`.
 
         """
         self.options = _FormatOptions(
@@ -71,6 +74,7 @@ class MdFormatter:
             print_width=print_width,
             apply_prose_fixes=apply_prose_fixes,
             format_math=format_math,
+            format_code_blocks=format_code_blocks,
         )
 
     def format(self, text: str) -> str:

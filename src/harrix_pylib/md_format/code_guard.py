@@ -7,15 +7,25 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from harrix_pylib.md_format.code_fence import _fence_marker_for_content, _identify_code_blocks
+from harrix_pylib.md_format.math_format import _format_math_content
 from harrix_pylib.md_format.text_lines import _join_lines, _make_placeholder, _split_lines
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from harrix_pylib.md_format.options import _FormatOptions
 
 PLACEHOLDER_PREFIX = "HSKMDFMTCODE"
 _MIN_FENCED_BLOCK_LINES = 2
 _FENCE_OPEN_RE = re.compile(r"^(\s*)(`{3,}|~{3,})(.*)$")
 _FENCE_CLOSE_RE = re.compile(r"^(\s*)(`{3,}|~{3,})[ \t]*$")
+
+# Language tag (first info-string token, lowercased) -> body formatter.
+# Extend this map when adding formatters for other fenced languages.
+_CODE_BLOCK_BODY_FORMATTERS: dict[str, Callable[[str], str]] = {
+    "latex": lambda body: _format_math_content(body, display=True),
+    "tex": lambda body: _format_math_content(body, display=True),
+}
 
 
 @dataclass(frozen=True)
@@ -67,8 +77,41 @@ def _extract_code_blocks(body: str) -> tuple[str, list[_CodeBlock]]:
     return _join_lines(result, trailing_newline=has_trailing_newline), blocks
 
 
+def _fence_language(info: str) -> str:
+    """Return the first info-string token lowercased, or empty string."""
+    stripped = info.strip()
+    if not stripped:
+        return ""
+    return stripped.split()[0].lower()
+
+
+def _format_fenced_code_body(language: str, body: str, *, options: _FormatOptions | None) -> str:
+    """Format a fenced code body for a supported language when enabled."""
+    if options is not None and not options.format_code_blocks:
+        return body
+    formatter = _CODE_BLOCK_BODY_FORMATTERS.get(language)
+    if formatter is None or not body.strip():
+        return body
+    return formatter(body.strip("\n"))
+
+
 def _format_markdown_fence_block(block_lines: list[str], *, _options: _FormatOptions | None) -> list[str]:
-    """Normalize fence length; do not recursively format `markdown` fence bodies."""
+    """Normalize fence length and optionally format supported language bodies."""
+    if len(block_lines) < _MIN_FENCED_BLOCK_LINES:
+        return block_lines
+
+    open_match = _FENCE_OPEN_RE.match(block_lines[0])
+    if open_match is not None:
+        language = _fence_language(open_match.group(3))
+        original_body_lines = block_lines[1:-1]
+        body = "\n".join(original_body_lines)
+        formatted_body = _format_fenced_code_body(language, body, options=_options)
+        # Keep original lines when the formatter did not change content (also preserves
+        # blank-only fences, which round-trip poorly through "\n".join / split).
+        if formatted_body != body.strip("\n"):
+            body_lines = [] if formatted_body == "" else formatted_body.split("\n")
+            block_lines = [block_lines[0], *body_lines, block_lines[-1]]
+
     return _normalize_fence_length(block_lines)
 
 
