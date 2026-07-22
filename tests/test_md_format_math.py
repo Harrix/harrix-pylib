@@ -52,6 +52,18 @@ def test_format_math_content_layouts_align_display() -> None:
     assert result == "\\begin{align*}\n  a &= b \\\\\n  c &= d\n\\end{align*}"
 
 
+def test_format_math_content_aligns_columns_by_ampersand() -> None:
+    source = r"\begin{array}{cc}a & bbb \\ cc & d\end{array}"
+    expected = "\\begin{array}{cc}\n  a  & bbb \\\\\n  cc & d\n\\end{array}"
+    result = _format_math_content(source, display=True)
+    assert result == expected
+    assert _format_math_content(result, display=True) == result
+
+    align = r"\begin{align*}x&=1\\long&=2\end{align*}"
+    align_expected = "\\begin{align*}\n  x    &= 1 \\\\\n  long &= 2\n\\end{align*}"
+    assert _format_math_content(align, display=True) == align_expected
+
+
 def test_format_math_content_indents_nested_environments_by_depth() -> None:
     source = (
         r"\begin{minipage}{0.5\textwidth}"
@@ -90,12 +102,12 @@ def test_format_math_content_indents_nested_environments_by_depth() -> None:
         "  \\end{equation*}\n"
         "  align:\n"
         "  \\begin{align*}\n"
-        "    z_0 &= d = 0 \\\\\n"
+        "    z_0     &= d = 0 \\\\\n"
         "    z_{n+1} &= z_n^2 + c\n"
         "  \\end{align*}\n"
         "  eqnarray:\n"
         "  \\begin{eqnarray*}\n"
-        "    z_0 &=& d = 0 \\\\\n"
+        "    z_0     &=& d = 0 \\\\\n"
         "    z_{n+1} &=& z_n^2 + c\n"
         "  \\end{eqnarray*}\n"
         "\\end{minipage}"

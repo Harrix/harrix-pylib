@@ -81,6 +81,17 @@ _HLINE_ROW_RE = re.compile(r"^(\\(?:hdashline|hline))\s*(.*)$", re.DOTALL)
 
 
 @dataclass(frozen=True, slots=True)
+class _EnvLine:
+    """One structural line inside a row-oriented environment body."""
+
+    kind: str  # "blank" | "hline" | "data"
+    cells: tuple[str, ...] = ()
+    style: str = "amp"  # "amp" | "eq" | "eqnar"
+    hline: str = ""
+    add_break: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class _Token:
     """One lexical unit of math content."""
 
@@ -185,6 +196,20 @@ def _apply_operator_spacing(content: str) -> str:
     collapsed = re.sub(r"[^\S\n]+", " ", "".join(parts))
     collapsed = re.sub(r" +\n", "\n", collapsed)
     return re.sub(r"\n +", "\n", collapsed)
+
+
+def _column_widths(lines: list[_EnvLine]) -> list[int]:
+    """Return max display width for each column across data rows."""
+    widths: list[int] = []
+    for line in lines:
+        if line.kind != "data":
+            continue
+        for index, cell in enumerate(line.cells):
+            if index >= len(widths):
+                widths.append(len(cell))
+            else:
+                widths[index] = max(widths[index], len(cell))
+    return widths
 
 
 def _consume_begin_args(content: str, start: int) -> int:
@@ -310,57 +335,23 @@ def _find_matching_right(content: str, body_start: int) -> tuple[int, int, str] 
 
 def _format_environment_body(body: str, *, depth: int = 1) -> str:
     """Format rows/columns inside a row-oriented environment at `depth` indent."""
-    rows = _split_top_level(body.strip("\n"), "\\\\")
-    # Trailing \\ produces an empty final segment — drop it.
-    if rows and not rows[-1].strip():
-        rows = rows[:-1]
+    lines = _parse_environment_lines(body)
+    widths = _column_widths(lines)
     indent = _INDENT_UNIT * depth
-    formatted_rows: list[str] = []
-    for row_index, row in enumerate(rows):
-        if not row.strip():
-            formatted_rows.append("")
+    formatted: list[str] = []
+    for line in lines:
+        if line.kind == "blank":
+            formatted.append("")
             continue
-        add_break = row_index < len(rows) - 1
-        formatted_rows.extend(_format_environment_row(row, add_break=add_break, indent=indent))
-    while formatted_rows and formatted_rows[-1] == "":
-        formatted_rows.pop()
-    return "\n".join(formatted_rows)
-
-
-def _format_environment_row(row: str, *, add_break: bool, indent: str) -> list[str]:
-    r"""Format one environment row, peeling leading \hline/\hdashline markers."""
-    stripped = row.strip()
-    if not stripped:
-        return [""]
-    hline_match = _HLINE_ROW_RE.match(stripped)
-    if hline_match:
-        lines = [f"{indent}{hline_match.group(1)}"]
-        rest = hline_match.group(2).strip()
-        if rest:
-            lines.extend(_format_environment_row(rest, add_break=add_break, indent=indent))
-        return lines
-    if "&=&" in stripped:
-        left, _, right = stripped.partition("&=&")
-        line = f"{left.strip()} &=& {right.strip()}".rstrip()
-        if add_break:
-            return [f"{indent}{line} \\\\"]
-        return [f"{indent}{line}"]
-    cells = _split_top_level(stripped, "&")
-    rebuilt: list[str] = []
-    for cell_index, cell in enumerate(cells):
-        text = " ".join(cell.split())
-        if cell_index == 0:
-            rebuilt.append(text)
+        if line.kind == "hline":
+            formatted.append(f"{indent}{line.hline}")
             continue
-        if text.startswith("="):
-            rhs = text[1:].lstrip()
-            rebuilt.append(f"&= {rhs}" if rhs else "&=")
+        rendered = _render_padded_cells(line.cells, widths, style=line.style)
+        if line.add_break:
+            formatted.append(f"{indent}{rendered} \\\\")
         else:
-            rebuilt.append(f"& {text}")
-    line = " ".join(rebuilt)
-    if add_break:
-        return [f"{indent}{line} \\\\"]
-    return [f"{indent}{line}"]
+            formatted.append(f"{indent}{rendered}")
+    return "\n".join(formatted)
 
 
 def _format_math_content(content: str, *, display: bool = False) -> str:
@@ -525,6 +516,11 @@ def _next_significant(tokens: list[_Token], index: int) -> _Token | None:
     return None
 
 
+def _normalize_cell_text(cell: str) -> str:
+    """Collapse internal whitespace in one table/align cell."""
+    return " ".join(cell.split())
+
+
 def _normalize_frac_args(content: str) -> str:
     """Trim spaces inside braced arguments of frac-like commands."""
     parts: list[str] = []
@@ -593,6 +589,58 @@ def _normalize_left_right(content: str) -> str:
     return "".join(parts)
 
 
+def _parse_environment_lines(body: str) -> list[_EnvLine]:
+    """Parse environment body into blank/hline/data lines with cell lists."""
+    rows = _split_top_level(body.strip("\n"), "\\\\")
+    if rows and not rows[-1].strip():
+        rows = rows[:-1]
+    lines: list[_EnvLine] = []
+    for row_index, row in enumerate(rows):
+        add_break = row_index < len(rows) - 1
+        lines.extend(_parse_environment_row(row, add_break=add_break))
+    while lines and lines[-1].kind == "blank":
+        lines.pop()
+    return lines
+
+
+def _parse_environment_row(row: str, *, add_break: bool) -> list[_EnvLine]:
+    r"""Parse one raw row, peeling leading \hline/\hdashline markers."""
+    stripped = row.strip()
+    if not stripped:
+        return [_EnvLine(kind="blank")]
+    hline_match = _HLINE_ROW_RE.match(stripped)
+    if hline_match:
+        parsed = [_EnvLine(kind="hline", hline=hline_match.group(1))]
+        rest = hline_match.group(2).strip()
+        if rest:
+            parsed.extend(_parse_environment_row(rest, add_break=add_break))
+        return parsed
+    if "&=&" in stripped:
+        left, _, right = stripped.partition("&=&")
+        return [
+            _EnvLine(
+                kind="data",
+                cells=(_normalize_cell_text(left), _normalize_cell_text(right)),
+                style="eqnar",
+                add_break=add_break,
+            )
+        ]
+    cells_raw = _split_top_level(stripped, "&")
+    cells: list[str] = []
+    style = "amp"
+    for cell_index, cell in enumerate(cells_raw):
+        text = _normalize_cell_text(cell)
+        if cell_index == 0:
+            cells.append(text)
+            continue
+        if text.startswith("="):
+            style = "eq"
+            cells.append(_normalize_cell_text(text[1:]))
+        else:
+            cells.append(text)
+    return [_EnvLine(kind="data", cells=tuple(cells), style=style, add_break=add_break)]
+
+
 def _prefix_indent(text: str, depth: int) -> str:
     """Prefix every non-empty line with `depth` indent units."""
     if not text or depth <= 0:
@@ -634,6 +682,28 @@ def _read_lr_command(content: str, start: int, which: str) -> tuple[int, str] | 
         end = cursor + 1 + len(esc_match.group(0))
         return end, content[start:end]
     return cursor + 1, content[start : cursor + 1]
+
+
+def _render_padded_cells(cells: tuple[str, ...], widths: list[int], *, style: str) -> str:
+    """Join cells with aligned padding; do not pad the last column."""
+    if not cells:
+        return ""
+    padded: list[str] = []
+    for index, cell in enumerate(cells):
+        width = widths[index] if index < len(widths) else len(cell)
+        if index < len(cells) - 1:
+            padded.append(cell.ljust(width))
+        else:
+            padded.append(cell)
+    if style == "eqnar":
+        return f"{padded[0]} &=& {padded[1]}" if len(padded) > 1 else padded[0]
+    if style == "eq":
+        if len(padded) == 1:
+            return padded[0]
+        return padded[0] + "".join(f" &= {part}" for part in padded[1:])
+    if len(padded) == 1:
+        return padded[0]
+    return padded[0] + "".join(f" & {part}" for part in padded[1:])
 
 
 def _restore_protected(content: str, protected: list[str]) -> str:
