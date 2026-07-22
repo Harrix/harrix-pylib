@@ -842,11 +842,11 @@ def _is_russian_polite_pronoun_at_sentence_start(line: str, match_start: int) ->
     Allowed at the start of a sentence or of Markdown title-like content:
 
     - line / heading / list / task-item start (including `- [Title](#anchor)`);
-    - after `.!?` or opening «;
+    - after `.!?` or opening `«`;
     - after a dialogue dash at line start;
     - after peeled opening `[` / `![` / emphasis markers that wrap the title.
 
-    Mid-sentence cases like `смотрите [Ваш вариант](url)` still return `False`.
+    Mid-sentence cases like `смотрите [Ваш вариант](url)` still return `False`. # ignore: HP001
 
     """
     text_before = line[:match_start]
