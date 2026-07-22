@@ -11,12 +11,12 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `MdChecker`](#️-class-mdchecker)
-  - [⚙️ Method `__call__`](#️-method-__call__)
-  - [⚙️ Method `__init__`](#️-method-__init__)
-  - [⚙️ Method `check`](#️-method-check)
-  - [⚙️ Method `check_directory`](#️-method-check_directory)
-  - [⚙️ Method `find_markdown_files`](#️-method-find_markdown_files)
+- [🏛️ Class `MdChecker`](#%EF%B8%8F-class-mdchecker)
+  - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
+  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
+  - [⚙️ Method `check`](#%EF%B8%8F-method-check)
+  - [⚙️ Method `check_directory`](#%EF%B8%8F-method-check_directory)
+  - [⚙️ Method `find_markdown_files`](#%EF%B8%8F-method-find_markdown_files)
 
 </details>
 

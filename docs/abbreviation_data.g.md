@@ -11,7 +11,7 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `AbbreviationData`](#️-class-abbreviationdata)
+- [🏛️ Class `AbbreviationData`](#%EF%B8%8F-class-abbreviationdata)
 - [🔧 Function `is_spaced_multipart`](#-function-is_spaced_multipart)
 - [🔧 Function `load_abbreviation_data`](#-function-load_abbreviation_data)
 - [🔧 Function `mask_abbreviations`](#-function-mask_abbreviations)

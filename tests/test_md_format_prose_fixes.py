@@ -39,7 +39,8 @@ def _checker_errors(tmp_path: Path, text: str, rules: set[str]) -> list[str]:
         ("2 x 3\n", {"H024"}, "2 \u00d7 3"),
         ("Dialogue \u2015 line.\n", {"H026"}, "Dialogue — line."),
         ("See №1.\n", {"H027"}, "See № 1."),
-        ("Really?.\n", {"H028"}, "Really?"),
+        ("Really?.\n", {"H028"}, "Really?.."),
+        ("Вот как?... Ну.\n", {"H028"}, "Вот как?.. Ну."),
         ("**Note:**text\n", {"H029"}, "**Note:** text"),
         ("**Note**: text\n", {"H030"}, "**Note:** text"),
         ("##Title\n", {"H036"}, "## Title"),
@@ -87,6 +88,14 @@ def test_formatter_preserves_russian_polite_pronouns_in_quotes() -> None:
     prose = "---\nlang: ru\n---\n\nОбращаемся к Вам с предложением.\n"
     result = _format(prose)
     assert "к вам с предложением" in result
+
+
+def test_formatter_preserves_question_mark_two_dots() -> None:
+    source = "— Вот как?.. Ну и чему он у него учился?\n"
+    result = _format(source)
+    assert "?.." in result
+    assert "?." not in result.replace("?..", "")
+    assert "?..." not in result
 
 
 def test_formatter_preserves_space_before_text_emoticons() -> None:

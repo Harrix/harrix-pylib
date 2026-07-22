@@ -11,12 +11,12 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `SvgOptimizer`](#️-class-svgoptimizer)
-  - [⚙️ Method `__call__`](#️-method-__call__)
-  - [⚙️ Method `__init__`](#️-method-__init__)
-  - [⚙️ Method `optimize`](#️-method-optimize)
-  - [⚙️ Method `optimize_file`](#️-method-optimize_file)
-  - [⚙️ Method `optimize_folder`](#️-method-optimize_folder)
+- [🏛️ Class `SvgOptimizer`](#%EF%B8%8F-class-svgoptimizer)
+  - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
+  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
+  - [⚙️ Method `optimize`](#%EF%B8%8F-method-optimize)
+  - [⚙️ Method `optimize_file`](#%EF%B8%8F-method-optimize_file)
+  - [⚙️ Method `optimize_folder`](#%EF%B8%8F-method-optimize_folder)
 
 </details>
 

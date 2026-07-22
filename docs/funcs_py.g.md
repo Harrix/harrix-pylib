@@ -11,7 +11,7 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `DocsSourceLoc`](#️-class-docssourceloc)
+- [🏛️ Class `DocsSourceLoc`](#%EF%B8%8F-class-docssourceloc)
 - [🔧 Function `check_python_docstring_markdown_errors`](#-function-check_python_docstring_markdown_errors)
 - [🔧 Function `create_uv_new_library`](#-function-create_uv_new_library)
 - [🔧 Function `create_uv_new_notebook`](#-function-create_uv_new_notebook)

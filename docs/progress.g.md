@@ -11,10 +11,10 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `ProgressBar`](#️-class-progressbar)
-  - [⚙️ Method `__init__`](#️-method-__init__)
-  - [⚙️ Method `finish`](#️-method-finish)
-  - [⚙️ Method `update`](#️-method-update)
+- [🏛️ Class `ProgressBar`](#%EF%B8%8F-class-progressbar)
+  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
+  - [⚙️ Method `finish`](#%EF%B8%8F-method-finish)
+  - [⚙️ Method `update`](#%EF%B8%8F-method-update)
 - [🔧 Function `iter_with_progress`](#-function-iter_with_progress)
 - [🔧 Function `render_progress`](#-function-render_progress)
 - [🔧 Function `render_progress_ascii`](#-function-render_progress_ascii)

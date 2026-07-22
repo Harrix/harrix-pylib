@@ -98,6 +98,8 @@ _H015_BANG_EXCEPTIONS = (" !details", " !note", " !important", " !warning")
 # Letter faces (`D`, `P`, …) must not start a longer word (`:smile:` stays punctuation).
 _H015_EMOTICON_AFTER_COLON = r"(?:[-^])?(?:[)(*\\/|<>3@]|[DPpoOsS](?![a-zA-Z]))"
 _H015_EMOTICON_AFTER_SEMICOLON = r"(?:[-^])?(?:[)(*\\/|<>]|[DPpo](?![a-zA-Z]))"
+# H028: normalize `?.` / `?...` / `?…` to `?..` (leave correct `?..` alone).
+_H028_BAD_QUESTION_DOTS_PATTERN = re.compile(r"\?(?:\.(?!\.)|\.{3,}|\u2026)")
 _SPACE_BEFORE_PUNCT_PATTERNS = (
     (re.compile(r" \.(?![a-zA-Z0-9])"), "."),
     (re.compile(r" ,"), ","),
@@ -232,15 +234,16 @@ def _fix_backslash_paths(segment: str) -> str:
 
 
 def _fix_bare_filenames_and_cheap_typography(segment: str) -> str:
-    """Wrap bare filenames, then apply cheap H017/H026/H028/H027 typography fixes."""
+    """Wrap bare filenames, then apply cheap H028/H017/H026/H027 typography fixes."""
     if "." in segment or "/" in segment or "\\" in segment:
         segment = _fix_bare_filenames_to_inline_code(segment)
+    # H028 before H017 so `?...` becomes `?..` instead of `?…`.
+    if "?." in segment or "?\u2026" in segment:
+        segment = _fix_question_mark_period(segment)  # H028
     if "..." in segment:
         segment = _fix_ellipsis(segment)  # H017
     if "\u2015" in segment:
         segment = _fix_horizontal_bar(segment)  # H026
-    if "?." in segment:
-        segment = _fix_question_mark_period(segment)  # H028
     if "\u2116" in segment:
         segment = _fix_numero_space(segment)  # H027
     return segment
@@ -620,8 +623,12 @@ def _fix_punctuation_before_closing_guillemet(segment: str) -> str:
 
 
 def _fix_question_mark_period(segment: str) -> str:
-    """Replace `?.` with `?` (H028)."""
-    return segment.replace("?.", "?")
+    """Normalize bad `?.` / `?...` / `?…` sequences to `?..` (H028).
+
+    The rare Russian form `?..` is left unchanged.
+
+    """
+    return _H028_BAD_QUESTION_DOTS_PATTERN.sub("?..", segment)
 
 
 def _fix_russian_polite_pronouns(line: str) -> str:

@@ -596,7 +596,7 @@ def test_combine_markdown_files_raw_markdown_fences_body_and_strips_flag() -> No
         assert "raw-markdown" not in content
         assert "tags:" in content
         assert "## Experiment" in content
-        assert "````\nCustom syntax with ```triple``` fences.\n````" in content
+        assert "````text\nCustom syntax with ```triple``` fences.\n````" in content
         assert "## Normal" in content
         assert "Plain text." in content
 

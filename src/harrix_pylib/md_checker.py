@@ -46,7 +46,7 @@ class MdChecker:
     - **H025** - Image Markdown not at start of line (several images in a row are allowed).
     - **H026** - Horizontal bar `―` (dialogue dash) should not be used.
     - **H027** - Space required after the numero sign (U+2116).
-    - **H028** - Question mark followed by period `?.`.
+    - **H028** - Incorrect `?.` / `?...` / `?…` (use `?..`; the form `?..` is allowed).
     - **H029** - Space required after colon in inline emphasis.
     - **H030** - Colon outside inline emphasis (should be inside when line continues after colon).
     - **H031** - Invalid or placeholder image alt text (empty, editor placeholder, or lowercase start).
@@ -158,6 +158,9 @@ class MdChecker:
     # Missing space after punctuation before a letter (H050)
     _MISSING_SPACE_AFTER_PUNCT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"([,;!?])(?=[^\W\d_])", re.UNICODE)
 
+    # H028: `?.` / `?...` / `?…` are wrong; `?..` is the allowed form.
+    _H028_BAD_QUESTION_DOTS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"\?(?:\.(?!\.)|\.{3,}|\u2026)")
+
     # Malformed punctuation sequences (H051).
     # Word+`.,` requires 6+ letters so short abbrevs like `напр.,` / `ул.,` are ignored.  # ignore: HP001
     _MALFORMED_PUNCT_SEQUENCE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
@@ -225,7 +228,7 @@ class MdChecker:
         "H025": "Image markdown ![ found not at start of line",
         "H026": "Horizontal bar ― (dialogue dash) should not be used",
         "H027": "Space required after №",
-        "H028": "Question mark followed by period (?.)",
+        "H028": "Incorrect ?. / ?... / ?… (use ?..)",
         "H029": "Space required after colon in inline emphasis",
         "H030": "Colon outside inline emphasis (should be inside)",
         "H031": "Invalid or placeholder image alt text",
@@ -1746,13 +1749,19 @@ class MdChecker:
             yield self._format_error("H058", error_msg, filename, line_num=line_num, col=col + 1)
 
     def _check_question_mark_period(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for question mark followed by period `?.` (H028)."""
+        """Check for incorrect `?.` / `?...` / `?…` sequences (H028).
+
+        The rare Russian form `?..` is allowed and must not be flagged.
+
+        """
         offset = 0
         for segment, in_code in h.md.identify_code_blocks_line(line):
-            if not in_code and "?." in segment:
-                col = offset + segment.find("?.") + 1
-                yield self._format_error("H028", self.RULES["H028"], filename, line_num=line_num, col=col)
-                return
+            if not in_code:
+                match = self._H028_BAD_QUESTION_DOTS_PATTERN.search(segment)
+                if match:
+                    col = offset + match.start() + 1
+                    yield self._format_error("H028", self.RULES["H028"], filename, line_num=line_num, col=col)
+                    return
             offset += len(segment)
 
     def _check_quotes(self, filename: Path, line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:

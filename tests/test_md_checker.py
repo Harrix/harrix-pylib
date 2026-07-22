@@ -1345,12 +1345,26 @@ def test_md_checker() -> None:
         assert not errors, "H027 must ignore № inside inline code"
 
         # =====================================================================
-        # H028: Question mark followed by period
+        # H028: Incorrect ?. / ?... (use ?..)
         # =====================================================================
         qmark_period_file = temp_path / "qmark_period.md"
         qmark_period_file.write_text("---\nlang: en\n---\n\nReally?.\n", encoding="utf-8")
         errors = checker.check(qmark_period_file, select={"H028"})
         assert any("H028" in e for e in errors)
+
+        qmark_three_dots_file = temp_path / "qmark_three_dots.md"
+        qmark_three_dots_file.write_text("---\nlang: ru\n---\n\nВот как?... Ну да.\n", encoding="utf-8")
+        errors = checker.check(qmark_three_dots_file, select={"H028"})
+        assert any("H028" in e for e in errors)
+
+        # Correct rare form ?.. must not trigger H028
+        qmark_two_dots_file = temp_path / "qmark_two_dots.md"
+        qmark_two_dots_file.write_text(
+            "---\nlang: ru\n---\n\n— Вот как?.. Ну и чему он у него учился?\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(qmark_two_dots_file, select={"H028"})
+        assert not errors
 
         # Normal "?" or "." should not trigger H028
         normal_punct_file = temp_path / "normal_punct.md"

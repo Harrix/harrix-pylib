@@ -11,14 +11,14 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `PyDocstringFormatter`](#️-class-pydocstringformatter)
-  - [⚙️ Method `__call__`](#️-method-__call__)
-  - [⚙️ Method `__init__`](#️-method-__init__)
-  - [⚙️ Method `format`](#️-method-format)
-  - [⚙️ Method `format_file`](#️-method-format_file)
-  - [⚙️ Method `format_folder`](#️-method-format_folder)
-  - [⚙️ Method `iter_code_span_issues`](#️-method-iter_code_span_issues)
-  - [⚙️ Method `normalize_code_spans`](#️-method-normalize_code_spans)
+- [🏛️ Class `PyDocstringFormatter`](#%EF%B8%8F-class-pydocstringformatter)
+  - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
+  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
+  - [⚙️ Method `format`](#%EF%B8%8F-method-format)
+  - [⚙️ Method `format_file`](#%EF%B8%8F-method-format_file)
+  - [⚙️ Method `format_folder`](#%EF%B8%8F-method-format_folder)
+  - [⚙️ Method `iter_code_span_issues`](#%EF%B8%8F-method-iter_code_span_issues)
+  - [⚙️ Method `normalize_code_spans`](#%EF%B8%8F-method-normalize_code_spans)
 
 </details>
 

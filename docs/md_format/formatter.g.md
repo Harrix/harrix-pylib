@@ -11,14 +11,14 @@ lang: en
 
 ## Contents
 
-- [🏛️ Class `MdFormatter`](#️-class-mdformatter)
-  - [⚙️ Method `__call__`](#️-method-__call__)
-  - [⚙️ Method `__init__`](#️-method-__init__)
-  - [⚙️ Method `format`](#️-method-format)
-  - [⚙️ Method `format_file`](#️-method-format_file)
-  - [⚙️ Method `format_folder`](#️-method-format_folder)
-  - [⚙️ Method `normalize_line_endings`](#️-method-normalize_line_endings)
-  - [⚙️ Method `read_markdown_text`](#️-method-read_markdown_text)
+- [🏛️ Class `MdFormatter`](#%EF%B8%8F-class-mdformatter)
+  - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
+  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
+  - [⚙️ Method `format`](#%EF%B8%8F-method-format)
+  - [⚙️ Method `format_file`](#%EF%B8%8F-method-format_file)
+  - [⚙️ Method `format_folder`](#%EF%B8%8F-method-format_folder)
+  - [⚙️ Method `normalize_line_endings`](#%EF%B8%8F-method-normalize_line_endings)
+  - [⚙️ Method `read_markdown_text`](#%EF%B8%8F-method-read_markdown_text)
 
 </details>
 
@@ -81,6 +81,10 @@ class MdFormatter:
         - `str`: Formatted Markdown text.
 
         """
+        from harrix_pylib.funcs_md import is_raw_markdown_enabled  # noqa: PLC0415
+
+        if is_raw_markdown_enabled(text):
+            return text
         return _format_with_options(text, self.options)
 
     def format_file(self, filename: Path | str) -> str:
@@ -95,9 +99,13 @@ class MdFormatter:
         - `str`: Status message.
 
         """
+        from harrix_pylib.funcs_md import is_raw_markdown_enabled  # noqa: PLC0415
+
         path = Path(filename)
         raw = path.read_bytes()
         document = self.read_markdown_text(path)
+        if is_raw_markdown_enabled(document):
+            return f"Skipped {path}: raw-markdown."
         document_new = self.format(document)
         if document != document_new or self._needs_end_of_line_rewrite(raw):
             path.write_text(document_new, encoding="utf-8", newline="")
@@ -252,6 +260,10 @@ Returns:
 
 ```python
 def format(self, text: str) -> str:
+        from harrix_pylib.funcs_md import is_raw_markdown_enabled  # noqa: PLC0415
+
+        if is_raw_markdown_enabled(text):
+            return text
         return _format_with_options(text, self.options)
 ```
 
@@ -278,9 +290,13 @@ Returns:
 
 ```python
 def format_file(self, filename: Path | str) -> str:
+        from harrix_pylib.funcs_md import is_raw_markdown_enabled  # noqa: PLC0415
+
         path = Path(filename)
         raw = path.read_bytes()
         document = self.read_markdown_text(path)
+        if is_raw_markdown_enabled(document):
+            return f"Skipped {path}: raw-markdown."
         document_new = self.format(document)
         if document != document_new or self._needs_end_of_line_rewrite(raw):
             path.write_text(document_new, encoding="utf-8", newline="")

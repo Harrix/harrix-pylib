@@ -693,6 +693,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
 
     data_yaml_headers = []
     contents = []
+    raw_markdown_fenced = 0
 
     for md_file in md_files:
         markdown_text = md_file.read_text(encoding="utf-8")
@@ -718,6 +719,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
         # Preserve experimental / nonstandard Markdown as a fenced block in .g.md.
         if is_raw_markdown_enabled(data_yaml):
             content_md = _wrap_content_after_first_h1(content_md)
+            raw_markdown_fenced += 1
 
         # Increase heading levels
         content_md = increase_heading_level_content(content_md)
@@ -813,6 +815,8 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
     # Write to the output file
     output_file.write_text(final_content, encoding="utf-8")
 
+    if raw_markdown_fenced:
+        return f"✅ File {output_file} is created. (raw-markdown fenced: {raw_markdown_fenced})"
     return f"✅ File {output_file} is created."
 
 
@@ -2735,6 +2739,39 @@ def increase_heading_level_content(markdown_text: str) -> str:
     return "\n".join(new_lines)
 
 
+def is_note_in_named_folder(md_path: Path) -> bool:
+    """Check whether a Markdown path uses the named-folder layout.
+
+    A note is in named-folder layout when it is stored as `Folder/Folder.md`,
+    where the folder name matches the file stem (case-insensitive comparison).
+    This function checks path structure only and does not verify that the file exists.
+
+    Args:
+
+    - `md_path` (`Path`): Path to the Markdown file to check.
+
+    Returns:
+
+    - `bool`: `True` if the path follows the named-folder layout, `False` otherwise.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+    from pathlib import Path
+
+    h.md.is_note_in_named_folder(Path("Notes/MyNote/MyNote.md"))
+    ```
+
+    """
+    note_dir = md_path.parent
+    stem = md_path.stem
+    if note_dir.name.lower() != stem.lower():
+        return False
+    expected_md = note_dir / f"{note_dir.name}.md"
+    return expected_md.resolve() == md_path.resolve()
+
+
 def is_raw_markdown_enabled(source: Path | str | dict[str, Any]) -> bool:
     """Return whether YAML has `raw-markdown: true`.
 
@@ -2771,39 +2808,6 @@ def is_raw_markdown_enabled(source: Path | str | dict[str, Any]) -> bool:
     except yaml.YAMLError:
         return False
     return isinstance(data_yaml, dict) and data_yaml.get(_RAW_MARKDOWN_YAML_KEY) is True
-
-
-def is_note_in_named_folder(md_path: Path) -> bool:
-    """Check whether a Markdown path uses the named-folder layout.
-
-    A note is in named-folder layout when it is stored as `Folder/Folder.md`,
-    where the folder name matches the file stem (case-insensitive comparison).
-    This function checks path structure only and does not verify that the file exists.
-
-    Args:
-
-    - `md_path` (`Path`): Path to the Markdown file to check.
-
-    Returns:
-
-    - `bool`: `True` if the path follows the named-folder layout, `False` otherwise.
-
-    Example:
-
-    ```python
-    import harrix_pylib as h
-    from pathlib import Path
-
-    h.md.is_note_in_named_folder(Path("Notes/MyNote/MyNote.md"))
-    ```
-
-    """
-    note_dir = md_path.parent
-    stem = md_path.stem
-    if note_dir.name.lower() != stem.lower():
-        return False
-    expected_md = note_dir / f"{note_dir.name}.md"
-    return expected_md.resolve() == md_path.resolve()
 
 
 def iter_note_md_in_folder(folder: Path | str, *, dir_name: str | None = None) -> Iterator[Path]:
@@ -3756,6 +3760,20 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     return _split_front_matter(markdown_text)
 
 
+def _is_toc_details_open(lines: list[str], index: int) -> bool:
+    if index >= len(lines) or lines[index].strip() != "<details>":
+        return False
+    scan = index + 1
+    while scan < len(lines) and not lines[scan].strip():
+        scan += 1
+    if scan >= len(lines):
+        return False
+    summary_line = lines[scan]
+    return "<summary>" in summary_line and (
+        "📖 Contents" in summary_line or "📖 Содержание" in summary_line  # ignore: HP001
+    )
+
+
 def _max_backtick_run(text: str) -> int:
     """Return the longest run of consecutive backticks in `text`."""
     max_run = 0
@@ -3773,7 +3791,8 @@ def _wrap_content_after_first_h1(content: str) -> str:
     """Wrap Markdown body after the first ATX H1 in a fenced code block.
 
     The H1 stays outside the fence. If there is no H1, the whole content is
-    wrapped. Fence length is `max(3, longest_backtick_run + 1)`.
+    wrapped. Fence length is `max(3, longest_backtick_run + 1)`. Info string is
+    `text` so later beautify/format treats the body as plain code.
 
     """
     lines = content.split("\n")
@@ -3788,7 +3807,7 @@ def _wrap_content_after_first_h1(content: str) -> str:
         if not body.strip():
             return content
         fence = "`" * max(3, _max_backtick_run(body) + 1)
-        return f"{fence}\n{body.rstrip()}\n{fence}"
+        return f"{fence}text\n{body.rstrip()}\n{fence}"
 
     heading = lines[h1_index]
     body_lines = lines[h1_index + 1 :]
@@ -3798,18 +3817,4 @@ def _wrap_content_after_first_h1(content: str) -> str:
     if not body.strip():
         return heading
     fence = "`" * max(3, _max_backtick_run(body) + 1)
-    return f"{heading}\n\n{fence}\n{body}\n{fence}"
-
-
-def _is_toc_details_open(lines: list[str], index: int) -> bool:
-    if index >= len(lines) or lines[index].strip() != "<details>":
-        return False
-    scan = index + 1
-    while scan < len(lines) and not lines[scan].strip():
-        scan += 1
-    if scan >= len(lines):
-        return False
-    summary_line = lines[scan]
-    return "<summary>" in summary_line and (
-        "📖 Contents" in summary_line or "📖 Содержание" in summary_line  # ignore: HP001
-    )
+    return f"{heading}\n\n{fence}text\n{body}\n{fence}"
