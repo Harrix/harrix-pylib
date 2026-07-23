@@ -934,16 +934,15 @@ def _tokenize(content: str) -> list[_Token]:
             index += 2
             continue
         if char in _CHAR_OPERATORS:
-            # TeX literal dashes: `---` (em) / `--` (en) must stay atomic.
-            if char == "-":
-                if index + 2 < length and content[index : index + 3] == "---":
-                    tokens.append(_Token("dash", "---"))
-                    index += 3
-                    continue
-                if index + 1 < length and content[index + 1] == "-":
-                    tokens.append(_Token("dash", "--"))
-                    index += 2
-                    continue
+            # TeX dashes / ASCII rules: any run of 2+ hyphens stays atomic
+            # (`--`, `---`, `-------------` in comments).
+            if char == "-" and index + 1 < length and content[index + 1] == "-":
+                end = index + 2
+                while end < length and content[end] == "-":
+                    end += 1
+                tokens.append(_Token("dash", content[index:end]))
+                index = end
+                continue
             tokens.append(_Token("op", char))
             index += 1
             continue

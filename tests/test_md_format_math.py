@@ -37,6 +37,9 @@ def test_format_math_content_preserves_tex_dashes_and_russian_ordinals() -> None
     assert _format_math_content(r'\LaTeX{} "--- это для \TeX{}') == r'\LaTeX{} "--- это для \TeX{}'
     assert _format_math_content("в 1984-м году") == "в 1984-м году"
     assert _format_math_content("a--b") == "a--b"
+    comment = r"\hspace*{.2em}% < ------------- This is where the rule starts from"
+    assert _format_math_content(comment) == comment
+    assert "------------ -" not in _format_math_content(comment)
 
 
 def test_formatter_leaves_latex_document_tex_fence_unchanged() -> None:
