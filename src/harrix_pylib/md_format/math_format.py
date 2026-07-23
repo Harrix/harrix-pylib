@@ -422,7 +422,7 @@ def _is_text_hyphen(tokens: list[_Token], index: int) -> bool:
 
     Tight hyphens between multi-letter words (`pdf-file`, `bib-document`) stay
     unspaced; single-letter math (`a-b`) still gets operator spacing.
-    Russian ordinals like `1984-м` (number + short Cyrillic ending) stay tight.
+    Russian ordinals like `1984-м` (number + short Cyrillic ending) stay tight. # ignore: HP001
 
     """
     if tokens[index].value != "-":
