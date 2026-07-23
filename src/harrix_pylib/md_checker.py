@@ -1826,9 +1826,11 @@ class MdChecker:
 
         Only whitespace may separate the two words (so `Notes-Notes` is allowed).
         Hyphenated compounds count as one token.
+        Title-Case doubles (`Гумберт Гумберт`, `Knock Knock`) are allowed.
 
         """
         previous: str | None = None
+        previous_token = ""
         previous_start = 0
         previous_end = 0
         for match in self._WORD_TOKEN_PATTERN.finditer(clean_line):
@@ -1839,6 +1841,8 @@ class MdChecker:
                 and current == previous
                 and len(token) >= self._H054_MIN_WORD_LEN
                 and clean_line[previous_end : match.start()].isspace()
+                # Intentional proper-name / title doubles stay capitalized on both words.
+                and not (previous_token[:1].isupper() and token[:1].isupper())
             ):
                 snippet = clean_line[previous_start : match.end()]
                 col = line.find(snippet)
@@ -1847,6 +1851,7 @@ class MdChecker:
                 error_msg = f'{self.RULES["H054"]}: "{token}"'
                 yield self._format_error("H054", error_msg, filename, line_num=line_num, col=col + 1)
             previous = current
+            previous_token = token
             previous_start = match.start()
             previous_end = match.end()
 

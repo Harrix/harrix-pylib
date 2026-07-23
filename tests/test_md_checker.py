@@ -2043,6 +2043,15 @@ def test_md_checker() -> None:
         errors = checker.check(repeated_compound_file, select={"H054"})
         assert any("H054" in e for e in errors)
 
+        # Title-Case doubles (names / titles) are allowed
+        title_case_double_file = temp_path / "title_case_double.md"
+        title_case_double_file.write_text(
+            "---\nlang: en\n---\n\nKnock Knock is a movie. Humbert Humbert is a character.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(title_case_double_file, select={"H054"})
+        assert not errors
+
         # =====================================================================
         # H055: Broken internal fragment link
         # =====================================================================
