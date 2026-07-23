@@ -211,6 +211,17 @@ def test_formatter_preserves_shields_io_query_string() -> None:
     assert "? Logo=" not in result
 
 
+def test_formatter_preserves_query_string_in_link_label(tmp_path: Path) -> None:
+    """H050 must not insert a space after `?` in labels like `[demo?a=2&b=3]`."""
+    source = "При вызове [demo?a=2&b=3](https://example.com/demo?a=2&b=3) мы получим `5`.\n"
+    assert _checker_errors(tmp_path, source, {"H050"}) == []
+    result = _format(source)
+    assert "[demo?a=2&b=3]" in result
+    assert "[demo? a=2&b=3]" not in result
+    assert "?a=2&b=3" in result
+    assert not _checker_errors(tmp_path, result, {"H050"}), result
+
+
 def test_formatter_preserves_lowercase_after_incl_abbrev(tmp_path: Path) -> None:
     """H021 must not capitalize after English abbreviations like `incl.`."""
     source = "Harrix PY rules and docstring Markdown check (incl. private; errors point at file).\n"

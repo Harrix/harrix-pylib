@@ -159,6 +159,7 @@ class MdChecker:
 
     # Missing space after punctuation before a letter (H050)
     _MISSING_SPACE_AFTER_PUNCT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"([,;!?])(?=[^\W\d_])", re.UNICODE)
+    _QUERY_PARAM_AFTER_QUESTION_RE: ClassVar[re.Pattern[str]] = re.compile(r"[A-Za-z0-9_]+=")
 
     # H028: `?.`/`!.` / `?...`/`!...` / `?…`/`!…` are wrong; `?..` / `!..` are allowed.
     _H028_BAD_EXCLAM_QUESTION_DOTS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"([?!])(?:\.(?!\.)|\.{3,}|\u2026)")
@@ -1523,6 +1524,9 @@ class MdChecker:
             next_char = clean_line[match.end()]
             # Admonitions / callouts: `[!NOTE]`, `[!gallery]`, …
             if punct == "!" and match.start() > 0 and clean_line[match.start() - 1] == "[":
+                continue
+            # Query strings in link labels / paths: `demo?a=2`, not a sentence question.
+            if punct == "?" and self._QUERY_PARAM_AFTER_QUESTION_RE.match(clean_line[match.end() :]):
                 continue
             # Exempt ASCII identifier-like joins such as `1979a,b` or `x,y`.
             if (

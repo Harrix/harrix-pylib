@@ -64,6 +64,7 @@ _BACKSLASH_PATH_PATTERN = re.compile(r"\]\(([^)]*\\[^)]*)\)")
 # Mistyped scheme separators: `https:\host`, `https:\\host`, `https:/host` → `https://host`.
 _SCHEME_URL_DEST_PATTERN = re.compile(r"\]\((https?):[/\\]+([^)]*)\)", re.IGNORECASE)
 _MISSING_SPACE_AFTER_PUNCT_PATTERN = re.compile(r"([,;!?])(?=[^\W\d_])", re.UNICODE)
+_QUERY_PARAM_AFTER_QUESTION_RE = re.compile(r"[A-Za-z0-9_]+=")
 _PUNCT_BEFORE_CLOSING_GUILLEMET_PATTERN = re.compile(
     r"((?:[^\W\d_]{2,}\.|[,;:]))»",
     re.UNICODE,
@@ -550,6 +551,9 @@ def _fix_missing_space_after_punctuation(segment: str) -> str:
         punct = match.group(1)
         next_char = segment[match.end()]
         if punct == "!" and match.start() > 0 and segment[match.start() - 1] == "[":
+            return match.group(0)
+        # Query strings in link labels: `demo?a=2`, not a sentence question.
+        if punct == "?" and _QUERY_PARAM_AFTER_QUESTION_RE.match(segment[match.end() :]):
             return match.group(0)
         if (
             punct in ",;"
