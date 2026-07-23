@@ -322,7 +322,7 @@ def test_formatter_math_formatting_is_idempotent() -> None:
 
 
 def test_formatter_flalign_placeholder_backslash_before_newline_is_idempotent() -> None:
-    """Lone `\\` before EOL (docs placeholder): normalize indent, stay idempotent."""
+    r"""Lone `\\` before EOL (docs placeholder): normalize indent, stay idempotent."""
     source = "```tex\n\\State < text > \\begin{flalign*}\n     < formula > \\\n  < formula >\n\\end{flalign*}\n```\n"
     once = _format(source)
     twice = _format(once)
