@@ -856,6 +856,23 @@ def test_md_checker() -> None:
         errors = checker.check(three_not_two_file, select={"H032"})
         assert not errors
 
+        # Rare Russian ?.. / !.. (H028) should not trigger H032
+        qmark_two_dots_h032 = temp_path / "qmark_two_dots_h032.md"
+        qmark_two_dots_h032.write_text(
+            "---\nlang: ru\n---\n\n— Вот как?.. Ну и чему он у него учился?\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(qmark_two_dots_h032, select={"H032"})
+        assert not errors
+
+        bang_two_dots_h032 = temp_path / "bang_two_dots_h032.md"
+        bang_two_dots_h032.write_text(
+            "---\nlang: ru\n---\n\n— Вот так!.. И всё.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(bang_two_dots_h032, select={"H032"})
+        assert not errors
+
         # Parent-directory path ../ should not trigger H032
         parent_path_file = temp_path / "parent_path.md"
         parent_path_file.write_text("---\nlang: en\n---\n\nSee ../docs for details.\n", encoding="utf-8")

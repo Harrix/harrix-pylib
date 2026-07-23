@@ -120,10 +120,15 @@ def _apply_operator_spacing(content: str) -> str:
     while index < len(tokens):
         token = tokens[index]
         if token.kind == "ws":
-            if "\n" in token.value:
-                # Preserve line structure; collapse horizontal runs later via spacing rules.
-                newline_count = token.value.count("\n")
-                parts.append("\n" * newline_count)
+            if "\n" not in token.value:
+                # Keep inter-word spaces (e.g. \KwData{this text}).
+                parts.append(" ")
+            else:
+                # Keep newlines and trailing indent after the last newline.
+                parts.append("\n" * token.value.count("\n"))
+                trailing = re.search(r"[ \t]+$", token.value)
+                if trailing is not None:
+                    parts.append(trailing.group(0))
             index += 1
             continue
         if token.kind == "op" and token.value in _UNARY_CHAR_OPS and _is_unary_plus_minus(tokens, index):
@@ -192,10 +197,19 @@ def _apply_operator_spacing(content: str) -> str:
             if nxt is not None and nxt.kind == "word":
                 parts.append(" ")
         index += 1
-    # Collapse runs of spaces but keep newlines.
-    collapsed = re.sub(r"[^\S\n]+", " ", "".join(parts))
-    collapsed = re.sub(r" +\n", "\n", collapsed)
-    return re.sub(r"\n +", "\n", collapsed)
+    return _collapse_horizontal_spaces("".join(parts))
+
+
+def _collapse_horizontal_spaces(text: str) -> str:
+    """Collapse internal horizontal space runs; keep leading line indent."""
+    lines = text.split("\n")
+    collapsed_lines: list[str] = []
+    for line in lines:
+        stripped = line.lstrip(" \t")
+        lead = line[: len(line) - len(stripped)]
+        body = re.sub(r"[^\S\n]+", " ", stripped).rstrip(" \t")
+        collapsed_lines.append(f"{lead}{body}")
+    return "\n".join(collapsed_lines)
 
 
 def _column_widths(lines: list[_EnvLine]) -> list[int]:
@@ -235,6 +249,20 @@ def _consume_begin_args(content: str, start: int) -> int:
             continue
         break
     return cursor
+
+
+def _dedent_common(text: str) -> str:
+    """Remove common leading horizontal whitespace from non-empty lines."""
+    if not text:
+        return text
+    lines = text.split("\n")
+    non_empty = [line for line in lines if line.strip()]
+    if not non_empty:
+        return text
+    common = min(len(line) - len(line.lstrip(" \t")) for line in non_empty)
+    if not common:
+        return text
+    return "\n".join(line[common:] if line.strip() else "" for line in lines)
 
 
 def _extract_protected_groups(content: str) -> tuple[str, list[str]]:
@@ -407,7 +435,7 @@ def _is_unary_plus_minus(tokens: list[_Token], index: int) -> bool:
 
 def _layout_structures(content: str, *, depth: int = 0) -> str:
     r"""Pretty-print `\begin{...}` and multiline `\left...\right` by nesting depth."""
-    return _prefix_indent(_layout_structures_root(content), depth)
+    return _prefix_indent(_layout_structures_root(_dedent_common(content)), depth)
 
 
 def _layout_structures_root(content: str) -> str:
@@ -452,13 +480,14 @@ def _layout_structures_root(content: str) -> str:
             body = content[left_end:right_start]
             should_break = "\\begin" in body or "\n" in body.strip()
             if should_break:
-                formatted_body = _layout_structures(body.strip("\n"), depth=1)
+                # lstrip drops the space often left after \left(; keep line indents for dedent.
+                formatted_body = _layout_structures(body.strip("\n").lstrip(" \t"), depth=1)
                 block = f"{left_cmd}\n"
                 if formatted_body.strip():
                     block += formatted_body.rstrip("\n") + "\n"
                 block += right_cmd
             else:
-                inner = _layout_structures_root(body.strip("\n")).strip() or body.strip()
+                inner = _layout_structures_root(body.strip("\n").lstrip(" \t")).strip() or body.strip()
                 block = f"{left_cmd}{inner}{right_cmd}"
             parts.append(block)
             index = right_end
@@ -489,6 +518,7 @@ def _layout_structures_root(content: str) -> str:
         if env in _ROW_ENVS:
             formatted_body = _format_environment_body(body, depth=1)
         else:
+            # Keep line indents so _dedent_common can normalize before re-indenting.
             formatted_body = _layout_structures(body.strip("\n"), depth=1)
         block = f"{header}\n"
         if formatted_body.strip():
@@ -642,11 +672,16 @@ def _parse_environment_row(row: str, *, add_break: bool) -> list[_EnvLine]:
 
 
 def _prefix_indent(text: str, depth: int) -> str:
-    """Prefix every non-empty line with `depth` indent units."""
+    """Prefix every non-empty line with `depth` indent units.
+
+    Dedents by the common leading whitespace of non-empty lines first so that
+    re-running layout stays idempotent when prior indents were preserved.
+
+    """
     if not text or depth <= 0:
         return text
+    lines = _dedent_common(text).split("\n")
     indent = _INDENT_UNIT * depth
-    lines = text.split("\n")
     out = [f"{indent}{line}" if line.strip() else "" for line in lines]
     result = "\n".join(out)
     if text.endswith("\n") and not result.endswith("\n"):

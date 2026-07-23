@@ -280,7 +280,8 @@ class MdChecker:
     }
 
     _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
-    _TWO_DOTS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<!\.)\.\.(?![\./])")
+    # Exclude `?..` / `!..` (required by H028) and `...` / `../`.
+    _TWO_DOTS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<![.?!])\.\.(?![\./])")
     _MATH_DELIMITER_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*\$\$\s*$")
     _HORIZONTAL_RULE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(?:\*\s*){3,}$|^(?:-\s*){3,}$|^(?:_\s*){3,}$")
     # Bullet (`- `, `* `, `+ `) or ordered (`1. `, `1) `) list item start (H059)
@@ -2027,7 +2028,8 @@ class MdChecker:
     def _check_two_dots(self, filename: Path, _line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
         """Check for exactly two consecutive dots (H032).
 
-        Does not match `...` (handled by H017) or `../` parent-directory paths.
+        Does not match `...` (handled by H017), `../` parent-directory paths,
+        or the rare Russian forms `?..` / `!..` required by H028.
 
         """
         for match in self._TWO_DOTS_PATTERN.finditer(clean_line):

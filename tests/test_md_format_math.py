@@ -48,6 +48,53 @@ def test_format_math_content_keeps_digits_after_protected_commands() -> None:
     assert _format_math_content(r"\text{a}123 + b") == r"\text{a}123 + b"
 
 
+def test_format_math_content_preserves_spaces_in_command_args() -> None:
+    assert _format_math_content(r"\KwData{this text}") == r"\KwData{this text}"
+    assert _format_math_content(r"\KwResult{how to write algorithm with LaTeX2e}") == (
+        r"\KwResult{how to write algorithm with LaTeX2e}"
+    )
+
+
+def test_format_math_content_preserves_algorithm_spaces_and_relative_indent() -> None:
+    source = (
+        "\\begin{algorithm}[H]\n"
+        "  \\SetAlgoLined\n"
+        "  \\KwData{this text}\n"
+        "  \\KwResult{how to write algorithm with LaTeX2e}\n"
+        "  initialization;\n"
+        "  \\While{not at end of this document}{\n"
+        "    read current;\n"
+        "    \\eIf{understand}{\n"
+        "      go to next section;\n"
+        "    }{\n"
+        "      go back to the beginning of current section;\n"
+        "    }\n"
+        "  }\n"
+        "  \\caption{How to write algorithms}\n"
+        "\\end{algorithm}"
+    )
+    result = _format_math_content(source, display=True)
+    assert "\\KwData{this text}" in result
+    assert "\\KwResult{how to write algorithm with LaTeX2e}" in result
+    assert "not at end of this document" in result
+    assert "go to next section" in result
+    assert "\\caption{How to write algorithms}" in result
+    lines = [line for line in result.splitlines() if line.strip()]
+    kw_data = next(line for line in lines if "\\KwData" in line)
+    read_current = next(line for line in lines if "read current" in line)
+    go_next = next(line for line in lines if "go to next section" in line)
+    assert len(kw_data) - len(kw_data.lstrip(" ")) < len(read_current) - len(read_current.lstrip(" "))
+    assert len(read_current) - len(read_current.lstrip(" ")) < len(go_next) - len(go_next.lstrip(" "))
+
+
+def test_formatter_preserves_spaces_in_tex_fence() -> None:
+    source = "```tex\n\\KwData{this text}\n\\While{not at end}{\n  read current;\n}\n```\n"
+    result = _format(source)
+    assert "\\KwData{this text}" in result
+    assert "not at end" in result
+    assert "read current" in result
+
+
 def test_format_math_content_layouts_bmatrix_display() -> None:
     result = _format_math_content(r"\begin{bmatrix}1&2\\3&4\end{bmatrix}", display=True)
     assert result == "\\begin{bmatrix}\n  1 & 2 \\\\\n  3 & 4\n\\end{bmatrix}"
