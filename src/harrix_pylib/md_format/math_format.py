@@ -422,6 +422,7 @@ def _is_text_hyphen(tokens: list[_Token], index: int) -> bool:
 
     Tight hyphens between multi-letter words (`pdf-file`, `bib-document`) stay
     unspaced; single-letter math (`a-b`) still gets operator spacing.
+    Russian ordinals like `1984-м` (number + short Cyrillic ending) stay tight.
 
     """
     if tokens[index].value != "-":
@@ -434,6 +435,8 @@ def _is_text_hyphen(tokens: list[_Token], index: int) -> bool:
     nxt = _next_significant(tokens, index)
     if prev is None or nxt is None:
         return False
+    if prev.kind == "number" and nxt.kind == "word" and any("\u0400" <= char <= "\u04ff" for char in nxt.value):
+        return True
     if prev.kind != "word" or nxt.kind != "word":
         return False
     return len(prev.value) > 1 and len(nxt.value) > 1
@@ -931,6 +934,16 @@ def _tokenize(content: str) -> list[_Token]:
             index += 2
             continue
         if char in _CHAR_OPERATORS:
+            # TeX literal dashes: `---` (em) / `--` (en) must stay atomic.
+            if char == "-":
+                if index + 2 < length and content[index : index + 3] == "---":
+                    tokens.append(_Token("dash", "---"))
+                    index += 3
+                    continue
+                if index + 1 < length and content[index + 1] == "-":
+                    tokens.append(_Token("dash", "--"))
+                    index += 2
+                    continue
             tokens.append(_Token("op", char))
             index += 1
             continue

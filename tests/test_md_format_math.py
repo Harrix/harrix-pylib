@@ -33,6 +33,30 @@ def test_format_math_content_keeps_compound_word_hyphens() -> None:
     assert _format_math_content("a-b") == "a - b"
 
 
+def test_format_math_content_preserves_tex_dashes_and_russian_ordinals() -> None:
+    assert _format_math_content(r'\LaTeX{} "--- это для \TeX{}') == r'\LaTeX{} "--- это для \TeX{}'
+    assert _format_math_content("в 1984-м году") == "в 1984-м году"
+    assert _format_math_content("a--b") == "a--b"
+
+
+def test_formatter_leaves_latex_document_tex_fence_unchanged() -> None:
+    source = (
+        "```tex\n"
+        "\\documentclass{article}\n"
+        "\\begin{document}\n"
+        '\\LaTeX{} "--- это своего рода препроцессор текста для \\TeX{} "---\n'
+        "программы. В 1984-м году.\n"
+        "\\end{document}\n"
+        "```\n"
+    )
+    result = _format(source)
+    assert '"--- это' in result
+    assert "1984-м" in result
+    assert '" - --' not in result
+    assert "1984 - м" not in result
+    assert "  \\LaTeX{}" not in result
+
+
 def test_format_math_content_keeps_unary_minus() -> None:
     assert _format_math_content("-x+y") == "-x + y"
     assert _format_math_content("x^{-2}") == "x^{-2}"

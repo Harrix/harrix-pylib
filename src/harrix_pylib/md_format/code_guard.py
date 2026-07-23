@@ -22,9 +22,10 @@ _FENCE_CLOSE_RE = re.compile(r"^(\s*)(`{3,}|~{3,})[ \t]*$")
 
 # Language tag (first info-string token, lowercased) -> body formatter.
 # Extend this map when adding formatters for other fenced languages.
+_LATEX_DOCUMENT_RE = re.compile(r"\\documentclass\b|\\begin\{document\}")
 _CODE_BLOCK_BODY_FORMATTERS: dict[str, Callable[[str], str]] = {
-    "latex": lambda body: _format_math_content(body, display=True),
-    "tex": lambda body: _format_math_content(body, display=True),
+    "latex": lambda body: _format_math_or_leave_latex_document(body),
+    "tex": lambda body: _format_math_or_leave_latex_document(body),
 }
 
 
@@ -113,6 +114,13 @@ def _format_markdown_fence_block(block_lines: list[str], *, _options: _FormatOpt
             block_lines = [block_lines[0], *body_lines, block_lines[-1]]
 
     return _normalize_fence_length(block_lines)
+
+
+def _format_math_or_leave_latex_document(body: str) -> str:
+    """Format TeX math; leave full LaTeX documents unchanged."""
+    if _LATEX_DOCUMENT_RE.search(body):
+        return body
+    return _format_math_content(body, display=True)
 
 
 def _leading_whitespace(line: str) -> str:
