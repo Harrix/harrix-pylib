@@ -148,6 +148,19 @@ def test_format_markdown_content_converts_self_referential_url_link_to_angle_aut
     assert result.strip() != url
 
 
+def test_format_markdown_content_converts_mid_sentence_self_link_to_angle_autolink() -> None:
+    """Mid-sentence `[url](url)` must become `<url>`, not a bare URL (H041)."""
+    source = (
+        "использовал платную CMS, а именно [http://readyscript.ru](http://readyscript.ru). "
+        "Понравилась мне в плане возможностей.\n"
+    )
+    result = _format_markdown(source, end_of_line="lf", apply_prose_fixes=True)
+    assert "<http://readyscript.ru>" in result
+    assert "[http://readyscript.ru](http://readyscript.ru)" not in result
+    assert " а именно http://readyscript.ru." not in result
+    assert "а именно <http://readyscript.ru>." in result
+
+
 def test_format_markdown_content_preserves_many_angle_autolinks_without_placeholder_collision() -> None:
     """Placeholder restore must match full indices (AL1 must not corrupt AL10)."""
     links = [f"<https://example.com/{index}>" for index in range(12)]

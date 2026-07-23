@@ -289,8 +289,7 @@ def _render_inline_token(
         if not title:
             raw_inner = _link_raw_text(children, index)
             if raw_inner is not None:
-                if raw_inner == href and not _inline_link_is_standalone(children, index):
-                    return href, next_index
+                # Linkify bare domains (no scheme) stay bare only when standalone.
                 if (
                     _is_linkify_link(child)
                     and not _inner_has_url_scheme(raw_inner)
@@ -298,7 +297,13 @@ def _render_inline_token(
                 ):
                     return raw_inner, next_index
                 autolink = _format_self_referential_link(href, raw_inner)
-                if autolink is not None and _inline_link_is_standalone(children, index):
+                if autolink is not None:
+                    # Explicit `[url](url)` → angle autolink even mid-sentence (H041).
+                    # Mid-text linkify stays bare so interrupted `](http://...)` keeps shape.
+                    if _is_linkify_link(child) and not _inline_link_is_standalone(children, index):
+                        if raw_inner == href:
+                            return href, next_index
+                        return autolink, next_index
                     return autolink, next_index
         inner_parts: list[str] = []
         inner_index = index + 1
