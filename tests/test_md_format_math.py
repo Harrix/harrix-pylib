@@ -42,6 +42,12 @@ def test_format_math_content_preserves_text_command_body() -> None:
     assert _format_math_content(r"\text{a+b} + c") == r"\text{a+b} + c"
 
 
+def test_format_math_content_keeps_digits_after_protected_commands() -> None:
+    assert _format_math_content(r"\mathrm{R}2") == r"\mathrm{R}2"
+    assert _format_math_content(r"\mathbf{v}0") == r"\mathbf{v}0"
+    assert _format_math_content(r"\text{a}123 + b") == r"\text{a}123 + b"
+
+
 def test_format_math_content_layouts_bmatrix_display() -> None:
     result = _format_math_content(r"\begin{bmatrix}1&2\\3&4\end{bmatrix}", display=True)
     assert result == "\\begin{bmatrix}\n  1 & 2 \\\\\n  3 & 4\n\\end{bmatrix}"
@@ -204,6 +210,13 @@ def test_formatter_formats_latex_fenced_code_blocks() -> None:
     assert "```latex" in result
     assert "  1 & 2 \\\\" in result
     assert "  3 & 4" in result
+    assert _format(result) == result
+
+
+def test_formatter_keeps_digits_after_protected_commands_in_tex_fence() -> None:
+    source = "```tex\n\\mathrm{R}2\n```\n"
+    result = _format(source)
+    assert "\\mathrm{R}2" in result
     assert _format(result) == result
 
 

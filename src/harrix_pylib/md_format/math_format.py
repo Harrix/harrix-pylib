@@ -76,7 +76,7 @@ _ROW_ENVS = frozenset(
 _INDENT_UNIT = "  "
 _BEGIN_RE = re.compile(r"\\begin\{([A-Za-z*]+)\}")
 _COMMAND_NAME_RE = re.compile(r"[A-Za-z]+|.")
-_PROTECTED_PLACEHOLDER_RE = re.compile(rf"{_PROTECTED_PREFIX}(\d+)")
+_PROTECTED_PLACEHOLDER_RE = re.compile(rf"{_PROTECTED_PREFIX}(\d+)Z")
 _HLINE_ROW_RE = re.compile(r"^(\\(?:hdashline|hline))\s*(.*)$", re.DOTALL)
 
 
@@ -256,7 +256,7 @@ def _extract_protected_groups(content: str) -> tuple[str, list[str]]:
                     end = _find_balanced_brace(content, index)
                     if end is not None:
                         protected.append(content[start : end + 1])
-                        parts.append(f"{_PROTECTED_PREFIX}{len(protected) - 1}")
+                        parts.append(f"{_PROTECTED_PREFIX}{len(protected) - 1}Z")
                         index = end + 1
                         continue
                 index = start
