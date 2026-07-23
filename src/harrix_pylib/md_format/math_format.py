@@ -471,7 +471,7 @@ def _layout_structures_root(content: str) -> str:
                 continue
             left_end, left_cmd = left
             matched = _find_matching_right(content, left_end)
-            parts.append(content[index:left_start])
+            parts.append(_rstrip_indent_before_structure(content[index:left_start]))
             if matched is None:
                 parts.append(left_cmd)
                 index = left_end
@@ -505,7 +505,7 @@ def _layout_structures_root(content: str) -> str:
             break
         env = begin_match.group(1)
         begin_start = begin_match.start()
-        parts.append(content[index:begin_start])
+        parts.append(_rstrip_indent_before_structure(content[index:begin_start]))
         header_end = _consume_begin_args(content, begin_match.end())
         end_marker = f"\\end{{{env}}}"
         end_index = _find_matching_end(content, header_end, env)
@@ -748,6 +748,23 @@ def _restore_protected(content: str, protected: list[str]) -> str:
         return protected[int(match.group(1))]
 
     return _PROTECTED_PLACEHOLDER_RE.sub(_replace, content)
+
+
+def _rstrip_indent_before_structure(text: str) -> str:
+    r"""Drop indent spaces after the last newline before `\begin` / `\left`.
+
+    Keeps same-line spacing such as `= \left` or `- \left`.
+
+    """
+    if not text:
+        return text
+    last_nl = text.rfind("\n")
+    if last_nl < 0:
+        return text
+    head, tail = text[: last_nl + 1], text[last_nl + 1 :]
+    if tail and not tail.strip():
+        return head
+    return text
 
 
 def _script_group_ranges(tokens: list[_Token]) -> list[tuple[int, int]]:
