@@ -940,6 +940,26 @@ def test_generate_image_captions_content_consecutive_images() -> None:
     assert md_after == h.md.generate_image_captions_content(md)
 
 
+def test_generate_image_captions_strips_trailing_space_in_alt() -> None:
+    """Trailing space in image alt must not break italic caption delimiters."""
+    source = "---\nlang: ru\n---\n\n![Папка с разархивированным архивом ](img/install.png)\n"
+    result = h.md.generate_image_captions_content(source)
+    assert "![Папка с разархивированным архивом](img/install.png)" in result
+    assert "_Рисунок 1 — Папка с разархивированным архивом_" in result
+    assert "архивом _" not in result
+    assert "\\_" not in result
+
+    # Escaped broken captions from a previous format pass are replaced on regenerate.
+    broken = (
+        "---\nlang: ru\n---\n\n"
+        "![Папка с разархивированным архивом](img/install.png)\n\n"
+        "\\_Рисунок 1 — Папка с разархивированным архивом \\_\n"
+    )
+    repaired = h.md.generate_image_captions_content(broken)
+    assert "_Рисунок 1 — Папка с разархивированным архивом_" in repaired
+    assert "\\_Рисунок" not in repaired
+
+
 def test_append_yaml_tag() -> None:
     """Test adding YAML tag to a Markdown file."""
     md_before = """---

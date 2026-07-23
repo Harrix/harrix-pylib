@@ -1900,7 +1900,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
             if line.strip() == "":
                 continue
         if (
-            re.match(r"^_.*_$", line)
+            re.match(r"^\\?_.*\\?_$", line)
             and lines[i - 1].strip() == ""
             and i > 1
             and re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip())
@@ -1920,7 +1920,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
             continue
         if image_re.match(line) and new_lines:
             prev_line = new_lines[-1]
-            if prev_line.strip() and (image_re.match(prev_line) or re.match(r"^_.*_$", prev_line)):
+            if prev_line.strip() and (image_re.match(prev_line) or re.match(r"^\\?_.*\\?_$", prev_line)):
                 new_lines.append("")
         new_lines.append(line)
     content_md = "\n".join(new_lines)
@@ -1941,12 +1941,16 @@ def generate_image_captions_content(markdown_text: str) -> str:
         if match and not any(fw in current_line for fw in forbidden_substrings):
             image_count += 1
 
-            alt_text = match.group(1)
+            raw_alt = match.group(1)
+            alt_text = raw_alt.strip()
             modified_line = current_line
             if not alt_text:
                 filename_no_ext = match.group(2).split("/")[-1]
                 alt_text = filename_no_ext.replace("_", " ").replace("-", " ").title()
                 modified_line = current_line.replace("![](", f"![{alt_text}](", 1)
+            elif alt_text != raw_alt:
+                # Trailing/leading spaces in alt break italic captions (`_text _`).
+                modified_line = current_line.replace(f"![{raw_alt}](", f"![{alt_text}](", 1)
 
             new_lines.append(modified_line)
 
