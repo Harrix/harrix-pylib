@@ -763,7 +763,14 @@ def _reindent_plain_lines(text: str, *, depth: int) -> str:
     """Strip per-line leading whitespace and apply a uniform `depth` indent."""
     indent = _INDENT_UNIT * depth
     lines = text.strip("\n").split("\n")
-    return "\n".join(f"{indent}{line.lstrip(' \t')}" if line.strip() else "" for line in lines)
+    result: list[str] = []
+    for line in lines:
+        if line.strip():
+            stripped = line.lstrip(" \t")
+            result.append(f"{indent}{stripped}")
+        else:
+            result.append("")
+    return "\n".join(result)
 
 
 def _render_padded_cells(cells: tuple[str, ...], widths: list[int], *, style: str) -> str:

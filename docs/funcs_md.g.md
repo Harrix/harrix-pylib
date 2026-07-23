@@ -2279,7 +2279,8 @@ def generate_image_captions_content(markdown_text: str) -> str:
             list_indent = _list_continuation_indent_for_image(new_lines, list_item_start_re)
             if list_indent is not None and len(indent) < len(list_indent):
                 indent = list_indent
-                modified_line = f"{indent}{modified_line.lstrip(' \t')}"
+                stripped_line = modified_line.lstrip(" \t")
+                modified_line = f"{indent}{stripped_line}"
 
             new_lines.append(modified_line)
 
