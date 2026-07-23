@@ -244,6 +244,23 @@ def test_formatter_wraps_bare_filenames_before_h006(tmp_path: Path) -> None:
     assert not _checker_errors(tmp_path, result, {"H006"}), result
 
 
+def test_formatter_wraps_bare_leading_dot_extensions(tmp_path: Path) -> None:
+    """Bare `.exe` / `.pdf` become inline code; H006 must not rewrite to `.EXE`."""
+    source = (
+        "Для версии Qt под компилятор Visual Studio статья "
+        "[Запуск Qt приложений под Visual Studio .exe вне Qt Creator]"
+        "(https://example.com/run-qt).\n\n"
+        "Откройте .pdf или .DLL вручную.\n"
+    )
+    result = _format(source)
+    assert "Visual Studio `.exe` вне Qt Creator" in result
+    assert "`.pdf`" in result
+    assert "`.DLL`" not in result and "`.dll`" in result
+    assert ".EXE" not in result
+    assert not _checker_errors(tmp_path, result, {"H006"}), result
+    assert not _checker_errors(tmp_path, "Visual Studio .exe вне Qt Creator.\n", {"H006"})
+
+
 def test_formatter_keeps_node_js_as_product_name(tmp_path: Path) -> None:
     """Node.js is a product name: do not wrap; rewrite bare node.js via H006."""
     source = "Install Node.js first.\n\nAlso support node.js on Windows.\n\nOpen src/node.js for the script.\n"

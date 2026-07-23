@@ -172,11 +172,15 @@ _FILE_PATH_EXTENSIONS = frozenset(
 _FILE_PATH_EXT_ALT = "|".join(sorted(_FILE_PATH_EXTENSIONS, key=lambda item: (-len(item), item)))
 # Product names that look like `name.ext` but are not files (skip backtick wrap).
 _BARE_FILENAME_PRODUCT_BASENAMES = frozenset({"node.js"})
-# Group 1: leading-dot mention `.g.md` (capture without the leading `.`).
-# Group 2: normal basename/path `config.json`, `../recover.sql`, `src/a.py`.
+# Group 1: leading-dot file mention `.g.md` (capture without the leading `.`).
+# Group 2: bare extension mention `.exe` / `.sql` (capture extension only; wrap keeps the `.`).
+# Group 3 (unnamed): normal basename/path `config.json`, `../recover.sql`, `src/a.py`.
 _BARE_FILENAME_PATTERN = re.compile(
-    rf"(?:(?<!\S)\.((?:[\w.-]+[/\\])*[\w][\w.-]*\.(?:{_FILE_PATH_EXT_ALT}))"
-    rf"|(?<![A-Za-z0-9_`.])(?:[A-Za-z]:[/\\])?(?:(?:[\w.-]+|\.\.)[/\\])*[\w][\w.-]*\.(?:{_FILE_PATH_EXT_ALT}))"
+    rf"(?:"
+    rf"(?<!\S)\.((?:[\w.-]+[/\\])*[\w][\w.-]*\.(?:{_FILE_PATH_EXT_ALT}))"
+    rf"|(?<!\S)\.({_FILE_PATH_EXT_ALT})"
+    rf"|(?<![A-Za-z0-9_`.])(?:[A-Za-z]:[/\\])?(?:(?:[\w.-]+|\.\.)[/\\])*[\w][\w.-]*\.(?:{_FILE_PATH_EXT_ALT})"
+    rf")"
     rf"(?!\.[A-Za-z0-9_])(?![A-Za-z0-9_])",
     re.IGNORECASE,
 )
@@ -273,6 +277,9 @@ def _fix_bare_filenames_to_inline_code(segment: str) -> str:
     Leading-dot mentions like `.g.md` become `` `g.md` `` so H015 cannot glue the
     leftover period onto the previous word (`combined .` → `combined.`).
 
+    Bare extensions like `.exe` become `` `.exe` `` (dot kept) so H006 does not
+    rewrite them to `.EXE`.
+
     Product names such as `Node.js` are left unwrapped (not a file). Paths like
     `src/node.js` are still wrapped.
 
@@ -282,6 +289,9 @@ def _fix_bare_filenames_to_inline_code(segment: str) -> str:
         leading_dot_name = match.group(1)
         if leading_dot_name is not None:
             return f"`{leading_dot_name}`"
+        bare_extension = match.group(2)
+        if bare_extension is not None:
+            return f"`.{bare_extension.lower()}`"
         matched = match.group(0)
         if "/" not in matched and "\\" not in matched and matched.casefold() in _BARE_FILENAME_PRODUCT_BASENAMES:
             return matched
@@ -815,13 +825,8 @@ def _is_blockquote_attribution_line(line: str) -> bool:
 
 
 def _is_file_extension_fragment(text: str, start: int, _end: int) -> bool:
-    """Return `True` if span is a file extension after a dotted filename stem."""
-    dot_index = start - 1
-    stem_index = start - 2
-    if stem_index < 0 or text[dot_index] != ".":
-        return False
-    prev = text[stem_index]
-    return prev.isalnum() or prev == "_"
+    """Return `True` if span is a file extension after a dot (e.g. `recover.sql`, `.exe`)."""
+    return start >= 1 and text[start - 1] == "."
 
 
 def _is_h021_allowed_period(segment: str, period_pos: int) -> bool:

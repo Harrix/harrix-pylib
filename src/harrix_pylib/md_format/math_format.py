@@ -140,6 +140,10 @@ def _apply_operator_spacing(content: str) -> str:
             parts.append(token.value)
             index += 1
             continue
+        if token.kind == "op" and _is_text_hyphen(tokens, index):
+            parts.append(token.value)
+            index += 1
+            continue
         if token.kind == "amp":
             eq_index = index + 1
             while eq_index < len(tokens) and tokens[eq_index].kind == "ws":
@@ -411,6 +415,28 @@ def _format_math_content(content: str, *, display: bool = False) -> str:
 def _is_control_word(command: str) -> bool:
     r"""Return whether `command` is a TeX control word like \lvert (not \{)."""
     return len(command) > 1 and command.startswith("\\") and command[1:].isalpha()
+
+
+def _is_text_hyphen(tokens: list[_Token], index: int) -> bool:
+    """Return whether `-` at `index` is a compound-word hyphen, not binary minus.
+
+    Tight hyphens between multi-letter words (`pdf-file`, `bib-документ`) stay
+    unspaced; single-letter math (`a-b`) still gets operator spacing.
+
+    """
+    if tokens[index].value != "-":
+        return False
+    if index > 0 and tokens[index - 1].kind == "ws":
+        return False
+    if index + 1 < len(tokens) and tokens[index + 1].kind == "ws":
+        return False
+    prev = _prev_significant(tokens, index)
+    nxt = _next_significant(tokens, index)
+    if prev is None or nxt is None:
+        return False
+    if prev.kind != "word" or nxt.kind != "word":
+        return False
+    return len(prev.value) > 1 and len(nxt.value) > 1
 
 
 def _is_unary_plus_minus(tokens: list[_Token], index: int) -> bool:

@@ -23,6 +23,16 @@ def test_format_math_content_spaces_around_operators() -> None:
     assert _format_math_content("a+b=c") == "a + b = c"
 
 
+def test_format_math_content_keeps_compound_word_hyphens() -> None:
+    assert _format_math_content("pdf-file") == "pdf-file"
+    assert _format_math_content("bib-document") == "bib-document"
+    assert _format_math_content("pdf-файле") == "pdf-файле"
+    assert _format_math_content("bib-документ") == "bib-документ"
+    assert _format_math_content(r"\KwData{pdf-файле}") == r"\KwData{pdf-файле}"
+    # Single-letter math identifiers still get minus spacing.
+    assert _format_math_content("a-b") == "a - b"
+
+
 def test_format_math_content_keeps_unary_minus() -> None:
     assert _format_math_content("-x+y") == "-x + y"
     assert _format_math_content("x^{-2}") == "x^{-2}"
