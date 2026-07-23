@@ -20,13 +20,7 @@ _MIN_FENCED_BLOCK_LINES = 2
 _FENCE_OPEN_RE = re.compile(r"^(\s*)(`{3,}|~{3,})(.*)$")
 _FENCE_CLOSE_RE = re.compile(r"^(\s*)(`{3,}|~{3,})[ \t]*$")
 
-# Language tag (first info-string token, lowercased) -> body formatter.
-# Extend this map when adding formatters for other fenced languages.
 _LATEX_DOCUMENT_RE = re.compile(r"\\documentclass\b|\\begin\{document\}")
-_CODE_BLOCK_BODY_FORMATTERS: dict[str, Callable[[str], str]] = {
-    "latex": lambda body: _format_math_or_leave_latex_document(body),
-    "tex": lambda body: _format_math_or_leave_latex_document(body),
-}
 
 
 @dataclass(frozen=True)
@@ -208,3 +202,11 @@ def _trim_trailing_blank_lines_before_closing_fence(block_lines: list[str]) -> l
         # Ensure an empty fenced block stays a fenced block (not inline code).
         trimmed.insert(1, "")
     return trimmed
+
+
+# Language tag (first info-string token, lowercased) -> body formatter.
+# Extend this map when adding formatters for other fenced languages.
+_CODE_BLOCK_BODY_FORMATTERS: dict[str, Callable[[str], str]] = {
+    "latex": _format_math_or_leave_latex_document,
+    "tex": _format_math_or_leave_latex_document,
+}

@@ -283,7 +283,7 @@ def test_formatter_wraps_bare_leading_dot_extensions(tmp_path: Path) -> None:
 
 
 def test_formatter_fixes_mistyped_http_scheme_separators(tmp_path: Path) -> None:
-    """`https:\\host` / `https:/host` become real `https://` URLs (H039)."""
+    r"""`https:\host` / `https:/host` become real `https://` URLs (H039)."""
     source = (
         "В том же [jsfiddle.net](https:\\jsfiddle.net) код.\n\n"
         "Already broken [x](https:/example.com/path).\n\n"
