@@ -272,7 +272,7 @@ def _render_inline_token(
     if child.type == "html_inline":
         return child.content, index + 1
     if child.type == "image":
-        alt = child.content
+        alt = child.content.strip()
         src = _readable_link_href(str(child.attrGet("src") or ""))
         title = child.attrGet("title")
         if title:

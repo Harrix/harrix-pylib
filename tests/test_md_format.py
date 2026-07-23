@@ -236,6 +236,12 @@ def test_format_markdown_content_preserves_cyrillic_urls_without_encoding(source
     assert "%D0" not in result
 
 
+def test_format_markdown_content_strips_spaces_in_image_alt() -> None:
+    source = "![Папка с разархивированным архивом ](img/install.png)\n"
+    result = _format_markdown(source, end_of_line="lf")
+    assert result == "![Папка с разархивированным архивом](img/install.png)\n"
+
+
 def test_format_markdown_content_decodes_percent_encoded_unicode_in_link_url() -> None:
     source = (
         "[Видеоуроки по Arduino, 7-я серия - I2C и Processing]"
