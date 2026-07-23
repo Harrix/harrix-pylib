@@ -48,6 +48,7 @@ def _checker_errors(tmp_path: Path, text: str, rules: set[str]) -> list[str]:
         ("**Note**: text\n", {"H030"}, "**Note:** text"),
         ("##Title\n", {"H036"}, "## Title"),
         ("[Link](folder\\file.md)\n", {"H039"}, "[Link](folder/file.md)"),
+        ("[jsfiddle.net](https:\\jsfiddle.net)\n", {"H039"}, "<jsfiddle.net>"),
         ("a\u200bb\n", {"H042"}, "ab"),
         ("Привет,мир\n", {"H050"}, "Привет, мир"),  # ignore: HP001
         ("## Title.\n", {"H057"}, "## Title\n"),
@@ -260,6 +261,23 @@ def test_formatter_wraps_bare_leading_dot_extensions(tmp_path: Path) -> None:
     assert ".EXE" not in result
     assert not _checker_errors(tmp_path, result, {"H006"}), result
     assert not _checker_errors(tmp_path, "Visual Studio .exe вне Qt Creator.\n", {"H006"})
+
+
+def test_formatter_fixes_mistyped_http_scheme_separators(tmp_path: Path) -> None:
+    """`https:\\host` / `https:/host` become real `https://` URLs (H039)."""
+    source = (
+        "В том же [jsfiddle.net](https:\\jsfiddle.net) код.\n\n"
+        "Already broken [x](https:/example.com/path).\n\n"
+        "Local [Link](folder\\file.md).\n"
+    )
+    result = _format(source)
+    # Domain label + fixed https URL collapses to an angle autolink.
+    assert "В том же <jsfiddle.net> код." in result
+    assert "[x](https://example.com/path)" in result
+    assert "[Link](folder/file.md)" in result
+    assert "https:/jsfiddle.net" not in result
+    assert "https:\\" not in result
+    assert not _checker_errors(tmp_path, result, {"H039"}), result
 
 
 def test_formatter_keeps_node_js_as_product_name(tmp_path: Path) -> None:

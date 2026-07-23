@@ -61,6 +61,8 @@ _ATX_HEADING_NO_SPACE_PATTERN = re.compile(r"^(\s{0,3}#{1,6})([^\s#].*)$")
 _ATX_HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.*)$")
 _ATX_CLOSING_HASHES_PATTERN = re.compile(r"\s+#+\s*$")
 _BACKSLASH_PATH_PATTERN = re.compile(r"\]\(([^)]*\\[^)]*)\)")
+# Mistyped scheme separators: `https:\host`, `https:\\host`, `https:/host` → `https://host`.
+_SCHEME_URL_DEST_PATTERN = re.compile(r"\]\((https?):[/\\]+([^)]*)\)", re.IGNORECASE)
 _MISSING_SPACE_AFTER_PUNCT_PATTERN = re.compile(r"([,;!?])(?=[^\W\d_])", re.UNICODE)
 _PUNCT_BEFORE_CLOSING_GUILLEMET_PATTERN = re.compile(
     r"((?:[^\W\d_]{2,}\.|[,;:]))»",
@@ -251,7 +253,13 @@ def _fix_atx_heading_space(line: str) -> str:
 
 
 def _fix_backslash_paths(segment: str) -> str:
-    """Normalize backslashes in local Markdown destinations (H039)."""
+    r"""Normalize link destinations: fix http(s) scheme separators, then local `\` (H039)."""
+
+    def fix_scheme(match: re.Match[str]) -> str:
+        rest = match.group(2).replace("\\", "/")
+        return f"]({match.group(1)}://{rest})"
+
+    segment = _SCHEME_URL_DEST_PATTERN.sub(fix_scheme, segment)
     return _BACKSLASH_PATH_PATTERN.sub(lambda match: f"]({match.group(1).replace(chr(92), '/')})", segment)
 
 
