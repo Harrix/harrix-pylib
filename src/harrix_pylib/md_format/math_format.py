@@ -910,6 +910,14 @@ def _tokenize(content: str) -> list[_Token]:
                 tokens.append(_Token("command", "\\\\"))
                 index += 2
                 continue
+            if next_char in {"\n", "\r"}:
+                # Lone `\` before EOL must not swallow the newline (`.` / next_char
+                # would otherwise glue `\`+`\n` into one command). That broke line
+                # structure: remaining indent became horizontal ws and collapsed to
+                # one space, so each format pass shifted the previous line right.
+                tokens.append(_Token("command", "\\"))
+                index += 1
+                continue
             if next_char == " ":
                 tokens.append(_Token("space_cmd", "\\ "))
                 index += 2

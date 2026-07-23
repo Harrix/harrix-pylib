@@ -321,6 +321,24 @@ def test_formatter_math_formatting_is_idempotent() -> None:
     assert once == twice
 
 
+def test_formatter_flalign_placeholder_backslash_before_newline_is_idempotent() -> None:
+    """Lone `\\` before EOL (docs placeholder) must not drift indent each pass."""
+    source = "```tex\n\\State < text > \\begin{flalign*}\n      < formula > \\\n  < formula >\n\\end{flalign*}\n```\n"
+    once = _format(source)
+    twice = _format(once)
+    assert once == twice
+    assert "      < formula > \\" in once.replace("\r\n", "\n")
+    assert "  < formula >" in once.replace("\r\n", "\n")
+
+    source_amp = (
+        "```tex\n\\State < text > \\begin{flalign*}\n      & < formula > \\\n  & < formula >\n\\end{flalign*}\n```\n"
+    )
+    once_amp = _format(source_amp)
+    assert _format(once_amp) == once_amp
+    assert "      & < formula > \\" in once_amp.replace("\r\n", "\n")
+    assert "  & < formula >" in once_amp.replace("\r\n", "\n")
+
+
 def test_formatter_preserves_hyphens_inside_formatted_math() -> None:
     source = (
         "Prose uses 1 - 2.\n\n"
