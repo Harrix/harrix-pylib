@@ -420,7 +420,7 @@ def _is_control_word(command: str) -> bool:
 def _is_text_hyphen(tokens: list[_Token], index: int) -> bool:
     """Return whether `-` at `index` is a compound-word hyphen, not binary minus.
 
-    Tight hyphens between multi-letter words (`pdf-file`, `bib-документ`) stay
+    Tight hyphens between multi-letter words (`pdf-file`, `bib-document`) stay
     unspaced; single-letter math (`a-b`) still gets operator spacing.
 
     """

@@ -1841,7 +1841,7 @@ class MdChecker:
 
         Only whitespace may separate the two words (so `Notes-Notes` is allowed).
         Hyphenated compounds count as one token.
-        Title-Case doubles (`Гумберт Гумберт`, `Knock Knock`) are allowed.
+        Title-case doubles (`Humbert Humbert`, `Knock Knock`) are allowed.
 
         """
         previous: str | None = None
