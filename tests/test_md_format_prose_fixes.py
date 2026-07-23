@@ -255,7 +255,8 @@ def test_formatter_wraps_bare_leading_dot_extensions(tmp_path: Path) -> None:
     result = _format(source)
     assert "Visual Studio `.exe` вне Qt Creator" in result
     assert "`.pdf`" in result
-    assert "`.DLL`" not in result and "`.dll`" in result
+    assert "`.DLL`" not in result
+    assert "`.dll`" in result
     assert ".EXE" not in result
     assert not _checker_errors(tmp_path, result, {"H006"}), result
     assert not _checker_errors(tmp_path, "Visual Studio .exe вне Qt Creator.\n", {"H006"})
