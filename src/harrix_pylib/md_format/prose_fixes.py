@@ -132,6 +132,7 @@ _FILE_PATH_EXTENSIONS = frozenset(
         "apk",
         "bat",
         "cfg",
+        "code-snippets",
         "cpp",
         "css",
         "csv",

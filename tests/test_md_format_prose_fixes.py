@@ -256,6 +256,14 @@ def test_formatter_wraps_bare_filenames_before_h006(tmp_path: Path) -> None:
     assert not _checker_errors(tmp_path, result, {"H006"}), result
 
 
+def test_formatter_wraps_vscode_code_snippets_filename() -> None:
+    """VS Code `*.code-snippets` files are wrapped like other bare filenames."""
+    source = "**markdown.json**:\n**common.code-snippets**:\n"
+    result = _format(source)
+    assert "**`markdown.json`**:" in result
+    assert "**`common.code-snippets`**:" in result
+
+
 def test_formatter_wraps_bare_leading_dot_extensions(tmp_path: Path) -> None:
     """Bare `.exe` / `.pdf` become inline code; H006 must not rewrite to `.EXE`."""
     source = (
