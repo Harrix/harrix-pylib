@@ -1923,6 +1923,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
 
     # Add captions
     forbidden_substrings = ("![Featured image](", "img.shields.io", "<!-- no-caption -->")
+    list_item_start_re = re.compile(r"^([-*+]|\d+[.)])\s+")
 
     image_count = 0
     new_lines = []
@@ -1948,6 +1949,12 @@ def generate_image_captions_content(markdown_text: str) -> str:
                 # Trailing/leading spaces in alt break italic captions (`_text _`).
                 modified_line = current_line.replace(f"![{raw_alt}](", f"![{alt_text}](", 1)
 
+            indent = modified_line[: len(modified_line) - len(modified_line.lstrip(" \t"))]
+            list_indent = _list_continuation_indent_for_image(new_lines, list_item_start_re)
+            if list_indent is not None and len(indent) < len(list_indent):
+                indent = list_indent
+                modified_line = f"{indent}{modified_line.lstrip(' \t')}"
+
             new_lines.append(modified_line)
 
             caption_templates = {
@@ -1956,7 +1963,6 @@ def generate_image_captions_content(markdown_text: str) -> str:
             }
             template = caption_templates.get(lang, caption_templates["en"])
             caption = template.format(count=image_count, text=alt_text)
-            indent = current_line[: len(current_line) - len(current_line.lstrip())]
             new_lines.append("")
             new_lines.append(f"{indent}{caption}")
         else:
@@ -3783,6 +3789,28 @@ def _is_toc_details_open(lines: list[str], index: int) -> bool:
     return "<summary>" in summary_line and (
         "📖 Contents" in summary_line or "📖 Содержание" in summary_line  # ignore: HP001
     )
+
+
+def _list_continuation_indent_for_image(previous_lines: list[str], list_item_start_re: re.Pattern[str]) -> str | None:
+    """Return list-continuation indent if the next image belongs under a list item.
+
+    Looks at the nearest non-empty line above. When that line is a list item
+    (e.g. `- …:`), the image should be indented to the list content column so
+    captions stay inside the item.
+
+    """
+    idx = len(previous_lines) - 1
+    while idx >= 0 and not previous_lines[idx].strip():
+        idx -= 1
+    if idx < 0:
+        return None
+    prev = previous_lines[idx]
+    if prev[:1] in {" ", "\t"}:
+        return None
+    match = list_item_start_re.match(prev)
+    if match is None:
+        return None
+    return " " * len(match.group(0))
 
 
 def _max_backtick_run(text: str) -> int:

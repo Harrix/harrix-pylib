@@ -2249,6 +2249,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
 
     # Add captions
     forbidden_substrings = ("![Featured image](", "img.shields.io", "<!-- no-caption -->")
+    list_item_start_re = re.compile(r"^([-*+]|\d+[.)])\s+")
 
     image_count = 0
     new_lines = []
@@ -2274,6 +2275,12 @@ def generate_image_captions_content(markdown_text: str) -> str:
                 # Trailing/leading spaces in alt break italic captions (`_text _`).
                 modified_line = current_line.replace(f"![{raw_alt}](", f"![{alt_text}](", 1)
 
+            indent = modified_line[: len(modified_line) - len(modified_line.lstrip(" \t"))]
+            list_indent = _list_continuation_indent_for_image(new_lines, list_item_start_re)
+            if list_indent is not None and len(indent) < len(list_indent):
+                indent = list_indent
+                modified_line = f"{indent}{modified_line.lstrip(' \t')}"
+
             new_lines.append(modified_line)
 
             caption_templates = {
@@ -2282,7 +2289,6 @@ def generate_image_captions_content(markdown_text: str) -> str:
             }
             template = caption_templates.get(lang, caption_templates["en"])
             caption = template.format(count=image_count, text=alt_text)
-            indent = current_line[: len(current_line) - len(current_line.lstrip())]
             new_lines.append("")
             new_lines.append(f"{indent}{caption}")
         else:

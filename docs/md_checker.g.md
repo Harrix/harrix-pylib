@@ -972,6 +972,11 @@ class MdChecker:
         if self._is_in_list_context(content_lines, line_index):
             return
 
+        # Skip image caption line (italic only, e.g. _Figure 1: ..._): belongs to previous image,
+        # not an intro phrase for the next list item (same exemption as H014).
+        if len(stripped) >= self._MIN_ITALIC_CAPTION_LEN and stripped.startswith("_") and stripped.endswith("_"):
+            return
+
         last_char, col = self._paragraph_last_char(line)
 
         if any(marker in line for marker in self._COLON_SKIP_MARKERS):
@@ -2405,12 +2410,22 @@ class MdChecker:
         return any(c in stripped for c in "-._")
 
     def _is_in_list_context(self, content_lines: list[str], line_index: int) -> bool:
-        """Return `True` if the line is a list item or an indented continuation of one."""
+        """Return `True` if the line is a list item or an indented continuation of one.
+
+        Blank lines between indented continuation blocks are skipped so that a figure
+        caption under a list item still counts as list context after `image` + blank.
+
+        """
+        current = content_lines[line_index] if 0 <= line_index < len(content_lines) else ""
+        allow_blank = current[:1] in {" ", "\t"}
         idx = line_index
         while idx >= 0:
             line = content_lines[idx]
             stripped = line.strip()
             if not stripped:
+                if allow_blank:
+                    idx -= 1
+                    continue
                 return False
             if self._LIST_ITEM_START_PATTERN.match(stripped):
                 return True

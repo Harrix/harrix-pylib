@@ -982,6 +982,21 @@ def test_generate_image_captions_for_indented_list_images() -> None:
     assert again == result
 
 
+def test_generate_image_captions_indents_unindented_images_under_list_items() -> None:
+    """Images after a list item without indent are pulled into the list with captions."""
+    source = (
+        "---\nlang: ru\n---\n\n"
+        "- [minimap](https://example.com) — карта документа:\n\n"
+        "![Пакет minimap](img/minimap.png)\n\n"
+        "- [pigments](https://example.com) — цвета:\n\n"
+        "![Пакет pigments](img/pigments.png)\n"
+    )
+    result = h.md.generate_image_captions_content(source)
+    assert "  ![Пакет minimap](img/minimap.png)\n\n  _Рисунок 1 — Пакет minimap_" in result
+    assert "  ![Пакет pigments](img/pigments.png)\n\n  _Рисунок 2 — Пакет pigments_" in result
+    assert h.md.generate_image_captions_content(result) == result
+
+
 def test_append_yaml_tag() -> None:
     """Test adding YAML tag to a Markdown file."""
     md_before = """---

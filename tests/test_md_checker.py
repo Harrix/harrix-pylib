@@ -614,6 +614,31 @@ def test_md_checker() -> None:
         errors = checker.check(list_continuation_file, select={"H059"})
         assert not [e for e in errors if "H059" in e], "H059 must not fire on list item continuations"
 
+        # Figure caption before next list item must not trigger H059 (belongs to previous image)
+        caption_before_list_file = temp_path / "caption_before_list.md"
+        caption_before_list_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "- [minimap](https://example.com) — карта:\n\n"
+            "![Пакет minimap](img/minimap.png)\n\n"
+            "_Рисунок 1 — Пакет minimap_\n\n"
+            "- [pigments](https://example.com) — цвета:\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(caption_before_list_file, select={"H059"})
+        assert not [e for e in errors if "H059" in e], "H059 must not fire on figure captions before list"
+
+        indented_caption_before_list_file = temp_path / "indented_caption_before_list.md"
+        indented_caption_before_list_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "- [minimap](https://example.com) — карта:\n\n"
+            "  ![Пакет minimap](img/minimap.png)\n\n"
+            "  _Рисунок 1 — Пакет minimap_\n\n"
+            "- [pigments](https://example.com) — цвета:\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(indented_caption_before_list_file, select={"H059"})
+        assert not [e for e in errors if "H059" in e], "H059 must not fire on indented figure captions before list"
+
         # Sentence-ending period before list (docstring summary / D400) must not require colon
         period_before_list_file = temp_path / "period_before_list.md"
         period_before_list_file.write_text(
