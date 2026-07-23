@@ -960,6 +960,28 @@ def test_generate_image_captions_strips_trailing_space_in_alt() -> None:
     assert "\\_Рисунок" not in repaired
 
 
+def test_generate_image_captions_for_indented_list_images() -> None:
+    """Images indented under list items must get captions with matching indent."""
+    source = (
+        "---\nlang: ru\n---\n\n"
+        "# Подборка\n\n"
+        "![Featured image](featured-image.svg)\n\n"
+        "- <https://example.com> — text:\n\n"
+        "  ![Внешний вид сервиса Matrix](img/matrix.png)\n\n"
+        "- next:\n\n"
+        "  ![Внешний вид сервиса Plink](img/plink.png)\n"
+    )
+    result = h.md.generate_image_captions_content(source)
+    assert "![Featured image](featured-image.svg)" in result
+    assert "_Рисунок" not in result.split("featured-image.svg", 1)[0]  # no caption before featured
+    assert "  ![Внешний вид сервиса Matrix](img/matrix.png)\n\n  _Рисунок 1 — Внешний вид сервиса Matrix_" in result
+    assert "  ![Внешний вид сервиса Plink](img/plink.png)\n\n  _Рисунок 2 — Внешний вид сервиса Plink_" in result
+
+    # Re-running must keep numbering stable (remove + recreate captions).
+    again = h.md.generate_image_captions_content(result)
+    assert again == result
+
+
 def test_append_yaml_tag() -> None:
     """Test adding YAML tag to a Markdown file."""
     md_before = """---

@@ -1891,6 +1891,8 @@ def generate_image_captions_content(markdown_text: str) -> str:
     is_caption = False
     new_lines = []
     lines = content_md.split("\n")
+    caption_line_re = re.compile(r"^\s*\\?_.*\\?_$")
+    image_re = re.compile(r"^\s*\!\[(.*?)\]\((.*?)\.(.*?)\)$")
     for i, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
         if is_code_block:
             new_lines.append(line)
@@ -1899,19 +1901,13 @@ def generate_image_captions_content(markdown_text: str) -> str:
             is_caption = False
             if line.strip() == "":
                 continue
-        if (
-            re.match(r"^\\?_.*\\?_$", line)
-            and lines[i - 1].strip() == ""
-            and i > 1
-            and re.match(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$", lines[i - 2].strip())
-        ):
+        if caption_line_re.match(line) and lines[i - 1].strip() == "" and i > 1 and image_re.match(lines[i - 2]):
             is_caption = True
             continue
         new_lines.append(line)
     content_md = "\n".join(new_lines)
 
     # Separate consecutive images with blank lines
-    image_re = re.compile(r"^\!\[(.*?)\]\((.*?)\.(.*?)\)$")
     new_lines = []
     lines = content_md.split("\n")
     for line, inside_code in identify_code_blocks(lines):
@@ -1920,7 +1916,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
             continue
         if image_re.match(line) and new_lines:
             prev_line = new_lines[-1]
-            if prev_line.strip() and (image_re.match(prev_line) or re.match(r"^\\?_.*\\?_$", prev_line)):
+            if prev_line.strip() and (image_re.match(prev_line) or caption_line_re.match(prev_line)):
                 new_lines.append("")
         new_lines.append(line)
     content_md = "\n".join(new_lines)
@@ -1960,8 +1956,9 @@ def generate_image_captions_content(markdown_text: str) -> str:
             }
             template = caption_templates.get(lang, caption_templates["en"])
             caption = template.format(count=image_count, text=alt_text)
+            indent = current_line[: len(current_line) - len(current_line.lstrip())]
             new_lines.append("")
-            new_lines.append(caption)
+            new_lines.append(f"{indent}{caption}")
         else:
             new_lines.append(current_line)
 
