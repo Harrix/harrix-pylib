@@ -63,6 +63,8 @@ _ROW_ENVS = frozenset(
         "aligned",
         "eqnarray",
         "eqnarray*",
+        "flalign",
+        "flalign*",
         "matrix",
         "pmatrix",
         "bmatrix",
@@ -366,7 +368,16 @@ def _find_matching_right(content: str, body_start: int) -> tuple[int, int, str] 
 
 
 def _format_environment_body(body: str, *, depth: int = 1) -> str:
-    """Format rows/columns inside a row-oriented environment at `depth` indent."""
+    r"""Format rows/columns inside a row-oriented environment at `depth` indent.
+
+    When the body has no TeX row breaks (`\\`), keep source lines and only
+    normalize leading indentation (documentation often uses a lone `\` as a
+    linebreak placeholder, which must not be collapsed into one row).
+
+    """
+    if "\\\\" not in body:
+        return _reindent_plain_lines(body, depth=depth)
+
     lines = _parse_environment_lines(body)
     widths = _column_widths(lines)
     indent = _INDENT_UNIT * depth
@@ -746,6 +757,13 @@ def _read_lr_command(content: str, start: int, which: str) -> tuple[int, str] | 
         end = cursor + 1 + len(esc_match.group(0))
         return end, content[start:end]
     return cursor + 1, content[start : cursor + 1]
+
+
+def _reindent_plain_lines(text: str, *, depth: int) -> str:
+    """Strip per-line leading whitespace and apply a uniform `depth` indent."""
+    indent = _INDENT_UNIT * depth
+    lines = text.strip("\n").split("\n")
+    return "\n".join(f"{indent}{line.lstrip(' \t')}" if line.strip() else "" for line in lines)
 
 
 def _render_padded_cells(cells: tuple[str, ...], widths: list[int], *, style: str) -> str:

@@ -322,21 +322,28 @@ def test_formatter_math_formatting_is_idempotent() -> None:
 
 
 def test_formatter_flalign_placeholder_backslash_before_newline_is_idempotent() -> None:
-    """Lone `\\` before EOL (docs placeholder) must not drift indent each pass."""
-    source = "```tex\n\\State < text > \\begin{flalign*}\n      < formula > \\\n  < formula >\n\\end{flalign*}\n```\n"
+    """Lone `\\` before EOL (docs placeholder): normalize indent, stay idempotent."""
+    source = "```tex\n\\State < text > \\begin{flalign*}\n     < formula > \\\n  < formula >\n\\end{flalign*}\n```\n"
     once = _format(source)
     twice = _format(once)
     assert once == twice
-    assert "      < formula > \\" in once.replace("\r\n", "\n")
-    assert "  < formula >" in once.replace("\r\n", "\n")
+    normalized = once.replace("\r\n", "\n")
+    assert "\\begin{flalign*}\n  < formula > \\\n  < formula >\n\\end{flalign*}" in normalized
 
     source_amp = (
-        "```tex\n\\State < text > \\begin{flalign*}\n      & < formula > \\\n  & < formula >\n\\end{flalign*}\n```\n"
+        "```tex\n\\State < text > \\begin{flalign*}\n     & < formula > \\\n  & < formula >\n\\end{flalign*}\n```\n"
     )
     once_amp = _format(source_amp)
     assert _format(once_amp) == once_amp
-    assert "      & < formula > \\" in once_amp.replace("\r\n", "\n")
-    assert "  & < formula >" in once_amp.replace("\r\n", "\n")
+    normalized_amp = once_amp.replace("\r\n", "\n")
+    assert "\\begin{flalign*}\n  & < formula > \\\n  & < formula >\n\\end{flalign*}" in normalized_amp
+
+
+def test_formatter_flalign_with_real_row_breaks_aligns_cells() -> None:
+    source = "```tex\n\\begin{flalign*}a&=b\\\\c&=d\\end{flalign*}\n```\n"
+    result = _format(source)
+    assert "\\begin{flalign*}\n  a &= b \\\\\n  c &= d\n\\end{flalign*}" in result.replace("\r\n", "\n")
+    assert _format(result) == result
 
 
 def test_formatter_preserves_hyphens_inside_formatted_math() -> None:
