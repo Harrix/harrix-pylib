@@ -603,6 +603,15 @@ def test_md_checker() -> None:
         errors = checker.check(image_before_list_file, select={"H059"})
         assert not errors
 
+        # Table row before list must not require colon (H059)
+        table_before_list_file = temp_path / "table_before_list.md"
+        table_before_list_file.write_text(
+            "---\nlang: en\n---\n\n| Name | Value |\n| ---- | ----- |\n| CPU  | i7    |\n\n- Item\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(table_before_list_file, select={"H059"})
+        assert not [e for e in errors if "H059" in e], "H059 must not fire when line before list is table row"
+
         admonition_before_list_file = temp_path / "admonition_before_list.md"
         admonition_before_list_file.write_text(
             "---\nlang: en\n---\n\nText [!NOTE]\n\n- Item\n",

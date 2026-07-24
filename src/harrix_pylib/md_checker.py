@@ -82,7 +82,8 @@ class MdChecker:
     - **H058** - Punctuation (`.`, `,`, `;`, `:`) immediately before a closing guillemet
       (Russian typography; `!` / `?` / `…` before the closer are allowed; single-letter abbreviations).
     - **H059** - Missing colon before list (sentence-ending punctuation is allowed;
-      list items and their continuations are skipped).
+      list items and their continuations are skipped; code, math, images, and tables
+      before a list do not require a colon).
     - **H060** - Asset under sibling `img/` or `files/` not referenced in any
       sibling Markdown file (excluding `*.g.md`); `img` → `![]()`, `files` → `[]()`;
       match by basename, path may differ; only direct files in those folders (not nested);
@@ -990,7 +991,8 @@ class MdChecker:
         Requires `:` before a list when the preceding line is an unfinished phrase.
         Sentence-ending punctuation (`.`, `!`, `?`, `…`) is allowed so docstring
         summaries can stay D400-compatible. List items and indented continuations
-        are skipped (loose lists with blank lines between items).
+        are skipped (loose lists with blank lines between items). Display math,
+        images, headings, horizontal rules, and table rows also do not require a colon.
 
         """
         if line_index + 2 >= len(content_lines):
@@ -2654,6 +2656,11 @@ class MdChecker:
             return False
         return False
 
+    def _is_markdown_table_line(self, line: str) -> bool:
+        """Return whether the line is a GFM table row (`|...|`)."""
+        stripped = line.strip()
+        return bool(stripped) and stripped.startswith("|") and stripped.endswith("|")
+
     def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
         """Return `True` if position pos in line is inside a table cell that contains only a hyphen."""
         parts = line.split("|")
@@ -2695,6 +2702,7 @@ class MdChecker:
             and stripped != "```"
             and not stripped.startswith(("![", "#"))
             and not self._is_horizontal_rule(stripped)
+            and not self._is_markdown_table_line(stripped)
         )
 
     @classmethod
