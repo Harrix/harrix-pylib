@@ -83,8 +83,9 @@ class MdChecker:
       (Russian typography; `!` / `?` / `…` before the closer are allowed; single-letter abbreviations).
     - **H059** - Missing colon before list (sentence-ending punctuation is allowed;
       list items and their continuations are skipped).
-    - **H060** - Asset under sibling `img/` or `files/` not referenced in Markdown
-      (`img` → `![]()`, `files` → `[]()`; match by basename, path may differ).
+    - **H060** - Asset under sibling `img/` or `files/` not referenced in any
+      sibling Markdown file (excluding `*.g.md`); `img` → `![]()`, `files` → `[]()`;
+      match by basename, path may differ.
 
     """
 
@@ -1779,20 +1780,21 @@ class MdChecker:
                     )
             offset += len(segment)
 
-    def _check_orphan_asset_files(self, filename: Path, content: str, yaml_end_line: int) -> Generator[str, None, None]:
+    def _check_orphan_asset_files(self, filename: Path, content: str, yaml_end_line: int) -> Generator[str, None, None]:  # noqa: ARG002
         """Check that sibling `img/` / `files/` assets are referenced in Markdown (H060).
 
         - Files under `img/` must appear in an image `![...](...)` (basename match).
         - Files under `files/` must appear in a non-image link `[...](...)` (basename match).
         - Destination path may differ from the on-disk folder (e.g. `img/a.png` as `files/a.png`).
-        - Fenced and inline code are ignored.
+        - References from any sibling `*.md` / `*.markdown` in the same folder count
+          (except `*.g.md`). Fenced and inline code are ignored.
 
         """
         assets = self._collect_sibling_asset_files(filename)
         if not assets:
             return
 
-        image_names, link_names = self._collect_markdown_asset_basenames(content, yaml_end_line)
+        image_names, link_names = self._collect_folder_markdown_asset_basenames(filename.parent)
         for rel_path, kind in assets:
             name_key = rel_path.name.casefold()
             if kind == "img":
@@ -2299,6 +2301,32 @@ class MdChecker:
 
         except yaml.YAMLError as e:
             yield self._format_error("H000", f"YAML parsing error: {e}", filename, line_num=1)
+
+    def _collect_folder_markdown_asset_basenames(self, folder: Path) -> tuple[set[str], set[str]]:
+        """Union image/link basenames from all non-generated Markdown files in `folder`."""
+        image_names: set[str] = set()
+        link_names: set[str] = set()
+        try:
+            children = list(folder.iterdir())
+        except OSError:
+            return image_names, link_names
+
+        for md_path in sorted(children, key=lambda path: path.name.casefold()):
+            if not md_path.is_file():
+                continue
+            if md_path.suffix.lower() not in {".md", ".markdown"}:
+                continue
+            if md_path.name.endswith(".g.md"):
+                continue
+            try:
+                file_content = md_path.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            yaml_end = self._find_yaml_end_line(file_content.splitlines())
+            imgs, links = self._collect_markdown_asset_basenames(file_content, yaml_end)
+            image_names |= imgs
+            link_names |= links
+        return image_names, link_names
 
     def _collect_heading_ids(self, code_block_info: list) -> set[str]:
         """Collect GitHub-style heading IDs from ATX headings outside fenced code.

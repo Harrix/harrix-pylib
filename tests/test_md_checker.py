@@ -1883,7 +1883,11 @@ def test_md_checker() -> None:
         errors = checker.check(orphan_md, select={"H060"})
         assert any("H060" in e and "img/a.png" in e for e in errors)
 
-        referenced_img_md = orphan_article / "note_img.md"
+        referenced_img_dir = temp_path / "referenced_img_article"
+        referenced_img_dir.mkdir()
+        (referenced_img_dir / "img").mkdir()
+        (referenced_img_dir / "img" / "a.png").write_bytes(b"png")
+        referenced_img_md = referenced_img_dir / "note_img.md"
         referenced_img_md.write_text(
             "---\nlang: en\n---\n\n![Alt](img/a.png)\n",
             encoding="utf-8",
@@ -1892,7 +1896,11 @@ def test_md_checker() -> None:
         assert not [e for e in errors if "H060" in e]
 
         # Basename match allows a “broken” folder prefix (img file linked as files/...)
-        broken_path_img_md = orphan_article / "note_broken_path.md"
+        broken_path_dir = temp_path / "broken_path_article"
+        broken_path_dir.mkdir()
+        (broken_path_dir / "img").mkdir()
+        (broken_path_dir / "img" / "a.png").write_bytes(b"png")
+        broken_path_img_md = broken_path_dir / "note_broken_path.md"
         broken_path_img_md.write_text(
             "---\nlang: en\n---\n\n![Alt](files/a.png)\n",
             encoding="utf-8",
@@ -1909,7 +1917,11 @@ def test_md_checker() -> None:
         errors = checker.check(orphan_files_md, select={"H060"})
         assert any("H060" in e and "files/doc.pdf" in e for e in errors)
 
-        linked_files_md = files_article / "note_link.md"
+        linked_files_dir = temp_path / "linked_files_article"
+        linked_files_dir.mkdir()
+        (linked_files_dir / "files").mkdir()
+        (linked_files_dir / "files" / "doc.pdf").write_bytes(b"%PDF")
+        linked_files_md = linked_files_dir / "note_link.md"
         linked_files_md.write_text(
             "---\nlang: en\n---\n\n[Download](files/doc.pdf)\n",
             encoding="utf-8",
@@ -1918,7 +1930,11 @@ def test_md_checker() -> None:
         assert not [e for e in errors if "H060" in e]
 
         # files/ asset mentioned only as an image does not count
-        image_only_files_md = files_article / "note_image_only.md"
+        image_only_files_dir = temp_path / "image_only_files_article"
+        image_only_files_dir.mkdir()
+        (image_only_files_dir / "files").mkdir()
+        (image_only_files_dir / "files" / "doc.pdf").write_bytes(b"%PDF")
+        image_only_files_md = image_only_files_dir / "note_image_only.md"
         image_only_files_md.write_text(
             "---\nlang: en\n---\n\n![Doc](files/doc.pdf)\n",
             encoding="utf-8",
@@ -1927,7 +1943,11 @@ def test_md_checker() -> None:
         assert any("H060" in e and "files/doc.pdf" in e for e in errors)
 
         # img/ asset mentioned only as a non-image link does not count
-        link_only_img_md = orphan_article / "note_link_only.md"
+        link_only_img_dir = temp_path / "link_only_img_article"
+        link_only_img_dir.mkdir()
+        (link_only_img_dir / "img").mkdir()
+        (link_only_img_dir / "img" / "a.png").write_bytes(b"png")
+        link_only_img_md = link_only_img_dir / "note_link_only.md"
         link_only_img_md.write_text(
             "---\nlang: en\n---\n\n[Alt](img/a.png)\n",
             encoding="utf-8",
@@ -1936,13 +1956,52 @@ def test_md_checker() -> None:
         assert any("H060" in e and "img/a.png" in e for e in errors)
 
         # Mention only inside a fenced code block does not count
-        code_only_md = orphan_article / "note_code_only.md"
+        code_only_dir = temp_path / "code_only_article"
+        code_only_dir.mkdir()
+        (code_only_dir / "img").mkdir()
+        (code_only_dir / "img" / "a.png").write_bytes(b"png")
+        code_only_md = code_only_dir / "note_code_only.md"
         code_only_md.write_text(
             "---\nlang: en\n---\n\n```md\n![Alt](img/a.png)\n```\n",
             encoding="utf-8",
         )
         errors = checker.check(code_only_md, select={"H060"})
         assert any("H060" in e and "img/a.png" in e for e in errors)
+
+        # Reference in one sibling Markdown file covers the whole folder
+        shared_dir = temp_path / "shared_assets_article"
+        shared_dir.mkdir()
+        (shared_dir / "img").mkdir()
+        (shared_dir / "img" / "shared.png").write_bytes(b"png")
+        (shared_dir / "README.md").write_text(
+            "---\nlang: en\n---\n\n![Shared](img/shared.png)\n",
+            encoding="utf-8",
+        )
+        (shared_dir / "DEVELOPMENT.md").write_text(
+            "---\nlang: en\n---\n\n# Development\n",
+            encoding="utf-8",
+        )
+        (shared_dir / "_Notes.g.md").write_text(
+            "---\nlang: en\n---\n\n# Generated\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(shared_dir / "DEVELOPMENT.md", select={"H060"})
+        assert not [e for e in errors if "H060" in e], "H060 must accept refs from sibling Markdown files"
+        errors = checker.check(shared_dir / "README.md", select={"H060"})
+        assert not [e for e in errors if "H060" in e]
+
+        # Generated *.g.md references must not count
+        g_md_only_dir = temp_path / "g_md_only_article"
+        g_md_only_dir.mkdir()
+        (g_md_only_dir / "img").mkdir()
+        (g_md_only_dir / "img" / "only-in-g.png").write_bytes(b"png")
+        (g_md_only_dir / "note.md").write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        (g_md_only_dir / "_Dump.g.md").write_text(
+            "---\nlang: en\n---\n\n![Only](img/only-in-g.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(g_md_only_dir / "note.md", select={"H060"})
+        assert any("H060" in e and "img/only-in-g.png" in e for e in errors)
 
         # No sibling asset folders → no H060
         plain_md = temp_path / "plain_no_assets.md"
