@@ -1890,7 +1890,7 @@ def test_md_checker() -> None:
         orphan_md = orphan_article / "note.md"
         orphan_md.write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
         errors = checker.check(orphan_md, select={"H060"})
-        assert any("H060" in e and "img/a.png" in e for e in errors)
+        assert any("H060" in e and str((orphan_article / "img" / "a.png").resolve()) in e for e in errors)
 
         referenced_img_dir = temp_path / "referenced_img_article"
         referenced_img_dir.mkdir()
@@ -1924,7 +1924,7 @@ def test_md_checker() -> None:
         orphan_files_md = files_article / "note.md"
         orphan_files_md.write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
         errors = checker.check(orphan_files_md, select={"H060"})
-        assert any("H060" in e and "files/doc.pdf" in e for e in errors)
+        assert any("H060" in e and str((files_article / "files" / "doc.pdf").resolve()) in e for e in errors)
 
         linked_files_dir = temp_path / "linked_files_article"
         linked_files_dir.mkdir()
@@ -1949,7 +1949,7 @@ def test_md_checker() -> None:
             encoding="utf-8",
         )
         errors = checker.check(image_only_files_md, select={"H060"})
-        assert any("H060" in e and "files/doc.pdf" in e for e in errors)
+        assert any("H060" in e and str((image_only_files_dir / "files" / "doc.pdf").resolve()) in e for e in errors)
 
         # img/ asset mentioned only as a non-image link does not count
         link_only_img_dir = temp_path / "link_only_img_article"
@@ -1962,7 +1962,7 @@ def test_md_checker() -> None:
             encoding="utf-8",
         )
         errors = checker.check(link_only_img_md, select={"H060"})
-        assert any("H060" in e and "img/a.png" in e for e in errors)
+        assert any("H060" in e and str((link_only_img_dir / "img" / "a.png").resolve()) in e for e in errors)
 
         # Mention only inside a fenced code block does not count
         code_only_dir = temp_path / "code_only_article"
@@ -1975,7 +1975,7 @@ def test_md_checker() -> None:
             encoding="utf-8",
         )
         errors = checker.check(code_only_md, select={"H060"})
-        assert any("H060" in e and "img/a.png" in e for e in errors)
+        assert any("H060" in e and str((code_only_dir / "img" / "a.png").resolve()) in e for e in errors)
 
         # Reference in one sibling Markdown file covers the whole folder
         shared_dir = temp_path / "shared_assets_article"
@@ -2010,7 +2010,7 @@ def test_md_checker() -> None:
             encoding="utf-8",
         )
         errors = checker.check(g_md_only_dir / "note.md", select={"H060"})
-        assert any("H060" in e and "img/only-in-g.png" in e for e in errors)
+        assert any("H060" in e and str((g_md_only_dir / "img" / "only-in-g.png").resolve()) in e for e in errors)
 
         # GitHub raw URL in README covers sibling THIRD_PARTY_NOTICES.md
         github_raw_dir = temp_path / "github_raw_article"
@@ -2054,7 +2054,7 @@ def test_md_checker() -> None:
             encoding="utf-8",
         )
         errors = checker.check(foreign_host_dir / "README.md", select={"H060"})
-        assert any("H060" in e and "img/screenshot.png" in e for e in errors)
+        assert any("H060" in e and str((foreign_host_dir / "img" / "screenshot.png").resolve()) in e for e in errors)
 
         # docs/actions-style: sibling files/*.g.md is a docs category, not assets
         category_files_dir = temp_path / "category_files_article"
@@ -2083,7 +2083,7 @@ def test_md_checker() -> None:
         (mixed_files_dir / "files" / "doc.pdf").write_bytes(b"%PDF")
         (mixed_files_dir / "note.md").write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
         errors = checker.check(mixed_files_dir / "note.md", select={"H060"})
-        assert any("H060" in e and "files/doc.pdf" in e for e in errors)
+        assert any("H060" in e and str((mixed_files_dir / "files" / "doc.pdf").resolve()) in e for e in errors)
         assert not any("readme.md" in e for e in errors if "H060" in e)
 
         # Nested note assets under category files/ must not affect parent Markdown
