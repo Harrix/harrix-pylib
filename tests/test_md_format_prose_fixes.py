@@ -48,7 +48,7 @@ def _checker_errors(tmp_path: Path, text: str, rules: set[str]) -> list[str]:
         ("**Note**: text\n", {"H030"}, "**Note:** text"),
         ("##Title\n", {"H036"}, "## Title"),
         ("[Link](folder\\file.md)\n", {"H039"}, "[Link](folder/file.md)"),
-        ("[jsfiddle.net](https:\\jsfiddle.net)\n", {"H039"}, "<jsfiddle.net>"),
+        ("[jsfiddle.net](https:\\jsfiddle.net)\n", {"H039"}, "<https://jsfiddle.net>"),
         ("a\u200bb\n", {"H042"}, "ab"),
         ("Привет,мир\n", {"H050"}, "Привет, мир"),  # ignore: HP001
         ("## Title.\n", {"H057"}, "## Title\n"),
@@ -290,8 +290,9 @@ def test_formatter_fixes_mistyped_http_scheme_separators(tmp_path: Path) -> None
         "Local [Link](folder\\file.md).\n"
     )
     result = _format(source)
-    # Domain label + fixed https URL collapses to an angle autolink.
-    assert "В том же <jsfiddle.net> код." in result
+    # Domain label + fixed https URL collapses to a full-URI angle autolink.
+    assert "В том же <https://jsfiddle.net> код." in result
+    assert "<jsfiddle.net>" not in result
     assert "[x](https://example.com/path)" in result
     assert "[Link](folder/file.md)" in result
     assert "https:/jsfiddle.net" not in result

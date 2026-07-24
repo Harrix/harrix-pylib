@@ -21,6 +21,8 @@ from harrix_pylib.md_format.front_matter import _split_front_matter
 # Markdown ATX heading levels: H1-H6; TOC uses H2-H6
 _MIN_TOC_HEADING_LEVEL = 2
 _MAX_HEADING_LEVEL = 6
+# Minimum length for italic-only caption lines (e.g. `_text_`)
+_MIN_ITALIC_CAPTION_LEN = 2
 _RAW_MARKDOWN_YAML_KEY = "raw-markdown"
 _H1_ATX_PATTERN = re.compile(r"^#\s+")
 
@@ -3787,7 +3789,7 @@ def _following_content_keeps_image_in_list(following_lines: list[str], list_item
         # Skip figure blocks that belong with this or a sibling image
         if stripped.startswith("![") and "](" in stripped:
             continue
-        if len(stripped) >= 2 and stripped.startswith("_") and stripped.endswith("_"):
+        if len(stripped) >= _MIN_ITALIC_CAPTION_LEN and stripped.startswith("_") and stripped.endswith("_"):
             continue
         return bool(list_item_start_re.match(stripped))
     # EOF, prose/heading already returned False above, or only blanks/figures remain
