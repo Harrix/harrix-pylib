@@ -96,7 +96,8 @@ Rules:
   list items and their continuations are skipped).
 - **H060** - Asset under sibling `img/` or `files/` not referenced in any
   sibling Markdown file (excluding `*.g.md`); `img` → `![]()`, `files` → `[]()`;
-  match by basename, path may differ.
+  match by basename, path may differ; GitHub `raw.githubusercontent.com` /
+  `github.com` blob/raw URLs with `/img/` or `/files/` count as references.
 
 <details>
 <summary>Code:</summary>
@@ -175,6 +176,11 @@ class MdChecker:
 
     # Sibling asset folders checked by H060
     _ASSET_DIR_NAMES: ClassVar[tuple[str, ...]] = ("img", "files")
+
+    # github.com URL path: owner / repo / blob|raw / ... (H060)
+    _GITHUB_COM_MIN_PATH_PARTS: ClassVar[int] = 4
+    _GITHUB_ASSET_HOSTS: ClassVar[frozenset[str]] = frozenset({"raw.githubusercontent.com", "github.com"})
+    _GITHUB_COM_REF_KINDS: ClassVar[frozenset[str]] = frozenset({"blob", "raw"})
 
     # Letter token that may mix Latin and Cyrillic scripts (H049)
     _MIXED_SCRIPT_TOKEN_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"[A-Za-z\u0400-\u04FF]+")
@@ -606,6 +612,30 @@ class MdChecker:
                 yield item
             elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
                 yield from self.find_markdown_files(item, additional_ignore_patterns)
+
+    def _basename_from_github_asset_url(self, destination: str) -> str | None:
+        """Return casefolded basename from a GitHub asset URL, or `None` if not applicable.
+
+        Accepts `raw.githubusercontent.com` and `github.com` blob/raw URLs whose path
+        contains an `img` or `files` segment (typical README / PyPI absolute image links).
+
+        """
+        parsed = urlparse(destination)
+        host = parsed.netloc.casefold()
+        if host not in self._GITHUB_ASSET_HOSTS:
+            return None
+        parts = [unquote(part) for part in parsed.path.split("/") if part]
+        if not parts:
+            return None
+        if host == "github.com" and (
+            len(parts) < self._GITHUB_COM_MIN_PATH_PARTS or parts[2].casefold() not in self._GITHUB_COM_REF_KINDS
+        ):
+            return None
+        lower_parts = {part.casefold() for part in parts}
+        if "img" not in lower_parts and "files" not in lower_parts:
+            return None
+        name_key = parts[-1].casefold()
+        return name_key or None
 
     def _build_display_math_line_indices(self, code_block_info: list) -> frozenset[int]:
         """Return content-line indices that belong to display-math `$$...$$` blocks."""
@@ -1801,6 +1831,8 @@ class MdChecker:
         - Files under `img/` must appear in an image `![...](...)` (basename match).
         - Files under `files/` must appear in a non-image link `[...](...)` (basename match).
         - Destination path may differ from the on-disk folder (e.g. `img/a.png` as `files/a.png`).
+        - Absolute GitHub URLs (`raw.githubusercontent.com`, `github.com` blob/raw)
+          whose path contains `/img/` or `/files/` also count (basename match).
         - References from any sibling `*.md` / `*.markdown` in the same folder count
           (except `*.g.md`). Fenced and inline code are ignored.
 
@@ -2366,7 +2398,12 @@ class MdChecker:
         return heading_ids
 
     def _collect_markdown_asset_basenames(self, content: str, yaml_end_line: int) -> tuple[set[str], set[str]]:
-        """Return casefolded basenames from image and non-image link destinations."""
+        """Return casefolded basenames from image and non-image link destinations.
+
+        Relative destinations and GitHub absolute URLs with `/img/` or `/files/` are
+        collected; other http(s) hosts and `#` / `mailto:` / `data:` are ignored.
+
+        """
         image_names: set[str] = set()
         link_names: set[str] = set()
         all_lines = content.splitlines()
@@ -2379,14 +2416,19 @@ class MdChecker:
                     continue
                 for match in self._INLINE_IMAGE_OR_LINK_PATTERN.finditer(segment):
                     destination = self._extract_link_destination(match.group(3))
-                    if not destination or destination.startswith(("http://", "https://", "#", "mailto:", "data:")):
+                    if not destination or destination.startswith(("#", "mailto:", "data:")):
                         continue
-                    path_part = unquote(destination.split("#", maxsplit=1)[0])
-                    if not path_part:
-                        continue
-                    name_key = Path(path_part).name.casefold()
-                    if not name_key:
-                        continue
+                    if destination.startswith(("http://", "https://")):
+                        name_key = self._basename_from_github_asset_url(destination)
+                        if not name_key:
+                            continue
+                    else:
+                        path_part = unquote(destination.split("#", maxsplit=1)[0])
+                        if not path_part:
+                            continue
+                        name_key = Path(path_part).name.casefold()
+                        if not name_key:
+                            continue
                     if match.group(1) == "!":
                         image_names.add(name_key)
                     else:

@@ -2003,6 +2003,50 @@ def test_md_checker() -> None:
         errors = checker.check(g_md_only_dir / "note.md", select={"H060"})
         assert any("H060" in e and "img/only-in-g.png" in e for e in errors)
 
+        # GitHub raw URL in README covers sibling THIRD_PARTY_NOTICES.md
+        github_raw_dir = temp_path / "github_raw_article"
+        github_raw_dir.mkdir()
+        (github_raw_dir / "img").mkdir()
+        (github_raw_dir / "img" / "screenshot.png").write_bytes(b"png")
+        (github_raw_dir / "README.md").write_text(
+            "---\nlang: en\n---\n\n"
+            "![Screenshot](https://raw.githubusercontent.com/Harrix/harrix-swiss-knife/"
+            "refs/heads/main/img/screenshot.png)\n",
+            encoding="utf-8",
+        )
+        (github_raw_dir / "THIRD_PARTY_NOTICES.md").write_text(
+            "---\nlang: en\n---\n\n# Notices\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(github_raw_dir / "THIRD_PARTY_NOTICES.md", select={"H060"})
+        assert not [e for e in errors if "H060" in e], "H060 must accept GitHub raw.githubusercontent.com URLs"
+        errors = checker.check(github_raw_dir / "README.md", select={"H060"})
+        assert not [e for e in errors if "H060" in e]
+
+        # github.com blob URL also counts
+        github_blob_dir = temp_path / "github_blob_article"
+        github_blob_dir.mkdir()
+        (github_blob_dir / "img").mkdir()
+        (github_blob_dir / "img" / "featured.png").write_bytes(b"png")
+        (github_blob_dir / "README.md").write_text(
+            "---\nlang: en\n---\n\n![Featured](https://github.com/Harrix/demo/blob/main/img/featured.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(github_blob_dir / "README.md", select={"H060"})
+        assert not [e for e in errors if "H060" in e], "H060 must accept github.com blob URLs"
+
+        # Non-GitHub absolute URL must not count
+        foreign_host_dir = temp_path / "foreign_host_article"
+        foreign_host_dir.mkdir()
+        (foreign_host_dir / "img").mkdir()
+        (foreign_host_dir / "img" / "screenshot.png").write_bytes(b"png")
+        (foreign_host_dir / "README.md").write_text(
+            "---\nlang: en\n---\n\n![Screenshot](https://example.com/img/screenshot.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(foreign_host_dir / "README.md", select={"H060"})
+        assert any("H060" in e and "img/screenshot.png" in e for e in errors)
+
         # No sibling asset folders → no H060
         plain_md = temp_path / "plain_no_assets.md"
         plain_md.write_text("---\nlang: en\n---\n\n# Plain\n", encoding="utf-8")
