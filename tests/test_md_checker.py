@@ -504,6 +504,20 @@ def test_md_checker() -> None:
         errors = checker.check(hr_stars_before_code_file, select={"H013"})
         assert not errors
 
+        # Figure caption before next code sample must not require colon (H013)
+        caption_before_code_file = temp_path / "caption_before_code.md"
+        caption_before_code_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "Пример кнопки:\n\n"
+            "```html\n[button]Кнопка[/button]\n```\n\n"
+            "![Кнопка маленькая](img/button-small.png)\n\n"
+            "_Рисунок 26 — Кнопка маленькая_\n\n"
+            '```html\n[button size="medium"]Кнопка[/button]\n```\n',
+            encoding="utf-8",
+        )
+        errors = checker.check(caption_before_code_file, select={"H013"})
+        assert not [e for e in errors if "H013" in e], "H013 must not fire on figure captions before code"
+
         # =====================================================================
         # H014: Missing colon before image
         # =====================================================================

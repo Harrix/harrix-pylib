@@ -857,11 +857,17 @@ class MdChecker:
         if not (next_line.strip() == "" and next_next_line.strip().startswith("```")):
             return
 
+        stripped = line.strip()
+        # Skip image caption (italic only): belongs to previous figure, not an intro
+        # for the next code sample (same exemption as H014 / H059).
+        if len(stripped) >= self._MIN_ITALIC_CAPTION_LEN and stripped.startswith("_") and stripped.endswith("_"):
+            return
+
         last_char, col = self._paragraph_last_char(line)
 
         if any(marker in line for marker in self._COLON_SKIP_MARKERS):
             return
-        if line.strip().startswith("<"):
+        if stripped.startswith("<"):
             return
         if last_char != ":":
             error_msg = f'{self.RULES["H013"]}: last char is "{last_char}"'
