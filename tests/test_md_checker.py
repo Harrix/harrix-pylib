@@ -2047,6 +2047,69 @@ def test_md_checker() -> None:
         errors = checker.check(foreign_host_dir / "README.md", select={"H060"})
         assert any("H060" in e and "img/screenshot.png" in e for e in errors)
 
+        # docs/actions-style: sibling files/*.g.md is a docs category, not assets
+        category_files_dir = temp_path / "category_files_article"
+        category_files_dir.mkdir()
+        (category_files_dir / "files").mkdir()
+        (category_files_dir / "files" / "extract_zip_archives.g.md").write_text(
+            "---\nlang: en\n---\n\n# Extract\n",
+            encoding="utf-8",
+        )
+        (category_files_dir / "files" / "note.md").write_text(
+            "---\nlang: en\n---\n\n# Note\n",
+            encoding="utf-8",
+        )
+        (category_files_dir / "dialog_widgets.g.md").write_text(
+            "---\nlang: en\n---\n\n# Dialog widgets\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(category_files_dir / "dialog_widgets.g.md", select={"H060"})
+        assert not [e for e in errors if "H060" in e], "H060 must ignore Markdown under files/"
+
+        # PDF under files/ remains an orphan asset
+        mixed_files_dir = temp_path / "mixed_files_article"
+        mixed_files_dir.mkdir()
+        (mixed_files_dir / "files").mkdir()
+        (mixed_files_dir / "files" / "readme.md").write_text("# Docs\n", encoding="utf-8")
+        (mixed_files_dir / "files" / "doc.pdf").write_bytes(b"%PDF")
+        (mixed_files_dir / "note.md").write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        errors = checker.check(mixed_files_dir / "note.md", select={"H060"})
+        assert any("H060" in e and "files/doc.pdf" in e for e in errors)
+        assert not any("readme.md" in e for e in errors if "H060" in e)
+
+        # Nested note assets under category files/ must not affect parent Markdown
+        nested_note_dir = temp_path / "nested_note_under_files"
+        nested_note_dir.mkdir()
+        (nested_note_dir / "files").mkdir()
+        note_subdir = nested_note_dir / "files" / "my-note"
+        note_subdir.mkdir()
+        (note_subdir / "img").mkdir()
+        (note_subdir / "files").mkdir()
+        (note_subdir / "img" / "nested.png").write_bytes(b"png")
+        (note_subdir / "files" / "nested.pdf").write_bytes(b"%PDF")
+        (note_subdir / "note.md").write_text(
+            "---\nlang: en\n---\n\n![Nested](img/nested.png)\n\n[PDF](files/nested.pdf)\n",
+            encoding="utf-8",
+        )
+        (nested_note_dir / "dialog_widgets.g.md").write_text(
+            "---\nlang: en\n---\n\n# Dialog widgets\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(nested_note_dir / "dialog_widgets.g.md", select={"H060"})
+        assert not [e for e in errors if "H060" in e], "H060 must not recurse into nested note assets"
+        errors = checker.check(note_subdir / "note.md", select={"H060"})
+        assert not [e for e in errors if "H060" in e]
+
+        # Nested file under img/subdir is not checked at parent level
+        deep_img_dir = temp_path / "deep_img_article"
+        deep_img_dir.mkdir()
+        (deep_img_dir / "img").mkdir()
+        (deep_img_dir / "img" / "chapter").mkdir()
+        (deep_img_dir / "img" / "chapter" / "deep.png").write_bytes(b"png")
+        (deep_img_dir / "note.md").write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        errors = checker.check(deep_img_dir / "note.md", select={"H060"})
+        assert not [e for e in errors if "H060" in e]
+
         # No sibling asset folders → no H060
         plain_md = temp_path / "plain_no_assets.md"
         plain_md.write_text("---\nlang: en\n---\n\n# Plain\n", encoding="utf-8")

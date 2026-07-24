@@ -85,7 +85,8 @@ class MdChecker:
       list items and their continuations are skipped).
     - **H060** - Asset under sibling `img/` or `files/` not referenced in any
       sibling Markdown file (excluding `*.g.md`); `img` → `![]()`, `files` → `[]()`;
-      match by basename, path may differ; GitHub `raw.githubusercontent.com` /
+      match by basename, path may differ; only direct files in those folders (not nested);
+      Markdown under `img/` / `files/` is ignored; GitHub `raw.githubusercontent.com` /
       `github.com` blob/raw URLs with `/img/` or `/files/` count as references.
 
     """
@@ -1818,6 +1819,10 @@ class MdChecker:
         - Destination path may differ from the on-disk folder (e.g. `img/a.png` as `files/a.png`).
         - Absolute GitHub URLs (`raw.githubusercontent.com`, `github.com` blob/raw)
           whose path contains `/img/` or `/files/` also count (basename match).
+        - Markdown files (`*.md` / `*.markdown`, including `*.g.md`) under `img/` /
+          `files/` are not treated as assets (e.g. docs category folders named `files`).
+        - Only direct files in sibling `img/` / `files/` are checked (not nested
+          subfolders, so notes inside a category `files/` keep their own assets).
         - References from any sibling `*.md` / `*.markdown` in the same folder count
           (except `*.g.md`). Fenced and inline code are ignored.
 
@@ -2421,17 +2426,28 @@ class MdChecker:
         return image_names, link_names
 
     def _collect_sibling_asset_files(self, filename: Path) -> list[tuple[Path, str]]:
-        """Return `(relative_path, kind)` for files under sibling `img/` and `files/`."""
+        """Return `(relative_path, kind)` for direct files under sibling `img/` and `files/`.
+
+        Only the immediate contents of those folders are considered (not recursive).
+        Markdown files under those folders are skipped (documentation categories, not assets).
+
+        """
         root = filename.parent
         found: list[tuple[Path, str]] = []
         for kind in self._ASSET_DIR_NAMES:
             folder = root / kind
             if not folder.is_dir():
                 continue
-            for path in sorted(folder.rglob("*")):
+            try:
+                children = list(folder.iterdir())
+            except OSError:
+                continue
+            for path in sorted(children, key=lambda item: item.name.casefold()):
                 if not path.is_file():
                     continue
-                if any(part.startswith(".") for part in path.relative_to(root).parts):
+                if path.suffix.lower() in {".md", ".markdown"}:
+                    continue
+                if path.name.startswith("."):
                     continue
                 found.append((path.relative_to(root), kind))
         return found
