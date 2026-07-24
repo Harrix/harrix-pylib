@@ -1734,6 +1734,32 @@ def test_md_checker() -> None:
         errors = checker.check(guillemet_in_code_file, select={"H043"})
         assert not errors, "H043 must ignore guillemets inside inline code"
 
+        # Soft-wrapped blockquote: open « on one line, close » on another
+        multiline_guillemet_file = temp_path / "multiline_guillemet.md"
+        multiline_guillemet_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "> Но Лут сказал им: «Это — мои гости,\\\n"
+            "> И вы меня пред ними не бесславьте,\\\n"
+            "> Побойтесь Бога и меня не опозорьте».\\\n"
+            ">\n"
+            "> -- _Коран, Сура 15_\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(multiline_guillemet_file, select={"H043"})
+        assert not [e for e in errors if "H043" in e], "H043 must allow «…» across soft-wrapped lines"
+
+        # Still unmatched when close never appears in the same prose block
+        multiline_unmatched_file = temp_path / "multiline_unmatched_guillemet.md"
+        multiline_unmatched_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "> Он сказал: «Первая строка,\\\n"
+            "> Вторая строка без закрытия.\n\n"
+            "Другой абзац.\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(multiline_unmatched_file, select={"H043"})
+        assert any("H043" in e for e in errors), "H043 must still catch unclosed « across lines"
+
         # =====================================================================
         # H044: Missing space before % or °
         # =====================================================================

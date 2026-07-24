@@ -74,7 +74,7 @@ Rules:
 - **H040** - `lang` field does not match document language.
 - **H041** - Bare URL in text (not wrapped in `<>` or link).
 - **H042** - Invisible Unicode character found.
-- **H043** - Unmatched guillemet on line.
+- **H043** - Unmatched guillemet (balance checked across a paragraph / soft-wrapped block).
 - **H044** - Missing space before `%` or `°` (Russian typography).
 - **H045** - Broken relative Markdown link or image.
 - **H046** - Wrong line endings (must match nearest `.gitattributes` `eol=`, else CRLF).
@@ -261,7 +261,7 @@ class MdChecker:
         "H040": "lang field does not match document language",
         "H041": "Bare URL in text",
         "H042": "Invisible Unicode character found",
-        "H043": "Unmatched guillemet on line",
+        "H043": "Unmatched guillemet",
         "H044": "Missing space before % or °",
         "H045": "Broken relative Markdown link",
         "H046": "Wrong line endings",
@@ -1239,6 +1239,9 @@ class MdChecker:
         if "H053" in rules and code_block_info is not None:
             yield from self._check_unbalanced_details_summary(filename, code_block_info, yaml_end_line)
 
+        if "H043" in rules and code_block_info is not None:
+            yield from self._check_unmatched_guillemets(filename, code_block_info, yaml_end_line)
+
         if "H055" in rules and code_block_info is not None:
             yield from self._check_broken_internal_fragments(filename, code_block_info, yaml_end_line)
 
@@ -1714,9 +1717,6 @@ class MdChecker:
         if "H041" in rules:
             yield from self._check_bare_url(filename, line, line_num)
 
-        if "H043" in rules:
-            yield from self._check_unmatched_guillemets(filename, line, clean_line, line_num)
-
         if "H044" in rules and lang == "ru":
             yield from self._check_space_before_percent_or_degree(filename, line, clean_line, line_num)
 
@@ -2120,32 +2120,68 @@ class MdChecker:
                 return
 
     def _check_unmatched_guillemets(
-        self, filename: Path, line: str, _clean_line: str, line_num: int
+        self, filename: Path, code_block_info: list, yaml_end_line: int
     ) -> Generator[str, None, None]:
-        """Check for unmatched guillemets on a line (H043).
+        """Check for unmatched guillemets (H043).
 
-        Guillemets inside inline code are ignored.
+        Balance is tracked across a contiguous prose block (non-blank lines outside
+        fenced code), so «…» may open on one soft-wrapped line and close on another
+        (e.g. blockquote poetry). Guillemets inside inline code are ignored.
 
         """
-        open_count = 0
-        close_count = 0
-        first_col: int | None = None
-        offset = 0
-        for segment, in_code in h.md.identify_code_blocks_line(line):
-            if not in_code:
-                for i, char in enumerate(segment):
-                    if char == "\u00ab":
-                        open_count += 1
-                        if first_col is None:
-                            first_col = offset + i + 1
-                    elif char == "\u00bb":
-                        close_count += 1
-                        if first_col is None:
-                            first_col = offset + i + 1
-            offset += len(segment)
-        if open_count == close_count or first_col is None:
-            return
-        yield self._format_error("H043", self.RULES["H043"], filename, line_num=line_num, col=first_col)
+        balance = 0
+        first_open_line: int | None = None
+        first_open_col: int | None = None
+
+        def flush_unit() -> Generator[str, None, None]:
+            nonlocal balance, first_open_line, first_open_col
+            if balance > 0 and first_open_line is not None and first_open_col is not None:
+                yield self._format_error(
+                    "H043",
+                    self.RULES["H043"],
+                    filename,
+                    line_num=first_open_line,
+                    col=first_open_col,
+                )
+            balance = 0
+            first_open_line = None
+            first_open_col = None
+
+        for index, (line, in_code) in enumerate(code_block_info):
+            actual_line_num = (yaml_end_line - 1) + index + 1
+            if in_code:
+                yield from flush_unit()
+                continue
+            if not line.strip() or re.fullmatch(r">+", line.strip()):
+                yield from flush_unit()
+                continue
+
+            offset = 0
+            for segment, in_inline_code in h.md.identify_code_blocks_line(line):
+                if not in_inline_code:
+                    for i, char in enumerate(segment):
+                        if char == "\u00ab":
+                            if balance == 0:
+                                first_open_line = actual_line_num
+                                first_open_col = offset + i + 1
+                            balance += 1
+                        elif char == "\u00bb":
+                            if balance == 0:
+                                yield self._format_error(
+                                    "H043",
+                                    self.RULES["H043"],
+                                    filename,
+                                    line_num=actual_line_num,
+                                    col=offset + i + 1,
+                                )
+                            else:
+                                balance -= 1
+                                if balance == 0:
+                                    first_open_line = None
+                                    first_open_col = None
+                offset += len(segment)
+
+        yield from flush_unit()
 
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         r"""Check for Latin `x` or Cyrillic `x` used instead of multiplication sign '\*' (H024).
