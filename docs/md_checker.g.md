@@ -56,7 +56,8 @@ Rules:
 - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only;
   skipped in `>` blockquotes, inside «…», and at sentence / Markdown title start).
 - **H024** - Latin `x` or Cyrillic `x` used instead of multiplication sign `x`.
-- **H025** - Image Markdown not at start of line (several images in a row are allowed).
+- **H025** - Image Markdown not at start of line (list items, linked images
+  `[![…](…)](…)`, and several images in a row are allowed).
 - **H026** - Horizontal bar `―` (dialogue dash) should not be used.
 - **H027** - Space required after the numero sign (U+2116).
 - **H028** - Incorrect `?.`/`!.` / `?...`/`!...` / `?…`/`!…` (use `?..` / `!..`).
@@ -156,6 +157,11 @@ class MdChecker:
 
     # Complete Markdown image (inline or reference) for H025
     _IMAGE_MARKDOWN_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[[^\]]*\](?:\([^)]*\)|\[[^\]]*\])")
+
+    # One H025-allowed unit: linked image `[![…](…)](…)` or bare `![…](…)` / `![…][ref]`
+    _H025_IMAGE_UNIT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
+        r"\[!\[[^\]]*\](?:\([^)]*\)|\[[^\]]*\])\]\([^)]+\)|!\[[^\]]*\](?:\([^)]*\)|\[[^\]]*\])"
+    )
 
     # Bare URL in prose (H041)
     _BARE_URL_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<![(<\[])(https?://[^\s<>)\]]+)")
@@ -1371,8 +1377,15 @@ class MdChecker:
     def _check_image_not_at_line_start(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that image Markdown starts the trimmed line (H025).
 
-        A line may contain several images in a row (e.g. badge rows), separated only by
-        whitespace. Occurrences of `![` inside inline code are ignored.
+        Allowed before the first image:
+
+        - leading whitespace (list continuations);
+        - a list marker (`- `, `* `, `1. `, …).
+
+        A line may contain several image units in a row (e.g. badge rows), separated
+        only by whitespace. An image unit is a bare `![…](…)` / `![…][ref]` or a
+        linked thumbnail `[![…](…)](…)`. Occurrences of `![` inside inline code are
+        ignored.
 
         """
         masked_chars: list[str] = []
@@ -1380,21 +1393,21 @@ class MdChecker:
             masked_chars.append(" " * len(segment) if in_code else segment)
         masked = "".join(masked_chars)
 
-        images = list(self._IMAGE_MARKDOWN_PATTERN.finditer(masked))
-        leading = len(line) - len(line.lstrip())
+        content_start = self._image_line_content_start(masked)
+        units = list(self._H025_IMAGE_UNIT_PATTERN.finditer(masked))
 
-        if not images:
+        if not units:
             bare = masked.find("![")
-            if bare >= 0 and bare != leading:
+            if bare >= 0 and bare != content_start:
                 yield self._format_error("H025", self.RULES["H025"], filename, line_num=line_num, col=bare + 1)
             return
 
-        if images[0].start() != leading:
-            yield self._format_error("H025", self.RULES["H025"], filename, line_num=line_num, col=images[0].start() + 1)
+        if units[0].start() != content_start:
+            yield self._format_error("H025", self.RULES["H025"], filename, line_num=line_num, col=units[0].start() + 1)
             return
 
-        cursor = leading
-        for match in images:
+        cursor = content_start
+        for match in units:
             if masked[cursor : match.start()].strip():
                 yield self._format_error("H025", self.RULES["H025"], filename, line_num=line_num, col=match.start() + 1)
                 return
@@ -2478,6 +2491,15 @@ class MdChecker:
         if stripped[0].isalpha() and stripped[0].islower():
             return f'alt text starts with "{stripped[0]}"'
         return None
+
+    def _image_line_content_start(self, line: str) -> int:
+        """Return index where an image unit may begin after indent and list marker."""
+        leading = len(line) - len(line.lstrip(" \t"))
+        rest = line[leading:]
+        list_match = self._LIST_ITEM_START_PATTERN.match(rest)
+        if list_match:
+            return leading + list_match.end()
+        return leading
 
     @staticmethod
     def _is_blockquote_attribution_line(line: str) -> bool:

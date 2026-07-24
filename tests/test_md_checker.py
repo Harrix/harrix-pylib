@@ -1358,6 +1358,51 @@ def test_md_checker() -> None:
         errors = checker.check(image_after_prose_file, select={"H025"})
         assert any("H025" in e for e in errors)
 
+        # Linked thumbnail image at line start is allowed
+        linked_image_file = temp_path / "linked_image.md"
+        linked_image_file.write_text(
+            "---\nlang: en\n---\n\n[![Wallpaper](gallery-thumb/a.jpg)](gallery/a.jpg)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(linked_image_file, select={"H025"})
+        assert not errors, "H025 must allow [![…](…)](…) at line start"
+
+        # List item with linked image is allowed
+        list_linked_image_file = temp_path / "list_linked_image.md"
+        list_linked_image_file.write_text(
+            "---\nlang: en\n---\n\n- [![Wallpaper](gallery-thumb/a.jpg)](gallery/a.jpg)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(list_linked_image_file, select={"H025"})
+        assert not errors, "H025 must allow linked images in list items"
+
+        # List item with bare image is allowed
+        list_image_file = temp_path / "list_image.md"
+        list_image_file.write_text(
+            "---\nlang: en\n---\n\n- ![Wallpaper](gallery/a.jpg)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(list_image_file, select={"H025"})
+        assert not errors, "H025 must allow images in list items"
+
+        # Indented continuation image under a list item is allowed
+        indented_list_image_file = temp_path / "indented_list_image.md"
+        indented_list_image_file.write_text(
+            "---\nlang: en\n---\n\n- Item:\n\n  ![Wallpaper](gallery/a.jpg)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(indented_list_image_file, select={"H025"})
+        assert not errors, "H025 must allow indented images under list items"
+
+        # Prose before a linked image must still trigger H025
+        prose_linked_image_file = temp_path / "prose_linked_image.md"
+        prose_linked_image_file.write_text(
+            "---\nlang: en\n---\n\nSee [![Wallpaper](t.jpg)](f.jpg)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(prose_linked_image_file, select={"H025"})
+        assert any("H025" in e for e in errors), "H025 must still fire for prose before linked image"
+
         # =====================================================================
         # H031: Invalid or placeholder image alt text
         # =====================================================================
