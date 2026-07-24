@@ -188,7 +188,19 @@ def test_format_markdown_content_preserves_bare_domains_in_list() -> None:
 def test_format_markdown_content_converts_explicit_bare_domain_link_to_angle_autolink() -> None:
     source = "[www.example.com](http://www.example.com)\n"
     result = _format_markdown(source, end_of_line="lf")
-    assert result == "<www.example.com>\n"
+    assert result == "<http://www.example.com>\n"
+
+
+def test_format_markdown_content_converts_host_label_https_link_to_full_angle_autolink() -> None:
+    """`[acmp.ru](https://acmp.ru/)` must become `<https://acmp.ru/>`, not `<acmp.ru>`."""
+    source = (
+        "Если вы будете отправлять файл исходного кода на проверку на сайт "
+        "[acmp.ru](https://acmp.ru/), то в отправляемом файле удаляйте строчку `packages`.\n"
+    )
+    result = _format_markdown(source, end_of_line="lf", apply_prose_fixes=True)
+    assert "<https://acmp.ru/>" in result
+    assert "<acmp.ru>" not in result
+    assert "[acmp.ru](https://acmp.ru/)" not in result
 
 
 def test_format_markdown_content_preserves_front_matter() -> None:

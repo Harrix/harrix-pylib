@@ -62,7 +62,12 @@ def _format_code_inline(
 
 
 def _format_self_referential_link(href: str, inner: str) -> str | None:
-    """Return autolink or bare URL syntax for self-referential links."""
+    """Return autolink or bare URL syntax for self-referential links.
+
+    When the label is the host (without scheme) of an http(s) destination, emit the
+    full destination in angle brackets so CommonMark treats it as a URI autolink.
+
+    """
     mailto_prefix = "mailto:"
     if href.startswith(mailto_prefix) and inner == href:
         return f"<{href}>"
@@ -75,7 +80,7 @@ def _format_self_referential_link(href: str, inner: str) -> str | None:
     if href.startswith(("http://", "https://")):
         href_without_scheme = href.removeprefix("https://").removeprefix("http://").rstrip("/")
         if inner.rstrip("/") == href_without_scheme:
-            return f"<{inner}>"
+            return f"<{href}>"
 
     return None
 
