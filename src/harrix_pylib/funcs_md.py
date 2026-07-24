@@ -1929,7 +1929,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
     new_lines = []
 
     lines = content_md.split("\n")
-    for current_line, inside_code in identify_code_blocks(lines):
+    for line_index, (current_line, inside_code) in enumerate(identify_code_blocks(lines)):
         if inside_code:
             new_lines.append(current_line)
             continue
@@ -1950,7 +1950,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
                 modified_line = current_line.replace(f"![{raw_alt}](", f"![{alt_text}](", 1)
 
             indent = modified_line[: len(modified_line) - len(modified_line.lstrip(" \t"))]
-            list_indent = _list_continuation_indent_for_image(new_lines, list_item_start_re)
+            list_indent = _list_continuation_indent_for_image(new_lines, lines[line_index + 1 :], list_item_start_re)
             if list_indent is not None and len(indent) < len(list_indent):
                 indent = list_indent
                 stripped_line = modified_line.lstrip(" \t")
@@ -3778,6 +3778,27 @@ def _dump_yaml_indented(data: dict[str, Any], *, explicit_start: bool = False) -
     )
 
 
+def _following_content_keeps_image_in_list(following_lines: list[str], list_item_start_re: re.Pattern[str]) -> bool:
+    """Return whether look-ahead still places an image inside the preceding list."""
+    for line in following_lines:
+        if not line.strip():
+            continue
+        stripped = line.lstrip(" \t")
+        # Figure blocks that belong with this or a sibling image
+        if stripped.startswith("![") and "](" in stripped:
+            continue
+        if len(stripped) >= 2 and stripped.startswith("_") and stripped.endswith("_"):
+            continue
+        if list_item_start_re.match(stripped):
+            return True
+        # Unindented prose / heading / other block ends the list
+        if line[:1] not in {" ", "\t"}:
+            return False
+        # Indented continuation still belongs to list context
+        return True
+    return True
+
+
 def _is_toc_details_open(lines: list[str], index: int) -> bool:
     if index >= len(lines) or lines[index].strip() != "<details>":
         return False
@@ -3792,12 +3813,25 @@ def _is_toc_details_open(lines: list[str], index: int) -> bool:
     )
 
 
-def _list_continuation_indent_for_image(previous_lines: list[str], list_item_start_re: re.Pattern[str]) -> str | None:
+def _list_continuation_indent_for_image(
+    previous_lines: list[str],
+    following_lines: list[str],
+    list_item_start_re: re.Pattern[str],
+) -> str | None:
     """Return list-continuation indent if the next image belongs under a list item.
 
     Looks at the nearest non-empty line above. When that line is a list item
-    (e.g. `- …:`), the image should be indented to the list content column so
+    (e.g. `- …:`), the image may be indented to the list content column so
     captions stay inside the item.
+
+    The image is pulled into the list only when it still belongs to list context:
+
+    - another list item follows (image sits between items), or
+    - nothing follows (trailing image under the last item).
+
+    If ordinary prose, a heading, or another top-level block follows, the image
+    is after the list and must stay unindented (otherwise MdFormatter treats the
+    list as loose and inserts blank lines between every item).
 
     """
     idx = len(previous_lines) - 1
@@ -3810,6 +3844,8 @@ def _list_continuation_indent_for_image(previous_lines: list[str], list_item_sta
         return None
     match = list_item_start_re.match(prev)
     if match is None:
+        return None
+    if not _following_content_keeps_image_in_list(following_lines, list_item_start_re):
         return None
     return " " * len(match.group(0))
 

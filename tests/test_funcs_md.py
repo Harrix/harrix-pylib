@@ -997,6 +997,30 @@ def test_generate_image_captions_indents_unindented_images_under_list_items() ->
     assert h.md.generate_image_captions_content(result) == result
 
 
+def test_generate_image_captions_does_not_indent_image_after_list_before_prose() -> None:
+    """Trailing image after a list, followed by prose, must stay outside the list."""
+    source = (
+        "---\nlang: ru\n---\n\n"
+        "## Виртуальные пространства\n\n"
+        "[venv](https://docs.python.org/3/library/venv.html):\n\n"
+        "- `python -m venv .venv`: создание `.venv`\n"
+        "- `pip install requests`: установка пакета\n\n"
+        "![Ошибка при активации виртуального окружения](img/fix_01.png)\n\n"
+        "_Рисунок 1 — Ошибка при активации виртуального окружения_\n\n"
+        "Одно из возможных вариантов решения проблемы:\n"
+    )
+    result = h.md.generate_image_captions_content(source)
+    assert "\n![Ошибка при активации виртуального окружения](img/fix_01.png)\n" in result
+    assert "\n_Рисунок 1 — Ошибка при активации виртуального окружения_\n" in result
+    assert "  ![Ошибка" not in result
+    assert "  _Рисунок" not in result
+
+    formatted = h.md.format_markdown_content(result, end_of_line="lf")
+    assert "- `python -m venv .venv`: создание `.venv`\n- `pip install requests`: установка пакета\n" in formatted
+    assert "\n![Ошибка при активации виртуального окружения](img/fix_01.png)\n" in formatted
+    assert "  ![Ошибка" not in formatted
+
+
 def test_append_yaml_tag() -> None:
     """Test adding YAML tag to a Markdown file."""
     md_before = """---

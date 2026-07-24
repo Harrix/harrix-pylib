@@ -2255,7 +2255,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
     new_lines = []
 
     lines = content_md.split("\n")
-    for current_line, inside_code in identify_code_blocks(lines):
+    for line_index, (current_line, inside_code) in enumerate(identify_code_blocks(lines)):
         if inside_code:
             new_lines.append(current_line)
             continue
@@ -2276,7 +2276,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
                 modified_line = current_line.replace(f"![{raw_alt}](", f"![{alt_text}](", 1)
 
             indent = modified_line[: len(modified_line) - len(modified_line.lstrip(" \t"))]
-            list_indent = _list_continuation_indent_for_image(new_lines, list_item_start_re)
+            list_indent = _list_continuation_indent_for_image(new_lines, lines[line_index + 1 :], list_item_start_re)
             if list_indent is not None and len(indent) < len(list_indent):
                 indent = list_indent
                 stripped_line = modified_line.lstrip(" \t")
