@@ -1824,6 +1824,85 @@ def test_md_checker() -> None:
         assert not errors
 
         # =====================================================================
+        # H060: Orphan asset files under sibling img/ and files/
+        # =====================================================================
+        orphan_article = temp_path / "orphan_article"
+        orphan_article.mkdir()
+        (orphan_article / "img").mkdir()
+        (orphan_article / "img" / "a.png").write_bytes(b"png")
+        orphan_md = orphan_article / "note.md"
+        orphan_md.write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        errors = checker.check(orphan_md, select={"H060"})
+        assert any("H060" in e and "img/a.png" in e for e in errors)
+
+        referenced_img_md = orphan_article / "note_img.md"
+        referenced_img_md.write_text(
+            "---\nlang: en\n---\n\n![Alt](img/a.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(referenced_img_md, select={"H060"})
+        assert not [e for e in errors if "H060" in e]
+
+        # Basename match allows a “broken” folder prefix (img file linked as files/...)
+        broken_path_img_md = orphan_article / "note_broken_path.md"
+        broken_path_img_md.write_text(
+            "---\nlang: en\n---\n\n![Alt](files/a.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(broken_path_img_md, select={"H060"})
+        assert not [e for e in errors if "H060" in e]
+
+        files_article = temp_path / "files_article"
+        files_article.mkdir()
+        (files_article / "files").mkdir()
+        (files_article / "files" / "doc.pdf").write_bytes(b"%PDF")
+        orphan_files_md = files_article / "note.md"
+        orphan_files_md.write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        errors = checker.check(orphan_files_md, select={"H060"})
+        assert any("H060" in e and "files/doc.pdf" in e for e in errors)
+
+        linked_files_md = files_article / "note_link.md"
+        linked_files_md.write_text(
+            "---\nlang: en\n---\n\n[Download](files/doc.pdf)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(linked_files_md, select={"H060"})
+        assert not [e for e in errors if "H060" in e]
+
+        # files/ asset mentioned only as an image does not count
+        image_only_files_md = files_article / "note_image_only.md"
+        image_only_files_md.write_text(
+            "---\nlang: en\n---\n\n![Doc](files/doc.pdf)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(image_only_files_md, select={"H060"})
+        assert any("H060" in e and "files/doc.pdf" in e for e in errors)
+
+        # img/ asset mentioned only as a non-image link does not count
+        link_only_img_md = orphan_article / "note_link_only.md"
+        link_only_img_md.write_text(
+            "---\nlang: en\n---\n\n[Alt](img/a.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(link_only_img_md, select={"H060"})
+        assert any("H060" in e and "img/a.png" in e for e in errors)
+
+        # Mention only inside a fenced code block does not count
+        code_only_md = orphan_article / "note_code_only.md"
+        code_only_md.write_text(
+            "---\nlang: en\n---\n\n```md\n![Alt](img/a.png)\n```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(code_only_md, select={"H060"})
+        assert any("H060" in e and "img/a.png" in e for e in errors)
+
+        # No sibling asset folders → no H060
+        plain_md = temp_path / "plain_no_assets.md"
+        plain_md.write_text("---\nlang: en\n---\n\n# Plain\n", encoding="utf-8")
+        errors = checker.check(plain_md, select={"H060"})
+        assert not errors
+
+        # =====================================================================
         # H046: Wrong line endings (respect .gitattributes eol=)
         # =====================================================================
         lf_endings_file = temp_path / "lf_endings.md"
@@ -2197,5 +2276,6 @@ def test_md_checker() -> None:
         assert "H056" in checker.all_rules
         assert "H057" in checker.all_rules
         assert "H059" in checker.all_rules
+        assert "H060" in checker.all_rules
         assert "H033" in checker.all_rules
         assert checker.all_rules == set(checker.RULES.keys())

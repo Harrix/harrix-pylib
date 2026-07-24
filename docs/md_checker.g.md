@@ -93,6 +93,8 @@ Rules:
   (Russian typography; `!` / `?` / `…` before the closer are allowed; single-letter abbreviations).
 - **H059** - Missing colon before list (sentence-ending punctuation is allowed;
   list items and their continuations are skipped).
+- **H060** - Asset under sibling `img/` or `files/` not referenced in Markdown
+  (`img` → `![]()`, `files` → `[]()`; match by basename, path may differ).
 
 <details>
 <summary>Code:</summary>
@@ -157,6 +159,12 @@ class MdChecker:
 
     # Markdown link/image destination (H045, H055)
     _LINK_DESTINATION_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"\]\(([^)]+)\)")
+
+    # Inline image or link with destination (H060); group 1 is `!` for images
+    _INLINE_IMAGE_OR_LINK_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(!?)\[([^\]]*)\]\(([^)]+)\)")
+
+    # Sibling asset folders checked by H060
+    _ASSET_DIR_NAMES: ClassVar[tuple[str, ...]] = ("img", "files")
 
     # Letter token that may mix Latin and Cyrillic scripts (H049)
     _MIXED_SCRIPT_TOKEN_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"[A-Za-z\u0400-\u04FF]+")
@@ -278,6 +286,7 @@ class MdChecker:
         "H057": "Trailing period at end of ATX heading",
         "H058": "Punctuation before closing guillemet",
         "H059": "Missing colon before list",
+        "H060": "Asset file not referenced in Markdown",
     }
 
     _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
@@ -1239,6 +1248,9 @@ class MdChecker:
         if "H045" in rules:
             yield from self._check_broken_relative_links(filename, content, yaml_end_line)
 
+        if "H060" in rules:
+            yield from self._check_orphan_asset_files(filename, content, yaml_end_line)
+
         if "H046" in rules:
             yield from self._check_line_endings(filename)
 
@@ -1766,6 +1778,30 @@ class MdChecker:
                     )
             offset += len(segment)
 
+    def _check_orphan_asset_files(self, filename: Path, content: str, yaml_end_line: int) -> Generator[str, None, None]:
+        """Check that sibling `img/` / `files/` assets are referenced in Markdown (H060).
+
+        - Files under `img/` must appear in an image `![...](...)` (basename match).
+        - Files under `files/` must appear in a non-image link `[...](...)` (basename match).
+        - Destination path may differ from the on-disk folder (e.g. `img/a.png` as `files/a.png`).
+        - Fenced and inline code are ignored.
+
+        """
+        assets = self._collect_sibling_asset_files(filename)
+        if not assets:
+            return
+
+        image_names, link_names = self._collect_markdown_asset_basenames(content, yaml_end_line)
+        for rel_path, kind in assets:
+            name_key = rel_path.name.casefold()
+            if kind == "img":
+                if name_key in image_names:
+                    continue
+            elif name_key in link_names:
+                continue
+            error_msg = f'{self.RULES["H060"]}: "{rel_path.as_posix()}" not referenced'
+            yield self._format_error("H060", error_msg, filename, line_num=1, col=1)
+
     def _check_punctuation_before_closing_guillemet(
         self, filename: Path, line: str, clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
@@ -2284,6 +2320,50 @@ class MdChecker:
             slug = h.md.generate_id(title, existing_ids)
             heading_ids.add(unquote(slug))
         return heading_ids
+
+    def _collect_markdown_asset_basenames(self, content: str, yaml_end_line: int) -> tuple[set[str], set[str]]:
+        """Return casefolded basenames from image and non-image link destinations."""
+        image_names: set[str] = set()
+        link_names: set[str] = set()
+        all_lines = content.splitlines()
+        content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
+        for line, in_code in h.md.identify_code_blocks(content_lines):
+            if in_code:
+                continue
+            for segment, in_inline_code in h.md.identify_code_blocks_line(line):
+                if in_inline_code:
+                    continue
+                for match in self._INLINE_IMAGE_OR_LINK_PATTERN.finditer(segment):
+                    destination = self._extract_link_destination(match.group(3))
+                    if not destination or destination.startswith(("http://", "https://", "#", "mailto:", "data:")):
+                        continue
+                    path_part = unquote(destination.split("#", maxsplit=1)[0])
+                    if not path_part:
+                        continue
+                    name_key = Path(path_part).name.casefold()
+                    if not name_key:
+                        continue
+                    if match.group(1) == "!":
+                        image_names.add(name_key)
+                    else:
+                        link_names.add(name_key)
+        return image_names, link_names
+
+    def _collect_sibling_asset_files(self, filename: Path) -> list[tuple[Path, str]]:
+        """Return `(relative_path, kind)` for files under sibling `img/` and `files/`."""
+        root = filename.parent
+        found: list[tuple[Path, str]] = []
+        for kind in self._ASSET_DIR_NAMES:
+            folder = root / kind
+            if not folder.is_dir():
+                continue
+            for path in sorted(folder.rglob("*")):
+                if not path.is_file():
+                    continue
+                if any(part.startswith(".") for part in path.relative_to(root).parts):
+                    continue
+                found.append((path.relative_to(root), kind))
+        return found
 
     def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]:
         """Determine which rules should be active."""
