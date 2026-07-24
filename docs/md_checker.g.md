@@ -1856,7 +1856,8 @@ class MdChecker:
                     continue
             elif name_key in link_names:
                 continue
-            error_msg = f'{self.RULES["H060"]}: "{rel_path.as_posix()}" not referenced'
+            asset_path = (filename.parent / rel_path).resolve()
+            error_msg = f'{self.RULES["H060"]}: "{asset_path}" not referenced'
             yield self._format_error("H060", error_msg, filename, line_num=1, col=1)
 
     def _check_punctuation_before_closing_guillemet(
