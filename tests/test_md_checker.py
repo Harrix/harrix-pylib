@@ -1363,6 +1363,9 @@ def test_md_checker() -> None:
         # =====================================================================
         invalid_alt_cases = [
             "![](img/image.png)\n",
+            "![alt](img/image.png)\n",
+            "![Alt](img/image.png)\n",
+            "![ALT](img/image.png)\n",
             "![alt text](img/image.png)\n",
             "![Alt text](img/image.png)\n",
             "![ALT TEXT](img/image.png)\n",

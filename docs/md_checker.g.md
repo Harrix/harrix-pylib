@@ -102,6 +102,9 @@ Rules:
 ````python
 class MdChecker:
 
+    # Placeholder image alt texts (H031); compared case-insensitively
+    _IMAGE_ALT_PLACEHOLDERS: ClassVar[frozenset[str]] = frozenset({"alt", "alt text"})
+
     # Minimum length for a line to be treated as italic-only caption (e.g. _text_)
     _MIN_ITALIC_CAPTION_LEN: ClassVar[int] = 2
 
@@ -2470,7 +2473,7 @@ class MdChecker:
         stripped = alt.strip()
         if not stripped:
             return "empty alt text"
-        if stripped.casefold() == "alt text":
+        if stripped.casefold() in self._IMAGE_ALT_PLACEHOLDERS:
             return f'placeholder alt text "{stripped}"'
         if stripped[0].isalpha() and stripped[0].islower():
             return f'alt text starts with "{stripped[0]}"'
