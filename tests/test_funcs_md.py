@@ -983,7 +983,7 @@ def test_generate_image_captions_for_indented_list_images() -> None:
 
 
 def test_generate_image_captions_indents_unindented_images_under_list_items() -> None:
-    """Images after a list item without indent are pulled into the list with captions."""
+    """Images between list items are pulled into the list; trailing images are not."""
     source = (
         "---\nlang: ru\n---\n\n"
         "- [minimap](https://example.com) — карта документа:\n\n"
@@ -993,7 +993,9 @@ def test_generate_image_captions_indents_unindented_images_under_list_items() ->
     )
     result = h.md.generate_image_captions_content(source)
     assert "  ![Пакет minimap](img/minimap.png)\n\n  _Рисунок 1 — Пакет minimap_" in result
-    assert "  ![Пакет pigments](img/pigments.png)\n\n  _Рисунок 2 — Пакет pigments_" in result
+    # Last image is after the list (EOF) — must stay outside
+    assert "\n![Пакет pigments](img/pigments.png)\n" in result
+    assert "  ![Пакет pigments]" not in result
     assert h.md.generate_image_captions_content(result) == result
 
 
@@ -1019,6 +1021,28 @@ def test_generate_image_captions_does_not_indent_image_after_list_before_prose()
     assert "- `python -m venv .venv`: создание `.venv`\n- `pip install requests`: установка пакета\n" in formatted
     assert "\n![Ошибка при активации виртуального окружения](img/fix_01.png)\n" in formatted
     assert "  ![Ошибка" not in formatted
+
+
+def test_generate_image_captions_does_not_indent_image_after_list_at_eof() -> None:
+    """Image after a list at end of file must stay outside the list (MRI-style notes)."""
+    source = (
+        "---\nlang: ru\n---\n\n"
+        "## Section\n\n"
+        "**Description:**\n\n"
+        "- Item one\n"
+        "- Item two\n"
+        "- Item three\n\n"
+        "![Spine MRI protocol](../2022/img/2022-09-06-02.avif)\n\n"
+        "_Рисунок 1 — Spine MRI protocol_\n"
+    )
+    result = h.md.generate_image_captions_content(source)
+    assert "\n![Spine MRI protocol](../2022/img/2022-09-06-02.avif)\n" in result
+    assert "  ![Spine" not in result
+    assert "  _Рисунок" not in result
+
+    formatted = h.md.format_markdown_content(result, end_of_line="lf")
+    assert "- Item one\n- Item two\n- Item three\n" in formatted
+    assert "  ![Spine" not in formatted
 
 
 def test_append_yaml_tag() -> None:

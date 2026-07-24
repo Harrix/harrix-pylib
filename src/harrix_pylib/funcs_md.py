@@ -3779,24 +3779,19 @@ def _dump_yaml_indented(data: dict[str, Any], *, explicit_start: bool = False) -
 
 
 def _following_content_keeps_image_in_list(following_lines: list[str], list_item_start_re: re.Pattern[str]) -> bool:
-    """Return whether look-ahead still places an image inside the preceding list."""
+    """Return `True` only when another list item follows (image sits between items)."""
     for line in following_lines:
         if not line.strip():
             continue
         stripped = line.lstrip(" \t")
-        # Figure blocks that belong with this or a sibling image
+        # Skip figure blocks that belong with this or a sibling image
         if stripped.startswith("![") and "](" in stripped:
             continue
         if len(stripped) >= 2 and stripped.startswith("_") and stripped.endswith("_"):
             continue
-        if list_item_start_re.match(stripped):
-            return True
-        # Unindented prose / heading / other block ends the list
-        if line[:1] not in {" ", "\t"}:
-            return False
-        # Indented continuation still belongs to list context
-        return True
-    return True
+        return bool(list_item_start_re.match(stripped))
+    # EOF, prose/heading already returned False above, or only blanks/figures remain
+    return False
 
 
 def _is_toc_details_open(lines: list[str], index: int) -> bool:
@@ -3824,14 +3819,11 @@ def _list_continuation_indent_for_image(
     (e.g. `- …:`), the image may be indented to the list content column so
     captions stay inside the item.
 
-    The image is pulled into the list only when it still belongs to list context:
-
-    - another list item follows (image sits between items), or
-    - nothing follows (trailing image under the last item).
-
-    If ordinary prose, a heading, or another top-level block follows, the image
-    is after the list and must stay unindented (otherwise MdFormatter treats the
-    list as loose and inserts blank lines between every item).
+    The image is pulled into the list only when another list item follows
+    (the image sits between items). If ordinary prose, a heading, EOF, or any
+    other top-level block follows, the image is after the list and must stay
+    unindented (otherwise MdFormatter treats the list as loose and inserts
+    blank lines between every item).
 
     """
     idx = len(previous_lines) - 1
