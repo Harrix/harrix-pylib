@@ -228,6 +228,8 @@ class MdChecker:
     # `well well-known` is not treated as a repeat of `well`.
     _WORD_TOKEN_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"[^\W\d_]+(?:-[^\W\d_]+)*", re.UNICODE)
     _H054_MIN_WORD_LEN: ClassVar[int] = 3
+    # Exactly two identical adjacent words = likely typo; 3+ = intentional emphasis.
+    _H054_TYPO_RUN_LEN: ClassVar[int] = 2
 
     # Allowed HTML container tags for balance check (H053)
     _DETAILS_OPEN_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"<details\b[^>]*>", re.IGNORECASE)
@@ -2004,7 +2006,7 @@ class MdChecker:
                 run_end += 1
 
             run_len = run_end - index
-            if run_len == 2:
+            if run_len == self._H054_TYPO_RUN_LEN:
                 token = first.group(0)
                 second = matches[index + 1].group(0)
                 if (
@@ -2528,10 +2530,8 @@ class MdChecker:
         image_names: set[str] = set()
         link_names: set[str] = set()
         stripped = yaml_text.strip()
-        if stripped.startswith("---"):
-            stripped = stripped[3:]
-        if stripped.endswith("---"):
-            stripped = stripped[:-3]
+        stripped = stripped.removeprefix("---")
+        stripped = stripped.removesuffix("---")
         try:
             data = yaml.safe_load(stripped)
         except yaml.YAMLError:
