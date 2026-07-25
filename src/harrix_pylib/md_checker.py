@@ -1969,7 +1969,7 @@ class MdChecker:
 
         Only an exact double (two identical tokens separated only by whitespace) is
         flagged — typical typos like `code code`. Runs of three or more
-        (`миллионов миллионов миллионов`, `very very very`) are treated as
+        (`миллионов миллионов миллионов`, `very very very`) are treated as # ignore: HP001
         intentional emphasis / hyperbole and ignored.
 
         Hyphenated compounds count as one token (`Notes-Notes` is not a repeat).
