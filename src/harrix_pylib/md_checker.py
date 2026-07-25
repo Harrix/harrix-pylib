@@ -75,7 +75,8 @@ class MdChecker:
     - **H051** - Malformed punctuation sequence.
     - **H052** - Heading level deeper than H6.
     - **H053** - Unbalanced `<details>` / `<summary>` tags.
-    - **H054** - Repeated adjacent word.
+    - **H054** - Repeated adjacent word (exactly two in a row; runs of three or more
+      are treated as intentional emphasis / hyperbole).
     - **H055** - Broken internal fragment link.
     - **H056** - Unbalanced inline code in table cell.
     - **H057** - Trailing period at end of ATX heading.
@@ -1964,36 +1965,45 @@ class MdChecker:
     ) -> Generator[str, None, None]:
         """Check for repeated adjacent words outside code (H054).
 
-        Only whitespace may separate the two words (so `Notes-Notes` is allowed).
-        Hyphenated compounds count as one token.
+        Only an exact double (two identical tokens separated only by whitespace) is
+        flagged — typical typos like `code code`. Runs of three or more
+        (`миллионов миллионов миллионов`, `very very very`) are treated as
+        intentional emphasis / hyperbole and ignored.
+
+        Hyphenated compounds count as one token (`Notes-Notes` is not a repeat).
         Title-case doubles (`Humbert Humbert`, `Knock Knock`) are allowed.
 
         """
-        previous: str | None = None
-        previous_token = ""
-        previous_start = 0
-        previous_end = 0
-        for match in self._WORD_TOKEN_PATTERN.finditer(clean_line):
-            token = match.group(0)
-            current = token.casefold()
-            if (
-                previous is not None
-                and current == previous
-                and len(token) >= self._H054_MIN_WORD_LEN
-                and clean_line[previous_end : match.start()].isspace()
-                # Intentional proper-name / title doubles stay capitalized on both words.
-                and not (previous_token[:1].isupper() and token[:1].isupper())
-            ):
-                snippet = clean_line[previous_start : match.end()]
-                col = line.find(snippet)
-                if col < 0:
-                    col = previous_start
-                error_msg = f'{self.RULES["H054"]}: "{token}"'
-                yield self._format_error("H054", error_msg, filename, line_num=line_num, col=col + 1)
-            previous = current
-            previous_token = token
-            previous_start = match.start()
-            previous_end = match.end()
+        matches = list(self._WORD_TOKEN_PATTERN.finditer(clean_line))
+        index = 0
+        while index < len(matches):
+            first = matches[index]
+            run_end = index + 1
+            while run_end < len(matches):
+                prev_match = matches[run_end - 1]
+                curr_match = matches[run_end]
+                if curr_match.group(0).casefold() != first.group(0).casefold():
+                    break
+                if not clean_line[prev_match.end() : curr_match.start()].isspace():
+                    break
+                run_end += 1
+
+            run_len = run_end - index
+            if run_len == 2:
+                token = first.group(0)
+                second = matches[index + 1].group(0)
+                if (
+                    len(token) >= self._H054_MIN_WORD_LEN
+                    # Intentional proper-name / title doubles stay capitalized on both words.
+                    and not (token[:1].isupper() and second[:1].isupper())
+                ):
+                    snippet = clean_line[first.start() : matches[index + 1].end()]
+                    col = line.find(snippet)
+                    if col < 0:
+                        col = first.start()
+                    error_msg = f'{self.RULES["H054"]}: "{token}"'
+                    yield self._format_error("H054", error_msg, filename, line_num=line_num, col=col + 1)
+            index = run_end
 
     def _check_russian_polite_pronouns(
         self, filename: Path, line: str, _clean_line: str, line_num: int

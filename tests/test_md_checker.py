@@ -2460,6 +2460,23 @@ def test_md_checker() -> None:
         errors = checker.check(title_case_double_file, select={"H054"})
         assert not errors
 
+        # Runs of 3+ identical words are intentional emphasis / hyperbole
+        triple_repeat_en_file = temp_path / "triple_repeat_en.md"
+        triple_repeat_en_file.write_text(
+            "---\nlang: en\n---\n\nThis is very very very unlikely.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(triple_repeat_en_file, select={"H054"})
+        assert not errors
+
+        hyperbole_ru_file = temp_path / "hyperbole_millions.md"
+        hyperbole_ru_file.write_text(
+            "---\nlang: ru\n---\n\nпримерно 1 из 10000 миллионов миллионов миллионов миллионов миллионов миллионов.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(hyperbole_ru_file, select={"H054"})
+        assert not errors
+
         # =====================================================================
         # H055: Broken internal fragment link
         # =====================================================================
