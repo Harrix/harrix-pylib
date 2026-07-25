@@ -19,7 +19,6 @@ Launch the finance tracking application.
 
 ```python
 class OnFinance(AppLauncherAction):
-
     icon = "💰"
     title = "Finance tracker"
     main_window_class = finance_main.MainWindow

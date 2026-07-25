@@ -99,7 +99,9 @@ Rules:
   sibling Markdown file (excluding `*.g.md`); `img` → `![]()`, `files` → `[]()`;
   match by basename, path may differ; only direct files in those folders (not nested);
   Markdown under `img/` / `files/` is ignored; GitHub `raw.githubusercontent.com` /
-  `github.com` blob/raw URLs with `/img/` or `/files/` count as references.
+  `github.com` blob/raw URLs with `/img/` or `/files/` count as references;
+  YAML front matter string values (e.g. `download:`) with such URLs or relative
+  `img/` / `files/` paths also count.
 
 <details>
 <summary>Code:</summary>
@@ -615,6 +617,46 @@ class MdChecker:
             elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
                 yield from self.find_markdown_files(item, additional_ignore_patterns)
 
+    def _add_yaml_asset_string(self, value: str, image_names: set[str], link_names: set[str]) -> None:
+        """Add a YAML string to image/link basename sets when it references an asset."""
+        text = value.strip()
+        if not text or text.startswith(("#", "mailto:", "data:")):
+            return
+        if text.startswith(("http://", "https://")):
+            ref = self._github_asset_basename_and_kind(text)
+            if not ref:
+                return
+            name_key, kind = ref
+            if kind == "img":
+                image_names.add(name_key)
+            else:
+                link_names.add(name_key)
+            return
+        path_part = unquote(text.split("#", maxsplit=1)[0].replace("\\", "/"))
+        if not path_part or "://" in path_part:
+            return
+        parts = [part for part in path_part.split("/") if part and part != "."]
+        if not parts:
+            return
+        kind = self._asset_kind_from_path_parts(parts)
+        if kind is None:
+            return
+        name_key = parts[-1].casefold()
+        if not name_key:
+            return
+        if kind == "img":
+            image_names.add(name_key)
+        else:
+            link_names.add(name_key)
+
+    def _asset_kind_from_path_parts(self, parts: list[str]) -> str | None:
+        """Return `img` or `files` from path segments, preferring the segment nearest the basename."""
+        for part in reversed(parts):
+            key = part.casefold()
+            if key in self._ASSET_DIR_NAMES:
+                return key
+        return None
+
     def _basename_from_github_asset_url(self, destination: str) -> str | None:
         """Return casefolded basename from a GitHub asset URL, or `None` if not applicable.
 
@@ -622,22 +664,8 @@ class MdChecker:
         contains an `img` or `files` segment (typical README / PyPI absolute image links).
 
         """
-        parsed = urlparse(destination)
-        host = parsed.netloc.casefold()
-        if host not in self._GITHUB_ASSET_HOSTS:
-            return None
-        parts = [unquote(part) for part in parsed.path.split("/") if part]
-        if not parts:
-            return None
-        if host == "github.com" and (
-            len(parts) < self._GITHUB_COM_MIN_PATH_PARTS or parts[2].casefold() not in self._GITHUB_COM_REF_KINDS
-        ):
-            return None
-        lower_parts = {part.casefold() for part in parts}
-        if "img" not in lower_parts and "files" not in lower_parts:
-            return None
-        name_key = parts[-1].casefold()
-        return name_key or None
+        ref = self._github_asset_basename_and_kind(destination)
+        return ref[0] if ref else None
 
     def _build_display_math_line_indices(self, code_block_info: list) -> frozenset[int]:
         """Return content-line indices that belong to display-math `$$...$$` blocks."""
@@ -1836,6 +1864,9 @@ class MdChecker:
         - Destination path may differ from the on-disk folder (e.g. `img/a.png` as `files/a.png`).
         - Absolute GitHub URLs (`raw.githubusercontent.com`, `github.com` blob/raw)
           whose path contains `/img/` or `/files/` also count (basename match).
+        - YAML front matter string values (e.g. `download:`) with such GitHub URLs or
+          relative paths containing `img/` / `files/` also count (`img` → image set,
+          `files` → link set).
         - Markdown files (`*.md` / `*.markdown`, including `*.g.md`) under `img/` /
           `files/` are not treated as assets (e.g. docs category folders named `files`).
         - Only direct files in sibling `img/` / `files/` are checked (not nested
@@ -2410,11 +2441,17 @@ class MdChecker:
 
         Relative destinations and GitHub absolute URLs with `/img/` or `/files/` are
         collected; other http(s) hosts and `#` / `mailto:` / `data:` are ignored.
+        YAML front matter string values are included (see `_collect_yaml_asset_basenames`).
 
         """
         image_names: set[str] = set()
         link_names: set[str] = set()
         all_lines = content.splitlines()
+        if yaml_end_line > 1:
+            yaml_text = "\n".join(all_lines[: yaml_end_line - 1])
+            yaml_imgs, yaml_links = self._collect_yaml_asset_basenames(yaml_text)
+            image_names |= yaml_imgs
+            link_names |= yaml_links
         content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
         for line, in_code in h.md.identify_code_blocks(content_lines):
             if in_code:
@@ -2469,6 +2506,31 @@ class MdChecker:
                     continue
                 found.append((path.relative_to(root), kind))
         return found
+
+    def _collect_yaml_asset_basenames(self, yaml_text: str) -> tuple[set[str], set[str]]:
+        """Return casefolded basenames from YAML string values that reference assets.
+
+        GitHub absolute URLs with `/img/` or `/files/`, and relative paths containing
+        those folder names, count. Classification follows the path segment (`img` →
+        images, `files` → links), e.g. `download: https://github.com/.../files/a.zip`.
+
+        """
+        image_names: set[str] = set()
+        link_names: set[str] = set()
+        stripped = yaml_text.strip()
+        if stripped.startswith("---"):
+            stripped = stripped[3:]
+        if stripped.endswith("---"):
+            stripped = stripped[:-3]
+        try:
+            data = yaml.safe_load(stripped)
+        except yaml.YAMLError:
+            return image_names, link_names
+        if data is None:
+            return image_names, link_names
+        for value in self._iter_yaml_strings(data):
+            self._add_yaml_asset_string(value, image_names, link_names)
+        return image_names, link_names
 
     def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]:
         """Determine which rules should be active."""
@@ -2565,6 +2627,29 @@ class MdChecker:
             return str(filename.resolve().relative_to(self.project_root))
         except ValueError:
             return str(filename.resolve())
+
+    def _github_asset_basename_and_kind(self, destination: str) -> tuple[str, str] | None:
+        """Return `(casefolded_basename, kind)` from a GitHub asset URL, or `None`.
+
+        `kind` is `img` or `files` according to path segments.
+
+        """
+        parsed = urlparse(destination)
+        host = parsed.netloc.casefold()
+        if host not in self._GITHUB_ASSET_HOSTS:
+            return None
+        parts = [unquote(part) for part in parsed.path.split("/") if part]
+        if not parts:
+            return None
+        if host == "github.com" and (
+            len(parts) < self._GITHUB_COM_MIN_PATH_PARTS or parts[2].casefold() not in self._GITHUB_COM_REF_KINDS
+        ):
+            return None
+        kind = self._asset_kind_from_path_parts(parts)
+        if kind is None:
+            return None
+        name_key = parts[-1].casefold()
+        return (name_key, kind) if name_key else None
 
     # =========================================================================
     # Helper Methods
@@ -2690,6 +2775,18 @@ class MdChecker:
                 return part.strip() == "-"
             start = end + 1  # +1 for the | separator
         return False
+
+    @staticmethod
+    def _iter_yaml_strings(data: object) -> Generator[str, None, None]:
+        """Yield all string values from a parsed YAML structure."""
+        if isinstance(data, str):
+            yield data
+        elif isinstance(data, dict):
+            for item in data.values():
+                yield from MdChecker._iter_yaml_strings(item)
+        elif isinstance(data, list):
+            for item in data:
+                yield from MdChecker._iter_yaml_strings(item)
 
     def _paragraph_last_char(self, line: str) -> tuple[str, int]:
         """Return last meaningful character and its 1-based column for colon checks.

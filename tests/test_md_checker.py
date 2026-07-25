@@ -2044,6 +2044,47 @@ def test_md_checker() -> None:
         errors = checker.check(github_blob_dir / "README.md", select={"H060"})
         assert not [e for e in errors if "H060" in e], "H060 must accept github.com blob URLs"
 
+        # YAML download: GitHub raw URL counts as a files/ link reference
+        yaml_download_dir = temp_path / "yaml_download_article"
+        yaml_download_dir.mkdir()
+        (yaml_download_dir / "files").mkdir()
+        (yaml_download_dir / "files" / "test-uv.zip").write_bytes(b"PK")
+        (yaml_download_dir / "article.md").write_text(
+            "---\nlang: en\n"
+            "download: https://github.com/Harrix/harrix.dev-articles-2025-en/raw/main/"
+            "uv-vscode-python/files/test-uv.zip\n"
+            "---\n\n# Article\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(yaml_download_dir / "article.md", select={"H060"})
+        assert not [e for e in errors if "H060" in e], "H060 must accept download URLs in YAML"
+
+        # YAML relative files/ path also counts
+        yaml_rel_dir = temp_path / "yaml_relative_files_article"
+        yaml_rel_dir.mkdir()
+        (yaml_rel_dir / "files").mkdir()
+        (yaml_rel_dir / "files" / "doc.pdf").write_bytes(b"%PDF")
+        (yaml_rel_dir / "article.md").write_text(
+            "---\nlang: en\ndownload: files/doc.pdf\n---\n\n# Article\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(yaml_rel_dir / "article.md", select={"H060"})
+        assert not [e for e in errors if "H060" in e], "H060 must accept relative files/ paths in YAML"
+
+        # YAML img/ GitHub URL counts as an image reference
+        yaml_img_dir = temp_path / "yaml_img_article"
+        yaml_img_dir.mkdir()
+        (yaml_img_dir / "img").mkdir()
+        (yaml_img_dir / "img" / "cover.png").write_bytes(b"png")
+        (yaml_img_dir / "article.md").write_text(
+            "---\nlang: en\n"
+            "cover: https://raw.githubusercontent.com/Harrix/demo/main/img/cover.png\n"
+            "---\n\n# Article\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(yaml_img_dir / "article.md", select={"H060"})
+        assert not [e for e in errors if "H060" in e], "H060 must accept img/ URLs in YAML"
+
         # Non-GitHub absolute URL must not count
         foreign_host_dir = temp_path / "foreign_host_article"
         foreign_host_dir.mkdir()
