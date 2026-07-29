@@ -21,6 +21,7 @@
   - [📄 File `funcs_md.py`](#-file-funcs_mdpy)
   - [📄 File `funcs_py.py`](#-file-funcs_pypy)
   - [📄 File `img_tools.py`](#-file-img_toolspy)
+  - [📄 File `md_assets.py`](#-file-md_assetspy)
   - [📄 File `md_checker.py`](#-file-md_checkerpy)
   - [📄 File `progress.py`](#-file-progresspy)
   - [📄 File `py_checker.py`](#-file-py_checkerpy)
@@ -249,6 +250,20 @@ Doc: [`img_tools.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/im
 | 🔧 [`optimize_image_with_tools`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-optimize_image_with_tools) | Optimize a raster image using ffmpeg, avifenc, or avifdec.            |
 | 🔧 [`process_animated_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_animated_avif)         | Optimize animated AVIF with avifdec and avifenc or ffmpeg.            |
 | 🔧 [`process_static_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_static_avif)             | Optimize static AVIF with ffmpeg.                                     |
+
+### 📄 File `md_assets.py`
+
+Doc: [`md_assets.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md)
+
+| Function/Class                                                                                                                                 | Description                                                                       |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 🔧 [`desired_note_asset_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-desired_note_asset_path)         | Return the correct path for a note asset, or `None` if already correct / ignored. |
+| 🔧 [`is_featured_image_name`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-is_featured_image_name)           | Return whether `name` is a featured-image asset (`featured-image.*`).             |
+| 🔧 [`is_media_file`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-is_media_file)                             | Return whether `path` has a media extension used for the `img/` folder.           |
+| 🔧 [`is_note_asset_folder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-is_note_asset_folder)               | Return whether `folder` should use note asset layout (H061 / organize).           |
+| 🔧 [`iter_misplaced_note_assets`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-iter_misplaced_note_assets)   | Yield `(source, destination)` for misplaced direct assets in a note folder.       |
+| 🔧 [`organize_note_folder_assets`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-organize_note_folder_assets) | Move misplaced note assets into `img/` / `files/` and rewrite Markdown links.     |
+| 🔧 [`rewrite_note_asset_links`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-rewrite_note_asset_links)       | Rewrite local Markdown/YAML asset paths after files were moved.                   |
 
 ### 📄 File `md_checker.py`
 

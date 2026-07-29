@@ -2167,6 +2167,79 @@ def test_md_checker() -> None:
         assert not errors
 
         # =====================================================================
+        # H061: Misplaced note asset files
+        # =====================================================================
+        loose_png_dir = temp_path / "h061_loose_png"
+        loose_png_dir.mkdir()
+        (loose_png_dir / "photo.png").write_bytes(b"png")
+        (loose_png_dir / "note.md").write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        errors = checker.check(loose_png_dir / "note.md", select={"H061"})
+        assert any("H061" in e and "photo.png" in e and "img/" in e for e in errors)
+
+        loose_pdf_dir = temp_path / "h061_loose_pdf"
+        loose_pdf_dir.mkdir()
+        (loose_pdf_dir / "doc.pdf").write_bytes(b"%PDF")
+        (loose_pdf_dir / "note.md").write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        errors = checker.check(loose_pdf_dir / "note.md", select={"H061"})
+        assert any("H061" in e and "doc.pdf" in e and "files/" in e for e in errors)
+
+        media_in_files_dir = temp_path / "h061_media_in_files"
+        media_in_files_dir.mkdir()
+        (media_in_files_dir / "files").mkdir()
+        (media_in_files_dir / "files" / "shot.gif").write_bytes(b"gif")
+        (media_in_files_dir / "note.md").write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        errors = checker.check(media_in_files_dir / "note.md", select={"H061"})
+        assert any("H061" in e and "shot.gif" in e and "img/" in e for e in errors)
+
+        pdf_in_img_dir = temp_path / "h061_pdf_in_img"
+        pdf_in_img_dir.mkdir()
+        (pdf_in_img_dir / "img").mkdir()
+        (pdf_in_img_dir / "img" / "doc.pdf").write_bytes(b"%PDF")
+        (pdf_in_img_dir / "note.md").write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        errors = checker.check(pdf_in_img_dir / "note.md", select={"H061"})
+        assert any("H061" in e and "doc.pdf" in e and "files/" in e for e in errors)
+
+        featured_root_dir = temp_path / "h061_featured_root"
+        featured_root_dir.mkdir()
+        (featured_root_dir / "featured-image.png").write_bytes(b"png")
+        (featured_root_dir / "note.md").write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        errors = checker.check(featured_root_dir / "note.md", select={"H061"})
+        assert not [e for e in errors if "H061" in e]
+
+        featured_img_dir = temp_path / "h061_featured_img"
+        featured_img_dir.mkdir()
+        (featured_img_dir / "img").mkdir()
+        (featured_img_dir / "img" / "featured-image.svg").write_bytes(b"<svg/>")
+        (featured_img_dir / "note.md").write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        errors = checker.check(featured_img_dir / "note.md", select={"H061"})
+        assert not [e for e in errors if "H061" in e]
+
+        nested_ignored_dir = temp_path / "h061_nested_ignored"
+        nested_ignored_dir.mkdir()
+        (nested_ignored_dir / "other").mkdir()
+        (nested_ignored_dir / "other" / "a.png").write_bytes(b"png")
+        (nested_ignored_dir / "note.md").write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        errors = checker.check(nested_ignored_dir / "note.md", select={"H061"})
+        assert not [e for e in errors if "H061" in e]
+
+        media_ext_dir = temp_path / "h061_media_ext"
+        media_ext_dir.mkdir()
+        (media_ext_dir / "icon.ico").write_bytes(b"ico")
+        (media_ext_dir / "vector.svg").write_bytes(b"<svg/>")
+        (media_ext_dir / "note.md").write_text("---\nlang: en\n---\n\n# Note\n", encoding="utf-8")
+        errors = checker.check(media_ext_dir / "note.md", select={"H061"})
+        assert any("H061" in e and "icon.ico" in e and "img/" in e for e in errors)
+        assert any("H061" in e and "vector.svg" in e and "img/" in e for e in errors)
+
+        project_root_dir = temp_path / "h061_project_root"
+        project_root_dir.mkdir()
+        (project_root_dir / "pyproject.toml").write_text("[project]\nname='x'\n", encoding="utf-8")
+        (project_root_dir / "photo.png").write_bytes(b"png")
+        (project_root_dir / "README.md").write_text("---\nlang: en\n---\n\n# Repo\n", encoding="utf-8")
+        errors = checker.check(project_root_dir / "README.md", select={"H061"})
+        assert not [e for e in errors if "H061" in e]
+
+        # =====================================================================
         # H046: Wrong line endings (respect .gitattributes eol=)
         # =====================================================================
         lf_endings_file = temp_path / "lf_endings.md"

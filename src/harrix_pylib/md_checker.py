@@ -92,6 +92,13 @@ class MdChecker:
       `github.com` blob/raw URLs with `/img/` or `/files/` count as references;
       YAML front matter string values (e.g. `download:`) with such URLs or relative
       `img/` / `files/` paths also count.
+    - **H061** - Misplaced note asset file: media (jpg/png/mp4/… including SVG/gif/ico)
+      belongs in sibling `img/`, other non-Markdown files in sibling `files/`;
+      `featured-image.*` may stay in the note root or in `img/` (not flagged); loose media
+      in the note root (except `featured-image.*`) or under `files/` is wrong; non-media
+      under `img/` or in the note root is wrong; nested folders other than `img/` / `files/`
+      are ignored; software project roots (`.git`, `pyproject.toml`, …) and
+      README/LICENSE-only folders are skipped.
 
     """
 
@@ -295,6 +302,7 @@ class MdChecker:
         "H058": "Punctuation before closing guillemet",
         "H059": "Missing colon before list",
         "H060": "Asset file not referenced in Markdown",
+        "H061": "Misplaced note asset file",
     }
 
     _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
@@ -1310,6 +1318,9 @@ class MdChecker:
         if "H060" in rules:
             yield from self._check_orphan_asset_files(filename, content, yaml_end_line)
 
+        if "H061" in rules:
+            yield from self._check_misplaced_note_assets(filename)
+
         if "H046" in rules:
             yield from self._check_line_endings(filename)
 
@@ -1583,6 +1594,25 @@ class MdChecker:
                 col = match.start()
             error_msg = f'{self.RULES["H051"]}: "{snippet}"'
             yield self._format_error("H051", error_msg, filename, line_num=line_num, col=col + 1)
+
+    def _check_misplaced_note_assets(self, filename: Path) -> Generator[str, None, None]:
+        """Check note-folder asset layout (H061).
+
+        Media files belong under sibling `img/`, other non-Markdown files under
+        sibling `files/`. `featured-image.*` in the note root or `img/` is allowed.
+        Nested directories other than `img/` / `files/` are ignored.
+
+        """
+        from harrix_pylib.md_assets import iter_misplaced_note_assets  # noqa: PLC0415
+
+        for source, destination in iter_misplaced_note_assets(filename.parent):
+            try:
+                dest_rel = destination.relative_to(filename.parent).as_posix()
+            except ValueError:
+                dest_rel = destination.as_posix()
+            target_folder = dest_rel.split("/", maxsplit=1)[0]
+            error_msg = f'{self.RULES["H061"]}: "{source.resolve()}" should be under {target_folder}/'
+            yield self._format_error("H061", error_msg, filename, line_num=1, col=1)
 
     def _check_missing_figure_captions(
         self, filename: Path, code_block_info: list, yaml_end_line: int

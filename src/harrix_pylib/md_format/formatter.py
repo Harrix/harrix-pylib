@@ -101,6 +101,9 @@ class MdFormatter:
     def format_file(self, filename: Path | str) -> str:
         """Format a Markdown file in place when content or line endings change.
 
+        Also organizes sibling note assets (`featured-image.*` in the note root,
+        media under `img/`, other files under `files/`) and rewrites local links.
+
         Args:
 
         - `filename` (`Path | str`): Path to the Markdown file.
@@ -111,20 +114,29 @@ class MdFormatter:
 
         """
         from harrix_pylib.funcs_md import is_raw_markdown_enabled  # noqa: PLC0415
+        from harrix_pylib.md_assets import organize_note_folder_assets  # noqa: PLC0415
 
         path = Path(filename)
+        organize_msg = organize_note_folder_assets(path.parent)
         raw = path.read_bytes()
         document = self.read_markdown_text(path)
         if is_raw_markdown_enabled(document):
-            return f"Skipped {path}: raw-markdown."
+            skip_msg = f"Skipped {path}: raw-markdown."
+            return f"{organize_msg}\n{skip_msg}" if organize_msg else skip_msg
         document_new = self.format(document)
         if document != document_new or self._needs_end_of_line_rewrite(raw):
             path.write_text(document_new, encoding="utf-8", newline="")
-            return f"✅ File {path} applied."
+            applied = f"✅ File {path} applied."
+            return f"{organize_msg}\n{applied}" if organize_msg else applied
+        if organize_msg:
+            return organize_msg
         return "File is not changed."
 
     def format_folder(self, folder: Path | str) -> str:
         """Recursively format Markdown files in a folder.
+
+        Organizes note-folder assets once per unique parent directory, then formats
+        each Markdown file.
 
         Args:
 
@@ -136,8 +148,26 @@ class MdFormatter:
 
         """
         from harrix_pylib import funcs_file  # noqa: PLC0415
+        from harrix_pylib.md_assets import organize_note_folder_assets  # noqa: PLC0415
 
-        return funcs_file.apply_func(folder, ".md", self.format_file)
+        root = Path(folder).resolve()
+        lines: list[str] = []
+        organized_parents: set[Path] = set()
+        for md_file in root.rglob("*.md"):
+            if funcs_file.should_ignore_path(md_file):
+                continue
+            parent = md_file.parent.resolve()
+            if parent in organized_parents:
+                continue
+            organized_parents.add(parent)
+            organize_msg = organize_note_folder_assets(parent)
+            if organize_msg:
+                lines.append(organize_msg)
+
+        format_msg = funcs_file.apply_func(folder, ".md", self.format_file)
+        if format_msg:
+            lines.append(format_msg)
+        return "\n".join(lines)
 
     @staticmethod
     def normalize_line_endings(text: str) -> str:
