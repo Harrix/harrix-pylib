@@ -791,6 +791,18 @@ def test_md_checker() -> None:
         errors = checker.check(wrong_colon_still_file, select={"H015"})
         assert any("H015" in e for e in errors)
 
+        # GFM table alignment colons must not trigger H015
+        table_align_file = temp_path / "table_align.md"
+        table_align_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "| Слева   |    По центру     | Справа |\n"
+            "| ------- | :--------------: | -----: |\n"
+            "| Телефон | Длинное значение |  $1600 |\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(table_align_file, select={"H015"})
+        assert not [e for e in errors if "H015" in e], "H015 must not fire for GFM table alignment"
+
         # =====================================================================
         # H016: Incorrect dash/hyphen usage
         # =====================================================================

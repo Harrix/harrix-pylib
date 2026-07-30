@@ -33,7 +33,8 @@ class MdChecker:
     - **H012** - Two consecutive empty lines.
     - **H013** - Missing colon before code block (list items and figure captions are exempt).
     - **H014** - Missing colon before image.
-    - **H015** - Space before punctuation mark (text emoticons like `:)` / `;)` are allowed).
+    - **H015** - Space before punctuation mark (text emoticons like `:)` / `;)` and GFM
+      table alignment colons like `| :---: |` are allowed).
     - **H016** - Incorrect dash/hyphen usage.
     - **H017** - Three dots instead of ellipsis character.
     - **H018** - Curly/straight quotes instead of angle quotes.
@@ -2179,6 +2180,7 @@ class MdChecker:
         Uses original line so that removal of inline code (e.g. `word`:)
         does not create `False` ` :` when segments are concatenated.
         Matches inside inline code (e.g. `cd ..`) are skipped.
+        GFM table alignment colons (`| :---: |`) are skipped: `:` before `-`.
 
         """
         code_ranges: list[tuple[int, int]] = []
@@ -2192,13 +2194,14 @@ class MdChecker:
             return any(start <= offset < end for start, end in code_ranges)
 
         # Skip text emoticons (`:)`, `;-)`, `:D`, …); letter faces must not start a word.
+        # Skip GFM table alignment (`| :---: |`, `| :--- |`) where `:` is followed by `-`.
         emoticon_after_colon = r"(?:[-^])?(?:[)(*\\/|<>3@]|[DPpoOsS](?![a-zA-Z]))"
         emoticon_after_semicolon = r"(?:[-^])?(?:[)(*\\/|<>]|[DPpo](?![a-zA-Z]))"
         patterns = [
             (r" \.(?![a-zA-Z0-9])", " ."),
             (r" ,", " ,"),
             (rf" ;(?!{emoticon_after_semicolon})", " ;"),
-            (rf" :(?!{emoticon_after_colon})", " :"),
+            (rf" :(?!-|{emoticon_after_colon})", " :"),
             (r" \?", " ?"),
         ]
 

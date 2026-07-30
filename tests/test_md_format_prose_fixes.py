@@ -62,6 +62,14 @@ def test_formatter_fixes_checker_rules(tmp_path: Path, source: str, rules: set[s
     assert not _checker_errors(tmp_path, result, rules), result
 
 
+def test_formatter_preserves_gfm_table_alignment(tmp_path: Path) -> None:
+    source = "| Left | Center | Right |\n| ---- | :----: | ----: |\n| a | b | c |\n"
+    assert not _checker_errors(tmp_path, source, {"H015"})
+    result = _format(source)
+    assert ":----:" in result
+    assert not _checker_errors(tmp_path, result, {"H015"}), result
+
+
 def test_formatter_fixes_russian_lang_gated_rules(tmp_path: Path) -> None:
     source = "---\nlang: ru\n---\n\nСпасибо Вам за 50%.\n"  # ignore: HP001
     rules = {"H023", "H044"}

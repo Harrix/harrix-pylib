@@ -100,6 +100,7 @@ _EMPHASIS_COLON_OUTSIDE_PATTERNS = (
 _H015_BANG_EXCEPTIONS = (" !details", " !note", " !important", " !warning")
 # Text emoticons like `:)` / `;-)` / `:D` — do not strip the space before `:` / `;`.
 # Letter faces (`D`, `P`, …) must not start a longer word (`:smile:` stays punctuation).
+# GFM table alignment (`| :---: |`) — `:` followed by `-` is not punctuation.
 _H015_EMOTICON_AFTER_COLON = r"(?:[-^])?(?:[)(*\\/|<>3@]|[DPpoOsS](?![a-zA-Z]))"
 _H015_EMOTICON_AFTER_SEMICOLON = r"(?:[-^])?(?:[)(*\\/|<>]|[DPpo](?![a-zA-Z]))"
 # H028: normalize `?.`/`!.` / `?...`/`!...` / `?…`/`!…` to `?..`/`!..`
@@ -109,7 +110,7 @@ _SPACE_BEFORE_PUNCT_PATTERNS = (
     (re.compile(r" \.(?![a-zA-Z0-9])"), "."),
     (re.compile(r" ,"), ","),
     (re.compile(rf" ;(?!{_H015_EMOTICON_AFTER_SEMICOLON})"), ";"),
-    (re.compile(rf" :(?!{_H015_EMOTICON_AFTER_COLON})"), ":"),
+    (re.compile(rf" :(?!-|{_H015_EMOTICON_AFTER_COLON})"), ":"),
     (re.compile(r" \?"), "?"),
 )
 _PRONOUN_BOUNDARY_BEFORE = r"(?<![a-zA-Zа-яА-ЯёЁ0-9_])"  # noqa: RUF001  # ignore: HP001
