@@ -102,7 +102,7 @@ Rules:
   Markdown under `img/` / `files/` is ignored; GitHub `raw.githubusercontent.com` /
   `github.com` blob/raw URLs with `/img/` or `/files/` count as references;
   YAML front matter string values (e.g. `download:`) with such URLs or relative
-  `img/` / `files/` paths also count.
+  `img/` / `files/` paths also count; backticks in alt/label do not break recognition.
 - **H061** - Misplaced note asset file: media (jpg/png/mp4/… including SVG/gif/ico)
   belongs in sibling `img/`, other non-Markdown files in sibling `files/`;
   `featured-image.*` may stay in the note root or in `img/` (not flagged); loose media
@@ -1905,7 +1905,8 @@ class MdChecker:
         - Only direct files in sibling `img/` / `files/` are checked (not nested
           subfolders, so notes inside a category `files/` keep their own assets).
         - References from any sibling `*.md` / `*.markdown` in the same folder count
-          (except `*.g.md`). Fenced and inline code are ignored.
+          (except `*.g.md`). Fenced and wholly inline-coded markup are ignored;
+          backticks inside alt/label text do not break recognition.
 
         """
         assets = self._collect_sibling_asset_files(filename)
@@ -2498,28 +2499,29 @@ class MdChecker:
         for line, in_code in h.md.identify_code_blocks(content_lines):
             if in_code:
                 continue
-            for segment, in_inline_code in h.md.identify_code_blocks_line(line):
-                if in_inline_code:
+            # Join non-code segments so backticks in alt/label do not split `![...](...)`.
+            clean_line = "".join(
+                segment for segment, in_inline_code in h.md.identify_code_blocks_line(line) if not in_inline_code
+            )
+            for match in self._INLINE_IMAGE_OR_LINK_PATTERN.finditer(clean_line):
+                destination = self._extract_link_destination(match.group(3))
+                if not destination or destination.startswith(("#", "mailto:", "data:")):
                     continue
-                for match in self._INLINE_IMAGE_OR_LINK_PATTERN.finditer(segment):
-                    destination = self._extract_link_destination(match.group(3))
-                    if not destination or destination.startswith(("#", "mailto:", "data:")):
+                if destination.startswith(("http://", "https://")):
+                    name_key = self._basename_from_github_asset_url(destination)
+                    if not name_key:
                         continue
-                    if destination.startswith(("http://", "https://")):
-                        name_key = self._basename_from_github_asset_url(destination)
-                        if not name_key:
-                            continue
-                    else:
-                        path_part = unquote(destination.split("#", maxsplit=1)[0])
-                        if not path_part:
-                            continue
-                        name_key = Path(path_part).name.casefold()
-                        if not name_key:
-                            continue
-                    if match.group(1) == "!":
-                        image_names.add(name_key)
-                    else:
-                        link_names.add(name_key)
+                else:
+                    path_part = unquote(destination.split("#", maxsplit=1)[0])
+                    if not path_part:
+                        continue
+                    name_key = Path(path_part).name.casefold()
+                    if not name_key:
+                        continue
+                if match.group(1) == "!":
+                    image_names.add(name_key)
+                else:
+                    link_names.add(name_key)
         return image_names, link_names
 
     def _collect_sibling_asset_files(self, filename: Path) -> list[tuple[Path, str]]:

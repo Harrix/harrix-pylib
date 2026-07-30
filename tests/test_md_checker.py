@@ -1904,6 +1904,23 @@ def test_md_checker() -> None:
         errors = checker.check(referenced_img_md, select={"H060"})
         assert not [e for e in errors if "H060" in e]
 
+        # Backticks in alt/label must not split the image/link and miss the asset
+        backtick_alt_dir = temp_path / "backtick_alt_article"
+        backtick_alt_dir.mkdir()
+        (backtick_alt_dir / "img").mkdir()
+        (backtick_alt_dir / "img" / "xml_01.png").write_bytes(b"png")
+        (backtick_alt_dir / "files").mkdir()
+        (backtick_alt_dir / "files" / "doc.pdf").write_bytes(b"%PDF")
+        backtick_alt_md = backtick_alt_dir / "note_backtick_alt.md"
+        backtick_alt_md.write_text(
+            "---\nlang: en\n---\n\n"
+            "![Переход к `activity_main.xml`](img/xml_01.png)\n"
+            "[Download `doc.pdf`](files/doc.pdf)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(backtick_alt_md, select={"H060"})
+        assert not [e for e in errors if "H060" in e], "H060 must accept backticks in alt/label"
+
         # Basename match allows a “broken” folder prefix (img file linked as files/...)
         broken_path_dir = temp_path / "broken_path_article"
         broken_path_dir.mkdir()
