@@ -1320,6 +1320,15 @@ def test_md_checker() -> None:
         errors = checker.check(x4_file, select={"H024"})
         assert not errors
 
+        # x inside display/inline LaTeX math should not trigger H024
+        x_math_file = temp_path / "x_math.md"
+        x_math_file.write_text(
+            "---\nlang: ru\n---\n\n$$\nz = x + y^{2x} \\tag{1}\n$$\n\nInline $z = x + y$ and $$a = x + b$$.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(x_math_file, select={"H024"})
+        assert not [e for e in errors if "H024" in e], "H024 must skip LaTeX math"
+
         # =====================================================================
         # H025: Image ![ not at start of line
         # =====================================================================

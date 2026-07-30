@@ -44,7 +44,8 @@ class MdChecker:
     - **H022** - Non-breaking space character found.
     - **H023** - Capitalized Russian polite pronoun (use lowercase when addressing reader; ru only;
       skipped in `>` blockquotes, inside «…», and at sentence / Markdown title start).
-    - **H024** - Latin `x` or Cyrillic `x` used instead of multiplication sign `x`.
+    - **H024** - Latin `x` or Cyrillic `x` used instead of multiplication sign;
+      skipped in fenced/inline code and dollar-math (`$...$`, `$$...$$`).
     - **H025** - Image Markdown not at start of line (list items, linked images
       `[![…](…)](…)`, and several images in a row are allowed).
     - **H026** - Horizontal bar `―` (dialogue dash) should not be used.
@@ -1798,7 +1799,7 @@ class MdChecker:
         if "H023" in rules and lang == "ru":
             yield from self._check_russian_polite_pronouns(filename, line, clean_line, line_num)
 
-        if "H024" in rules:
+        if "H024" in rules and line_index not in display_math_lines:
             yield from self._check_x_instead_of_times(filename, line, line_num)
 
         if "H025" in rules:
@@ -2345,15 +2346,16 @@ class MdChecker:
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         r"""Check for Latin `x` or Cyrillic `x` used instead of multiplication sign '\*' (H024).
 
-        Only checks text outside inline code and outside link URLs.
+        Only checks text outside inline code, dollar-math, and link URLs.
+        Display-math lines (`$$...$$`) are skipped by the caller.
         Exceptions: `x86` and `x64`; digit + `x` + space (e.g. 2x Type-C);
         `x` + digit(s) when not after digit (e.g. PCIe x4, x16).
 
         """
         link_url_ranges = self._get_link_url_ranges(line)
         offset = 0
-        for segment, in_code in h.md.identify_code_blocks_line(line):
-            if not in_code:
+        for segment, protected in iter_code_and_math_segments(h.md.identify_code_blocks_line(line)):
+            if not protected:
                 for pos, char in enumerate(segment):
                     if offset + pos in link_url_ranges:
                         continue
