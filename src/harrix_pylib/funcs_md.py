@@ -855,9 +855,9 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_m
     - Hidden folders (starting with `.`) will be skipped.
     - Files and folders that match common ignore patterns (like `.git`, `_pycache__`, `node_modules`, etc.)
       are ignored during processing.
-    - Files will be combined in a folder if either:
-      1. The folder directly contains at least 2 Markdown files, or
-      2. The folder and its subfolders together contain at least 2 Markdown files.
+    - Named note folders (`Folder/Folder.md`) are skipped: no `_Folder.g.md` is created inside them.
+    - Other folders get a combined file when they contain at least one Markdown note in the
+      folder tree or a `.g.md` in a direct subfolder (including a single nested note).
     - Folders are processed from the deepest level up, allowing parent folders to use
       already combined `g.md` files from subfolders.
 
@@ -919,10 +919,9 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_m
 
     # Process each folder from deepest to shallowest
     for folder in all_folders:
-        # Get all .md files in this folder (non-recursively)
-        md_files_in_folder = [
-            f for f in folder.glob("*.md") if f.is_file() and should_include_file(f) and should_process_path(f)
-        ]
+        # Named note folders (Folder/Folder.md) must not get their own _Folder.g.md.
+        if is_named_note_folder(folder):
+            continue
 
         # Get all .md files in this folder and its subfolders (recursively)
         md_files_recursive = [
@@ -940,20 +939,9 @@ def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_m
                 ]
             )
 
-        # Create a combined file if:
-        # 1. The folder directly contains at least 2 .md files
-        # 2. OR the folder and its subfolders contain at least 2 .md files
-        # 3. OR the folder contains at least 1 .md file AND at least 1 subfolder with a .g.md file
-        min_count_md_files_in_folder = 2
-        min_count_md_files_recursive = 2
-        if (
-            len(md_files_in_folder) >= min_count_md_files_in_folder
-            or (
-                len(md_files_recursive) >= min_count_md_files_recursive
-                and len(md_files_recursive) > len(md_files_in_folder)
-            )
-            or (len(md_files_in_folder) >= 1 and len(g_md_files_in_subfolders) >= 1)
-        ):
+        # Category / container folders: combine when there is at least one note in the
+        # tree or an already-combined .g.md in a direct subfolder.
+        if len(md_files_recursive) >= 1 or len(g_md_files_in_subfolders) >= 1:
             try:
                 result_lines.append(combine_markdown_files(folder, is_recursive=True))
             except Exception as e:
@@ -2740,6 +2728,47 @@ def increase_heading_level_content(markdown_text: str) -> str:
         else:
             new_lines.append(line)
     return "\n".join(new_lines)
+
+
+def is_named_note_folder(folder: Path | str) -> bool:
+    """Return whether `folder` is a named note folder (`Folder/Folder.md`).
+
+    Args:
+
+    - `folder` (`Path | str`): Directory to check.
+
+    Returns:
+
+    - `bool`: `True` when `Folder/Folder.md` exists (case-insensitive stem match).
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+    from pathlib import Path
+
+    h.md.is_named_note_folder(Path("Notes/MyNote"))
+    ```
+
+    """
+    root = Path(folder)
+    if not root.is_dir():
+        return False
+    named = root / f"{root.name}.md"
+    if named.is_file():
+        return True
+    try:
+        for child in root.iterdir():
+            if (
+                child.is_file()
+                and child.suffix.lower() == ".md"
+                and not child.name.endswith(".g.md")
+                and child.stem.lower() == root.name.lower()
+            ):
+                return True
+    except OSError:
+        return False
+    return False
 
 
 def is_note_in_named_folder(md_path: Path) -> bool:

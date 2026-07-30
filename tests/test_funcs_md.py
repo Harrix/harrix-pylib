@@ -688,9 +688,7 @@ def test_combine_markdown_files_recursively() -> None:
         # Check which folders were processed (by checking for generated files)
         assert (folder1 / f"_{folder1.name}.g.md").exists()  # folder1 has 2 files directly
         assert (folder2 / f"_{folder2.name}.g.md").exists()  # folder2 has 1 file + 1 in subfolder
-
-        # folder3 should not be processed (only 1 file)
-        assert not (folder3 / f"_{folder3.name}.g.md").exists()
+        assert (folder3 / f"_{folder3.name}.g.md").exists()  # single note in a non-note folder
 
         # .hidden_folder should be skipped
         assert not (hidden_folder / f"_{hidden_folder.name}.g.md").exists()
@@ -1508,6 +1506,40 @@ def test_combine_markdown_files_recursively_named_folders() -> None:
         h.md.combine_markdown_files_recursively(root_path)
 
         assert (folder1 / "_folder1.g.md").exists()
+        # Named note folders themselves must not get a combined dump.
+        assert not (note_a / "_NoteA.g.md").exists()
+        assert not (note_b / "_NoteB.g.md").exists()
+
+
+def test_combine_markdown_files_recursively_single_named_note_in_category() -> None:
+    """Category folder with one nested named note must get `.g.md`; note folder must not."""
+    with TemporaryDirectory() as temp_dir:
+        root_path = Path(temp_dir)
+        category = root_path / "IT-DIY"
+        category.mkdir()
+        note = category / "3D-printer"
+        note.mkdir()
+        (note / "3D-printer.md").write_text("# 3D printer\n\nText.\n", encoding="utf-8")
+
+        h.md.combine_markdown_files_recursively(root_path)
+
+        assert (category / "_IT-DIY.g.md").exists()
+        assert not (note / "_3D-printer.g.md").exists()
+
+
+def test_is_named_note_folder() -> None:
+    with TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        note = root / "MyNote"
+        note.mkdir()
+        (note / "MyNote.md").write_text("# MyNote\n", encoding="utf-8")
+        category = root / "Category"
+        category.mkdir()
+        (category / "other.md").write_text("# Other\n", encoding="utf-8")
+
+        assert h.md.is_named_note_folder(note) is True
+        assert h.md.is_named_note_folder(category) is False
+        assert h.md.is_named_note_folder(root / "missing") is False
 
 
 def test_add_diary_entry_in_year_named_folder() -> None:
