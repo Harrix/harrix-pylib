@@ -112,6 +112,13 @@ Rules:
   are ignored; software project roots (`.git`, `pyproject.toml`, …) and
   README/LICENSE-only folders are skipped.
 
+Notes:
+
+- Files with `raw-markdown: true` in YAML: prose and structure checks skip the
+  body after the first ATX H1 (same span that `combine_markdown_files` wraps in a
+  fenced code block). Filename, YAML, BOM, line endings, and H060/H061 asset
+  layout rules still apply; H060 still scans the full file for asset references.
+
 <details>
 <summary>Code:</summary>
 
@@ -160,6 +167,9 @@ class MdChecker:
 
     # ATX heading with level (H037, H038, H057)
     _ATX_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(#{1,6})\s+(.*)$")
+
+    # First ATX H1 only (raw-markdown body boundary; same as funcs_md._H1_ATX_PATTERN)
+    _ATX_H1_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^#\s+")
 
     # Trailing closed-ATX hashes (H057): `## Title ##`
     _ATX_CLOSING_HASHES_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"\s+#+\s*$")
@@ -768,16 +778,27 @@ class MdChecker:
 
             yield from self._check_yaml_rules(filename, yaml_part, all_lines, rules, yaml_data=yaml_data)
             content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
+            raw_markdown = isinstance(yaml_data, dict) and h.md.is_raw_markdown_enabled(yaml_data)
+            full_content = content
+            check_lines = all_lines
+            if raw_markdown:
+                content_lines = self._content_lines_through_first_h1(content_lines)
+                yaml_prefix = all_lines[: yaml_end_line - 1] if yaml_end_line > 1 else []
+                check_lines = yaml_prefix + content_lines
+                content = "\n".join(check_lines)
+                if full_content.endswith("\n"):
+                    content += "\n"
             code_block_info = list(h.md.identify_code_blocks(content_lines))
             yield from self._check_content_rules(
                 filename,
-                all_lines,
+                check_lines,
                 yaml_end_line,
                 rules,
                 content,
                 lang=lang,
                 code_block_info=code_block_info,
                 yaml_data=yaml_data,
+                full_content=full_content if raw_markdown else None,
             )
             yield from self._check_code_rules(filename, yaml_end_line, rules, code_block_info=code_block_info)
 
@@ -1158,6 +1179,7 @@ class MdChecker:
         lang: str = "",
         code_block_info: list,
         yaml_data: dict | None = None,
+        full_content: str | None = None,
     ) -> Generator[str, None, None]:
         """Check content-related rules working directly with original file lines."""
         content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
@@ -1172,6 +1194,7 @@ class MdChecker:
             yaml_end_line=yaml_end_line,
             lang=lang,
             yaml_data=yaml_data,
+            full_content=full_content,
         )
 
         for i, (line, is_code_block) in enumerate(code_block_info):
@@ -1304,11 +1327,18 @@ class MdChecker:
         yaml_end_line: int = 1,
         lang: str = "",
         yaml_data: dict | None = None,  # noqa: ARG002
+        full_content: str | None = None,
     ) -> Generator[str, None, None]:
         """Check rules that apply to the entire file."""
-        # H011: No empty line at end of file
-        if "H011" in rules and all_lines and not content.endswith("\n"):
-            yield self._format_error("H011", self.RULES["H011"], filename, line_num=len(all_lines))
+        # H011: No empty line at end of file (use full file when content was trimmed for raw-markdown)
+        h011_source = full_content if full_content is not None else content
+        if "H011" in rules and h011_source and not h011_source.endswith("\n"):
+            yield self._format_error(
+                "H011",
+                self.RULES["H011"],
+                filename,
+                line_num=len(h011_source.splitlines()) or 1,
+            )
 
         # H012: Two consecutive empty lines (skip inside code blocks)
         if "H012" in rules:
@@ -1332,7 +1362,9 @@ class MdChecker:
             yield from self._check_broken_relative_links(filename, content, yaml_end_line)
 
         if "H060" in rules:
-            yield from self._check_orphan_asset_files(filename, content, yaml_end_line)
+            # Keep full file so asset refs inside raw-markdown body still count.
+            orphan_content = full_content if full_content is not None else content
+            yield from self._check_orphan_asset_files(filename, orphan_content, yaml_end_line)
 
         if "H061" in rules:
             yield from self._check_misplaced_note_assets(filename)
@@ -2554,6 +2586,19 @@ class MdChecker:
         for value in self._iter_yaml_strings(data):
             self._add_yaml_asset_string(value, image_names, link_names)
         return image_names, link_names
+
+    def _content_lines_through_first_h1(self, content_lines: list[str]) -> list[str]:
+        """Keep content through the first ATX H1; drop the raw body after it.
+
+        Matches `combine_markdown_files` / `_wrap_content_after_first_h1`: when YAML
+        has `raw-markdown: true`, that body is opaque. If there is no H1, the whole
+        content would be fenced, so return an empty list.
+
+        """
+        for index, line in enumerate(content_lines):
+            if self._ATX_H1_PATTERN.match(line):
+                return content_lines[: index + 1]
+        return []
 
     def _determine_active_rules(self, select: set[str] | None, exclude_rules: set[str] | None) -> set[str]:
         """Determine which rules should be active."""

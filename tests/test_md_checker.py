@@ -2655,6 +2655,40 @@ def test_md_checker() -> None:
         errors = checker.check(escaped_pipe_table_file, select={"H056"})
         assert not errors
 
+        # =====================================================================
+        # raw-markdown: true — skip body after first ATX H1
+        # =====================================================================
+        raw_md_file = temp_path / "raw_markdown_note.md"
+        raw_md_file.write_text(
+            "---\nlang: en\nraw-markdown: true\n---\n\n"
+            "# Experiment\n\n"
+            "Custom syntax with markdown and Hello , world.\n"
+            "Bad dash - here and https://example.com/bare\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(raw_md_file)
+        assert not any(code in error for error in errors for code in ("H006", "H015", "H016", "H041", "H050")), errors
+
+        # Without the flag, the same body is flagged
+        normal_md_file = temp_path / "normal_markdown_note.md"
+        normal_md_file.write_text(
+            "---\nlang: en\n---\n\n# Experiment\n\nCustom syntax with markdown and Hello , world.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(normal_md_file, select={"H006", "H015"})
+        assert any("H006" in error for error in errors)
+        assert any("H015" in error for error in errors)
+
+        # YAML / filename rules still apply with raw-markdown
+        raw_no_lang = temp_path / "raw_no_lang.md"
+        raw_no_lang.write_text(
+            "---\nraw-markdown: true\n---\n\n# Title\n\nbad markdown body\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(raw_no_lang, select={"H004", "H006"})
+        assert any("H004" in error for error in errors)
+        assert not any("H006" in error for error in errors)
+
         # All registered rules are enabled by default
         assert "H045" in checker.all_rules
         assert "H046" in checker.all_rules
