@@ -1607,6 +1607,8 @@ def test_md_checker() -> None:
             "---\nlang: ru\n---\n\n"
             "- **Author's name in English:** Vitaly Bianki\n"
             "- **URL**: <https://fantlab.ru/work483028>\n"
+            "- **WIKI:** <https://en.wikipedia.org/wiki/The_Black_Arrow:_A_Tale_of_the_Two_Roses>\n"
+            "- **Link:** [The Black Arrow](https://en.wikipedia.org/wiki/The_Black_Arrow:_A_Tale_of_the_Two_Roses)\n"
             "Label: value\n"
             "Use `**Bold:**text` in code.\n",
             encoding="utf-8",

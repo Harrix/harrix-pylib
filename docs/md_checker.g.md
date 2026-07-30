@@ -192,6 +192,9 @@ class MdChecker:
     # Bare URL in prose (H041)
     _BARE_URL_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<![(<\[])(https?://[^\s<>)\]]+)")
 
+    # Angle-bracket URI autolink (H029/H030/H024 URL skips)
+    _ANGLE_AUTOLINK_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"<https?://[^>\s]+>")
+
     # Markdown link/image destination (H045, H055)
     _LINK_DESTINATION_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"\]\(([^)]+)\)")
 
@@ -1123,7 +1126,7 @@ class MdChecker:
 
         Colon after \*, \*\*, \_, __, ~~ labels should be inside emphasis markers when
         the same line continues after the colon. A trailing colon at end of line is allowed.
-        Uses original line; matches inside inline code are skipped.
+        Uses original line; matches inside inline code and URLs are skipped.
 
         """
         code_ranges: list[tuple[int, int]] = []
@@ -1132,6 +1135,7 @@ class MdChecker:
             if in_code:
                 code_ranges.append((pos, pos + len(segment)))
             pos += len(segment)
+        url_ranges = self._get_link_url_ranges(line)
 
         def _inside_inline_code(offset: int) -> bool:
             return any(start <= offset < end for start, end in code_ranges)
@@ -1139,7 +1143,7 @@ class MdChecker:
         reported_cols: set[int] = set()
         for pattern in self._EMPHASIS_COLON_OUTSIDE_PATTERNS:
             for match in pattern.finditer(line):
-                if _inside_inline_code(match.start()):
+                if _inside_inline_code(match.start()) or match.start() in url_ranges:
                     continue
                 if not line[match.end() :].strip():
                     continue
@@ -2152,7 +2156,7 @@ class MdChecker:
         r"""Check for missing space after colon in or after inline emphasis (H029).
 
         Colon inside or after \*, \*\*, \_, __, ~~ must be followed by a space before text.
-        Uses original line; matches inside inline code are skipped.
+        Uses original line; matches inside inline code and URLs are skipped.
 
         """
         code_ranges: list[tuple[int, int]] = []
@@ -2161,6 +2165,7 @@ class MdChecker:
             if in_code:
                 code_ranges.append((pos, pos + len(segment)))
             pos += len(segment)
+        url_ranges = self._get_link_url_ranges(line)
 
         def _inside_inline_code(offset: int) -> bool:
             return any(start <= offset < end for start, end in code_ranges)
@@ -2168,7 +2173,7 @@ class MdChecker:
         reported_cols: set[int] = set()
         for pattern in self._EMPHASIS_COLON_NO_SPACE_PATTERNS:
             for match in pattern.finditer(line):
-                if _inside_inline_code(match.start()):
+                if _inside_inline_code(match.start()) or match.start() in url_ranges:
                     continue
                 col = match.end() + 1
                 if col in reported_cols:
@@ -2385,7 +2390,8 @@ class MdChecker:
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         r"""Check for Latin `x` or Cyrillic `x` used instead of multiplication sign '\*' (H024).
 
-        Only checks text outside inline code, dollar-math, and link URLs.
+        Only checks text outside inline code, dollar-math, and URLs
+        (link destinations, angle autolinks, bare http(s) URLs).
         Display-math lines (`$$...$$`) are skipped by the caller.
         Exceptions: `x86` and `x64`; digit + `x` + space (e.g. 2x Type-C);
         `x` + digit(s) when not after digit (e.g. PCIe x4, x16).
@@ -2732,11 +2738,19 @@ class MdChecker:
         return f"{location}: {error_code} {message}"
 
     def _get_link_url_ranges(self, line: str) -> set[int]:
-        """Return set of 0-based character positions that are inside Markdown link URLs (`(url)`)."""
+        """Return 0-based positions inside link destinations, angle autolinks, and bare URLs.
+
+        Covers `](url)`, `<https://...>`, and bare `http(s)://...` so rules like H024/H029/H030
+        do not treat underscores in paths (e.g. Wikipedia titles) as emphasis.
+
+        """
         positions: set[int] = set()
         for m in re.finditer(r"\]\([^)]*\)", line):
-            for i in range(m.start() + 2, m.end() - 1):
-                positions.add(i)
+            positions.update(range(m.start() + 2, m.end() - 1))
+        for m in self._ANGLE_AUTOLINK_PATTERN.finditer(line):
+            positions.update(range(m.start(), m.end()))
+        for m in self._BARE_URL_PATTERN.finditer(line):
+            positions.update(range(m.start(), m.end()))
         return positions
 
     def _get_relative_path(self, filename: Path) -> str:
