@@ -2576,6 +2576,15 @@ def test_md_checker() -> None:
         errors = checker.check(hyperbole_ru_file, select={"H054"})
         assert not errors
 
+        # Same word around inline code is not an adjacent repeat
+        word_around_code_file = temp_path / "word_around_code.md"
+        word_around_code_file.write_text(
+            "---\nlang: ru\n---\n\n`ma#тет` или `ma@fc` или `ma:10` — пример.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(word_around_code_file, select={"H054"})
+        assert not [e for e in errors if "H054" in e], "H054 must not join words across inline code"
+
         # =====================================================================
         # H055: Broken internal fragment link
         # =====================================================================

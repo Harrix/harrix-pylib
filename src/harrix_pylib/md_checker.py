@@ -77,7 +77,7 @@ class MdChecker:
     - **H052** - Heading level deeper than H6.
     - **H053** - Unbalanced `<details>` / `<summary>` tags.
     - **H054** - Repeated adjacent word (exactly two in a row; runs of three or more
-      are treated as intentional emphasis / hyperbole).
+      are treated as intentional emphasis / hyperbole; skipped across inline code / math).
     - **H055** - Broken internal fragment link.
     - **H056** - Unbalanced inline code in table cell.
     - **H057** - Trailing period at end of ATX heading.
@@ -1995,7 +1995,7 @@ class MdChecker:
             yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
 
     def _check_repeated_adjacent_words(
-        self, filename: Path, line: str, clean_line: str, line_num: int
+        self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
         """Check for repeated adjacent words outside code (H054).
 
@@ -2006,38 +2006,17 @@ class MdChecker:
 
         Hyphenated compounds count as one token (`Notes-Notes` is not a repeat).
         Title-case doubles (`Humbert Humbert`, `Knock Knock`) are allowed.
+        Words separated by inline code or dollar-math are not adjacent
+        (e.g. `` `a` or `b` or `c` ``).
 
         """
-        matches = list(self._WORD_TOKEN_PATTERN.finditer(clean_line))
-        index = 0
-        while index < len(matches):
-            first = matches[index]
-            run_end = index + 1
-            while run_end < len(matches):
-                prev_match = matches[run_end - 1]
-                curr_match = matches[run_end]
-                if curr_match.group(0).casefold() != first.group(0).casefold():
-                    break
-                if not clean_line[prev_match.end() : curr_match.start()].isspace():
-                    break
-                run_end += 1
-
-            run_len = run_end - index
-            if run_len == self._H054_TYPO_RUN_LEN:
-                token = first.group(0)
-                second = matches[index + 1].group(0)
-                if (
-                    len(token) >= self._H054_MIN_WORD_LEN
-                    # Intentional proper-name / title doubles stay capitalized on both words.
-                    and not (token[:1].isupper() and second[:1].isupper())
-                ):
-                    snippet = clean_line[first.start() : matches[index + 1].end()]
-                    col = line.find(snippet)
-                    if col < 0:
-                        col = first.start()
-                    error_msg = f'{self.RULES["H054"]}: "{token}"'
-                    yield self._format_error("H054", error_msg, filename, line_num=line_num, col=col + 1)
-            index = run_end
+        offset = 0
+        for segment, protected in iter_code_and_math_segments(h.md.identify_code_blocks_line(line)):
+            if not protected:
+                yield from self._flag_repeated_adjacent_words_in_segment(
+                    filename, segment, line_num, segment_offset=offset
+                )
+            offset += len(segment)
 
     def _check_russian_polite_pronouns(
         self, filename: Path, line: str, _clean_line: str, line_num: int
@@ -2631,6 +2610,43 @@ class MdChecker:
             if line.strip().startswith(f"{field}:"):
                 return i
         return 2
+
+    def _flag_repeated_adjacent_words_in_segment(
+        self,
+        filename: Path,
+        segment: str,
+        line_num: int,
+        *,
+        segment_offset: int,
+    ) -> Generator[str, None, None]:
+        """Flag exact double word runs inside one non-code/math segment (H054)."""
+        matches = list(self._WORD_TOKEN_PATTERN.finditer(segment))
+        index = 0
+        while index < len(matches):
+            first = matches[index]
+            run_end = index + 1
+            while run_end < len(matches):
+                prev_match = matches[run_end - 1]
+                curr_match = matches[run_end]
+                if curr_match.group(0).casefold() != first.group(0).casefold():
+                    break
+                if not segment[prev_match.end() : curr_match.start()].isspace():
+                    break
+                run_end += 1
+
+            run_len = run_end - index
+            if run_len == self._H054_TYPO_RUN_LEN:
+                token = first.group(0)
+                second = matches[index + 1].group(0)
+                if (
+                    len(token) >= self._H054_MIN_WORD_LEN
+                    # Intentional proper-name / title doubles stay capitalized on both words.
+                    and not (token[:1].isupper() and second[:1].isupper())
+                ):
+                    col = segment_offset + first.start()
+                    error_msg = f'{self.RULES["H054"]}: "{token}"'
+                    yield self._format_error("H054", error_msg, filename, line_num=line_num, col=col + 1)
+            index = run_end
 
     def _format_error(self, error_code: str, message: str, filename: Path, *, line_num: int = 0, col: int = 0) -> str:
         """Format error message in ruff style."""
