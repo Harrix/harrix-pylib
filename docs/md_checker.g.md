@@ -42,7 +42,7 @@ Rules:
 - **H010** - Tab character found.
 - **H011** - No empty line at end of file.
 - **H012** - Two consecutive empty lines.
-- **H013** - Missing colon before code block.
+- **H013** - Missing colon before code block (list items and figure captions are exempt).
 - **H014** - Missing colon before image.
 - **H015** - Space before punctuation mark (text emoticons like `:)` / `;)` are allowed).
 - **H016** - Incorrect dash/hyphen usage.
@@ -961,7 +961,12 @@ class MdChecker:
         code_block_info: list,
         display_math_lines: frozenset[int],
     ) -> Generator[str, None, None]:
-        """Check for missing colon before code block (H013)."""
+        """Check for missing colon before code block (H013).
+
+        List items (and indented continuations) before a fenced code block do not
+        require a colon — the list is content, not an introductory phrase for the code.
+
+        """
         if line_index + 2 >= len(code_block_info):
             return
 
@@ -988,6 +993,11 @@ class MdChecker:
         # Skip image caption (italic only): belongs to previous figure, not an intro
         # for the next code sample (same exemption as H014 / H059).
         if len(stripped) >= self._MIN_ITALIC_CAPTION_LEN and stripped.startswith("_") and stripped.endswith("_"):
+            return
+
+        # Skip list items / continuations: list before code needs no colon.
+        content_lines = [ln for ln, _ in code_block_info]
+        if self._is_in_list_context(content_lines, line_index):
             return
 
         last_char, col = self._paragraph_last_char(line)

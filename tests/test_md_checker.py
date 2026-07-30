@@ -518,6 +518,33 @@ def test_md_checker() -> None:
         errors = checker.check(caption_before_code_file, select={"H013"})
         assert not [e for e in errors if "H013" in e], "H013 must not fire on figure captions before code"
 
+        # List item before code block must not require colon (H013)
+        list_before_code_file = temp_path / "list_before_code.md"
+        list_before_code_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "Пример ненумерованного списка:\n\n"
+            "- Пункт 1\n"
+            "- Пункт 2\n"
+            "- Пункт 3\n\n"
+            "```markdown\n"
+            "Пример нумерованного списка:\n\n"
+            "1. Пункт 1\n"
+            "2. Пункт 2\n"
+            "3. Пункт 3\n"
+            "```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(list_before_code_file, select={"H013"})
+        assert not [e for e in errors if "H013" in e], "H013 must not require colon after list before code"
+
+        ordered_list_before_code_file = temp_path / "ordered_list_before_code.md"
+        ordered_list_before_code_file.write_text(
+            "---\nlang: en\n---\n\n1. First\n2. Second\n\n```python\nprint(1)\n```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ordered_list_before_code_file, select={"H013"})
+        assert not [e for e in errors if "H013" in e], "H013 must not require colon after ordered list"
+
         # =====================================================================
         # H014: Missing colon before image
         # =====================================================================
