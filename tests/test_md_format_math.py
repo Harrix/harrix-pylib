@@ -314,6 +314,32 @@ def test_formatter_can_disable_code_block_formatting() -> None:
     assert "```latex\na+b=c\n```" in result.replace("\r\n", "\n")
 
 
+def test_formatter_formats_md_fenced_code_blocks() -> None:
+    source = "Before\n\n```md\n# Title\ntext\n```\n"
+    result = _format(source)
+    normalized = result.replace("\r\n", "\n")
+    assert "```md\n# Title\n\ntext\n```" in normalized
+    assert _format(result) == result
+
+
+def test_formatter_formats_markdown_language_alias_fenced_blocks() -> None:
+    source = "```markdown\n-   item\n-  two\n```\n"
+    result = _format(source)
+    normalized = result.replace("\r\n", "\n")
+    assert "```markdown\n- item\n- two\n```" in normalized
+    assert _format(result) == result
+
+
+def test_formatter_can_disable_md_fenced_code_block_formatting() -> None:
+    source = "```md\n# Title\ntext\n```\n"
+    result = MdFormatter(
+        end_of_line="lf",
+        apply_prose_fixes=False,
+        format_code_blocks=False,
+    ).format(source)
+    assert "```md\n# Title\ntext\n```" in result.replace("\r\n", "\n")
+
+
 def test_formatter_math_formatting_is_idempotent() -> None:
     source = "$$\n\\begin{align*}a&=b\\\\c&=d\\end{align*}\n$$\n"
     once = _format(source)

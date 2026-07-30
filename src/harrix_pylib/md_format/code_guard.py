@@ -87,7 +87,23 @@ def _format_fenced_code_body(language: str, body: str, *, options: _FormatOption
     formatter = _CODE_BLOCK_BODY_FORMATTERS.get(language)
     if formatter is None or not body.strip():
         return body
-    return formatter(body.strip("\n"))
+    return formatter(body.strip("\n"), options=options)
+
+
+def _format_markdown_code_body(body: str, *, options: _FormatOptions | None = None) -> str:
+    """Format a fenced `md` / `markdown` body with `MdFormatter` (LF inside the fence)."""
+    from harrix_pylib.md_format.formatter import _format_with_options  # noqa: PLC0415
+    from harrix_pylib.md_format.options import _FormatOptions as FormatOptions  # noqa: PLC0415
+
+    nested = FormatOptions(
+        end_of_line="lf",
+        prose_wrap=options.prose_wrap if options is not None else "preserve",
+        print_width=options.print_width if options is not None else 80,
+        apply_prose_fixes=options.apply_prose_fixes if options is not None else True,
+        format_math=options.format_math if options is not None else True,
+        format_code_blocks=options.format_code_blocks if options is not None else True,
+    )
+    return _format_with_options(body, nested).strip("\n")
 
 
 def _format_markdown_fence_block(block_lines: list[str], *, _options: _FormatOptions | None) -> list[str]:
@@ -110,7 +126,7 @@ def _format_markdown_fence_block(block_lines: list[str], *, _options: _FormatOpt
     return _normalize_fence_length(block_lines)
 
 
-def _format_math_or_leave_latex_document(body: str) -> str:
+def _format_math_or_leave_latex_document(body: str, *, options: _FormatOptions | None = None) -> str:  # noqa: ARG001
     """Format TeX math; leave full LaTeX documents unchanged."""
     if _LATEX_DOCUMENT_RE.search(body):
         return body
@@ -206,7 +222,9 @@ def _trim_trailing_blank_lines_before_closing_fence(block_lines: list[str]) -> l
 
 # Language tag (first info-string token, lowercased) -> body formatter.
 # Extend this map when adding formatters for other fenced languages.
-_CODE_BLOCK_BODY_FORMATTERS: dict[str, Callable[[str], str]] = {
+_CODE_BLOCK_BODY_FORMATTERS: dict[str, Callable[..., str]] = {
     "latex": _format_math_or_leave_latex_document,
+    "markdown": _format_markdown_code_body,
+    "md": _format_markdown_code_body,
     "tex": _format_math_or_leave_latex_document,
 }

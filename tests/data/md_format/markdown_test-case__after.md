@@ -94,13 +94,13 @@ Header 2
 - Green
 - Blue
 
-+ Red
-+ Green
-+ Blue
-
 * Red
 * Green
 * Blue
+
+- Red
+- Green
+- Blue
 ```
 
 1. Buy flour and salt

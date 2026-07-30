@@ -61,7 +61,7 @@ class MdFormatter:
           subset). Defaults to `True`.
         - `format_math` (`bool`): Format TeX/LaTeX content inside `$...$` / `$$...$$`. Defaults to `True`.
         - `format_code_blocks` (`bool`): Format fenced code block bodies for supported languages
-          (currently `latex` / `tex`). Defaults to `True`.
+          (`latex` / `tex`, `md` / `markdown`). Defaults to `True`.
 
         """
         self.options = _FormatOptions(
@@ -252,7 +252,7 @@ Args:
   subset). Defaults to `True`.
 - `format_math` (`bool`): Format TeX/LaTeX content inside `$...$` / `$$...$$`. Defaults to `True`.
 - `format_code_blocks` (`bool`): Format fenced code block bodies for supported languages
-  (currently `latex` / `tex`). Defaults to `True`.
+  (`latex` / `tex`, `md` / `markdown`). Defaults to `True`.
 
 <details>
 <summary>Code:</summary>
