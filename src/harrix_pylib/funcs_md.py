@@ -1626,7 +1626,8 @@ def generate_image_captions(filename: Path | str) -> str:
 
     This function reads a Markdown file, processes its content to:
 
-    - Recognize images by their Markdown syntax.
+    - Recognize bare images `![alt](path.ext)` and linked thumbnails
+      `[![alt](path.ext)](url)`.
     - Add automatic captions with sequential numbering, localized for Russian or English.
     - Skip image captions that already exist in italic format.
     - Ensure proper handling within and outside of code blocks.
@@ -1758,7 +1759,8 @@ def generate_image_captions_content(markdown_text: str) -> str:
 
     This function reads a Markdown file, processes its content to:
 
-    - Recognize images by their Markdown syntax.
+    - Recognize bare images `![alt](path.ext)` and linked thumbnails
+      `[![alt](path.ext)](url)`.
     - Add automatic captions with sequential numbering, localized for Russian or English.
     - Skip image captions that already exist in italic format.
     - Ensure proper handling within and outside of code blocks.
@@ -1882,7 +1884,8 @@ def generate_image_captions_content(markdown_text: str) -> str:
     new_lines = []
     lines = content_md.split("\n")
     caption_line_re = re.compile(r"^\s*\\?_.*\\?_$")
-    image_re = re.compile(r"^\s*\!\[(.*?)\]\((.*?)\.(.*?)\)$")
+    # Bare `![alt](path.ext)` or linked thumbnail `[![alt](path.ext)](url)`.
+    image_re = re.compile(r"^\s*(?:\[)?\!\[(.*?)\]\((.*?)\.(.*?)\)(?:\]\([^)]*\))?$")
     for i, (line, is_code_block) in enumerate(identify_code_blocks(lines)):
         if is_code_block:
             new_lines.append(line)

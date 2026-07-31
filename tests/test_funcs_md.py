@@ -958,6 +958,23 @@ def test_generate_image_captions_strips_trailing_space_in_alt() -> None:
     assert "\\_Рисунок" not in repaired
 
 
+def test_generate_image_captions_for_linked_images() -> None:
+    """Linked thumbnails `[![…](…)](…)` must get the same captions as bare images."""
+    source = (
+        "---\nlang: ru\n---\n\n"
+        "![Изображение](img/image.png)\n\n"
+        "[![Изображение со ссылкой](img/image.png)](https://github.com)\n\n"
+        "![SVG изображение](img/image.svg)\n"
+    )
+    result = h.md.generate_image_captions_content(source)
+    assert "![Изображение](img/image.png)\n\n_Рисунок 1 — Изображение_" in result
+    assert (
+        "[![Изображение со ссылкой](img/image.png)](https://github.com)\n\n_Рисунок 2 — Изображение со ссылкой_"
+    ) in result
+    assert "![SVG изображение](img/image.svg)\n\n_Рисунок 3 — SVG изображение_" in result
+    assert h.md.generate_image_captions_content(result) == result
+
+
 def test_generate_image_captions_for_indented_list_images() -> None:
     """Images indented under list items must get captions with matching indent."""
     source = (

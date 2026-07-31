@@ -1734,6 +1734,25 @@ def test_md_checker() -> None:
         errors = checker.check(ru_caption_file, select={"H035"})
         assert not errors
 
+        linked_no_caption_file = temp_path / "linked_no_caption.md"
+        linked_no_caption_file.write_text(
+            "---\nlang: en\n---\n\nExample:\n\n[![Alt text](img/image.png)](https://github.com)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(linked_no_caption_file, select={"H035"})
+        assert any("H035" in e for e in errors), "H035 must flag linked images without captions"
+
+        linked_with_caption_file = temp_path / "linked_with_caption.md"
+        linked_with_caption_file.write_text(
+            "---\nlang: en\n---\n\n"
+            "Example:\n\n"
+            "[![Alt text](img/image.png)](https://github.com)\n\n"
+            "_Figure 1: Alt text_\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(linked_with_caption_file, select={"H035"})
+        assert not errors, "H035 must accept captions after linked images"
+
         # =====================================================================
         # H036: Missing space after # in ATX heading
         # =====================================================================

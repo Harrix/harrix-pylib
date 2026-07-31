@@ -1674,7 +1674,8 @@ class MdChecker:
                 continue
 
             stripped = line.strip()
-            if not stripped.startswith("!["):
+            # Bare `![…](…)` or linked thumbnail `[![…](…)](…)`.
+            if not stripped.startswith(("[![", "![")):
                 index += 1
                 continue
             if any(sub in line for sub in self._IMAGE_H014_SKIP_SUBSTRINGS):
