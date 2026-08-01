@@ -2014,17 +2014,33 @@ class MdChecker:
 
         Only applies when line contains Russian letters; otherwise straight quotes "" are allowed.
         Exception: straight double quote after a digit is allowed (inch notation, e.g. 14", 15.6").
+        Spaces around angle quotes are checked on the original line (not after stripping
+        inline code), so a space before an inline code span next to a closing quote is
+        not treated as a space before that quote.
 
         """
         if not re.search(r"[а-яА-ЯёЁ]", line):  # noqa: RUF001  # ignore: HP001
             return
+
+        code_ranges: list[tuple[int, int]] = []
+        pos = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                code_ranges.append((pos, pos + len(segment)))
+            pos += len(segment)
+
+        def _inside_inline_code(offset: int) -> bool:
+            return any(start <= offset < end for start, end in code_ranges)
+
         incorrect_quotes = [
             ('"', 'straight double quote "'),
             ("\u201c", "curly quote \u201c"),
             ("\u201d", "curly quote \u201d"),
+        ]
+        guillemet_space_patterns = (
             ("« ", "space after «"),
             (" »", "space before »"),
-        ]
+        )
 
         for char, description in incorrect_quotes:
             if char not in clean_line:
@@ -2056,6 +2072,18 @@ class MdChecker:
             pos = line.find(char) if char in line else clean_line.find(char)
             error_msg = f"{self.RULES['H018']}: found {description}"
             yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
+
+        for pattern, description in guillemet_space_patterns:
+            search_from = 0
+            while True:
+                pos = line.find(pattern, search_from)
+                if pos < 0:
+                    break
+                if not _inside_inline_code(pos):
+                    error_msg = f"{self.RULES['H018']}: found {description}"
+                    yield self._format_error("H018", error_msg, filename, line_num=line_num, col=pos + 1)
+                    return
+                search_from = pos + 1
 
     def _check_repeated_adjacent_words(
         self, filename: Path, line: str, _clean_line: str, line_num: int

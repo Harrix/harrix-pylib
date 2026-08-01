@@ -1044,6 +1044,17 @@ def test_md_checker() -> None:
         errors = checker.check(inch_quote_file, select={"H018"})
         assert not errors
 
+        # Inline code before » must not look like " »" after code stripping
+        code_before_rquote_file = temp_path / "code_before_rquote.md"
+        code_before_rquote_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "Техподдержка ответила так: «То самый простой способ — это установить "
+            "редирект на заглушку (`stub.htm`) для других IP в `htaccess`».\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(code_before_rquote_file, select={"H018"})
+        assert not errors, "H018 must not treat space before inline code as space before »"
+
         # =====================================================================
         # H019: HTML tags in markdown content
         # =====================================================================
