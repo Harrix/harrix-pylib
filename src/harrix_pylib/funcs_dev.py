@@ -1,5 +1,7 @@
 """Functions for development working."""
 
+from __future__ import annotations
+
 import fnmatch
 import inspect
 import json
@@ -8,23 +10,25 @@ import shutil
 import subprocess
 import tempfile
 import time
-from collections.abc import Callable
 from pathlib import Path, PurePosixPath
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import harrix_pylib as h
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 EndOfLine = Literal["lf", "crlf"]
 DEFAULT_END_OF_LINE: EndOfLine = "crlf"
 _MIN_GITATTRIBUTES_LINE_PARTS = 2  # pattern + at least one attribute
 
 
-def config_load(filename: str, *, is_temp: bool = False, resolve_snippets: bool = True) -> dict:
+def config_load(filename: Path | str, *, is_temp: bool = False, resolve_snippets: bool = True) -> dict:
     """Load configuration from a JSON file.
 
     Args:
 
-    - `filename` (`str`): Path to the JSON configuration file. Defaults to `None`.
+    - `filename` (`Path | str`): Path to the JSON configuration file. Defaults to `None`.
     - `is_temp` (`bool`): If `True`, load the temporary config file (`config-temp.json`)
       instead of the main config file. Defaults to `False`.
     - `resolve_snippets` (`bool`): If `True`, replace `snippet:path` string values with
@@ -34,7 +38,7 @@ def config_load(filename: str, *, is_temp: bool = False, resolve_snippets: bool 
 
     - `dict`: Configuration loaded from the file.
 
-    Examples:
+    Example:
 
     ```python
     import harrix_pylib as h
@@ -67,7 +71,7 @@ def config_load(filename: str, *, is_temp: bool = False, resolve_snippets: bool 
     return _resolve_config_snippets(config)
 
 
-def config_save(config: dict, filename: str, *, is_temp: bool = False) -> None:
+def config_save(config: dict, filename: Path | str, *, is_temp: bool = False) -> None:
     """Save configuration to a JSON file.
 
     Args:
@@ -77,7 +81,7 @@ def config_save(config: dict, filename: str, *, is_temp: bool = False) -> None:
     - `is_temp` (`bool`): If `True`, save to the temporary config file (`config-temp.json`)
       instead of the main config file. Defaults to `False`.
 
-    Examples:
+    Example:
 
     ```python
     import harrix_pylib as h
@@ -108,7 +112,7 @@ def config_save(config: dict, filename: str, *, is_temp: bool = False) -> None:
         json.dump(config, file, indent=2, ensure_ascii=False)
 
 
-def config_update_value(key: str, value: object, filename: str, *, is_temp: bool = False) -> None:
+def config_update_value(key: str, value: object, filename: Path | str, *, is_temp: bool = False) -> None:
     """Update a single configuration value and save it to a JSON file.
 
     This function loads the configuration file, updates the specified key with the new value,
@@ -123,7 +127,7 @@ def config_update_value(key: str, value: object, filename: str, *, is_temp: bool
     - `is_temp` (`bool`): If `True`, update the temporary config file (`config-temp.json`)
       instead of the main config file. Defaults to `False`.
 
-    Examples:
+    Example:
 
     ```python
     import harrix_pylib as h
@@ -344,7 +348,7 @@ def run_powershell_script(commands: str) -> str:
 
     - `str`: Combined output and error messages from the PowerShell execution.
 
-    Examples:
+    Example:
 
     ```python
     import harrix_pylib as h
@@ -403,7 +407,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
     - Multiline scripts are written to a `.ps1` file as-is (not joined with `;`), so block syntax is preserved.
     - The launcher uses `Start-Process -Verb RunAs -Wait` so execution finishes before the output file is read.
 
-    Examples:
+    Example:
 
     ```python
     import harrix_pylib as h
@@ -530,7 +534,7 @@ def write_in_output_txt(*, is_show_output: bool = True) -> Callable:
     - The `output.txt` file is created in a `temp` folder under the project root.
       If the folder does not exist, it will be created.
 
-    Examples:
+    Example:
 
     ```python
     import harrix_pylib as h
@@ -599,7 +603,7 @@ def write_in_output_txt(*, is_show_output: bool = True) -> Callable:
     return decorator
 
 
-def _config_load_raw(filename: str, *, is_temp: bool = False) -> dict:
+def _config_load_raw(filename: Path | str, *, is_temp: bool = False) -> dict:
     config_file = _resolve_config_path(filename, is_temp=is_temp)
     with config_file.open("r", encoding="utf-8") as file:
         return json.load(file)
@@ -641,7 +645,7 @@ def _gitattributes_pattern_matches(rel_posix: str, pattern: str) -> bool:
     return fnmatch.fnmatch(rel_posix, normalized)
 
 
-def _resolve_config_path(filename: str, *, is_temp: bool) -> Path:
+def _resolve_config_path(filename: Path | str, *, is_temp: bool) -> Path:
     if is_temp:
         path_obj = Path(filename)
         temp_filename = f"{path_obj.stem}-temp{path_obj.suffix}"

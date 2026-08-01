@@ -58,6 +58,27 @@ Check docstring Markdown typography for Python sources; errors point at `.py` lo
 Generates ephemeral docs (including private names when `include_private` is `True`), runs
 MdChecker, and remaps findings to Python path/line/column. Does not modify the project.
 
+Args:
+
+- `folder` (`Path | str`): Project folder that contains a `src` subfolder.
+- `include_private` (`bool`): Also check docstrings of private names. Defaults to `True`.
+- `show_progress` (`bool`): Show a stderr progress bar when the stream is a TTY.
+  Defaults to `True`.
+
+Returns:
+
+- `list[str]`: Error messages pointing at `.py` locations. Empty when `src` is missing.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+errors = h.py.check_python_docstring_markdown_errors("D:/GitHub/harrix-pylib")
+for error in errors:
+    print(error)
+```
+
 <details>
 <summary>Code:</summary>
 
@@ -121,7 +142,7 @@ Args:
 - `library_name` (`str`): The name of the new library.
 - `folder` (`Path | str`): The folder path where the library will be created.
 - `editor` (`str`): The name of the text editor for opening the library. Example: `code`
-- `cli_commands` (`Path | str`): The section of CLI commands for `README.md`.
+- `cli_commands` (`str`): The section of CLI commands for `README.md`.
 
 Returns:
 
@@ -208,7 +229,7 @@ Args:
 - `notebook_name` (`str`): The name of the new notebook project.
 - `folder` (`Path | str`): The folder path where the project will be created.
 - `editor` (`str`): The name of the text editor for opening the project. Example: `code`
-- `cli_commands` (`Path | str`): The section of CLI commands for `README.md`.
+- `cli_commands` (`str`): The section of CLI commands for `README.md`.
 
 Returns:
 
@@ -305,7 +326,7 @@ Args:
 - `project_name` (`str`): The name of the new project.
 - `folder` (`Path | str`): The folder path where the project will be created.
 - `editor` (`str`): The name of the text editor for opening the project. Example: `code`
-- `cli_commands` (`Path | str`): The section of CLI commands for `README.md`.
+- `cli_commands` (`str`): The section of CLI commands for `README.md`.
 
 Example of `cli_commands`:
 
@@ -424,7 +445,7 @@ Example output:
 | 🔧 `multiply` | Multiples two integers. |
 ```
 
-Examples:
+Example:
 
 ```python
 import harrix_pylib as h
@@ -751,6 +772,25 @@ Generate Markdown docs for a Python file and a per-line map to Python source.
 Each entry in the returned map corresponds to one line of the Markdown content
 (1-based Markdown line `i` maps to `line_map[i - 1]`).
 
+Args:
+
+- `file_path` (`Path | str`): Path to the Python file.
+- `include_private` (`bool`): Also document private names. Defaults to `False`.
+
+Returns:
+
+- `tuple[str, list[DocsSourceLoc | None]]`: Markdown content and the per-line source map.
+  A map entry is `None` when the line has no Python counterpart.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+content, line_map = h.py.generate_md_docs_content_with_source_map("src/harrix_pylib/progress.py")
+print(line_map[0])
+```
+
 <details>
 <summary>Code:</summary>
 
@@ -1056,6 +1096,26 @@ def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) 
 
 Rewrite a MdChecker error to the corresponding Python source location.
 
+Args:
+
+- `error` (`str`): Error message produced by MdChecker for generated Markdown docs.
+- `line_map` (`list[DocsSourceLoc | None]`): Per-line map from
+  `generate_md_docs_content_with_source_map`.
+
+Returns:
+
+- `str`: Error with the location rewritten to the `.py` file, or the original message
+  when it cannot be remapped.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+content, line_map = h.py.generate_md_docs_content_with_source_map("src/harrix_pylib/progress.py")
+print(h.py.remap_markdown_docs_error("progress.g.md:10:1: H021 Message", line_map))
+```
+
 <details>
 <summary>Code:</summary>
 
@@ -1099,7 +1159,7 @@ def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) 
 ## 🔧 Function `sort_py_code`
 
 ```python
-def sort_py_code(filename: str) -> str
+def sort_py_code(filename: Path | str) -> str
 ```
 
 Sorts the Python code in the given file by organizing classes, functions, and statements.
@@ -1208,7 +1268,7 @@ def _helper_function():
 <summary>Code:</summary>
 
 ```python
-def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> str:
+def sort_py_code(filename: Path | str, *, is_use_ruff_format: bool = True) -> str:
 
     def _get_sort_key(name: str) -> tuple[int, str]:
         r"""Return a sort key for function/method names.

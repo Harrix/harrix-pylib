@@ -41,7 +41,17 @@ class MdFormatter:
     """Format Markdown text inspired by Prettier Markdown parser."""
 
     def __call__(self, text: str) -> str:
-        """Format Markdown text."""
+        """Format Markdown text.
+
+        Args:
+
+        - `text` (`str`): Markdown source text.
+
+        Returns:
+
+        - `str`: Formatted Markdown text.
+
+        """
         return self.format(text)
 
     def __init__(

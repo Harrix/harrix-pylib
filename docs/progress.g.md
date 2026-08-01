@@ -81,7 +81,18 @@ class ProgressBar:
         self._last_len = 0
 
     def update(self, done: int | None = None) -> None:
-        """Set or increment progress and redraw when appropriate."""
+        """Set or increment progress and redraw when appropriate.
+
+        Args:
+
+        - `done` (`int | None`): Number of completed items. `None` increments by one.
+          Defaults to `None`.
+
+        Returns:
+
+        - `None`.
+
+        """
         if not self.enabled:
             return
         if done is None:
@@ -201,6 +212,15 @@ def update(self, done: int | None = None) -> None
 
 Set or increment progress and redraw when appropriate.
 
+Args:
+
+- `done` (`int | None`): Number of completed items. `None` increments by one.
+  Defaults to `None`.
+
+Returns:
+
+- `None`.
+
 <details>
 <summary>Code:</summary>
 
@@ -229,6 +249,17 @@ Yield items while updating a progress bar.
 
 When `show_progress` is `True`, the bar is shown only if the stream is a TTY.
 When `show_progress` is `False`, iteration is silent.
+
+Args:
+
+- `items` (`Sequence[T]`): Items to iterate over.
+- `show_progress` (`bool`): Draw the progress bar. Defaults to `True`.
+- `stream` (`TextIO | None`): Target stream. Defaults to `None` (stderr).
+- `width` (`int`): Bar width in characters. Defaults to `40`.
+
+Yields:
+
+- `T`: Each item from `items`, in order.
 
 <details>
 <summary>Code:</summary>
@@ -303,6 +334,16 @@ def render_progress_ascii(done: int, total: int) -> str
 ```
 
 ASCII fallback when the stream cannot encode block characters.
+
+Args:
+
+- `done` (`int`): Number of completed items.
+- `total` (`int`): Total number of items.
+- `width` (`int`): Bar width in characters. Defaults to `40`.
+
+Returns:
+
+- `str`: e.g. `Progress: |####----| 2/8 (25%)`.
 
 <details>
 <summary>Code:</summary>

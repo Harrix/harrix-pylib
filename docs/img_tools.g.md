@@ -24,19 +24,30 @@ lang: en
 ## 🔧 Function `convert_gif_mp4_to_avif`
 
 ```python
-def convert_gif_mp4_to_avif(source: Path, output: Path, project_root: Path) -> None
+def convert_gif_mp4_to_avif(source: Path | str, output: Path | str, project_root: Path | str) -> None
 ```
 
 Convert GIF or MP4 to AVIF using ffmpeg.
+
+Args:
+
+- `source` (`Path | str`): Source GIF or MP4 file.
+- `output` (`Path | str`): Destination AVIF file.
+- `project_root` (`Path | str`): Folder containing `ffmpeg.exe`.
+- `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
+
+Returns:
+
+- `None`.
 
 <details>
 <summary>Code:</summary>
 
 ```python
 def convert_gif_mp4_to_avif(
-    source: Path,
-    output: Path,
-    project_root: Path,
+    source: Path | str,
+    output: Path | str,
+    project_root: Path | str,
     *,
     max_size: int | None = None,
 ) -> None:
@@ -69,16 +80,25 @@ def convert_gif_mp4_to_avif(
 ## 🔧 Function `get_frame_rate`
 
 ```python
-def get_frame_rate(source: Path, project_root: Path) -> float
+def get_frame_rate(source: Path | str, project_root: Path | str) -> float
 ```
 
 Detect frame rate from media file using ffmpeg output.
+
+Args:
+
+- `source` (`Path | str`): Media file to inspect.
+- `project_root` (`Path | str`): Folder containing `ffmpeg.exe`.
+
+Returns:
+
+- `float`: Detected frames per second, or `10.0` when detection fails.
 
 <details>
 <summary>Code:</summary>
 
 ```python
-def get_frame_rate(source: Path, project_root: Path) -> float:
+def get_frame_rate(source: Path | str, project_root: Path | str) -> float:
     ffmpeg = _exe(project_root, "ffmpeg")
     output = _ffmpeg_output(source, ffmpeg)
     fps = _DEFAULT_FPS
@@ -99,16 +119,25 @@ def get_frame_rate(source: Path, project_root: Path) -> float:
 ## 🔧 Function `is_avif_animated`
 
 ```python
-def is_avif_animated(source: Path, project_root: Path) -> bool
+def is_avif_animated(source: Path | str, project_root: Path | str) -> bool
 ```
 
 Return `True` if AVIF contains more than one frame.
+
+Args:
+
+- `source` (`Path | str`): AVIF file to inspect.
+- `project_root` (`Path | str`): Folder containing `ffmpeg.exe` and `avifdec.exe`.
+
+Returns:
+
+- `bool`: `True` when the file is animated.
 
 <details>
 <summary>Code:</summary>
 
 ```python
-def is_avif_animated(source: Path, project_root: Path) -> bool:
+def is_avif_animated(source: Path | str, project_root: Path | str) -> bool:
     ffmpeg = _exe(project_root, "ffmpeg")
     output = _ffmpeg_output(source, ffmpeg)
     duration_match = re.search(r"Duration: (\d{2}):(\d{2}):(\d{2}\.\d+)", output)
@@ -129,19 +158,31 @@ def is_avif_animated(source: Path, project_root: Path) -> bool:
 ## 🔧 Function `optimize_avif`
 
 ```python
-def optimize_avif(source: Path, output: Path, project_root: Path) -> None
+def optimize_avif(source: Path | str, output: Path | str, project_root: Path | str) -> None
 ```
 
 Optimize AVIF using ffmpeg or avifdec/avifenc depending on animation.
+
+Args:
+
+- `source` (`Path | str`): Source AVIF file.
+- `output` (`Path | str`): Destination AVIF file.
+- `project_root` (`Path | str`): Folder containing `ffmpeg.exe`, `avifenc.exe`, `avifdec.exe`.
+- `quality` (`bool`): Use higher quality settings. Defaults to `False`.
+- `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
+
+Returns:
+
+- `None`.
 
 <details>
 <summary>Code:</summary>
 
 ```python
 def optimize_avif(
-    source: Path,
-    output: Path,
-    project_root: Path,
+    source: Path | str,
+    output: Path | str,
+    project_root: Path | str,
     *,
     quality: bool = False,
     max_size: int | None = None,
@@ -209,23 +250,36 @@ def optimize_image_with_tools(
 ## 🔧 Function `process_animated_avif`
 
 ```python
-def process_animated_avif(source: Path, output: Path, project_root: Path) -> None
+def process_animated_avif(source: Path | str, output: Path | str, project_root: Path | str) -> None
 ```
 
 Optimize animated AVIF with avifdec and avifenc or ffmpeg.
+
+Args:
+
+- `source` (`Path | str`): Source animated AVIF file.
+- `output` (`Path | str`): Destination AVIF file.
+- `project_root` (`Path | str`): Folder containing `ffmpeg.exe`, `avifenc.exe`, `avifdec.exe`.
+- `quality` (`bool`): Use higher quality settings. Defaults to `False`.
+- `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
+
+Returns:
+
+- `None`.
 
 <details>
 <summary>Code:</summary>
 
 ```python
 def process_animated_avif(
-    source: Path,
-    output: Path,
-    project_root: Path,
+    source: Path | str,
+    output: Path | str,
+    project_root: Path | str,
     *,
     quality: bool = False,
     max_size: int | None = None,
 ) -> None:
+    source = Path(source)
     original_frame_rate = get_frame_rate(source, project_root)
     target_frame_rate = min(original_frame_rate, _MAX_ANIMATED_FPS)
     frames_to_keep_ratio = target_frame_rate / original_frame_rate
@@ -286,19 +340,31 @@ def process_animated_avif(
 ## 🔧 Function `process_static_avif`
 
 ```python
-def process_static_avif(source: Path, output: Path, project_root: Path) -> None
+def process_static_avif(source: Path | str, output: Path | str, project_root: Path | str) -> None
 ```
 
 Optimize static AVIF with ffmpeg.
+
+Args:
+
+- `source` (`Path | str`): Source static AVIF file.
+- `output` (`Path | str`): Destination AVIF file.
+- `project_root` (`Path | str`): Folder containing `ffmpeg.exe`.
+- `quality` (`bool`): Use higher quality settings. Defaults to `False`.
+- `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
+
+Returns:
+
+- `None`.
 
 <details>
 <summary>Code:</summary>
 
 ```python
 def process_static_avif(
-    source: Path,
-    output: Path,
-    project_root: Path,
+    source: Path | str,
+    output: Path | str,
+    project_root: Path | str,
     *,
     quality: bool = False,
     max_size: int | None = None,

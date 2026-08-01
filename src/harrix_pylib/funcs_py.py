@@ -43,6 +43,27 @@ def check_python_docstring_markdown_errors(
     Generates ephemeral docs (including private names when `include_private` is `True`), runs
     MdChecker, and remaps findings to Python path/line/column. Does not modify the project.
 
+    Args:
+
+    - `folder` (`Path | str`): Project folder that contains a `src` subfolder.
+    - `include_private` (`bool`): Also check docstrings of private names. Defaults to `True`.
+    - `show_progress` (`bool`): Show a stderr progress bar when the stream is a TTY.
+      Defaults to `True`.
+
+    Returns:
+
+    - `list[str]`: Error messages pointing at `.py` locations. Empty when `src` is missing.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    errors = h.py.check_python_docstring_markdown_errors("D:/GitHub/harrix-pylib")
+    for error in errors:
+        print(error)
+    ```
+
     """
     folder = Path(folder)
     src_folder = folder / "src"
@@ -90,7 +111,7 @@ def create_uv_new_library(library_name: str, folder: Path | str, editor: str = "
     - `library_name` (`str`): The name of the new library.
     - `folder` (`Path | str`): The folder path where the library will be created.
     - `editor` (`str`): The name of the text editor for opening the library. Example: `code`
-    - `cli_commands` (`Path | str`): The section of CLI commands for `README.md`.
+    - `cli_commands` (`str`): The section of CLI commands for `README.md`.
 
     Returns:
 
@@ -166,7 +187,7 @@ def create_uv_new_notebook(notebook_name: str, folder: Path | str, editor: str =
     - `notebook_name` (`str`): The name of the new notebook project.
     - `folder` (`Path | str`): The folder path where the project will be created.
     - `editor` (`str`): The name of the text editor for opening the project. Example: `code`
-    - `cli_commands` (`Path | str`): The section of CLI commands for `README.md`.
+    - `cli_commands` (`str`): The section of CLI commands for `README.md`.
 
     Returns:
 
@@ -252,7 +273,7 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
     - `project_name` (`str`): The name of the new project.
     - `folder` (`Path | str`): The folder path where the project will be created.
     - `editor` (`str`): The name of the text editor for opening the project. Example: `code`
-    - `cli_commands` (`Path | str`): The section of CLI commands for `README.md`.
+    - `cli_commands` (`str`): The section of CLI commands for `README.md`.
 
     Example of `cli_commands`:
 
@@ -367,7 +388,7 @@ def extract_functions_and_classes(
     | 🔧 `multiply` | Multiples two integers. |
     ```
 
-    Examples:
+    Example:
 
     ```python
     import harrix_pylib as h
@@ -658,6 +679,25 @@ def generate_md_docs_content_with_source_map(
     Each entry in the returned map corresponds to one line of the Markdown content
     (1-based Markdown line `i` maps to `line_map[i - 1]`).
 
+    Args:
+
+    - `file_path` (`Path | str`): Path to the Python file.
+    - `include_private` (`bool`): Also document private names. Defaults to `False`.
+
+    Returns:
+
+    - `tuple[str, list[DocsSourceLoc | None]]`: Markdown content and the per-line source map.
+      A map entry is `None` when the line has no Python counterpart.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    content, line_map = h.py.generate_md_docs_content_with_source_map("src/harrix_pylib/progress.py")
+    print(line_map[0])
+    ```
+
     """
     file_path = Path(file_path).resolve()
     with file_path.open(encoding="utf-8") as f:
@@ -935,7 +975,29 @@ def lint_and_fix_python_code(py_content: str) -> str:
 
 
 def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) -> str:
-    """Rewrite a MdChecker error to the corresponding Python source location."""
+    """Rewrite a MdChecker error to the corresponding Python source location.
+
+    Args:
+
+    - `error` (`str`): Error message produced by MdChecker for generated Markdown docs.
+    - `line_map` (`list[DocsSourceLoc | None]`): Per-line map from
+      `generate_md_docs_content_with_source_map`.
+
+    Returns:
+
+    - `str`: Error with the location rewritten to the `.py` file, or the original message
+      when it cannot be remapped.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    content, line_map = h.py.generate_md_docs_content_with_source_map("src/harrix_pylib/progress.py")
+    print(h.py.remap_markdown_docs_error("progress.g.md:10:1: H021 Message", line_map))
+    ```
+
+    """
     match = _MD_DOCS_CODE_RE.search(error)
     if match is None:
         return error
@@ -969,7 +1031,7 @@ def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) 
     return f"{loc.path}:{loc.line}:{py_col}: {code} {message}"
 
 
-def sort_py_code(filename: str, *, is_use_ruff_format: bool = True) -> str:
+def sort_py_code(filename: Path | str, *, is_use_ruff_format: bool = True) -> str:
     r'''Sorts the Python code in the given file by organizing classes, functions, and statements.
 
     This function reads a Python file, parses it, sorts classes and functions alphabetically,

@@ -1,13 +1,17 @@
 """Module providing functionality for checking Python files for compliance with specified rules."""
 
+from __future__ import annotations
+
 import ast
 import re
-from collections.abc import Generator
 from pathlib import Path
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import harrix_pylib as h
 from harrix_pylib.py_docstring_format import PyDocstringFormatter
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 class PyChecker:
@@ -155,7 +159,7 @@ class PyChecker:
         Args:
 
         - `filename` (`Path`): Path to the Python file being checked.
-        - `rules` (`set`): Set of rule codes to apply during checking.
+        - `rules` (`set[str]`): Set of rule codes to apply during checking.
 
         Yields:
 
@@ -182,7 +186,7 @@ class PyChecker:
 
         - `filename` (`Path`): Path to the Python file being checked.
         - `lines` (`list[str]`): All lines from the file.
-        - `rules` (`set`): Set of rule codes to apply during checking.
+        - `rules` (`set[str]`): Set of rule codes to apply during checking.
 
         Yields:
 

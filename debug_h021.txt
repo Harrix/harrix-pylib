@@ -1,2 +1,0 @@
-C:\Users\sergi\AppData\Local\Temp\tmp39g3pu6_\t.md:5:37: H021 Lowercase letter after sentence-ending punctuation: found lowercase "д" after punctuation
-C:\Users\sergi\AppData\Local\Temp\tmp39g3pu6_\t.md:5:65: H021 Lowercase letter after sentence-ending punctuation: found lowercase "е" after punctuation

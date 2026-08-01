@@ -76,15 +76,15 @@ uv add harrix-pylib
 Examples of using the library:
 
 ```python
-import harrixpylib as h
+import harrix_pylib as h
 
 h.file.clear_directory("C:/temp_dir")
 ```
 
 ```python
-import harrixpylib as h
+import harrix_pylib as h
 
-md_clean = h.file.remove_yaml_content("""
+md_clean = h.md.remove_yaml_content("""
 ---
 categories: [it, program]
 tags: [VSCode, FAQ]

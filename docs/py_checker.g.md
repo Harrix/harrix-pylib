@@ -174,7 +174,7 @@ class PyChecker:
         Args:
 
         - `filename` (`Path`): Path to the Python file being checked.
-        - `rules` (`set`): Set of rule codes to apply during checking.
+        - `rules` (`set[str]`): Set of rule codes to apply during checking.
 
         Yields:
 
@@ -201,7 +201,7 @@ class PyChecker:
 
         - `filename` (`Path`): Path to the Python file being checked.
         - `lines` (`list[str]`): All lines from the file.
-        - `rules` (`set`): Set of rule codes to apply during checking.
+        - `rules` (`set[str]`): Set of rule codes to apply during checking.
 
         Yields:
 

@@ -17,13 +17,26 @@ _DEFAULT_FPS = 10.0
 
 
 def convert_gif_mp4_to_avif(
-    source: Path,
-    output: Path,
-    project_root: Path,
+    source: Path | str,
+    output: Path | str,
+    project_root: Path | str,
     *,
     max_size: int | None = None,
 ) -> None:
-    """Convert GIF or MP4 to AVIF using ffmpeg."""
+    """Convert GIF or MP4 to AVIF using ffmpeg.
+
+    Args:
+
+    - `source` (`Path | str`): Source GIF or MP4 file.
+    - `output` (`Path | str`): Destination AVIF file.
+    - `project_root` (`Path | str`): Folder containing `ffmpeg.exe`.
+    - `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
+
+    Returns:
+
+    - `None`.
+
+    """
     ffmpeg = _exe(project_root, "ffmpeg")
     args = [str(ffmpeg), "-i", str(source)]
     scale_vf = _scale_vf(max_size)
@@ -48,8 +61,19 @@ def convert_gif_mp4_to_avif(
     _run_checked(args)
 
 
-def get_frame_rate(source: Path, project_root: Path) -> float:
-    """Detect frame rate from media file using ffmpeg output."""
+def get_frame_rate(source: Path | str, project_root: Path | str) -> float:
+    """Detect frame rate from media file using ffmpeg output.
+
+    Args:
+
+    - `source` (`Path | str`): Media file to inspect.
+    - `project_root` (`Path | str`): Folder containing `ffmpeg.exe`.
+
+    Returns:
+
+    - `float`: Detected frames per second, or `10.0` when detection fails.
+
+    """
     ffmpeg = _exe(project_root, "ffmpeg")
     output = _ffmpeg_output(source, ffmpeg)
     fps = _DEFAULT_FPS
@@ -65,8 +89,19 @@ def get_frame_rate(source: Path, project_root: Path) -> float:
     return fps
 
 
-def is_avif_animated(source: Path, project_root: Path) -> bool:
-    """Return `True` if AVIF contains more than one frame."""
+def is_avif_animated(source: Path | str, project_root: Path | str) -> bool:
+    """Return `True` if AVIF contains more than one frame.
+
+    Args:
+
+    - `source` (`Path | str`): AVIF file to inspect.
+    - `project_root` (`Path | str`): Folder containing `ffmpeg.exe` and `avifdec.exe`.
+
+    Returns:
+
+    - `bool`: `True` when the file is animated.
+
+    """
     ffmpeg = _exe(project_root, "ffmpeg")
     output = _ffmpeg_output(source, ffmpeg)
     duration_match = re.search(r"Duration: (\d{2}):(\d{2}):(\d{2}\.\d+)", output)
@@ -83,14 +118,28 @@ def is_avif_animated(source: Path, project_root: Path) -> bool:
 
 
 def optimize_avif(
-    source: Path,
-    output: Path,
-    project_root: Path,
+    source: Path | str,
+    output: Path | str,
+    project_root: Path | str,
     *,
     quality: bool = False,
     max_size: int | None = None,
 ) -> None:
-    """Optimize AVIF using ffmpeg or avifdec/avifenc depending on animation."""
+    """Optimize AVIF using ffmpeg or avifdec/avifenc depending on animation.
+
+    Args:
+
+    - `source` (`Path | str`): Source AVIF file.
+    - `output` (`Path | str`): Destination AVIF file.
+    - `project_root` (`Path | str`): Folder containing `ffmpeg.exe`, `avifenc.exe`, `avifdec.exe`.
+    - `quality` (`bool`): Use higher quality settings. Defaults to `False`.
+    - `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
+
+    Returns:
+
+    - `None`.
+
+    """
     if is_avif_animated(source, project_root):
         process_animated_avif(source, output, project_root, quality=quality, max_size=max_size)
     else:
@@ -139,14 +188,29 @@ def optimize_image_with_tools(
 
 
 def process_animated_avif(
-    source: Path,
-    output: Path,
-    project_root: Path,
+    source: Path | str,
+    output: Path | str,
+    project_root: Path | str,
     *,
     quality: bool = False,
     max_size: int | None = None,
 ) -> None:
-    """Optimize animated AVIF with avifdec and avifenc or ffmpeg."""
+    """Optimize animated AVIF with avifdec and avifenc or ffmpeg.
+
+    Args:
+
+    - `source` (`Path | str`): Source animated AVIF file.
+    - `output` (`Path | str`): Destination AVIF file.
+    - `project_root` (`Path | str`): Folder containing `ffmpeg.exe`, `avifenc.exe`, `avifdec.exe`.
+    - `quality` (`bool`): Use higher quality settings. Defaults to `False`.
+    - `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
+
+    Returns:
+
+    - `None`.
+
+    """
+    source = Path(source)
     original_frame_rate = get_frame_rate(source, project_root)
     target_frame_rate = min(original_frame_rate, _MAX_ANIMATED_FPS)
     frames_to_keep_ratio = target_frame_rate / original_frame_rate
@@ -203,14 +267,28 @@ def process_animated_avif(
 
 
 def process_static_avif(
-    source: Path,
-    output: Path,
-    project_root: Path,
+    source: Path | str,
+    output: Path | str,
+    project_root: Path | str,
     *,
     quality: bool = False,
     max_size: int | None = None,
 ) -> None:
-    """Optimize static AVIF with ffmpeg."""
+    """Optimize static AVIF with ffmpeg.
+
+    Args:
+
+    - `source` (`Path | str`): Source static AVIF file.
+    - `output` (`Path | str`): Destination AVIF file.
+    - `project_root` (`Path | str`): Folder containing `ffmpeg.exe`.
+    - `quality` (`bool`): Use higher quality settings. Defaults to `False`.
+    - `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
+
+    Returns:
+
+    - `None`.
+
+    """
     crf = 18 if quality else 28
     ffmpeg = _exe(project_root, "ffmpeg")
     args = [
@@ -233,11 +311,11 @@ def process_static_avif(
     _run_checked(args)
 
 
-def _exe(project_root: Path, name: str) -> Path:
-    return project_root / f"{name}.exe"
+def _exe(project_root: Path | str, name: str) -> Path:
+    return Path(project_root) / f"{name}.exe"
 
 
-def _ffmpeg_output(source: Path, ffmpeg: Path) -> str:
+def _ffmpeg_output(source: Path | str, ffmpeg: Path) -> str:
     process = subprocess.run(
         [str(ffmpeg), "-i", str(source), "-f", "null", "-"],
         capture_output=True,
@@ -248,7 +326,7 @@ def _ffmpeg_output(source: Path, ffmpeg: Path) -> str:
     return "\n".join(filter(None, [(process.stdout or "").strip(), (process.stderr or "").strip()]))
 
 
-def _is_avif_animated_with_avifdec(source: Path, project_root: Path) -> bool:
+def _is_avif_animated_with_avifdec(source: Path | str, project_root: Path | str) -> bool:
     avifdec = _exe(project_root, "avifdec")
     with tempfile.TemporaryDirectory(prefix="avif_check_") as temp_dir:
         temp_path = Path(temp_dir)

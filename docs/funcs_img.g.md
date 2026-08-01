@@ -30,7 +30,7 @@ Args:
 
 - `filename` (`Path | str`): Source image path.
 - `output_filename` (`Path | str`): Destination path.
-- `project_root` (`Path | str`): Folder containing external tool executables.
+- `project_root` (`Path | str`): Folder containing `ffmpeg.exe`, `avifenc.exe`, `avifdec.exe`.
 - `quality` (`bool`): Use higher quality settings. Defaults to `False`.
 - `max_size` (`int | None`): Maximum width or height in pixels. Defaults to `None`.
 

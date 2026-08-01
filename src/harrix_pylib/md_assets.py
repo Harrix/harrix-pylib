@@ -62,14 +62,25 @@ _EXEMPT_NOTE_MD_STEMS: frozenset[str] = frozenset(
 )
 
 
-def desired_note_asset_path(folder: Path, path: Path) -> Path | None:
+def desired_note_asset_path(folder: Path | str, path: Path | str) -> Path | None:
     """Return the correct path for a note asset, or `None` if already correct / ignored.
 
     Only direct children of the note folder and of sibling `img/` / `files/` are
     considered. Markdown files, hidden files, nested folders, and `featured-image.*`
     special cases follow the note-folder layout rules.
 
+    Args:
+
+    - `folder` (`Path | str`): Note folder that owns the asset.
+    - `path` (`Path | str`): Asset path to check.
+
+    Returns:
+
+    - `Path | None`: Correct asset path, or `None` when the asset is already correct or ignored.
+
     """
+    folder = Path(folder)
+    path = Path(path)
     try:
         rel = path.relative_to(folder)
     except ValueError:
@@ -108,13 +119,33 @@ def desired_note_asset_path(folder: Path, path: Path) -> Path | None:
 
 
 def is_featured_image_name(name: str) -> bool:
-    """Return whether `name` is a featured-image asset (`featured-image.*`)."""
+    """Return whether `name` is a featured-image asset (`featured-image.*`).
+
+    Args:
+
+    - `name` (`str`): File name to check.
+
+    Returns:
+
+    - `bool`: `True` when the name starts with `featured-image`.
+
+    """
     return name.startswith("featured-image")
 
 
-def is_media_file(path: Path) -> bool:
-    """Return whether `path` has a media extension used for the `img/` folder."""
-    return path.suffix.lower() in MEDIA_EXTENSIONS
+def is_media_file(path: Path | str) -> bool:
+    """Return whether `path` has a media extension used for the `img/` folder.
+
+    Args:
+
+    - `path` (`Path | str`): Asset path to check.
+
+    Returns:
+
+    - `bool`: `True` when the suffix is in `MEDIA_EXTENSIONS`.
+
+    """
+    return Path(path).suffix.lower() in MEDIA_EXTENSIONS
 
 
 def is_note_asset_folder(folder: Path | str) -> bool:
@@ -125,6 +156,14 @@ def is_note_asset_folder(folder: Path | str) -> bool:
     - software project roots (`.git`, `pyproject.toml`, `package.json`, …);
     - folders whose only Markdown files are docs like `README.md` / `LICENSE.md`
       (so `api-keys/README.md` does not trigger moving secrets into `files/`).
+
+    Args:
+
+    - `folder` (`Path | str`): Folder to check.
+
+    Returns:
+
+    - `bool`: `True` when the folder is a note folder that uses the asset layout.
 
     """
     root = Path(folder)
@@ -142,11 +181,19 @@ def is_note_asset_folder(folder: Path | str) -> bool:
     return _folder_has_note_markdown(children)
 
 
-def iter_misplaced_note_assets(folder: Path) -> Iterator[tuple[Path, Path]]:
+def iter_misplaced_note_assets(folder: Path | str) -> Iterator[tuple[Path, Path]]:
     """Yield `(source, destination)` for misplaced direct assets in a note folder.
 
     Destination may already exist; callers that move files should skip collisions.
     Project roots are skipped (see `is_note_asset_folder`).
+
+    Args:
+
+    - `folder` (`Path | str`): Note folder to scan.
+
+    Yields:
+
+    - `tuple[Path, Path]`: Current asset path and the path it should be moved to.
 
     """
     root = Path(folder)

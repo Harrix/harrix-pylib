@@ -24,6 +24,16 @@ def display_math_line_flags(lines: Sequence[str]) -> list[bool]
 
 Return per-line flags for display-math `$$...$$` regions (including delimiters).
 
+Args:
+
+- `lines` (`Sequence[str]`): Source lines to scan.
+- `in_code` (`Sequence[bool] | None`): Per-line flags marking fenced code lines, which are
+  skipped. Defaults to `None`.
+
+Returns:
+
+- `list[bool]`: One flag per input line, `True` inside display math.
+
 <details>
 <summary>Code:</summary>
 
@@ -60,6 +70,15 @@ def iter_code_and_math_segments(code_segments: Iterator[tuple[str, bool]] | Sequ
 ```
 
 Yield `(segment, protected)` where protected is inline code or dollar-math.
+
+Args:
+
+- `code_segments` (`Iterator[tuple[str, bool]] | Sequence[tuple[str, bool]]`): Segments paired
+  with a flag telling whether the segment is inline code.
+
+Yields:
+
+- `tuple[str, bool]`: Segment and a flag telling whether it must be left untouched.
 
 <details>
 <summary>Code:</summary>

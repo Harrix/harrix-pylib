@@ -1,11 +1,12 @@
 """Functions for working with Markdown files."""
 
+from __future__ import annotations
+
 import functools
 import re
-from collections.abc import Callable, Iterator, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import quote, urlparse
 
 import requests
@@ -17,6 +18,9 @@ from harrix_pylib.md_format.code_fence import _identify_code_blocks as _md_ident
 from harrix_pylib.md_format.code_fence import _identify_code_blocks_line as _md_identify_code_blocks_line
 from harrix_pylib.md_format.formatter import MdFormatter
 from harrix_pylib.md_format.front_matter import _split_front_matter
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator, Sequence
 
 # Markdown ATX heading levels: H1-H6; TOC uses H2-H6
 _MIN_TOC_HEADING_LEVEL = 2
@@ -553,7 +557,7 @@ def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> st
     return "File is not changed."
 
 
-def collect_subfolder_md(subfolder: Path, should_include_file: Callable[[Path], bool]) -> list[Path]:
+def collect_subfolder_md(subfolder: Path | str, should_include_file: Callable[[Path], bool]) -> list[Path]:
     """Collect Markdown files from a subfolder for combine operations.
 
     Prefers the named-folder layout `Name/Name/Name.md`, then flat `Name/Name.md`,
@@ -561,7 +565,7 @@ def collect_subfolder_md(subfolder: Path, should_include_file: Callable[[Path], 
 
     Args:
 
-    - `subfolder` (`Path`): Subfolder to collect Markdown files from.
+    - `subfolder` (`Path | str`): Subfolder to collect Markdown files from.
     - `should_include_file` (`Callable[[Path], bool]`): Predicate that decides whether
       a file should be included.
 
@@ -2126,7 +2130,7 @@ def generate_summaries(folder: Path | str) -> str:
 
     - `str`: Success message with paths to the created files
 
-    Notes:
+    Note:
 
     - The function looks for Markdown files with years in their names (e.g., `2023.md`,
       "Before-2013-(Cinema).md", `After_2024.md`)
@@ -2588,10 +2592,10 @@ def get_yaml_content(markdown_text: str) -> str:
 
     - `str`: YAML from the Markdown file.
 
-    Examples:
+    Example:
 
     ```python
-    import harrix-pylib as h
+    import harrix_pylib as h
 
     yaml_content = h.md.get_yaml_content("---\ncategories: [it]\n---\n\nText")
     print(yaml_content)  # Text
@@ -2599,7 +2603,7 @@ def get_yaml_content(markdown_text: str) -> str:
 
     ```python
     from pathlib import Path
-    import harrix-pylib as h
+    import harrix_pylib as h
 
     md = Path("article.md").read_text(encoding="utf-8")
     yaml_content = h.md.get_yaml_content(md)
@@ -2618,11 +2622,10 @@ def identify_code_blocks(lines: Sequence[str]) -> Iterator[tuple[str, bool]]:
 
     - `lines` (`Sequence[str]`): A sequence of strings where each string is a line of text to be processed.
 
-    Returns:
+    Yields:
 
-    - `Iterator[tuple[str, bool]]`: An iterator yielding tuples. Each tuple contains:
-      - The original line of text (`str`).
-      - A boolean flag (`bool`) indicating if the line is within a code block (`True`) or not (`False`).
+    - `tuple[str, bool]`: The original line of text and a boolean flag indicating if the line is
+      within a code block (`True`) or not (`False`).
 
     Note:
 
@@ -2662,10 +2665,10 @@ def identify_code_blocks_line(markdown_line: str) -> Iterator[tuple[str, bool]]:
 
     - `markdown_line` (`str`): The input Markdown line to analyze.
 
-    Returns:
+    Yields:
 
-    - `Iterator[tuple[str, bool]]`: An iterator yielding tuples where the first element is a segment of the line,
-      and the second is a boolean indicating whether this segment is part of an inline code block.
+    - `tuple[str, bool]`: A segment of the line and a boolean indicating whether this segment is
+      part of an inline code block.
 
     Example:
 
@@ -2774,7 +2777,7 @@ def is_named_note_folder(folder: Path | str) -> bool:
     return False
 
 
-def is_note_in_named_folder(md_path: Path) -> bool:
+def is_note_in_named_folder(md_path: Path | str) -> bool:
     """Check whether a Markdown path uses the named-folder layout.
 
     A note is in named-folder layout when it is stored as `Folder/Folder.md`,
@@ -2783,7 +2786,7 @@ def is_note_in_named_folder(md_path: Path) -> bool:
 
     Args:
 
-    - `md_path` (`Path`): Path to the Markdown file to check.
+    - `md_path` (`Path | str`): Path to the Markdown file to check.
 
     Returns:
 
@@ -2799,6 +2802,7 @@ def is_note_in_named_folder(md_path: Path) -> bool:
     ```
 
     """
+    md_path = Path(md_path)
     note_dir = md_path.parent
     stem = md_path.stem
     if note_dir.name.lower() != stem.lower():
@@ -2860,9 +2864,9 @@ def iter_note_md_in_folder(folder: Path | str, *, dir_name: str | None = None) -
     - `dir_name` (`str | None`): Folder name used to filter `_{dir_name}*` files.
       Defaults to `folder.name`.
 
-    Returns:
+    Yields:
 
-    - `Iterator[Path]`: Unique scannable note paths in sorted discovery order.
+    - `Path`: Unique scannable note paths in sorted discovery order.
 
     Example:
 
@@ -3098,10 +3102,10 @@ def remove_yaml_and_code_content(markdown_text: str) -> str:
 
     - `str`: A string containing the Markdown content with YAML front matter and code blocks removed.
 
-    Examples:
+    Example:
 
     ```python
-    import harrix-pylib as h
+    import harrix_pylib as h
 
     md_clean = h.md.remove_yaml_and_code_content("---\ncategories: [it]\n---\n\nText")
     print(md_clean)  # Text
@@ -3109,7 +3113,7 @@ def remove_yaml_and_code_content(markdown_text: str) -> str:
 
     ```python
     from pathlib import Path
-    import harrix-pylib as h
+    import harrix_pylib as h
 
     md = Path("article.md").read_text(encoding="utf-8")
     md_clean = h.md.remove_yaml_and_code_content(md)
@@ -3157,10 +3161,10 @@ def remove_yaml_content(markdown_text: str) -> str:
 
     - `str`: Text of the Markdown file without YAML.
 
-    Examples:
+    Example:
 
     ```python
-    import harrix-pylib as h
+    import harrix_pylib as h
 
     md_clean = h.md.remove_yaml_content("---\ncategories: [it]\n---\n\nText")
     print(md_clean)  # Text
@@ -3168,7 +3172,7 @@ def remove_yaml_content(markdown_text: str) -> str:
 
     ```python
     from pathlib import Path
-    import harrix-pylib as h
+    import harrix_pylib as h
 
     md = Path("article.md").read_text(encoding="utf-8")
     md_clean = h.md.remove_yaml_content(md)
@@ -3196,7 +3200,7 @@ def replace_section(filename: Path | str, replace_content: str, title_section: s
 
     - `str`: A message indicating that the section has been replaced.
 
-    Notes:
+    Note:
 
     - If `start_index` or `end_index` is not found, the file remains unchanged.
     - The function assumes that the file uses UTF-8 encoding for reading and writing.
@@ -3245,7 +3249,7 @@ def replace_section_content(
 
     - `str`: The Markdown content with the replaced section.
 
-    Notes:
+    Note:
 
     - If `start_index` or `end_index` is not found, the text remains unchanged.
     - If no section matches the `title_section`, or if the section spans till the end of the text,
@@ -3371,7 +3375,7 @@ def sort_sections(filename: Path | str, *, is_sort_section_from_yaml: bool = Fal
     - `str`: A message indicating whether the file was sorted and saved (`✅ File {filename} applied.`)
       or if no changes were made (`File is not changed.`).
 
-    Notes:
+    Note:
 
     - The function assumes that sections are marked by `##` at the beginning of a line,
       and code blocks are delimited by triple backticks (```).

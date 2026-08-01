@@ -26,14 +26,14 @@ lang: en
 ## 🔧 Function `config_load`
 
 ```python
-def config_load(filename: str) -> dict
+def config_load(filename: Path | str) -> dict
 ```
 
 Load configuration from a JSON file.
 
 Args:
 
-- `filename` (`str`): Path to the JSON configuration file. Defaults to `None`.
+- `filename` (`Path | str`): Path to the JSON configuration file. Defaults to `None`.
 - `is_temp` (`bool`): If `True`, load the temporary config file (`config-temp.json`)
   instead of the main config file. Defaults to `False`.
 - `resolve_snippets` (`bool`): If `True`, replace `snippet:path` string values with
@@ -43,7 +43,7 @@ Returns:
 
 - `dict`: Configuration loaded from the file.
 
-Examples:
+Example:
 
 ```python
 import harrix_pylib as h
@@ -73,7 +73,7 @@ config = h.dev.config_load("config.json", is_temp=True)
 <summary>Code:</summary>
 
 ```python
-def config_load(filename: str, *, is_temp: bool = False, resolve_snippets: bool = True) -> dict:
+def config_load(filename: Path | str, *, is_temp: bool = False, resolve_snippets: bool = True) -> dict:
     config = _config_load_raw(filename, is_temp=is_temp)
     if not resolve_snippets:
         return config
@@ -85,7 +85,7 @@ def config_load(filename: str, *, is_temp: bool = False, resolve_snippets: bool 
 ## 🔧 Function `config_save`
 
 ```python
-def config_save(config: dict, filename: str) -> None
+def config_save(config: dict, filename: Path | str) -> None
 ```
 
 Save configuration to a JSON file.
@@ -97,7 +97,7 @@ Args:
 - `is_temp` (`bool`): If `True`, save to the temporary config file (`config-temp.json`)
   instead of the main config file. Defaults to `False`.
 
-Examples:
+Example:
 
 ```python
 import harrix_pylib as h
@@ -126,7 +126,7 @@ h.dev.config_save(config, "config.json", is_temp=True)
 <summary>Code:</summary>
 
 ```python
-def config_save(config: dict, filename: str, *, is_temp: bool = False) -> None:
+def config_save(config: dict, filename: Path | str, *, is_temp: bool = False) -> None:
     config_file = _resolve_config_path(filename, is_temp=is_temp)
     with config_file.open("w", encoding="utf-8") as file:
         json.dump(config, file, indent=2, ensure_ascii=False)
@@ -137,7 +137,7 @@ def config_save(config: dict, filename: str, *, is_temp: bool = False) -> None:
 ## 🔧 Function `config_update_value`
 
 ```python
-def config_update_value(key: str, value: object, filename: str) -> None
+def config_update_value(key: str, value: object, filename: Path | str) -> None
 ```
 
 Update a single configuration value and save it to a JSON file.
@@ -154,7 +154,7 @@ Args:
 - `is_temp` (`bool`): If `True`, update the temporary config file (`config-temp.json`)
   instead of the main config file. Defaults to `False`.
 
-Examples:
+Example:
 
 ```python
 import harrix_pylib as h
@@ -185,7 +185,7 @@ h.dev.config_update_value("path_github", "C:/GitHub/Temp", "config.json", is_tem
 <summary>Code:</summary>
 
 ```python
-def config_update_value(key: str, value: object, filename: str, *, is_temp: bool = False) -> None:
+def config_update_value(key: str, value: object, filename: Path | str, *, is_temp: bool = False) -> None:
     config = _config_load_raw(filename, is_temp=is_temp)
 
     # Handle nested keys (e.g., "section.key")
@@ -419,7 +419,7 @@ Returns:
 
 - `str`: Combined output and error messages from the PowerShell execution.
 
-Examples:
+Example:
 
 ```python
 import harrix_pylib as h
@@ -489,7 +489,7 @@ Note:
 - Multiline scripts are written to a `.ps1` file as-is (not joined with `;`), so block syntax is preserved.
 - The launcher uses `Start-Process -Verb RunAs -Wait` so execution finishes before the output file is read.
 
-Examples:
+Example:
 
 ```python
 import harrix_pylib as h
@@ -627,7 +627,7 @@ Note:
 - The `output.txt` file is created in a `temp` folder under the project root.
   If the folder does not exist, it will be created.
 
-Examples:
+Example:
 
 ```python
 import harrix_pylib as h

@@ -36,9 +36,19 @@ Format Markdown inside Python docstrings, similar to `MdFormatter` for `.md` fil
 ```python
 class PyDocstringFormatter:
 
-    def __call__(self, filename: Path | str) -> str:
-        """Format docstrings in a Python file in place."""
-        return self.format_file(filename)
+    def __call__(self, source: str) -> str:
+        """Format Markdown inside docstrings in Python source text.
+
+        Args:
+
+        - `source` (`str`): Python source code.
+
+        Returns:
+
+        - `str`: Source with formatted docstrings (unchanged when nothing applies).
+
+        """
+        return self.format(source)
 
     def __init__(
         self,
@@ -150,7 +160,17 @@ class PyDocstringFormatter:
 
     @staticmethod
     def iter_code_span_issues(text: str) -> Iterator[tuple[int, int, str]]:
-        """Yield `(line_index, col_1based, token)` for prose tokens that should use backticks."""
+        """Yield `(line_index, col_1based, token)` for prose tokens that should use backticks.
+
+        Args:
+
+        - `text` (`str`): Docstring Markdown text.
+
+        Yields:
+
+        - `tuple[int, int, str]`: Zero-based line index, 1-based column, and the token.
+
+        """
         lines = text.split("\n")
         for line_index, (line, in_fence) in enumerate(_identify_code_blocks(lines)):
             if in_fence:
@@ -172,6 +192,14 @@ class PyDocstringFormatter:
 
         - Bare `True`, `False`, and `None` become `` `True` `` / `` `False` `` / `` `None` ``
         - Quoted identifiers like `'name'` or `"HP001"` become `` `name` `` / `` `HP001` ``
+
+        Args:
+
+        - `text` (`str`): Docstring Markdown text.
+
+        Returns:
+
+        - `str`: Text with code tokens wrapped in backticks.
 
         """
         lines = text.split("\n")
@@ -198,17 +226,25 @@ class PyDocstringFormatter:
 ### ⚙️ Method `__call__`
 
 ```python
-def __call__(self, filename: Path | str) -> str
+def __call__(self, source: str) -> str
 ```
 
-Format docstrings in a Python file in place.
+Format Markdown inside docstrings in Python source text.
+
+Args:
+
+- `source` (`str`): Python source code.
+
+Returns:
+
+- `str`: Source with formatted docstrings (unchanged when nothing applies).
 
 <details>
 <summary>Code:</summary>
 
 ```python
-def __call__(self, filename: Path | str) -> str:
-        return self.format_file(filename)
+def __call__(self, source: str) -> str:
+        return self.format(source)
 ```
 
 </details>
@@ -377,6 +413,14 @@ def iter_code_span_issues(text: str) -> Iterator[tuple[int, int, str]]
 
 Yield `(line_index, col_1based, token)` for prose tokens that should use backticks.
 
+Args:
+
+- `text` (`str`): Docstring Markdown text.
+
+Yields:
+
+- `tuple[int, int, str]`: Zero-based line index, 1-based column, and the token.
+
 <details>
 <summary>Code:</summary>
 
@@ -410,6 +454,14 @@ Outside fenced and inline code:
 
 - Bare `True`, `False`, and `None` become `` `True` `` / `` `False` `` / `` `None` ``
 - Quoted identifiers like `'name'` or `"HP001"` become `` `name` `` / `` `HP001` ``
+
+Args:
+
+- `text` (`str`): Docstring Markdown text.
+
+Returns:
+
+- `str`: Text with code tokens wrapped in backticks.
 
 <details>
 <summary>Code:</summary>

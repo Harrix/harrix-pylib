@@ -26,7 +26,17 @@ class AbbreviationData:
 
 
 def is_spaced_multipart(form: str) -> bool:
-    """Return `True` if form is a multi-part dotted abbrev with spaces (H006 candidate)."""
+    """Return `True` if form is a multi-part dotted abbrev with spaces (H006 candidate).
+
+    Args:
+
+    - `form` (`str`): Abbreviation form to inspect, for example `e. g.`.
+
+    Returns:
+
+    - `bool`: `True` when the form contains both a period and a space.
+
+    """
     if "." not in form or " " not in form:
         return False
     # Space after a period, or space before a dotted token
@@ -35,7 +45,13 @@ def is_spaced_multipart(form: str) -> bool:
 
 @lru_cache(maxsize=1)
 def load_abbreviation_data() -> AbbreviationData:
-    """Load RU+EN abbreviation JSON (always both; not gated by document lang)."""
+    """Load RU+EN abbreviation JSON (always both; not gated by document lang).
+
+    Returns:
+
+    - `AbbreviationData`: Compiled forms and patterns, cached after the first call.
+
+    """
     package = "harrix_pylib.data"
     forms = _dedupe_casefold(
         [
@@ -87,7 +103,19 @@ def load_abbreviation_data() -> AbbreviationData:
 
 
 def mask_abbreviations(text: str, pattern: re.Pattern[str] | None, placeholder: str = "\u00b7") -> str:
-    """Replace known dotted abbreviations with same-length placeholders for H021."""
+    """Replace known dotted abbreviations with same-length placeholders for H021.
+
+    Args:
+
+    - `text` (`str`): Text to mask.
+    - `pattern` (`re.Pattern[str] | None`): Compiled abbreviation pattern. `None` returns `text` as is.
+    - `placeholder` (`str`): Single character used for masking. Defaults to `·`.
+
+    Returns:
+
+    - `str`: Text with abbreviations replaced by placeholders of the same length.
+
+    """
     if pattern is None:
         return text
 
@@ -98,12 +126,32 @@ def mask_abbreviations(text: str, pattern: re.Pattern[str] | None, placeholder: 
 
 
 def normalize_abbrev(text: str) -> str:
-    """Normalize soft hyphens and trim whitespace."""
+    """Normalize soft hyphens and trim whitespace.
+
+    Args:
+
+    - `text` (`str`): Raw abbreviation form.
+
+    Returns:
+
+    - `str`: Form with soft hyphens replaced by `-` and outer whitespace removed.
+
+    """
     return text.replace(SOFT_HYPHEN, "-").strip()
 
 
 def unspaced_variant(form: str) -> str:
-    """Collapse spaces that follow periods inside multi-part dotted abbreviations."""
+    """Collapse spaces that follow periods inside multi-part dotted abbreviations.
+
+    Args:
+
+    - `form` (`str`): Canonical abbreviation form, for example `e. g.`.
+
+    Returns:
+
+    - `str`: Form without spaces after periods, for example `e.g.`.
+
+    """
     return re.sub(r"\.\s+", ".", form)
 
 

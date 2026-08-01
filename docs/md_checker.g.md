@@ -113,12 +113,25 @@ Rules:
   are ignored; software project roots (`.git`, `pyproject.toml`, …) and
   README/LICENSE-only folders are skipped.
 
-Notes:
+Example for ignore directives:
+
+```markdown
+Text with an error on this line. <!-- ignore: H021 -->
+Text with several ignored rules. <!-- ignore: H021, H024 -->
+
+<!-- file-ignore: H021 -->
+<!-- file-ignore: H021, H024 -->
+```
+
+Note:
 
 - Files with `raw-markdown: true` in YAML: prose and structure checks skip the
   body after the first ATX H1 (same span that `combine_markdown_files` wraps in a
   fenced code block). Filename, YAML, BOM, line endings, and H060/H061 asset
   layout rules still apply; H060 still scans the full file for asset references.
+- `<!-- ignore: ... -->` suppresses the listed rules on its own line, and
+  `<!-- file-ignore: ... -->` suppresses them for the whole file, mirroring the
+  `# ignore:` / `# file-ignore:` comments of `PyChecker`.
 
 <details>
 <summary>Code:</summary>
@@ -334,6 +347,17 @@ class MdChecker:
         "H060": "Asset file not referenced in Markdown",
         "H061": "Misplaced note asset file",
     }
+
+    # HTML comment for ignoring checks on specific lines
+    IGNORE_PATTERN: ClassVar[re.Pattern] = re.compile(r"<!--\s*ignore:\s*([A-Z0-9,\s]+?)\s*-->", re.IGNORECASE)
+
+    # HTML comment for ignoring checks for entire file
+    FILE_IGNORE_PATTERN: ClassVar[re.Pattern] = re.compile(
+        r"<!--\s*file-ignore:\s*([A-Z0-9,\s]+?)\s*-->", re.IGNORECASE
+    )
+
+    # Location and rule code inside a formatted error, used to apply line-level ignores
+    _ERROR_LOCATION_PATTERN: ClassVar[re.Pattern] = re.compile(r":(\d+)(?::\d+)?: ([A-Z]+\d+)\b")
 
     _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
     # Exclude `?..` / `!..` (required by H028) and `...` / `../`.
@@ -596,18 +620,53 @@ class MdChecker:
     def __call__(
         self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
     ) -> list[str]:
-        """Check Markdown file for compliance with specified rules."""
+        """Check Markdown file for compliance with specified rules.
+
+        Args:
+
+        - `filename` (`Path | str`): Path to the Markdown file to check.
+        - `select` (`set[str] | None`): Rule codes to run. Defaults to `None` (all rules).
+        - `exclude_rules` (`set[str] | None`): Rule codes to skip. Defaults to `None`.
+
+        Returns:
+
+        - `list[str]`: Error messages in `{path}:{line}:{col}: {code} {message}` format.
+
+        """
         return self.check(filename, select=select, exclude_rules=exclude_rules)
 
     def __init__(self, project_root: Path | str | None = None) -> None:
-        """Initialize the MdChecker with all available rules."""
+        """Initialize the MdChecker with all available rules.
+
+        Args:
+
+        - `project_root` (`Path | str | None`): Folder used to build relative paths in error
+          messages. Defaults to `None` (nearest Git root, else the current folder).
+
+        Returns:
+
+        - `None`.
+
+        """
         self.all_rules = set(self.RULES.keys())
         self.project_root = self._determine_project_root(project_root)
 
     def check(
         self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
     ) -> list[str]:
-        """Check Markdown file for compliance with specified rules."""
+        """Check Markdown file for compliance with specified rules.
+
+        Args:
+
+        - `filename` (`Path | str`): Path to the Markdown file to check.
+        - `select` (`set[str] | None`): Rule codes to run. Defaults to `None` (all rules).
+        - `exclude_rules` (`set[str] | None`): Rule codes to skip. Defaults to `None`.
+
+        Returns:
+
+        - `list[str]`: Error messages in `{path}:{line}:{col}: {code} {message}` format.
+
+        """
         filename = Path(filename)
         active_rules = self._determine_active_rules(select, exclude_rules)
         return list(self._check_all_rules(filename, active_rules))
@@ -620,7 +679,22 @@ class MdChecker:
         exclude_rules: set[str] | None = None,
         additional_ignore_patterns: list[str] | None = None,
     ) -> dict[str, list[str]]:
-        """Check all Markdown files in directory for compliance with specified rules."""
+        """Check all Markdown files in directory for compliance with specified rules.
+
+        Args:
+
+        - `directory` (`Path | str`): Folder to scan recursively.
+        - `select` (`set[str] | None`): Rule codes to run. Defaults to `None` (all rules).
+        - `exclude_rules` (`set[str] | None`): Rule codes to skip. Defaults to `None`.
+        - `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to skip.
+          Defaults to `None`.
+
+        Returns:
+
+        - `dict[str, list[str]]`: Mapping of file path to its error messages. Files without
+          errors are omitted.
+
+        """
         results = {}
         for md_file in self.find_markdown_files(directory, additional_ignore_patterns):
             errors = self.check(md_file, select=select, exclude_rules=exclude_rules)
@@ -631,7 +705,19 @@ class MdChecker:
     def find_markdown_files(
         self, directory: Path | str, additional_ignore_patterns: list[str] | None = None
     ) -> Generator[Path, None, None]:
-        """Find all Markdown files in directory, ignoring hidden folders."""
+        """Find all Markdown files in directory, ignoring hidden folders.
+
+        Args:
+
+        - `directory` (`Path | str`): Folder to scan recursively.
+        - `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to skip.
+          Defaults to `None`.
+
+        Yields:
+
+        - `Path`: Path to each `.md` or `.markdown` file found.
+
+        """
         directory = Path(directory)
         if not directory.is_dir():
             return
@@ -722,7 +808,7 @@ class MdChecker:
         return frozenset(display_math_lines)
 
     def _check_all_lines_rules(
-        self, filename: Path, line: str, line_num: int, rules: set, *, is_code_block: bool = False
+        self, filename: Path, line: str, line_num: int, rules: set[str], *, is_code_block: bool = False
     ) -> Generator[str, None, None]:
         """Check rules that apply to all lines including code blocks."""
         # H008: Trailing whitespace
@@ -759,55 +845,28 @@ class MdChecker:
                 yield self._format_error("H048", self.RULES["H048"], filename, line_num=line_num, col=idx + 1)
                 start = idx + 1
 
-    def _check_all_rules(self, filename: Path, rules: set) -> Generator[str, None, None]:
-        """Generate all errors found during checking."""
-        yield from self._check_filename_rules(filename, rules)
+    def _check_all_rules(self, filename: Path, rules: set[str]) -> Generator[str, None, None]:
+        """Generate all errors found during checking, honoring `ignore` / `file-ignore` comments.
 
+        Args:
+
+        - `filename` (`Path`): Path to the Markdown file being checked.
+        - `rules` (`set[str]`): Set of rule codes to apply during checking.
+
+        Yields:
+
+        - `str`: Error message for each found issue that is not suppressed.
+
+        """
         try:
-            content = filename.read_text(encoding="utf-8")
-
-            if "H047" in rules and content.startswith("\ufeff"):
-                yield self._format_error("H047", self.RULES["H047"], filename, line_num=1, col=1)
-
-            all_lines = content.splitlines()
-            yaml_end_line = self._find_yaml_end_line(all_lines)
-            yaml_part, _ = h.md.split_yaml_content(content)
-
-            try:
-                yaml_data = yaml.safe_load(yaml_part.replace("---\n", "").replace("\n---", "")) if yaml_part else None
-                lang = (yaml_data or {}).get("lang") or ""
-            except yaml.YAMLError:
-                yaml_data = None
-                lang = ""
-
-            yield from self._check_yaml_rules(filename, yaml_part, all_lines, rules, yaml_data=yaml_data)
-            content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
-            raw_markdown = isinstance(yaml_data, dict) and h.md.is_raw_markdown_enabled(yaml_data)
-            full_content = content
-            check_lines = all_lines
-            if raw_markdown:
-                content_lines = self._content_lines_through_first_h1(content_lines)
-                yaml_prefix = all_lines[: yaml_end_line - 1] if yaml_end_line > 1 else []
-                check_lines = yaml_prefix + content_lines
-                content = "\n".join(check_lines)
-                if full_content.endswith("\n"):
-                    content += "\n"
-            code_block_info = list(h.md.identify_code_blocks(content_lines))
-            yield from self._check_content_rules(
-                filename,
-                check_lines,
-                yaml_end_line,
-                rules,
-                content,
-                lang=lang,
-                code_block_info=code_block_info,
-                yaml_data=yaml_data,
-                full_content=full_content if raw_markdown else None,
-            )
-            yield from self._check_code_rules(filename, yaml_end_line, rules, code_block_info=code_block_info)
-
-        except (OSError, UnicodeDecodeError) as e:
-            yield self._format_error("H000", f"Exception error: {e}", filename)
+            lines = filename.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeDecodeError):
+            lines = []
+        rules_to_check = rules - self._get_file_ignored_rules(lines)
+        line_ignored_rules = self._get_line_ignored_rules(lines)
+        for error in self._iter_rule_errors(filename, rules_to_check):
+            if not self._is_error_ignored(error, line_ignored_rules):
+                yield error
 
     def _check_atx_heading_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check for missing space after # in ATX heading (H036)."""
@@ -914,7 +973,7 @@ class MdChecker:
     # =========================================================================
 
     def _check_code_rules(
-        self, filename: Path, yaml_end_line: int, rules: set, *, code_block_info: list
+        self, filename: Path, yaml_end_line: int, rules: set[str], *, code_block_info: list
     ) -> Generator[str, None, None]:
         """Check code block related rules."""
         code_block_delimiter: str | None = None
@@ -1188,7 +1247,7 @@ class MdChecker:
         filename: Path,
         all_lines: list[str],
         yaml_end_line: int,
-        rules: set,
+        rules: set[str],
         content: str = "",
         *,
         lang: str = "",
@@ -1335,7 +1394,7 @@ class MdChecker:
         self,
         filename: Path,
         all_lines: list[str],
-        rules: set,
+        rules: set[str],
         content: str = "",
         *,
         code_block_info: list | None = None,
@@ -1400,7 +1459,7 @@ class MdChecker:
     # Filename Rules (H001, H002)
     # =========================================================================
 
-    def _check_filename_rules(self, filename: Path, rules: set) -> Generator[str, None, None]:
+    def _check_filename_rules(self, filename: Path, rules: set[str]) -> Generator[str, None, None]:
         """Check filename-related rules."""
         if "H001" in rules and " " in filename.name:
             yield self._format_error("H001", self.RULES["H001"], filename)
@@ -1790,7 +1849,7 @@ class MdChecker:
         content_lines: list[str],
         line_index: int,
         code_block_info: list,
-        rules: set,
+        rules: set[str],
         yaml_end_line: int,
         *,
         lang: str = "",
@@ -2465,7 +2524,7 @@ class MdChecker:
         filename: Path,
         yaml_content: str,
         all_lines: list[str],
-        rules: set,
+        rules: set[str],
         *,
         yaml_data: dict | None = None,
     ) -> Generator[str, None, None]:
@@ -2766,6 +2825,45 @@ class MdChecker:
                 location += f":{col}"
         return f"{location}: {error_code} {message}"
 
+    def _get_file_ignored_rules(self, lines: list[str]) -> set[str]:
+        """Get set of rules that should be ignored for the entire file.
+
+        Args:
+
+        - `lines` (`list[str]`): All lines from the file.
+
+        Returns:
+
+        - `set[str]`: Set of rule codes that should be ignored for the entire file.
+
+        """
+        file_ignored_rules: set[str] = set()
+        for line in lines:
+            for match in self.FILE_IGNORE_PATTERN.finditer(line):
+                file_ignored_rules.update(self._parse_rules_string(match.group(1)))
+        return file_ignored_rules
+
+    def _get_line_ignored_rules(self, lines: list[str]) -> dict[int, set[str]]:
+        """Get rules ignored per line via `<!-- ignore: ... -->` comments.
+
+        Args:
+
+        - `lines` (`list[str]`): All lines from the file.
+
+        Returns:
+
+        - `dict[int, set[str]]`: Mapping of 1-based line number to ignored rule codes.
+
+        """
+        line_ignored_rules: dict[int, set[str]] = {}
+        for line_num, line in enumerate(lines, 1):
+            ignored: set[str] = set()
+            for match in self.IGNORE_PATTERN.finditer(line):
+                ignored.update(self._parse_rules_string(match.group(1)))
+            if ignored:
+                line_ignored_rules[line_num] = ignored
+        return line_ignored_rules
+
     def _get_link_url_ranges(self, line: str) -> set[int]:
         """Return 0-based positions inside link destinations, angle autolinks, and bare URLs.
 
@@ -2846,6 +2944,26 @@ class MdChecker:
         while content.lstrip().startswith(">"):
             content = content.lstrip()[1:].lstrip()
         return content.startswith("--")
+
+    def _is_error_ignored(self, error: str, line_ignored_rules: dict[int, set[str]]) -> bool:
+        """Return `True` if a formatted error is suppressed by an `ignore` comment on its line.
+
+        Args:
+
+        - `error` (`str`): Formatted error message.
+        - `line_ignored_rules` (`dict[int, set[str]]`): Mapping of line number to ignored rules.
+
+        Returns:
+
+        - `bool`: `True` when the error should be dropped.
+
+        """
+        if not line_ignored_rules:
+            return False
+        match = self._ERROR_LOCATION_PATTERN.search(error)
+        if match is None:
+            return False
+        return match.group(2) in line_ignored_rules.get(int(match.group(1)), set())
 
     @staticmethod
     def _is_escaped_table_pipe(line: str, index: int) -> bool:
@@ -2937,6 +3055,67 @@ class MdChecker:
             start = end + 1  # +1 for the | separator
         return False
 
+    def _iter_rule_errors(self, filename: Path, rules: set[str]) -> Generator[str, None, None]:
+        """Generate all errors found during checking, before ignore comments are applied.
+
+        Args:
+
+        - `filename` (`Path`): Path to the Markdown file being checked.
+        - `rules` (`set[str]`): Set of rule codes to apply during checking.
+
+        Yields:
+
+        - `str`: Error message for each found issue.
+
+        """
+        yield from self._check_filename_rules(filename, rules)
+
+        try:
+            content = filename.read_text(encoding="utf-8")
+
+            if "H047" in rules and content.startswith("\ufeff"):
+                yield self._format_error("H047", self.RULES["H047"], filename, line_num=1, col=1)
+
+            all_lines = content.splitlines()
+            yaml_end_line = self._find_yaml_end_line(all_lines)
+            yaml_part, _ = h.md.split_yaml_content(content)
+
+            try:
+                yaml_data = yaml.safe_load(yaml_part.replace("---\n", "").replace("\n---", "")) if yaml_part else None
+                lang = (yaml_data or {}).get("lang") or ""
+            except yaml.YAMLError:
+                yaml_data = None
+                lang = ""
+
+            yield from self._check_yaml_rules(filename, yaml_part, all_lines, rules, yaml_data=yaml_data)
+            content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
+            raw_markdown = isinstance(yaml_data, dict) and h.md.is_raw_markdown_enabled(yaml_data)
+            full_content = content
+            check_lines = all_lines
+            if raw_markdown:
+                content_lines = self._content_lines_through_first_h1(content_lines)
+                yaml_prefix = all_lines[: yaml_end_line - 1] if yaml_end_line > 1 else []
+                check_lines = yaml_prefix + content_lines
+                content = "\n".join(check_lines)
+                if full_content.endswith("\n"):
+                    content += "\n"
+            code_block_info = list(h.md.identify_code_blocks(content_lines))
+            yield from self._check_content_rules(
+                filename,
+                check_lines,
+                yaml_end_line,
+                rules,
+                content,
+                lang=lang,
+                code_block_info=code_block_info,
+                yaml_data=yaml_data,
+                full_content=full_content if raw_markdown else None,
+            )
+            yield from self._check_code_rules(filename, yaml_end_line, rules, code_block_info=code_block_info)
+
+        except (OSError, UnicodeDecodeError) as e:
+            yield self._format_error("H000", f"Exception error: {e}", filename)
+
     @staticmethod
     def _iter_yaml_strings(data: object) -> Generator[str, None, None]:
         """Yield all string values from a parsed YAML structure."""
@@ -2963,6 +3142,21 @@ class MdChecker:
         if end == 0:
             return "", 0
         return stripped[end - 1], end
+
+    @staticmethod
+    def _parse_rules_string(rules_str: str) -> set[str]:
+        """Parse comma-separated rules string into a set.
+
+        Args:
+
+        - `rules_str` (`str`): Comma-separated string of rule codes.
+
+        Returns:
+
+        - `set[str]`: Set of rule codes.
+
+        """
+        return {rule.strip().upper() for rule in rules_str.split(",") if rule.strip()}
 
     def _remove_inline_code(self, line: str) -> str:
         """Remove inline code segments from line, keeping only non-code text."""
@@ -3002,6 +3196,16 @@ def __call__(self, filename: Path | str) -> list[str]
 
 Check Markdown file for compliance with specified rules.
 
+Args:
+
+- `filename` (`Path | str`): Path to the Markdown file to check.
+- `select` (`set[str] | None`): Rule codes to run. Defaults to `None` (all rules).
+- `exclude_rules` (`set[str] | None`): Rule codes to skip. Defaults to `None`.
+
+Returns:
+
+- `list[str]`: Error messages in `{path}:{line}:{col}: {code} {message}` format.
+
 <details>
 <summary>Code:</summary>
 
@@ -3022,6 +3226,15 @@ def __init__(self, project_root: Path | str | None = None) -> None
 
 Initialize the MdChecker with all available rules.
 
+Args:
+
+- `project_root` (`Path | str | None`): Folder used to build relative paths in error
+  messages. Defaults to `None` (nearest Git root, else the current folder).
+
+Returns:
+
+- `None`.
+
 <details>
 <summary>Code:</summary>
 
@@ -3040,6 +3253,16 @@ def check(self, filename: Path | str) -> list[str]
 ```
 
 Check Markdown file for compliance with specified rules.
+
+Args:
+
+- `filename` (`Path | str`): Path to the Markdown file to check.
+- `select` (`set[str] | None`): Rule codes to run. Defaults to `None` (all rules).
+- `exclude_rules` (`set[str] | None`): Rule codes to skip. Defaults to `None`.
+
+Returns:
+
+- `list[str]`: Error messages in `{path}:{line}:{col}: {code} {message}` format.
 
 <details>
 <summary>Code:</summary>
@@ -3062,6 +3285,19 @@ def check_directory(self, directory: Path | str) -> dict[str, list[str]]
 ```
 
 Check all Markdown files in directory for compliance with specified rules.
+
+Args:
+
+- `directory` (`Path | str`): Folder to scan recursively.
+- `select` (`set[str] | None`): Rule codes to run. Defaults to `None` (all rules).
+- `exclude_rules` (`set[str] | None`): Rule codes to skip. Defaults to `None`.
+- `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to skip.
+  Defaults to `None`.
+
+Returns:
+
+- `dict[str, list[str]]`: Mapping of file path to its error messages. Files without
+  errors are omitted.
 
 <details>
 <summary>Code:</summary>
@@ -3092,6 +3328,16 @@ def find_markdown_files(self, directory: Path | str, additional_ignore_patterns:
 ```
 
 Find all Markdown files in directory, ignoring hidden folders.
+
+Args:
+
+- `directory` (`Path | str`): Folder to scan recursively.
+- `additional_ignore_patterns` (`list[str] | None`): Extra path patterns to skip.
+  Defaults to `None`.
+
+Yields:
+
+- `Path`: Path to each `.md` or `.markdown` file found.
 
 <details>
 <summary>Code:</summary>

@@ -53,7 +53,7 @@ Returns:
 
 - `str`: A string where each line represents an action taken on a subfolder (e.g., `Fix subfolder_name`).
 
-Notes:
+Note:
 
 - This function will print exceptions to stdout if there are issues with moving files or deleting folders.
 - Folders will only be removed if they become empty after moving all files.
@@ -161,6 +161,12 @@ Args:
 - `ext` (`str`): The file extension to filter files. For example, `.txt`.
 - `func` (`Callable`): A function that takes a single argument (the file path as a string)
   and performs an operation on the file. It may return a value.
+- `skip_rel_prefixes` (`tuple[tuple[str, ...], ...] | None`): Skip files whose path relative
+  to the resolved root starts with one of these tuples. Defaults to `None`.
+- `skip_name_endswith` (`tuple[str, ...] | None`): Skip files whose name ends with one of
+  these suffixes. Defaults to `None`.
+- `skip_file` (`Callable[[Path], bool] | None`): Skip a candidate file when the callable
+  returns `True`. Defaults to `None`.
 - `show_progress` (`bool`): Show a stderr progress bar when the stream is a TTY.
   Defaults to `True`.
 
@@ -451,17 +457,17 @@ Returns:
 
 - `None`.
 
-Examples:
+Example:
 
 ```python
-import harrix-pylib as h
+import harrix_pylib as h
 
 h.file.clear_directory("C:/temp_dir")
 ```
 
 ```python
 from pathlib import Path
-import harrix-pylib as h
+import harrix_pylib as h
 
 folder = Path(__file__).resolve().parent / "data/temp"
 folder.mkdir(parents=True, exist_ok=True)
@@ -486,15 +492,15 @@ def clear_directory(path: Path | str) -> None:
 ## 🔧 Function `collect_text_files_to_markdown`
 
 ```python
-def collect_text_files_to_markdown(file_paths: Sequence[str | Path], base_folder: str | Path | None = None) -> str
+def collect_text_files_to_markdown(file_paths: Sequence[Path | str], base_folder: Path | str | None = None) -> str
 ```
 
 Create a Markdown document containing the contents of text files.
 
 Args:
 
-- `file_paths` (`Sequence[str | Path]`): File paths (absolute or relative) to text files.
-- `base_folder` (`str | Path | None`, _optional_): A base directory to strip from file paths
+- `file_paths` (`Sequence[Path | str]`): File paths (absolute or relative) to text files.
+- `base_folder` (`Path | str | None`): A base directory to strip from file paths
   in the output. Defaults to `None`.
 
 Returns:
@@ -522,7 +528,7 @@ print(result)
 <summary>Code:</summary>
 
 ```python
-def collect_text_files_to_markdown(file_paths: Sequence[str | Path], base_folder: str | Path | None = None) -> str:
+def collect_text_files_to_markdown(file_paths: Sequence[Path | str], base_folder: Path | str | None = None) -> str:
     base_folder = Path(base_folder).resolve() if base_folder else None
     markdown_parts = []
 
@@ -689,14 +695,14 @@ def extract_zip_archive(filename: Path | str) -> str:
 ## 🔧 Function `find_max_folder_number`
 
 ```python
-def find_max_folder_number(base_path: str, start_pattern: str) -> int
+def find_max_folder_number(base_path: Path | str, start_pattern: str) -> int
 ```
 
 Find the highest folder number in a given folder based on a pattern.
 
 Args:
 
-- `base_path` (`str`): The base folder path to search for folders.
+- `base_path` (`Path | str`): The base folder path to search for folders.
 - `start_pattern` (`str`): A regex pattern for matching folder names.
 
 Returns:
@@ -716,7 +722,7 @@ number = h.file.find_max_folder_number("C:/projects/", "python_project_")
 <summary>Code:</summary>
 
 ```python
-def find_max_folder_number(base_path: str, start_pattern: str) -> int:
+def find_max_folder_number(base_path: Path | str, start_pattern: str) -> int:
     pattern = re.compile(start_pattern + r"(\d+)$")
     max_number = 0
     base_path_obj = Path(base_path)
@@ -2213,11 +2219,11 @@ import harrix_pylib as h
 from pathlib import Path
 
 path1 = Path(".git")
-result1 = h.should_ignore_path(path1)
+result1 = h.file.should_ignore_path(path1)
 print(result1)
 
 path2 = Path("my_folder")
-result2 = h.should_ignore_path(path2)
+result2 = h.file.should_ignore_path(path2)
 print(result2)
 
 path3 = Path("temp")
