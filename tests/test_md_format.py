@@ -1106,3 +1106,60 @@ def test_format_markdown_content_preserves_trailing_space_in_inline_code_before_
     result = _format_markdown(source, end_of_line="lf")
     assert result == source
     assert "` cd ..  `" not in result
+
+
+def test_format_markdown_content_pyssg_body_syntax_parity() -> None:
+    """Round-trip body constructs that harrix-pyssg renders with markdown-it plugins."""
+    source = (
+        "---\n"
+        "title: Parity\n"
+        "lang: en\n"
+        "---\n"
+        "\n"
+        "# Title\n"
+        "\n"
+        "Inline math $x$ and block:\n"
+        "\n"
+        "$$\n"
+        "E = mc^2\n"
+        "$$\n"
+        "\n"
+        "Strikethrough ~~old~~ text and (c) mark -- dash...\n"
+        "\n"
+        "| A | B |\n"
+        "| --- | --- |\n"
+        "| 1 | 2 |\n"
+        "\n"
+        "- [ ] Todo\n"
+        "- [x] Done\n"
+        "\n"
+        "Note with footnote[^1].\n"
+        "\n"
+        "```python\n"
+        "print(1)\n"
+        "```\n"
+        "\n"
+        "[^1]: Footnote body.\n"
+    )
+    once = _format_markdown(source, end_of_line="lf")
+    twice = _format_markdown(once, end_of_line="lf")
+    assert once == twice
+    assert "---\ntitle: Parity\nlang: en\n---" in once
+    assert "$x$" in once
+    assert "$$\nE = mc^2\n$$" in once
+    assert "~~old~~" in once
+    assert "(c)" in once
+    assert "--" in once
+    assert "..." in once
+    assert "©" not in once
+    assert "–" not in once
+    assert "—" not in once
+    assert "…" not in once
+    assert "| A" in once
+    assert "| B" in once
+    assert "- [ ] Todo" in once
+    assert "- [x] Done" in once
+    assert "<input" not in once
+    assert "[^1]" in once
+    assert "[^1]: Footnote body." in once
+    assert "```python\nprint(1)\n```" in once
