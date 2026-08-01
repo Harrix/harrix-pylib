@@ -1036,6 +1036,21 @@ def test_extract_zip_archive() -> None:
         assert "✅ Archive empty_valid.zip extracted and original file deleted" in result
         assert not empty_valid_zip.exists()
 
+        # Test 11: Zip Slip — reject `..` path traversal members
+        zip_slip = temp_path / "zip_slip.zip"
+        with zipfile.ZipFile(zip_slip, "w") as zf:
+            zf.writestr("../evil.txt", "should not be written")
+
+        outside_target = temp_path.parent / "evil.txt"
+        if outside_target.exists():
+            outside_target.unlink()
+
+        result = h.file.extract_zip_archive(zip_slip)
+        assert "❌ Failed to extract" in result
+        assert "illegal path" in result
+        assert zip_slip.exists()  # Archive kept after failed extraction
+        assert not outside_target.exists()
+
 
 def test_remove_empty_folders() -> None:
     """Test the remove_empty_folders function with various scenarios."""

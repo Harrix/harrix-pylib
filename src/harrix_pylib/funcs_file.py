@@ -545,6 +545,7 @@ def extract_zip_archive(filename: Path | str) -> str:
     - Uses built-in zipfile module.
     - Files are extracted directly to the archive's parent directory.
     - The original archive file is deleted after successful extraction.
+    - Members with absolute paths or `..` segments are rejected (Zip Slip).
 
     Example:
 
@@ -555,17 +556,6 @@ def extract_zip_archive(filename: Path | str) -> str:
     ```
 
     """
-
-    def extract_zip_file(file_path: Path, extract_to: Path) -> bool:
-        """Extract ZIP archive using built-in zipfile module."""
-        try:
-            with zipfile.ZipFile(file_path, "r") as zip_ref:
-                zip_ref.extractall(extract_to)
-        except Exception:
-            return False
-        else:
-            return True
-
     filename = Path(filename)
 
     # Validate file existence and type
@@ -581,14 +571,19 @@ def extract_zip_archive(filename: Path | str) -> str:
     # Extract to the same directory where the archive is located
     extract_to = filename.parent
 
-    # Extract ZIP file directly to parent directory
-    if not extract_zip_file(filename, extract_to):
+    try:
+        _safe_extract_zip(filename, extract_to)
+    except zipfile.BadZipFile:
         return f"❌ Failed to extract {filename.name}. Archive might be corrupted or password-protected."
+    except ValueError as e:
+        return f"❌ Failed to extract {filename.name}: {e}"
+    except OSError as e:
+        return f"❌ Failed to extract {filename.name}: {e}"
 
     # Remove original archive file
     try:
         filename.unlink()
-    except Exception as e:
+    except OSError as e:
         return f"⚠️ Archive extracted successfully, but failed to delete original file: {e!s}"
     else:
         return f"✅ Archive {filename.name} extracted and original file deleted."
@@ -2175,6 +2170,24 @@ def _format_author_name(author_text: str) -> str:
     return author_text
 
 
+def _is_safe_zip_member(extract_to: Path, member_name: str) -> bool:
+    """Return whether a ZIP member path stays inside `extract_to` after resolution."""
+    if not member_name or "\x00" in member_name:
+        return False
+    # Normalize separators; reject absolute / drive-relative names early.
+    normalized = member_name.replace("\\", "/")
+    candidate = Path(normalized)
+    if candidate.is_absolute() or normalized.startswith(("/", "\\")) or _DRIVE_RELATIVE_RE.match(normalized):
+        return False
+    if any(part == ".." for part in Path(normalized).parts):
+        return False
+    try:
+        (extract_to / normalized).resolve().relative_to(extract_to.resolve())
+    except ValueError:
+        return False
+    return True
+
+
 def _resolve_unique_rename_path(original_path: Path, new_name: str) -> tuple[Path, str]:
     """Return a non-colliding destination path and final filename."""
     new_path = original_path.parent / new_name
@@ -2186,6 +2199,17 @@ def _resolve_unique_rename_path(original_path: Path, new_name: str) -> tuple[Pat
         new_path = original_path.parent / new_name
         counter += 1
     return new_path, new_name
+
+
+def _safe_extract_zip(file_path: Path, extract_to: Path) -> None:
+    """Extract a ZIP archive while rejecting Zip Slip path traversal members."""
+    extract_root = extract_to.resolve()
+    with zipfile.ZipFile(file_path, "r") as zip_ref:
+        for info in zip_ref.infolist():
+            if not _is_safe_zip_member(extract_root, info.filename):
+                msg = f"illegal path in archive: {info.filename!r}"
+                raise ValueError(msg)
+            zip_ref.extract(info, extract_root)
 
 
 def _transliterate_filename(filename_stem: str) -> str:
@@ -2201,4 +2225,5 @@ def _transliterate_filename(filename_stem: str) -> str:
 
 
 _DD_MM_YYYY_PATTERN = re.compile(r"(?<!\d)(\d{2})\.(\d{2})\.(\d{4})(?!\d)")
+_DRIVE_RELATIVE_RE = re.compile(r"^[A-Za-z]:")
 _YYYY_MM_DD_PATTERN = re.compile(r"(?<!\d)(\d{4})\.(\d{2})\.(\d{2})(?!\d)")

@@ -328,18 +328,20 @@ def get_project_root() -> Path:
 ## 🔧 Function `run_command`
 
 ```python
-def run_command(command: str) -> str
+def run_command(command: str | list[str]) -> str
 ```
 
 Run a console command and return its output.
 
-This function executes a console command using the system's default shell
-and returns the combined output (stdout + stderr).
+By default the command runs without a shell (`is_shell=False`). Pass a
+`list[str]` argv when possible. Use `is_shell=True` only for trusted
+command strings that need shell features (`&&`, redirection, builtins).
 
 Args:
 
-- `command` (`str`): The command to execute.
-- `is_shell` (`bool`): Whether to run the command through the shell. Defaults to `True`.
+- `command` (`str | list[str]`): Executable argv list, or a shell command string
+  when `is_shell=True`.
+- `is_shell` (`bool`): Whether to run through the shell. Defaults to `False`.
 - `cwd` (`str | None`): Working directory for the command. Defaults to `None`.
 - `env` (`dict[str, str] | None`): Environment variables. Defaults to `None`.
 - `timeout` (`float | None`): Timeout in seconds. Defaults to `None`.
@@ -348,18 +350,22 @@ Returns:
 
 - `str`: Combined output and error messages from the command execution.
 
+Note:
+
+- Never pass untrusted input with `is_shell=True` (command injection risk).
+
 Example:
 
 ```python
 import harrix_pylib as h
 
-result = h.dev.run_command("python --version")
+result = h.dev.run_command(["python", "--version"])
 print(result)
 
-result = h.dev.run_command("python --version && pip --version")
+result = h.dev.run_command("python --version && pip --version", is_shell=True)
 print(result)
 
-result = h.dev.run_command("ping google.com", timeout=5)
+result = h.dev.run_command(["ping", "google.com"], timeout=5)
 print(result)
 ```
 
@@ -368,13 +374,21 @@ print(result)
 
 ```python
 def run_command(
-    command: str,
+    command: str | list[str],
     *,
-    is_shell: bool = True,
+    is_shell: bool = False,
     cwd: str | None = None,
     env: dict[str, str] | None = None,
     timeout: float | None = None,
 ) -> str:
+    if isinstance(command, str) and not is_shell and " " in command.strip():
+        # A spaced string without shell looks for an executable of that full name.
+        # Prefer list argv, or pass is_shell=True for trusted shell strings.
+        return (
+            "Error executing command: spaced string requires is_shell=True "
+            "or a list[str] argv (shell is disabled by default)"
+        )
+
     try:
         process = subprocess.run(
             command,
@@ -394,7 +408,7 @@ def run_command(
 
     except subprocess.TimeoutExpired:
         return f"Command timed out after {timeout} seconds"
-    except Exception as e:
+    except (OSError, ValueError) as e:
         return f"Error executing command: {e!s}"
 ```
 
@@ -478,6 +492,7 @@ Execute a PowerShell script with administrator privileges and captures the outpu
 Args:
 
 - `commands` (`str`): A string containing the PowerShell commands to execute.
+  Must be fully trusted: the script runs elevated via UAC.
 
 Returns:
 
@@ -485,6 +500,7 @@ Returns:
 
 Note:
 
+- Trusted input only. Never pass untrusted or user-controlled command text.
 - This function creates temporary files to store the script and its output, which are deleted after execution.
 - Multiline scripts are written to a `.ps1` file as-is (not joined with `;`), so block syntax is preserved.
 - The launcher uses `Start-Process -Verb RunAs -Wait` so execution finishes before the output file is read.

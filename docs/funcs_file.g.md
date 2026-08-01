@@ -637,6 +637,7 @@ Note:
 - Uses built-in zipfile module.
 - Files are extracted directly to the archive's parent directory.
 - The original archive file is deleted after successful extraction.
+- Members with absolute paths or `..` segments are rejected (Zip Slip).
 
 Example:
 
@@ -651,17 +652,6 @@ result = h.file.extract_zip_archive("C:/Downloads/archive.zip")
 
 ```python
 def extract_zip_archive(filename: Path | str) -> str:
-
-    def extract_zip_file(file_path: Path, extract_to: Path) -> bool:
-        """Extract ZIP archive using built-in zipfile module."""
-        try:
-            with zipfile.ZipFile(file_path, "r") as zip_ref:
-                zip_ref.extractall(extract_to)
-        except Exception:
-            return False
-        else:
-            return True
-
     filename = Path(filename)
 
     # Validate file existence and type
@@ -677,14 +667,19 @@ def extract_zip_archive(filename: Path | str) -> str:
     # Extract to the same directory where the archive is located
     extract_to = filename.parent
 
-    # Extract ZIP file directly to parent directory
-    if not extract_zip_file(filename, extract_to):
+    try:
+        _safe_extract_zip(filename, extract_to)
+    except zipfile.BadZipFile:
         return f"❌ Failed to extract {filename.name}. Archive might be corrupted or password-protected."
+    except ValueError as e:
+        return f"❌ Failed to extract {filename.name}: {e}"
+    except OSError as e:
+        return f"❌ Failed to extract {filename.name}: {e}"
 
     # Remove original archive file
     try:
         filename.unlink()
-    except Exception as e:
+    except OSError as e:
         return f"⚠️ Archive extracted successfully, but failed to delete original file: {e!s}"
     else:
         return f"✅ Archive {filename.name} extracted and original file deleted."

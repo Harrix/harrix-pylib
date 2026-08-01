@@ -2773,3 +2773,11 @@ def test_md_checker() -> None:
         assert "H060" in checker.all_rules
         assert "H033" in checker.all_rules
         assert checker.all_rules == set(checker.RULES.keys())
+
+        # =====================================================================
+        # H000: Unreadable / missing file must surface an error (not silent)
+        # =====================================================================
+        missing_file = temp_path / "missing_unreadable.md"
+        errors = checker.check(missing_file)
+        assert any("H000" in error for error in errors)
+        assert any("Exception error" in error for error in errors)

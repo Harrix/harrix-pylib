@@ -849,8 +849,9 @@ class MdChecker:
         """
         try:
             lines = filename.read_text(encoding="utf-8").splitlines()
-        except (OSError, UnicodeDecodeError):
-            lines = []
+        except (OSError, UnicodeDecodeError) as e:
+            yield self._format_error("H000", f"Exception error: {e}", filename)
+            return
         rules_to_check = rules - self._get_file_ignored_rules(lines)
         line_ignored_rules = self._get_line_ignored_rules(lines)
         for error in self._iter_rule_errors(filename, rules_to_check):

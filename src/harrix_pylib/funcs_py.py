@@ -1434,7 +1434,7 @@ def _open_project_in_editor(project_path: Path, file_path: Path, editor: str) ->
     editor_env = os.environ.copy()
     editor_env.pop("VIRTUAL_ENV", None)
     editor_command = f'{editor} --new-window "{project_path.resolve()}" "{file_path.resolve()}"'
-    return h.dev.run_command(editor_command, env=editor_env)
+    return h.dev.run_command(editor_command, is_shell=True, env=editor_env)
 
 
 def _should_document_name(name: str, *, include_private: bool) -> bool:

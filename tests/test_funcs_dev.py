@@ -189,9 +189,16 @@ def test_run_command() -> None:
         test_command = "echo 'Hello, World!'"
         expected_output = "Hello, World!"
 
-    output = h.dev.run_command(test_command)
+    # Shell builtins like `echo` need is_shell=True; default is shell=False.
+    output = h.dev.run_command(test_command, is_shell=True)
 
     assert output.strip() == expected_output.strip()
+
+    argv_output = h.dev.run_command(["python", "--version"])
+    assert "Python" in argv_output
+
+    spaced_without_shell = h.dev.run_command("python --version")
+    assert "is_shell=True" in spaced_without_shell or "list[str]" in spaced_without_shell
 
 
 @pytest.mark.skipif(
