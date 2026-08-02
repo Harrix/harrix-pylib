@@ -2817,14 +2817,19 @@ class MdChecker:
             index = run_end
 
     def _format_error(self, error_code: str, message: str, filename: Path, *, line_num: int = 0, col: int = 0) -> str:
-        """Format error message in ruff style."""
+        """Format error as a clickable location line plus an indented message line.
+
+        First line stays `{path}:{line}:{col}: {code}` so editors can jump to the file.
+        The message is on the next line so long paths inside the text do not bury the location.
+
+        """
         relative_path = self._get_relative_path(filename)
         location = relative_path
         if line_num > 0:
             location += f":{line_num}"
             if col > 0:
                 location += f":{col}"
-        return f"{location}: {error_code} {message}"
+        return f"{location}: {error_code}\n  {message}"
 
     def _get_file_ignored_rules(self, lines: list[str]) -> set[str]:
         """Get set of rules that should be ignored for the entire file.

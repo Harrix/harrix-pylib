@@ -53,13 +53,15 @@ class ProgressBar:
             self._write_line(0)
 
     def finish(self) -> None:
-        """Draw 100% and end with a newline so following stdout output is clean."""
+        """Draw 100%, clear the in-place line, then end with a newline."""
         if not self.enabled:
             return
         self.done = self.total
         self._write_line(self.total)
         try:
-            self.stream.write("\n")
+            # Clear any leftover characters from longer previous draws before leaving the row.
+            clear_width = max(self._last_len, len(render_progress(self.total, self.total, width=self.width)))
+            self.stream.write("\r" + (" " * clear_width) + "\r\n")
             self.stream.flush()
         except OSError:
             return

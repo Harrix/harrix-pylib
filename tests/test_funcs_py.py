@@ -766,7 +766,11 @@ def test_remap_markdown_docs_error_uses_python_location() -> None:
     ]
     error = 'temp/mod.g.md:2:3: H006 Incorrect word form used: "markdown" should be "Markdown"'
     remapped = remap_markdown_docs_error(error, line_map)
-    assert remapped == (f'{py_path}:10:7: H006 Incorrect word form used: "markdown" should be "Markdown"')
+    assert remapped == (f'{py_path}:10:7: H006\n  Incorrect word form used: "markdown" should be "Markdown"')
+
+    multiline = 'temp/mod.g.md:2:3: H006\n  Incorrect word form used: "markdown" should be "Markdown"'
+    remapped_multiline = remap_markdown_docs_error(multiline, line_map)
+    assert remapped_multiline == remapped
 
 
 def test_check_python_docstring_markdown_errors_reports_py_paths() -> None:

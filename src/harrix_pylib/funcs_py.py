@@ -19,7 +19,8 @@ import harrix_pylib as h
 from harrix_pylib.md_format.front_matter import _prepend_markdown_header
 from harrix_pylib.py_docstring_format import PyDocstringFormatter as PyDocstringFormatter  # noqa: PLC0414
 
-_MD_DOCS_CODE_RE = re.compile(r": ([A-Z]+\d+) (.*)$")
+# Single-line (`: CODE message`) or multi-line (`: CODE\n  message`) checker errors.
+_MD_DOCS_CODE_RE = re.compile(r"^(?P<location>.*?): (?P<code>[A-Z]+\d+)(?:\n  | )(?P<message>.*)$", re.DOTALL)
 _MIN_ERROR_LOCATION_PARTS = 2
 _ERROR_LOCATION_WITH_COLUMN_PARTS = 3
 
@@ -998,13 +999,13 @@ def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) 
     ```
 
     """
-    match = _MD_DOCS_CODE_RE.search(error)
+    match = _MD_DOCS_CODE_RE.fullmatch(error.strip("\n"))
     if match is None:
         return error
 
-    code = match.group(1)
-    message = match.group(2)
-    location = error[: match.start()]
+    code = match.group("code")
+    message = match.group("message")
+    location = match.group("location")
     parts = location.split(":")
     if len(parts) < _MIN_ERROR_LOCATION_PARTS:
         return error
@@ -1028,7 +1029,7 @@ def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) 
         return error
 
     py_col = max(1, loc.col + md_col - 1)
-    return f"{loc.path}:{loc.line}:{py_col}: {code} {message}"
+    return f"{loc.path}:{loc.line}:{py_col}: {code}\n  {message}"
 
 
 def sort_py_code(filename: Path | str, *, is_use_ruff_format: bool = True) -> str:

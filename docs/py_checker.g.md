@@ -418,7 +418,7 @@ class PyChecker:
         return match.start() + 1 if match else 1
 
     def _format_error(self, error_code: str, message: str, filename: Path, *, line_num: int = 0, col: int = 0) -> str:
-        """Format error message in ruff style.
+        """Format error as a clickable location line plus an indented message line.
 
         Args:
 
@@ -430,7 +430,8 @@ class PyChecker:
 
         Returns:
 
-        - `str`: Formatted error message in ruff style.
+        - `str`: Formatted error with `{path}:{line}:{col}: {code}` on the first line
+          and the message (plus optional ignore hint) on the next indented line.
 
         """
         relative_path = self._get_relative_path(filename)
@@ -442,7 +443,7 @@ class PyChecker:
                 location += f":{col}"
 
         hint = f" [to ignore: # ignore: {error_code}]" if error_code in self.RULES else ""
-        return f"{location}: {error_code} {message}{hint}"
+        return f"{location}: {error_code}\n  {message}{hint}"
 
     def _get_file_ignored_rules(self, lines: list[str]) -> set[str]:
         """Get set of rules that should be ignored for the entire file.

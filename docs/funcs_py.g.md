@@ -1121,13 +1121,13 @@ print(h.py.remap_markdown_docs_error("progress.g.md:10:1: H021 Message", line_ma
 
 ```python
 def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) -> str:
-    match = _MD_DOCS_CODE_RE.search(error)
+    match = _MD_DOCS_CODE_RE.fullmatch(error.strip("\n"))
     if match is None:
         return error
 
-    code = match.group(1)
-    message = match.group(2)
-    location = error[: match.start()]
+    code = match.group("code")
+    message = match.group("message")
+    location = match.group("location")
     parts = location.split(":")
     if len(parts) < _MIN_ERROR_LOCATION_PARTS:
         return error
@@ -1151,7 +1151,7 @@ def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) 
         return error
 
     py_col = max(1, loc.col + md_col - 1)
-    return f"{loc.path}:{loc.line}:{py_col}: {code} {message}"
+    return f"{loc.path}:{loc.line}:{py_col}: {code}\n  {message}"
 ```
 
 </details>
