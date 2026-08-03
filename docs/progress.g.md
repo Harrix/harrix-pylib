@@ -68,15 +68,20 @@ class ProgressBar:
             self._write_line(0)
 
     def finish(self) -> None:
-        """Draw 100%, clear the in-place line, then end with a newline."""
+        """Draw a final 100% line and leave it visible on its own row."""
         if not self.enabled:
             return
         self.done = self.total
+        try:
+            # Clear leftovers from a longer previous in-place draw, then print 100% permanently.
+            clear_width = max(self._last_len, len(render_progress(self.total, self.total, width=self.width)))
+            self.stream.write("\r" + (" " * clear_width) + "\r")
+            self.stream.flush()
+        except OSError:
+            return
         self._write_line(self.total)
         try:
-            # Clear any leftover characters from longer previous draws before leaving the row.
-            clear_width = max(self._last_len, len(render_progress(self.total, self.total, width=self.width)))
-            self.stream.write("\r" + (" " * clear_width) + "\r\n")
+            self.stream.write("\n")
             self.stream.flush()
         except OSError:
             return
@@ -185,7 +190,7 @@ def __init__(
 def finish(self) -> None
 ```
 
-Draw 100%, clear the in-place line, then end with a newline.
+Draw a final 100% line and leave it visible on its own row.
 
 <details>
 <summary>Code:</summary>
@@ -195,11 +200,16 @@ def finish(self) -> None:
         if not self.enabled:
             return
         self.done = self.total
+        try:
+            # Clear leftovers from a longer previous in-place draw, then print 100% permanently.
+            clear_width = max(self._last_len, len(render_progress(self.total, self.total, width=self.width)))
+            self.stream.write("\r" + (" " * clear_width) + "\r")
+            self.stream.flush()
+        except OSError:
+            return
         self._write_line(self.total)
         try:
-            # Clear any leftover characters from longer previous draws before leaving the row.
-            clear_width = max(self._last_len, len(render_progress(self.total, self.total, width=self.width)))
-            self.stream.write("\r" + (" " * clear_width) + "\r\n")
+            self.stream.write("\n")
             self.stream.flush()
         except OSError:
             return

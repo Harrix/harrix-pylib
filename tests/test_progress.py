@@ -29,6 +29,7 @@ def test_progress_bar_writes_to_stream() -> None:
     text = stream.getvalue()
     assert "1/4" in text
     assert "4/4 (100%)" in text
+    assert text.rstrip("\n").endswith("4/4 (100%)")
     assert text.endswith("\n")
 
 
