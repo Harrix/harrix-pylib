@@ -431,6 +431,15 @@ def test_md_checker() -> None:
         errors = checker.check(colon_code_file, select={"H013"})
         assert not errors
 
+        # Hidden Markdown comment before code should not trigger H013 or H018
+        hidden_comment_before_code_file = temp_path / "hidden_comment_before_code.md"
+        hidden_comment_before_code_file.write_text(
+            '---\nlang: ru\n---\n\n[//]: # "Это тоже комментарий"\n\n```python\nprint("hello")\n```\n',
+            encoding="utf-8",
+        )
+        errors = checker.check(hidden_comment_before_code_file, select={"H013", "H018"})
+        assert not errors
+
         # Admonition before code block should not trigger H013
         admonition_code_file = temp_path / "admonition_code.md"
         admonition_code_file.write_text(

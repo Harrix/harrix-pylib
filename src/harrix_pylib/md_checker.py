@@ -186,6 +186,11 @@ class MdChecker:
     # Complete Markdown image (inline or reference) for H025
     _IMAGE_MARKDOWN_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[[^\]]*\](?:\([^)]*\)|\[[^\]]*\])")
 
+    # Hidden Markdown comment convention: `[//]: # "Comment"` (a link reference definition)
+    _HIDDEN_COMMENT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
+        r"""^\s*\[//\]:\s*#(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*$"""
+    )
+
     # One H025-allowed unit: linked image `[![…](…)](…)` or bare `![…](…)` / `![…][ref]`
     _H025_IMAGE_UNIT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
         r"\[!\[[^\]]*\](?:\([^)]*\)|\[[^\]]*\])\]\([^)]+\)|!\[[^\]]*\](?:\([^)]*\)|\[[^\]]*\])"
@@ -1846,6 +1851,9 @@ class MdChecker:
         display_math_lines: frozenset[int],
     ) -> Generator[str, None, None]:
         """Check rules that apply only to non-code lines (Markdown content, not YAML/code)."""
+        if self._HIDDEN_COMMENT_PATTERN.fullmatch(line):
+            return
+
         # Remove inline code, URLs, and identifier-like link labels before text checks
         clean_line = self._remove_inline_code(line)
         clean_line = re.sub(r"\]\([^)]*\)", "]()", clean_line)
