@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 class MdChecker:
-    """Class for checking Markdown files for compliance with specified rules.
+    r"""Class for checking Markdown files for compliance with specified rules.
 
     Rules:
 
@@ -39,7 +39,8 @@ class MdChecker:
     - **H014** - Missing colon before image.
     - **H015** - Space before punctuation mark (text emoticons like `:)` / `;)` and GFM
       table alignment colons like `| :---: |` are allowed).
-    - **H016** - Incorrect dash/hyphen usage.
+    - **H016** - Incorrect dash/hyphen usage (em dash before a trailing Markdown
+      hard line break `\\` is allowed, e.g. poetic line endings).
     - **H017** - Three dots instead of ellipsis character.
     - **H018** - Curly/straight quotes instead of angle quotes.
     - **H019** - HTML tags in Markdown content.
@@ -1288,9 +1289,13 @@ class MdChecker:
     def _check_dash_usage(
         self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
-        """Check for incorrect dash/hyphen usage (H016). Applies only to Markdown text, not YAML/code.
+        r"""Check for incorrect dash/hyphen usage (H016). Applies only to Markdown text, not YAML/code.
 
-        Exception: `--` at the start of blockquote attribution lines (e.g. `> -- Author`).
+        Exceptions:
+
+        - `--` at the start of blockquote attribution lines (e.g. `> -- Author`).
+        - Em dash with a space before it and a trailing Markdown hard line break
+          (` —\`), typical for poetic / quoted line endings.
 
         """
         # Single pass over segments: check for " - ", " − " (Unicode minus), and " -- "  # noqa: RUF003
@@ -1346,12 +1351,12 @@ class MdChecker:
                 if in_protected(pos):
                     continue
                 before = line[pos - 1] if pos > 0 else " "
-                after = line[pos + 1] if pos + 1 < len(line) else " "
+                after_ok = self._is_em_dash_after_ok(line, pos)
                 if pos == 0:
-                    if after != " ":
+                    if not after_ok:
                         error_msg = f'{self.RULES["H016"]}: em dash "—" at start should be followed by space'
                         yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
-                elif not (before == " " and after == " "):
+                elif not (before == " " and after_ok):
                     error_msg = f'{self.RULES["H016"]}: em dash "—" should have spaces around it'
                     yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
 
@@ -2947,6 +2952,21 @@ class MdChecker:
         while content.lstrip().startswith(">"):
             content = content.lstrip()[1:].lstrip()
         return content.startswith("--")
+
+    @staticmethod
+    def _is_em_dash_after_ok(line: str, pos: int) -> bool:
+        r"""Return `True` if the character after an em dash is an allowed follower.
+
+        Allowed: a space, end of line, or a trailing Markdown hard line break (`\`).
+
+        """
+        if pos + 1 >= len(line):
+            return True
+        after = line[pos + 1]
+        if after == " ":
+            return True
+        # Poetic / quoted line ending: ` —\` (backslash hard break is last char)
+        return after == "\\" and pos + 2 == len(line)
 
     def _is_error_ignored(self, error: str, line_ignored_rules: dict[int, set[str]]) -> bool:
         """Return `True` if a formatted error is suppressed by an `ignore` comment on its line.

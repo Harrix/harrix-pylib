@@ -907,6 +907,25 @@ def test_md_checker() -> None:
         errors = checker.check(minus_sign_file, select={"H016"})
         assert any("H016" in e for e in errors)
 
+        # Em dash before trailing hard line break should not trigger H016
+        emdash_hard_break_file = temp_path / "emdash_hard_break.md"
+        emdash_hard_break_file.write_text(
+            "---\nlang: ru\n---\n\n"
+            "> Владыка наш! Разрушь богатства их,\\\n"
+            "> Ожесточи их сердце, —\\\n"
+            "> Чтоб не уверовать им (в Бога) до тех пор,\\\n"
+            "> Пока мучительную кару не познают.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(emdash_hard_break_file, select={"H016"})
+        assert not errors, "H016 must allow em dash before trailing Markdown hard break"
+
+        # Em dash glued to a word (not a hard break) should still trigger H016
+        emdash_glued_file = temp_path / "emdash_glued.md"
+        emdash_glued_file.write_text("---\nlang: ru\n---\n\nСлово—слово без пробелов.\n", encoding="utf-8")
+        errors = checker.check(emdash_glued_file, select={"H016"})
+        assert any("H016" in e for e in errors)
+
         # =====================================================================
         # H017: Three dots instead of ellipsis character
         # =====================================================================
