@@ -774,6 +774,9 @@ Note:
 - Files with `raw-markdown: true` keep body after the first ATX H1 inside a
   fenced code block in the combined `.g.md`; the flag itself is not merged
   into the combined YAML.
+- Per-note UI metadata such as `icon` is not merged into the combined YAML
+  (along with `date`, `update`, `permalink`, `related-id`, `sort-section`,
+  and `raw-markdown`).
 - Heading levels in the content will be increased by one level.
 - Local links and image paths will be adjusted to maintain proper references.
 - The combined file will be named `_foldername.g.md`.
@@ -950,17 +953,8 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
     if all_attributions:
         combined_yaml["attribution"] = all_attributions
 
-    # Fix final YAML
-    list_keys = [
-        "related-id",
-        "date",
-        "update",
-        "permalink",
-        "permalink-source",
-        "sort-section",
-        _RAW_MARKDOWN_YAML_KEY,
-    ]
-    for key in list_keys:
+    # Fix final YAML (drop per-file / UI-only keys from combined .g.md)
+    for key in _YAML_KEYS_EXCLUDED_FROM_G_MD:
         combined_yaml.pop(key, None)
     if "lang" in combined_yaml and isinstance(combined_yaml["lang"], list):
         combined_yaml["lang"] = "en" if "en" in combined_yaml["lang"] else combined_yaml["lang"][0]
@@ -2487,6 +2481,7 @@ Note:
 - Book entries are identified by second-level headings (## Title)
 - Ratings are extracted from headings in format "## Title: N" where N is a number
 - YAML frontmatter from the first processed file will be copied to the summary files
+  (except per-note UI metadata such as `icon`)
 
 Example:
 
@@ -2547,7 +2542,7 @@ def generate_summaries(folder: Path | str) -> str:
         # If we haven't extracted the YAML frontmatter yet, extract it from this file
         if not yaml_frontmatter and "---" in content:
             yaml_end = content.find("---", content.find("---") + 3) + 3
-            yaml_frontmatter = content[:yaml_end]
+            yaml_frontmatter = _strip_yaml_keys_for_g_md(content[:yaml_end], keys=("icon",))
 
         content = remove_yaml_and_code_content(content)
 

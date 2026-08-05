@@ -622,6 +622,26 @@ def test_combine_markdown_files_raw_markdown_fences_body_and_strips_flag() -> No
         assert "Plain text." in content
 
 
+def test_combine_markdown_files_strips_icon_from_yaml() -> None:
+    with TemporaryDirectory() as temp_dir:
+        folder_path = Path(temp_dir)
+        (folder_path / "note.md").write_text(
+            "---\nlang: en\nicon: 📚\ntags:\n  - books\n---\n\n# Note\n\nText.\n",
+            encoding="utf-8",
+        )
+
+        result = h.md.combine_markdown_files(folder_path)
+        assert "✅ File" in result
+
+        content = (folder_path / f"_{folder_path.name}.g.md").read_text(encoding="utf-8")
+        assert "icon:" not in content
+        assert "📚" not in content
+        assert "lang: en" in content
+        assert "tags:" in content
+        assert "books" in content
+        assert "## Note" in content
+
+
 def test_raw_markdown_skips_beautify_content_transforms() -> None:
     source = (
         "---\nlang: en\nraw-markdown: true\nsort-section: true\n---\n\n"
@@ -1177,6 +1197,7 @@ def test_generate_summaries() -> None:
         yaml_content = """---
 author: Test Author
 date: 2024-06-15
+icon: 📚
 ---
 
 # Books 2023
@@ -1260,11 +1281,15 @@ A long book about a whale.
         assert "| 2022 | 2 |" in table_content  # 2 valid entries (excluding "Contents")
         assert "| 2021 | 3 |" in table_content  # 3 valid entries
 
-        # Verify the YAML frontmatter was copied
+        # Verify the YAML frontmatter was copied (without icon)
         assert "author: Test Author" in table_content
         assert "date: 2024-06-15" in table_content
+        assert "icon:" not in table_content
+        assert "📚" not in table_content
         assert "author: Test Author" in short_content
         assert "date: 2024-06-15" in short_content
+        assert "icon:" not in short_content
+        assert "📚" not in short_content
 
         # Verify the short summary content
         assert f"# {temp_path.name}: short" in short_content
