@@ -21,7 +21,7 @@ lang: en
 ## 🔧 Function `optimize_image_with_tools`
 
 ```python
-def optimize_image_with_tools(filename: Path | str, output_filename: Path | str) -> str
+def optimize_image_with_tools(filename: Path | str, output_filename: Path | str, *, project_root: Path | str, quality: bool = False, max_size: int | None = None) -> str
 ```
 
 Optimize GIF, MP4, or AVIF using ffmpeg, avifenc, and avifdec.
@@ -111,7 +111,7 @@ def optimize_svg(filename: Path | str, output_filename: Path | str | None = None
 ## 🔧 Function `optimize_svg_content`
 
 ```python
-def optimize_svg_content(svg_text: str) -> str
+def optimize_svg_content(svg_text: str, *, multipass: bool = True) -> str
 ```
 
 Optimize SVG markup to a compact form similar to SVGO preset-default.

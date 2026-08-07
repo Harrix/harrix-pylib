@@ -993,6 +993,94 @@ def test_should_ignore_path() -> None:
         assert h.file.should_ignore_path(Path(".hidden") / "file.md")
 
 
+def test_generate_md_docs_content_signature_and_decorators() -> None:
+    content = '''
+def kwonly(a: int, *, width: int = 40, enabled: bool | None = None) -> str:
+    """Keyword-only parameters."""
+    return ""
+
+def posonly(a: int = 0, b: int = 1, /, c: int = 2) -> int:
+    """Positional-only parameters."""
+    return a + b + c
+
+async def fetch_item(item_id: int) -> str:
+    """Async module function."""
+    return str(item_id)
+
+class Demo:
+    """Demo class with nested API."""
+
+    @classmethod
+    def create(cls) -> "Demo":
+        """Class factory."""
+        return cls()
+
+    @staticmethod
+    def helper() -> int:
+        """Static helper."""
+        return 1
+
+    @property
+    def value(self) -> int:
+        """Property getter."""
+        return 0
+
+    @value.setter
+    def value(self, raw: int) -> None:
+        """Property setter."""
+        return None
+
+    async def load(self) -> None:
+        """Async method."""
+        return None
+
+    class Nested:
+        """Nested public class."""
+
+        def run(self) -> None:
+            """Nested method."""
+            return None
+'''
+
+    with TemporaryDirectory() as temp_folder:
+        test_file = Path(temp_folder) / "signatures.py"
+        test_file.write_text(content, encoding="utf8")
+        md_content = h.py.generate_md_docs_content(str(test_file))
+
+    assert "def kwonly(a: int, *, width: int = 40, enabled: bool | None = None) -> str" in md_content
+    assert "def posonly(a: int = 0, b: int = 1, /, c: int = 2) -> int" in md_content
+    assert "## 🔧 Function `fetch_item`" in md_content
+    assert "async def fetch_item(item_id: int) -> str" in md_content
+    assert "### ⚙️ Method `create (classmethod)`" in md_content
+    assert "### ⚙️ Method `helper (staticmethod)`" in md_content
+    assert "### ⚙️ Method `value (property)`" in md_content
+    assert "### ⚙️ Method `value (setter)`" in md_content
+    assert "### ⚙️ Method `load`" in md_content
+    assert "async def load(self) -> None" in md_content
+    assert "### 🏛️ Class `Demo.Nested`" in md_content
+    assert "#### ⚙️ Method `run`" in md_content
+
+
+def test_extract_functions_and_classes_includes_async() -> None:
+    content = '''
+async def fetch_item(item_id: int) -> str:
+    """Async module function."""
+    return str(item_id)
+
+def sync_item() -> None:
+    """Sync module function."""
+    pass
+'''
+
+    with TemporaryDirectory() as temp_folder:
+        test_file = Path(temp_folder) / "async_api.py"
+        test_file.write_text(content, encoding="utf8")
+        table = h.py.extract_functions_and_classes(str(test_file))
+
+    assert "`fetch_item`" in table
+    assert "`sync_item`" in table
+
+
 def test_sort_py_code() -> None:
     current_folder = h.dev.get_project_root()
     py = Path(current_folder / "tests/data/sort_py_code__before.txt").read_text(encoding="utf8")

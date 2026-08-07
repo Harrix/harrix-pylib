@@ -424,7 +424,9 @@ def extract_functions_and_classes(
 
     # Traverse the AST to collect function and class definitions
     for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and _should_document_name(node.name, include_private=include_private):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _should_document_name(
+            node.name, include_private=include_private
+        ):
             functions.append(node)
         elif isinstance(node, ast.ClassDef) and _should_document_name(node.name, include_private=include_private):
             classes.append(node)
@@ -758,37 +760,6 @@ def generate_md_docs_content_with_source_map(
             locs.append(DocsSourceLoc(file_path, py_line, max(1, idx + 1)))
         return locs
 
-    def get_function_signature(node: ast.FunctionDef) -> str:
-        args = []
-        defaults = [None] * (len(node.args.args) - len(node.args.defaults)) + node.args.defaults
-
-        for arg, default in zip(node.args.args, defaults, strict=False):
-            arg_str = arg.arg
-            if arg.annotation:
-                arg_str += f": {ast.unparse(arg.annotation)}"
-            if default:
-                arg_str += f" = {ast.unparse(default)}"
-            args.append(arg_str)
-
-        if node.args.vararg:
-            arg_str = f"*{node.args.vararg.arg}"
-            if node.args.vararg.annotation:
-                arg_str += f": {ast.unparse(node.args.vararg.annotation)}"
-            args.append(arg_str)
-
-        if node.args.kwarg:
-            arg_str = f"**{node.args.kwarg.arg}"
-            if node.args.kwarg.annotation:
-                arg_str += f": {ast.unparse(node.args.kwarg.annotation)}"
-            args.append(arg_str)
-
-        args_str = ", ".join(args)
-        args_str = args_str.replace("'", '"')
-        signature = f"def {node.name}({args_str})"
-        if node.returns:
-            signature += f" -> {ast.unparse(node.returns)}"
-        return signature
-
     def get_class_signature(node: ast.ClassDef) -> str:
         bases = [ast.unparse(base) for base in node.bases]
         bases_str = ", ".join(bases)
@@ -858,7 +829,7 @@ def generate_md_docs_content_with_source_map(
     def emit_callable_docs(
         heading: str,
         signature: str,
-        node: ast.FunctionDef | ast.ClassDef,
+        node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
         docstring: str | None,
     ) -> None:
         loc = entity_loc(node)
@@ -874,6 +845,36 @@ def generate_md_docs_content_with_source_map(
         emit_structural("</details>", loc)
         emit_blank(loc)
 
+    def emit_class_docs(class_node: ast.ClassDef, heading_level: int, qualified_name: str) -> None:
+        class_hashes = "#" * heading_level
+        emit_callable_docs(
+            f"{class_hashes} 🏛️ Class `{qualified_name}`",
+            get_class_signature(class_node),
+            class_node,
+            ast.get_docstring(class_node),
+        )
+        method_hashes = "#" * (heading_level + 1)
+        seen_method_headings: dict[str, int] = {}
+        for body_node in class_node.body:
+            if isinstance(body_node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _should_document_name(
+                body_node.name, include_private=include_private
+            ):
+                method_suffix = _method_heading_suffix(body_node)
+                base_heading = f"{body_node.name}{method_suffix}"
+                occurrence = seen_method_headings.get(base_heading, 0) + 1
+                seen_method_headings[base_heading] = occurrence
+                heading_name = base_heading if occurrence == 1 else f"{base_heading} ({occurrence})"
+                emit_callable_docs(
+                    f"{method_hashes} ⚙️ Method `{heading_name}`",
+                    _get_function_signature(body_node),
+                    body_node,
+                    ast.get_docstring(body_node),
+                )
+            elif isinstance(body_node, ast.ClassDef) and _should_document_name(
+                body_node.name, include_private=include_private
+            ):
+                emit_class_docs(body_node, heading_level + 1, f"{qualified_name}.{body_node.name}")
+
     file_loc = DocsSourceLoc(file_path, 1, 1)
     emit_structural(f"# 📄 File `{file_path.name}`", file_loc)
     emit_blank(file_loc)
@@ -882,32 +883,13 @@ def generate_md_docs_content_with_source_map(
         if isinstance(node, ast.ClassDef):
             if not _should_document_name(node.name, include_private=include_private):
                 continue
-            emit_callable_docs(
-                f"## 🏛️ Class `{node.name}`",
-                get_class_signature(node),
-                node,
-                ast.get_docstring(node),
-            )
-            seen_method_headings: dict[str, int] = {}
-            for class_node in node.body:
-                if isinstance(class_node, ast.FunctionDef) and _should_document_name(
-                    class_node.name, include_private=include_private
-                ):
-                    method_suffix = _property_accessor_suffix(class_node)
-                    base_heading = f"{class_node.name}{method_suffix}"
-                    occurrence = seen_method_headings.get(base_heading, 0) + 1
-                    seen_method_headings[base_heading] = occurrence
-                    heading_name = base_heading if occurrence == 1 else f"{base_heading} ({occurrence})"
-                    emit_callable_docs(
-                        f"### ⚙️ Method `{heading_name}`",
-                        get_function_signature(class_node),
-                        class_node,
-                        ast.get_docstring(class_node),
-                    )
-        elif isinstance(node, ast.FunctionDef) and _should_document_name(node.name, include_private=include_private):
+            emit_class_docs(node, heading_level=2, qualified_name=node.name)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _should_document_name(
+            node.name, include_private=include_private
+        ):
             emit_callable_docs(
                 f"## 🔧 Function `{node.name}`",
-                get_function_signature(node),
+                _get_function_signature(node),
                 node,
                 ast.get_docstring(node),
             )
@@ -1399,10 +1381,64 @@ def _fence_for_content(content: str, *, language: str = "python") -> tuple[str, 
     return f"{fence}{language}", fence
 
 
+def _format_function_arg(arg: ast.arg, default: ast.expr | None = None) -> str:
+    """Return a single parameter fragment for a function signature."""
+    arg_str = arg.arg
+    if arg.annotation:
+        arg_str += f": {ast.unparse(arg.annotation)}"
+    if default is not None:
+        arg_str += f" = {ast.unparse(default)}"
+    return arg_str
+
+
+def _get_function_signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+    """Return a complete `def` / `async def` signature for documentation fences."""
+    arguments = node.args
+    parts: list[str] = []
+
+    positional = [*arguments.posonlyargs, *arguments.args]
+    defaults: list[ast.expr | None] = [None] * (len(positional) - len(arguments.defaults)) + list(arguments.defaults)
+
+    for index, arg in enumerate(arguments.posonlyargs):
+        parts.append(_format_function_arg(arg, defaults[index]))
+    if arguments.posonlyargs:
+        parts.append("/")
+
+    posonly_count = len(arguments.posonlyargs)
+    for index, arg in enumerate(arguments.args):
+        parts.append(_format_function_arg(arg, defaults[posonly_count + index]))
+
+    if arguments.vararg is not None:
+        vararg = f"*{arguments.vararg.arg}"
+        if arguments.vararg.annotation:
+            vararg += f": {ast.unparse(arguments.vararg.annotation)}"
+        parts.append(vararg)
+    elif arguments.kwonlyargs:
+        parts.append("*")
+
+    for arg, default in zip(arguments.kwonlyargs, arguments.kw_defaults, strict=True):
+        parts.append(_format_function_arg(arg, default))
+
+    if arguments.kwarg is not None:
+        kwarg = f"**{arguments.kwarg.arg}"
+        if arguments.kwarg.annotation:
+            kwarg += f": {ast.unparse(arguments.kwarg.annotation)}"
+        parts.append(kwarg)
+
+    args_str = ", ".join(parts).replace("'", '"')
+    keyword = "async def" if isinstance(node, ast.AsyncFunctionDef) else "def"
+    signature = f"{keyword} {node.name}({args_str})"
+    if node.returns:
+        signature += f" -> {ast.unparse(node.returns)}"
+    return signature
+
+
 def _has_documented_entities(tree: ast.Module, *, include_private: bool = False) -> bool:
     """Return whether file has at least one documented entity."""
     for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and _should_document_name(node.name, include_private=include_private):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _should_document_name(
+            node.name, include_private=include_private
+        ):
             return True
         if isinstance(node, ast.ClassDef) and _should_document_name(node.name, include_private=include_private):
             return True
@@ -1436,20 +1472,22 @@ def _max_backtick_run(text: str) -> int:
     return max_run
 
 
+def _method_heading_suffix(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+    """Return heading suffix for property / classmethod / staticmethod decorators."""
+    for decorator in node.decorator_list:
+        if isinstance(decorator, ast.Attribute) and decorator.attr in {"setter", "deleter"}:
+            return f" ({decorator.attr})"
+        if isinstance(decorator, ast.Name) and decorator.id in {"property", "classmethod", "staticmethod"}:
+            return f" ({decorator.id})"
+    return ""
+
+
 def _open_project_in_editor(project_path: Path, file_path: Path, editor: str) -> str:
     """Open a project folder and file in a new editor window without inheriting VIRTUAL_ENV."""
     editor_env = os.environ.copy()
     editor_env.pop("VIRTUAL_ENV", None)
     editor_command = f'{editor} --new-window "{project_path.resolve()}" "{file_path.resolve()}"'
     return h.dev.run_command(editor_command, is_shell=True, env=editor_env)
-
-
-def _property_accessor_suffix(node: ast.FunctionDef) -> str:
-    """Return ` (setter)` / ` (deleter)` when `node` is a property accessor overload."""
-    for decorator in node.decorator_list:
-        if isinstance(decorator, ast.Attribute) and decorator.attr in {"setter", "deleter"}:
-            return f" ({decorator.attr})"
-    return ""
 
 
 def _should_document_name(name: str, *, include_private: bool) -> bool:

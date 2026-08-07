@@ -17,8 +17,8 @@ lang: en
   - [⚙️ Method `format`](#%EF%B8%8F-method-format)
   - [⚙️ Method `format_file`](#%EF%B8%8F-method-format_file)
   - [⚙️ Method `format_folder`](#%EF%B8%8F-method-format_folder)
-  - [⚙️ Method `iter_code_span_issues`](#%EF%B8%8F-method-iter_code_span_issues)
-  - [⚙️ Method `normalize_code_spans`](#%EF%B8%8F-method-normalize_code_spans)
+  - [⚙️ Method `iter_code_span_issues (staticmethod)`](#%EF%B8%8F-method-iter_code_span_issues-staticmethod)
+  - [⚙️ Method `normalize_code_spans (staticmethod)`](#%EF%B8%8F-method-normalize_code_spans-staticmethod)
 
 </details>
 
@@ -252,7 +252,7 @@ def __call__(self, source: str) -> str:
 ### ⚙️ Method `__init__`
 
 ```python
-def __init__(self) -> None
+def __init__(self, *, end_of_line: str = "lf", prose_wrap: str = "preserve", print_width: int = 80, apply_prose_fixes: bool = True) -> None
 ```
 
 Initialize the docstring formatter.
@@ -405,7 +405,7 @@ def format_folder(self, folder: Path | str) -> str:
 
 </details>
 
-### ⚙️ Method `iter_code_span_issues`
+### ⚙️ Method `iter_code_span_issues (staticmethod)`
 
 ```python
 def iter_code_span_issues(text: str) -> Iterator[tuple[int, int, str]]
@@ -442,7 +442,7 @@ def iter_code_span_issues(text: str) -> Iterator[tuple[int, int, str]]:
 
 </details>
 
-### ⚙️ Method `normalize_code_spans`
+### ⚙️ Method `normalize_code_spans (staticmethod)`
 
 ```python
 def normalize_code_spans(text: str) -> str

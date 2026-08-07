@@ -145,7 +145,7 @@ class ProgressBar:
 ### ⚙️ Method `__init__`
 
 ```python
-def __init__(self, total: int) -> None
+def __init__(self, total: int, *, stream: TextIO | None = None, enabled: bool | None = None, width: int = _DEFAULT_WIDTH) -> None
 ```
 
 Create a progress bar and draw the initial `0/total` line when enabled.
@@ -256,7 +256,7 @@ def update(self, done: int | None = None) -> None:
 ## 🔧 Function `iter_with_progress`
 
 ```python
-def iter_with_progress(items: Sequence[T]) -> Iterator[T]
+def iter_with_progress(items: Sequence[T], *, show_progress: bool = True, stream: TextIO | None = None, width: int = _DEFAULT_WIDTH) -> Iterator[T]
 ```
 
 Yield items while updating a progress bar.
@@ -302,7 +302,7 @@ def iter_with_progress(
 ## 🔧 Function `render_progress`
 
 ```python
-def render_progress(done: int, total: int) -> str
+def render_progress(done: int, total: int, *, width: int = _DEFAULT_WIDTH) -> str
 ```
 
 Return a single-line progress string.
@@ -344,7 +344,7 @@ def render_progress(done: int, total: int, *, width: int = _DEFAULT_WIDTH) -> st
 ## 🔧 Function `render_progress_ascii`
 
 ```python
-def render_progress_ascii(done: int, total: int) -> str
+def render_progress_ascii(done: int, total: int, *, width: int = _DEFAULT_WIDTH) -> str
 ```
 
 ASCII fallback when the stream cannot encode block characters.

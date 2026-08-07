@@ -149,7 +149,7 @@ def all_to_parent_folder(path: Path | str) -> str:
 ## 🔧 Function `apply_func`
 
 ```python
-def apply_func(path: Path | str, ext: str, func: Callable) -> str
+def apply_func(path: Path | str, ext: str, func: Callable, *, skip_rel_prefixes: tuple[tuple[str, ...], ...] | None = None, skip_name_endswith: tuple[str, ...] | None = None, skip_file: Callable[[Path], bool] | None = None, show_progress: bool = True) -> str
 ```
 
 Recursively apply a function to all files with a specified extension in a directory.
@@ -359,7 +359,7 @@ def check_featured_image(path: Path | str) -> tuple[bool, str]:
 ## 🔧 Function `check_func`
 
 ```python
-def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list]) -> list
+def check_func(path: Path | str, ext: str, func: Callable[[Path | str], list], *, show_progress: bool = True) -> list
 ```
 
 Recursively applies a checking function to all files with a specified extension in a directory.
@@ -737,7 +737,7 @@ def find_max_folder_number(base_path: Path | str, start_pattern: str) -> int:
 ## 🔧 Function `list_files_simple`
 
 ```python
-def list_files_simple(path: Path | str) -> str
+def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = False, is_only_files: bool = False) -> str
 ```
 
 Generate a simple list of all files in a directory structure.
@@ -899,7 +899,7 @@ def open_file_or_folder(path: Path | str) -> None:
 ## 🔧 Function `remove_empty_folders`
 
 ```python
-def remove_empty_folders(folder_path: Path | str, additional_patterns: list[str] | None = None) -> str
+def remove_empty_folders(folder_path: Path | str, additional_patterns: list[str] | None = None, *, is_ignore_hidden: bool = True) -> str
 ```
 
 Remove all empty folders recursively while respecting ignore patterns.
@@ -1819,7 +1819,7 @@ def rename_largest_images_to_featured(path: Path | str) -> str:
 ## 🔧 Function `rename_pdf_file`
 
 ```python
-def rename_pdf_file(filename: Path | str) -> str
+def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str
 ```
 
 Rename PDF file based on metadata from file content.
@@ -2189,7 +2189,7 @@ def rename_pdf_file(filename: Path | str, *, is_verbose: bool = False) -> str:
 ## 🔧 Function `should_ignore_path`
 
 ```python
-def should_ignore_path(path: Path | str, additional_patterns: list[str] | None = None) -> bool
+def should_ignore_path(path: Path | str, additional_patterns: list[str] | None = None, *, is_ignore_hidden: bool = True) -> bool
 ```
 
 Check if a path should be ignored based on common ignore patterns.
@@ -2291,7 +2291,7 @@ def should_ignore_path(
 ## 🔧 Function `tree_view_folder`
 
 ```python
-def tree_view_folder(path: Path | str) -> str
+def tree_view_folder(path: Path | str, *, is_ignore_hidden_folders: bool = False) -> str
 ```
 
 Generate a tree-like representation of folder contents.

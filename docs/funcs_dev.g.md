@@ -26,7 +26,7 @@ lang: en
 ## 🔧 Function `config_load`
 
 ```python
-def config_load(filename: Path | str) -> dict
+def config_load(filename: Path | str, *, is_temp: bool = False, resolve_snippets: bool = True) -> dict
 ```
 
 Load configuration from a JSON file.
@@ -85,7 +85,7 @@ def config_load(filename: Path | str, *, is_temp: bool = False, resolve_snippets
 ## 🔧 Function `config_save`
 
 ```python
-def config_save(config: dict, filename: Path | str) -> None
+def config_save(config: dict, filename: Path | str, *, is_temp: bool = False) -> None
 ```
 
 Save configuration to a JSON file.
@@ -137,7 +137,7 @@ def config_save(config: dict, filename: Path | str, *, is_temp: bool = False) ->
 ## 🔧 Function `config_update_value`
 
 ```python
-def config_update_value(key: str, value: object, filename: Path | str) -> None
+def config_update_value(key: str, value: object, filename: Path | str, *, is_temp: bool = False) -> None
 ```
 
 Update a single configuration value and save it to a JSON file.
@@ -328,7 +328,7 @@ def get_project_root() -> Path:
 ## 🔧 Function `run_command`
 
 ```python
-def run_command(command: str | list[str]) -> str
+def run_command(command: str | list[str], *, is_shell: bool = False, cwd: str | None = None, env: dict[str, str] | None = None, timeout: float | None = None) -> str
 ```
 
 Run a console command and return its output.
@@ -612,7 +612,7 @@ def run_powershell_script_as_admin(commands: str) -> str:
 ## 🔧 Function `write_in_output_txt`
 
 ```python
-def write_in_output_txt() -> Callable
+def write_in_output_txt(*, is_show_output: bool = True) -> Callable
 ```
 
 Decorate to write function output to a temporary file and optionally display it.

@@ -543,7 +543,7 @@ class PyChecker:
 ### ⚙️ Method `__call__`
 
 ```python
-def __call__(self, filename: Path | str) -> list[str]
+def __call__(self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None) -> list[str]
 ```
 
 Check Python file for compliance with specified rules.
@@ -597,7 +597,7 @@ def __init__(self, project_root: Path | str | None = None) -> None:
 ### ⚙️ Method `check`
 
 ```python
-def check(self, filename: Path | str) -> list[str]
+def check(self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None) -> list[str]
 ```
 
 Check Python file for compliance with specified rules.
@@ -629,7 +629,7 @@ def check(
 ### ⚙️ Method `check_directory`
 
 ```python
-def check_directory(self, directory: Path | str) -> dict[str, list[str]]
+def check_directory(self, directory: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None, additional_ignore_patterns: list[str] | None = None) -> dict[str, list[str]]
 ```
 
 Check all Python files in directory for compliance with specified rules.

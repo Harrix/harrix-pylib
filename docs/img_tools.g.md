@@ -24,7 +24,7 @@ lang: en
 ## 🔧 Function `convert_gif_mp4_to_avif`
 
 ```python
-def convert_gif_mp4_to_avif(source: Path | str, output: Path | str, project_root: Path | str) -> None
+def convert_gif_mp4_to_avif(source: Path | str, output: Path | str, project_root: Path | str, *, max_size: int | None = None) -> None
 ```
 
 Convert GIF or MP4 to AVIF using ffmpeg.
@@ -158,7 +158,7 @@ def is_avif_animated(source: Path | str, project_root: Path | str) -> bool:
 ## 🔧 Function `optimize_avif`
 
 ```python
-def optimize_avif(source: Path | str, output: Path | str, project_root: Path | str) -> None
+def optimize_avif(source: Path | str, output: Path | str, project_root: Path | str, *, quality: bool = False, max_size: int | None = None) -> None
 ```
 
 Optimize AVIF using ffmpeg or avifdec/avifenc depending on animation.
@@ -198,7 +198,7 @@ def optimize_avif(
 ## 🔧 Function `optimize_image_with_tools`
 
 ```python
-def optimize_image_with_tools(filename: Path | str, output_filename: Path | str) -> str
+def optimize_image_with_tools(filename: Path | str, output_filename: Path | str, *, project_root: Path | str, quality: bool = False, max_size: int | None = None) -> str
 ```
 
 Optimize a raster image using ffmpeg, avifenc, or avifdec.
@@ -250,7 +250,7 @@ def optimize_image_with_tools(
 ## 🔧 Function `process_animated_avif`
 
 ```python
-def process_animated_avif(source: Path | str, output: Path | str, project_root: Path | str) -> None
+def process_animated_avif(source: Path | str, output: Path | str, project_root: Path | str, *, quality: bool = False, max_size: int | None = None) -> None
 ```
 
 Optimize animated AVIF with avifdec and avifenc or ffmpeg.
@@ -340,7 +340,7 @@ def process_animated_avif(
 ## 🔧 Function `process_static_avif`
 
 ```python
-def process_static_avif(source: Path | str, output: Path | str, project_root: Path | str) -> None
+def process_static_avif(source: Path | str, output: Path | str, project_root: Path | str, *, quality: bool = False, max_size: int | None = None) -> None
 ```
 
 Optimize static AVIF with ffmpeg.

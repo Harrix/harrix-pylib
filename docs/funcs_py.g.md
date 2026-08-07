@@ -50,7 +50,7 @@ class DocsSourceLoc(NamedTuple):
 ## 🔧 Function `check_python_docstring_markdown_errors`
 
 ```python
-def check_python_docstring_markdown_errors(folder: Path | str) -> list[str]
+def check_python_docstring_markdown_errors(folder: Path | str, *, include_private: bool = True, show_progress: bool = True) -> list[str]
 ```
 
 Check docstring Markdown typography for Python sources; errors point at `.py` locations.
@@ -414,7 +414,7 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
 ## 🔧 Function `extract_functions_and_classes`
 
 ```python
-def extract_functions_and_classes(filename: Path | str) -> str
+def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: bool = True, domain: str = "", src_folder: Path | str | None = None, include_private: bool = False) -> str
 ```
 
 Extract all classes and functions from a Python file and formats them into a Markdown list.
@@ -491,7 +491,9 @@ def extract_functions_and_classes(
 
     # Traverse the AST to collect function and class definitions
     for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and _should_document_name(node.name, include_private=include_private):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _should_document_name(
+            node.name, include_private=include_private
+        ):
             functions.append(node)
         elif isinstance(node, ast.ClassDef) and _should_document_name(node.name, include_private=include_private):
             classes.append(node)
@@ -571,7 +573,7 @@ def extract_functions_and_classes(
 ## 🔧 Function `generate_md_docs`
 
 ```python
-def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str) -> str
+def generate_md_docs(folder: Path | str, beginning_of_md: str, domain: str, *, include_private: bool = False, docs_folder: Path | str | None = None, update_readme: bool = True, copy_root_md: bool = True) -> str
 ```
 
 Generate documentation for all Python files within a given project folder.
@@ -724,7 +726,7 @@ def generate_md_docs(
 ## 🔧 Function `generate_md_docs_content`
 
 ```python
-def generate_md_docs_content(file_path: Path | str) -> str
+def generate_md_docs_content(file_path: Path | str, *, include_private: bool = False) -> str
 ```
 
 Generate Markdown documentation for a single Python file.
@@ -764,7 +766,7 @@ def generate_md_docs_content(file_path: Path | str, *, include_private: bool = F
 ## 🔧 Function `generate_md_docs_content_with_source_map`
 
 ```python
-def generate_md_docs_content_with_source_map(file_path: Path | str) -> tuple[str, list[DocsSourceLoc | None]]
+def generate_md_docs_content_with_source_map(file_path: Path | str, *, include_private: bool = False) -> tuple[str, list[DocsSourceLoc | None]]
 ```
 
 Generate Markdown docs for a Python file and a per-line map to Python source.
@@ -858,37 +860,6 @@ def generate_md_docs_content_with_source_map(
             locs.append(DocsSourceLoc(file_path, py_line, max(1, idx + 1)))
         return locs
 
-    def get_function_signature(node: ast.FunctionDef) -> str:
-        args = []
-        defaults = [None] * (len(node.args.args) - len(node.args.defaults)) + node.args.defaults
-
-        for arg, default in zip(node.args.args, defaults, strict=False):
-            arg_str = arg.arg
-            if arg.annotation:
-                arg_str += f": {ast.unparse(arg.annotation)}"
-            if default:
-                arg_str += f" = {ast.unparse(default)}"
-            args.append(arg_str)
-
-        if node.args.vararg:
-            arg_str = f"*{node.args.vararg.arg}"
-            if node.args.vararg.annotation:
-                arg_str += f": {ast.unparse(node.args.vararg.annotation)}"
-            args.append(arg_str)
-
-        if node.args.kwarg:
-            arg_str = f"**{node.args.kwarg.arg}"
-            if node.args.kwarg.annotation:
-                arg_str += f": {ast.unparse(node.args.kwarg.annotation)}"
-            args.append(arg_str)
-
-        args_str = ", ".join(args)
-        args_str = args_str.replace("'", '"')
-        signature = f"def {node.name}({args_str})"
-        if node.returns:
-            signature += f" -> {ast.unparse(node.returns)}"
-        return signature
-
     def get_class_signature(node: ast.ClassDef) -> str:
         bases = [ast.unparse(base) for base in node.bases]
         bases_str = ", ".join(bases)
@@ -958,7 +929,7 @@ def generate_md_docs_content_with_source_map(
     def emit_callable_docs(
         heading: str,
         signature: str,
-        node: ast.FunctionDef | ast.ClassDef,
+        node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
         docstring: str | None,
     ) -> None:
         loc = entity_loc(node)
@@ -974,6 +945,36 @@ def generate_md_docs_content_with_source_map(
         emit_structural("</details>", loc)
         emit_blank(loc)
 
+    def emit_class_docs(class_node: ast.ClassDef, heading_level: int, qualified_name: str) -> None:
+        class_hashes = "#" * heading_level
+        emit_callable_docs(
+            f"{class_hashes} 🏛️ Class `{qualified_name}`",
+            get_class_signature(class_node),
+            class_node,
+            ast.get_docstring(class_node),
+        )
+        method_hashes = "#" * (heading_level + 1)
+        seen_method_headings: dict[str, int] = {}
+        for body_node in class_node.body:
+            if isinstance(body_node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _should_document_name(
+                body_node.name, include_private=include_private
+            ):
+                method_suffix = _method_heading_suffix(body_node)
+                base_heading = f"{body_node.name}{method_suffix}"
+                occurrence = seen_method_headings.get(base_heading, 0) + 1
+                seen_method_headings[base_heading] = occurrence
+                heading_name = base_heading if occurrence == 1 else f"{base_heading} ({occurrence})"
+                emit_callable_docs(
+                    f"{method_hashes} ⚙️ Method `{heading_name}`",
+                    _get_function_signature(body_node),
+                    body_node,
+                    ast.get_docstring(body_node),
+                )
+            elif isinstance(body_node, ast.ClassDef) and _should_document_name(
+                body_node.name, include_private=include_private
+            ):
+                emit_class_docs(body_node, heading_level + 1, f"{qualified_name}.{body_node.name}")
+
     file_loc = DocsSourceLoc(file_path, 1, 1)
     emit_structural(f"# 📄 File `{file_path.name}`", file_loc)
     emit_blank(file_loc)
@@ -982,32 +983,13 @@ def generate_md_docs_content_with_source_map(
         if isinstance(node, ast.ClassDef):
             if not _should_document_name(node.name, include_private=include_private):
                 continue
-            emit_callable_docs(
-                f"## 🏛️ Class `{node.name}`",
-                get_class_signature(node),
-                node,
-                ast.get_docstring(node),
-            )
-            seen_method_headings: dict[str, int] = {}
-            for class_node in node.body:
-                if isinstance(class_node, ast.FunctionDef) and _should_document_name(
-                    class_node.name, include_private=include_private
-                ):
-                    method_suffix = _property_accessor_suffix(class_node)
-                    base_heading = f"{class_node.name}{method_suffix}"
-                    occurrence = seen_method_headings.get(base_heading, 0) + 1
-                    seen_method_headings[base_heading] = occurrence
-                    heading_name = base_heading if occurrence == 1 else f"{base_heading} ({occurrence})"
-                    emit_callable_docs(
-                        f"### ⚙️ Method `{heading_name}`",
-                        get_function_signature(class_node),
-                        class_node,
-                        ast.get_docstring(class_node),
-                    )
-        elif isinstance(node, ast.FunctionDef) and _should_document_name(node.name, include_private=include_private):
+            emit_class_docs(node, heading_level=2, qualified_name=node.name)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _should_document_name(
+            node.name, include_private=include_private
+        ):
             emit_callable_docs(
                 f"## 🔧 Function `{node.name}`",
-                get_function_signature(node),
+                _get_function_signature(node),
                 node,
                 ast.get_docstring(node),
             )
@@ -1165,7 +1147,7 @@ def remap_markdown_docs_error(error: str, line_map: list[DocsSourceLoc | None]) 
 ## 🔧 Function `sort_py_code`
 
 ```python
-def sort_py_code(filename: Path | str) -> str
+def sort_py_code(filename: Path | str, *, is_use_ruff_format: bool = True) -> str
 ```
 
 Sorts the Python code in the given file by organizing classes, functions, and statements.

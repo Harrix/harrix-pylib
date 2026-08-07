@@ -17,8 +17,8 @@ lang: en
   - [⚙️ Method `format`](#%EF%B8%8F-method-format)
   - [⚙️ Method `format_file`](#%EF%B8%8F-method-format_file)
   - [⚙️ Method `format_folder`](#%EF%B8%8F-method-format_folder)
-  - [⚙️ Method `normalize_line_endings`](#%EF%B8%8F-method-normalize_line_endings)
-  - [⚙️ Method `read_markdown_text`](#%EF%B8%8F-method-read_markdown_text)
+  - [⚙️ Method `normalize_line_endings (staticmethod)`](#%EF%B8%8F-method-normalize_line_endings-staticmethod)
+  - [⚙️ Method `read_markdown_text (staticmethod)`](#%EF%B8%8F-method-read_markdown_text-staticmethod)
 
 </details>
 
@@ -257,7 +257,7 @@ def __call__(self, text: str) -> str:
 ### ⚙️ Method `__init__`
 
 ```python
-def __init__(self) -> None
+def __init__(self, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80, apply_prose_fixes: bool = True, format_math: bool = True, format_code_blocks: bool = True) -> None
 ```
 
 Initialize the MdFormatter.
@@ -428,7 +428,7 @@ def format_folder(self, folder: Path | str) -> str:
 
 </details>
 
-### ⚙️ Method `normalize_line_endings`
+### ⚙️ Method `normalize_line_endings (staticmethod)`
 
 ```python
 def normalize_line_endings(text: str) -> str
@@ -458,7 +458,7 @@ def normalize_line_endings(text: str) -> str:
 
 </details>
 
-### ⚙️ Method `read_markdown_text`
+### ⚙️ Method `read_markdown_text (staticmethod)`
 
 ```python
 def read_markdown_text(filename: Path | str) -> str

@@ -19,7 +19,7 @@ lang: en
 ## 🔧 Function `display_math_line_flags`
 
 ```python
-def display_math_line_flags(lines: Sequence[str]) -> list[bool]
+def display_math_line_flags(lines: Sequence[str], *, in_code: Sequence[bool] | None = None) -> list[bool]
 ```
 
 Return per-line flags for display-math `$$...$$` regions (including delimiters).

@@ -149,7 +149,7 @@ class SvgOptimizer:
 ### ⚙️ Method `__call__`
 
 ```python
-def __call__(self, svg_text: str) -> str
+def __call__(self, svg_text: str, *, multipass: bool | None = None) -> str
 ```
 
 Optimize SVG markup.
@@ -176,7 +176,7 @@ def __call__(self, svg_text: str, *, multipass: bool | None = None) -> str:
 ### ⚙️ Method `__init__`
 
 ```python
-def __init__(self) -> None
+def __init__(self, *, multipass: bool = True) -> None
 ```
 
 Initialize the SvgOptimizer.
@@ -198,7 +198,7 @@ def __init__(self, *, multipass: bool = True) -> None:
 ### ⚙️ Method `optimize`
 
 ```python
-def optimize(self, svg_text: str) -> str
+def optimize(self, svg_text: str, *, multipass: bool | None = None) -> str
 ```
 
 Optimize SVG markup to a compact form similar to SVGO preset-default.

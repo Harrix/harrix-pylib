@@ -264,7 +264,7 @@ def add_diary_new_dairy_in_year(path_dream: Path | str, beginning_of_md: str) ->
 ## 🔧 Function `add_diary_new_diary`
 
 ```python
-def add_diary_new_diary(path_diary: Path | str, beginning_of_md: str) -> tuple[str, Path]
+def add_diary_new_diary(path_diary: Path | str, beginning_of_md: str, *, is_with_images: bool = False) -> tuple[str, Path]
 ```
 
 Create a new diary entry for the current day and time.
@@ -326,7 +326,7 @@ def add_diary_new_diary(
 ## 🔧 Function `add_diary_new_dream`
 
 ```python
-def add_diary_new_dream(path_dream: Path | str, beginning_of_md: str) -> tuple[str, Path]
+def add_diary_new_dream(path_dream: Path | str, beginning_of_md: str, *, is_with_images: bool = False) -> tuple[str, Path]
 ```
 
 Create a new dream diary entry for the current day and time with placeholders for dream descriptions.
@@ -429,7 +429,7 @@ def add_diary_new_dream_in_year(path_dream: Path | str, beginning_of_md: str) ->
 ## 🔧 Function `add_diary_new_note`
 
 ```python
-def add_diary_new_note(base_path: Path | str, text: str) -> tuple[str, Path]
+def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool) -> tuple[str, Path]
 ```
 
 Add a new note to the diary or dream diary for the given base path.
@@ -482,7 +482,7 @@ def add_diary_new_note(base_path: Path | str, text: str, *, is_with_images: bool
 ## 🔧 Function `add_note`
 
 ```python
-def add_note(base_path: Path | str, name: str, text: str) -> tuple[str, Path]
+def add_note(base_path: Path | str, name: str, text: str, *, is_with_images: bool) -> tuple[str, Path]
 ```
 
 Add a note to the specified base path.
@@ -752,7 +752,7 @@ def collect_subfolder_md(subfolder: Path | str, should_include_file: Callable[[P
 ## 🔧 Function `combine_markdown_files`
 
 ```python
-def combine_markdown_files(folder_path: Path | str) -> str
+def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = False) -> str
 ```
 
 Combine multiple Markdown files in a folder into a single file with intelligent YAML header merging.
@@ -992,7 +992,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
 ## 🔧 Function `combine_markdown_files_recursively`
 
 ```python
-def combine_markdown_files_recursively(folder_path: Path | str) -> str
+def combine_markdown_files_recursively(folder_path: Path | str, *, is_delete_g_md_files: bool = True) -> str
 ```
 
 Recursively process a folder structure and combines Markdown files in each folder that meets specific criteria.
@@ -1404,7 +1404,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
 ## 🔧 Function `format_markdown`
 
 ```python
-def format_markdown(filename: Path | str) -> str
+def format_markdown(filename: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80, apply_prose_fixes: bool = True) -> str
 ```
 
 Format a Markdown file in place when content changes.
@@ -1446,7 +1446,7 @@ def format_markdown(
 ## 🔧 Function `format_markdown_content`
 
 ```python
-def format_markdown_content(markdown_text: str) -> str
+def format_markdown_content(markdown_text: str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80, apply_prose_fixes: bool = True) -> str
 ```
 
 Format Markdown content using the harrix-pylib Markdown formatter.
@@ -1488,7 +1488,7 @@ def format_markdown_content(
 ## 🔧 Function `format_markdown_folder`
 
 ```python
-def format_markdown_folder(folder: Path | str) -> str
+def format_markdown_folder(folder: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80, apply_prose_fixes: bool = True) -> str
 ```
 
 Recursively format Markdown files in a folder.
@@ -3313,7 +3313,7 @@ def is_raw_markdown_enabled(source: Path | str | dict[str, Any]) -> bool:
 ## 🔧 Function `iter_note_md_in_folder`
 
 ```python
-def iter_note_md_in_folder(folder: Path | str) -> Iterator[Path]
+def iter_note_md_in_folder(folder: Path | str, *, dir_name: str | None = None) -> Iterator[Path]
 ```
 
 Iterate scannable note Markdown files in a folder.
@@ -3927,7 +3927,7 @@ def resolve_md_path(path: Path | str) -> Path:
 ## 🔧 Function `sort_sections`
 
 ```python
-def sort_sections(filename: Path | str) -> str
+def sort_sections(filename: Path | str, *, is_sort_section_from_yaml: bool = False) -> str
 ```
 
 Sort the sections of a Markdown file by their headings, maintaining YAML front matter
@@ -4043,7 +4043,7 @@ def sort_sections(filename: Path | str, *, is_sort_section_from_yaml: bool = Fal
 ## 🔧 Function `sort_sections_content`
 
 ```python
-def sort_sections_content(markdown_text: str) -> str
+def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool = False) -> str
 ```
 
 Sort sections by their `##` headings: top sections first, then dates in descending order,
