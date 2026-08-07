@@ -390,12 +390,14 @@ Example:
 import harrix_pylib as h
 from pathlib import Path
 
+
 def check_markdown(filepath):
     errors = []
     # Some checking logic
     if some_condition:
         errors.append(f"Error in {filepath.name}: something is wrong")
     return errors
+
 
 all_errors = h.file.check_func("docs/", ".md", check_markdown)
 for error in all_errors:
@@ -513,11 +515,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-files = [
-    "C:/folder/folder2/1.txt",
-    "C:/folder/folder2/2.py",
-    "C:/folder/folder3/recover.sql"
-]
+files = ["C:/folder/folder2/1.txt", "C:/folder/folder2/2.py", "C:/folder/folder3/recover.sql"]
 base = "C:/folder"
 
 result = h.file.collect_text_files_to_markdown(files, base)
@@ -1505,11 +1503,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-mapping = {
-    "old_file.txt": "new_file.txt",
-    "readme.md": "README_NEW.md",
-    "config.json": "settings.json"
-}
+mapping = {"old_file.txt": "new_file.txt", "readme.md": "README_NEW.md", "config.json": "settings.json"}
 
 result = h.file.rename_files_by_mapping("C:/Projects/my_project", mapping)
 print(result)

@@ -53,6 +53,10 @@ def _checker_errors(tmp_path: Path, text: str, rules: set[str]) -> list[str]:
         ("Привет,мир\n", {"H050"}, "Привет, мир"),  # ignore: HP001
         ("## Title.\n", {"H057"}, "## Title\n"),
         ("Слово.»\n", {"H058"}, "Слово»."),  # ignore: HP001
+        ("- a\n* b\n", {"H071"}, "- a\n- b\n"),
+        ("Title\n=====\n", {"H072"}, "# Title\n"),
+        ("Subtitle\n-------\n", {"H072"}, "## Subtitle\n"),
+        ("line one\\\nline two  \nline three\n", {"H075"}, "line one  \nline two  \n"),
     ],
 )
 def test_formatter_fixes_checker_rules(tmp_path: Path, source: str, rules: set[str], expected_snippet: str) -> None:
@@ -60,6 +64,40 @@ def test_formatter_fixes_checker_rules(tmp_path: Path, source: str, rules: set[s
     result = _format(source)
     assert expected_snippet in result
     assert not _checker_errors(tmp_path, result, rules), result
+
+
+def test_formatter_preserves_single_hard_break_style(tmp_path: Path) -> None:
+    """H075 autofix must not rewrite a file that uses only backslash hard breaks."""
+    source = "line one\\\nline two\n"
+    assert not _checker_errors(tmp_path, source, {"H075"})
+    result = _format(source)
+    assert "line one\\" in result or "line one\\\n" in result.replace("\r\n", "\n")
+    assert not _checker_errors(tmp_path, result, {"H075"}), result
+
+
+def test_formatter_structural_pipeline_clears_h063_h064_h065_h066(tmp_path: Path) -> None:
+    """H063-H066 are cleared by prose wrap / blank-line / compact-YAML format steps."""
+    bare = "See config.json here.\n"
+    assert _checker_errors(tmp_path, bare, {"H063"})
+    bare_fixed = _format(bare)
+    assert "`config.json`" in bare_fixed
+    assert not _checker_errors(tmp_path, bare_fixed, {"H063"}), bare_fixed
+
+    list_gap = "- a\n- b\n# Next\n"
+    assert _checker_errors(tmp_path, list_gap, {"H064"})
+    list_fixed = _format(list_gap)
+    assert not _checker_errors(tmp_path, list_fixed, {"H064"}), list_fixed
+
+    table_gap = "| a | b |\n| --- | --- |\n| 1 | 2 |\nNext.\n"
+    assert _checker_errors(tmp_path, table_gap, {"H065"})
+    table_fixed = _format(table_gap)
+    assert not _checker_errors(tmp_path, table_fixed, {"H065"}), table_fixed
+
+    yaml_gap = "---\nlang: en\n\ntitle: x\n---\n\n# T\n"
+    assert _checker_errors(tmp_path, yaml_gap, {"H066"})
+    yaml_fixed = _format(yaml_gap)
+    assert "lang: en\ntitle: x" in yaml_fixed.replace("\r\n", "\n")
+    assert not _checker_errors(tmp_path, yaml_fixed, {"H066"}), yaml_fixed
 
 
 def test_formatter_preserves_gfm_table_alignment(tmp_path: Path) -> None:

@@ -71,8 +71,9 @@ class MdFormatter:
         - `end_of_line` (`str`): Line ending style (`crlf` or `lf`). Defaults to `crlf`.
         - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
         - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
-        - `apply_prose_fixes` (`bool`): Apply mechanical MdChecker autofixes (typography, H006-H058
-          subset). Defaults to `True`.
+        - `apply_prose_fixes` (`bool`): Apply mechanical MdChecker autofixes (typography,
+          H006 — H062 subset, H071/H072/H075; H063 bare filenames). Defaults to `True`.
+          H064 — H066 are applied by the structural format pipeline regardless.
         - `format_math` (`bool`): Format TeX/LaTeX content inside `$...$` / `$$...$$`. Defaults to `True`.
         - `format_code_blocks` (`bool`): Format fenced code block bodies for supported languages
           (`latex` / `tex`, `md` / `markdown`). Defaults to `True`.

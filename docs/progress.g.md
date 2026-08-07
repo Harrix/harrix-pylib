@@ -36,7 +36,6 @@ When enabled, draws `0/total` immediately so the bar is visible before the first
 
 ```python
 class ProgressBar:
-
     def __init__(
         self,
         total: int,
@@ -162,24 +161,24 @@ Args:
 
 ```python
 def __init__(
-        self,
-        total: int,
-        *,
-        stream: TextIO | None = None,
-        enabled: bool | None = None,
-        width: int = _DEFAULT_WIDTH,
-    ) -> None:
-        self.total = max(0, total)
-        self.width = width
-        self.stream: TextIO = stream if stream is not None else sys.stderr
-        if enabled is None:
-            enabled = bool(getattr(self.stream, "isatty", lambda: False)()) and self.total > 0
-        self.enabled = bool(enabled) and self.total > 0
-        self.done = 0
-        self._last_len = 0
-        self._use_ascii = False
-        if self.enabled:
-            self._write_line(0)
+    self,
+    total: int,
+    *,
+    stream: TextIO | None = None,
+    enabled: bool | None = None,
+    width: int = _DEFAULT_WIDTH,
+) -> None:
+    self.total = max(0, total)
+    self.width = width
+    self.stream: TextIO = stream if stream is not None else sys.stderr
+    if enabled is None:
+        enabled = bool(getattr(self.stream, "isatty", lambda: False)()) and self.total > 0
+    self.enabled = bool(enabled) and self.total > 0
+    self.done = 0
+    self._last_len = 0
+    self._use_ascii = False
+    if self.enabled:
+        self._write_line(0)
 ```
 
 </details>
@@ -197,23 +196,23 @@ Draw a final 100% line and leave it visible on its own row.
 
 ```python
 def finish(self) -> None:
-        if not self.enabled:
-            return
-        self.done = self.total
-        try:
-            # Clear leftovers from a longer previous in-place draw, then print 100% permanently.
-            clear_width = max(self._last_len, len(render_progress(self.total, self.total, width=self.width)))
-            self.stream.write("\r" + (" " * clear_width) + "\r")
-            self.stream.flush()
-        except OSError:
-            return
-        self._write_line(self.total)
-        try:
-            self.stream.write("\n")
-            self.stream.flush()
-        except OSError:
-            return
-        self._last_len = 0
+    if not self.enabled:
+        return
+    self.done = self.total
+    try:
+        # Clear leftovers from a longer previous in-place draw, then print 100% permanently.
+        clear_width = max(self._last_len, len(render_progress(self.total, self.total, width=self.width)))
+        self.stream.write("\r" + (" " * clear_width) + "\r")
+        self.stream.flush()
+    except OSError:
+        return
+    self._write_line(self.total)
+    try:
+        self.stream.write("\n")
+        self.stream.flush()
+    except OSError:
+        return
+    self._last_len = 0
 ```
 
 </details>
@@ -240,15 +239,15 @@ Returns:
 
 ```python
 def update(self, done: int | None = None) -> None:
-        if not self.enabled:
-            return
-        if done is None:
-            self.done += 1
-        else:
-            self.done = max(0, done)
-        if not self._should_redraw(self.done):
-            return
-        self._write_line(self.done)
+    if not self.enabled:
+        return
+    if done is None:
+        self.done += 1
+    else:
+        self.done = max(0, done)
+    if not self._should_redraw(self.done):
+        return
+    self._write_line(self.done)
 ```
 
 </details>

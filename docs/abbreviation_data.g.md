@@ -33,7 +33,6 @@ Compiled abbreviation data for H006 spacing and H021 masking.
 
 ```python
 class AbbreviationData:
-
     all_forms: tuple[str, ...]
     dotted_forms: tuple[str, ...]
     spaced_forms: tuple[str, ...]

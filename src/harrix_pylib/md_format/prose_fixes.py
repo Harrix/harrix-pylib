@@ -3,12 +3,17 @@
 Runs before the Prettier-style parse/render pipeline so source-preserving paths
 keep fixed prose. Skips fenced and inline code the same way as MdChecker
 (H006, H007, H015-H017, H020-H024, H026-H030, H036, H039, H042, H044, H050,
-H057, H058, H062).
+H057, H058, H062, H071, H072, H075).
 
 Bare filenames and paths (for example `config.json`, `src/app/recover.sql`) are
-wrapped in inline code before H006 so file extensions are not uppercased.
-Product names that look like files (for example Node.js) are left as prose.
-A leading-dot mention like `.g.md` becomes `` `g.md` `` (not `` .`g.md` ``).
+wrapped in inline code before H006 so file extensions are not uppercased
+(H063). Product names that look like files (for example Node.js) are left as
+prose. A leading-dot mention like `.g.md` becomes `` `g.md` `` (not `` .`g.md` ``).
+
+Structural rules cleared by the full `MdFormatter` pipeline (not only this
+module): H064 / H065 blank line after list or table, H066 compact YAML front
+matter. Note-folder asset layout (H061 / H078) is handled by
+`organize_note_folder_assets` on `format_file` / `format_folder`.
 
 """
 
@@ -21,7 +26,18 @@ from typing import TYPE_CHECKING
 from harrix_pylib.abbreviation_data import mask_abbreviations
 from harrix_pylib.md_decimal_separators import fix_decimal_separators
 from harrix_pylib.md_format.code_fence import _identify_code_blocks, _identify_code_blocks_line
+from harrix_pylib.md_format.hard_break_format import (
+    _line_has_single_backslash_hard_break,
+    _line_has_space_hard_break,
+)
+from harrix_pylib.md_format.list_format import (
+    BULLET_LIST_ITEM_RE,
+    _is_list_continuation,
+    _is_list_item_continuation_line,
+    _is_list_line,
+)
 from harrix_pylib.md_format.math_spans import display_math_line_flags, iter_code_and_math_segments
+from harrix_pylib.md_format.text_lines import _join_lines, _split_lines
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -61,6 +77,8 @@ _RUSSIAN_POLITE_PRONOUNS_CAPITALIZED = (
 _ATX_HEADING_NO_SPACE_PATTERN = re.compile(r"^(\s{0,3}#{1,6})([^\s#].*)$")
 _ATX_HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.*)$")
 _ATX_CLOSING_HASHES_PATTERN = re.compile(r"\s+#+\s*$")
+_SETEXT_H1_UNDERLINE_PATTERN = re.compile(r"^\s{0,3}=+\s*$")
+_SETEXT_H2_UNDERLINE_PATTERN = re.compile(r"^\s{0,3}-{3,}\s*$")
 _BACKSLASH_PATH_PATTERN = re.compile(r"\]\(([^)]*\\[^)]*)\)")
 # Mistyped scheme separators: `https:\host`, `https:\\host`, `https:/host` → `https://host`.
 _SCHEME_URL_DEST_PATTERN = re.compile(r"\]\((https?):[/\\]+([^)]*)\)", re.IGNORECASE)
@@ -226,7 +244,10 @@ def _apply_checker_prose_fixes(text: str, *, lang: str = "") -> str:
     output = "\n".join(result)
     if has_trailing_newline:
         output += "\n"
-    return output
+    # Multi-line structural autofixes (need fence awareness across lines).
+    output = _fix_setext_headings_to_atx(output)  # H072
+    output = _fix_mixed_bullet_markers(output)  # H071
+    return _fix_mixed_hard_break_styles(output)  # H075
 
 
 def _extract_url_regions(line: str) -> tuple[str, list[str]]:
@@ -572,6 +593,97 @@ def _fix_missing_space_after_punctuation(segment: str) -> str:
     return _MISSING_SPACE_AFTER_PUNCT_PATTERN.sub(replacer, segment)
 
 
+def _fix_mixed_bullet_markers(text: str) -> str:
+    """Normalize mixed `-` / `*` / `+` markers in one contiguous list to the first (H071)."""
+    lines, trailing = _split_lines(text)
+    if not lines:
+        return text
+    fence_info = list(_identify_code_blocks(lines))
+    result = list(lines)
+    index = 0
+    while index < len(result):
+        if fence_info[index][1]:
+            index += 1
+            continue
+        stripped = result[index].strip()
+        bullet = BULLET_LIST_ITEM_RE.match(stripped)
+        if not bullet:
+            index += 1
+            continue
+
+        first_marker = stripped[0]
+        markers = {first_marker}
+        item_indices = [index]
+        cursor = index + 1
+        while cursor < len(result):
+            if fence_info[cursor][1]:
+                break
+            next_stripped = result[cursor].strip()
+            if not next_stripped:
+                break
+            next_bullet = BULLET_LIST_ITEM_RE.match(next_stripped)
+            if next_bullet:
+                markers.add(next_stripped[0])
+                item_indices.append(cursor)
+                cursor += 1
+                continue
+            if _is_list_line(result[cursor]) or _is_list_continuation(result[cursor]):
+                cursor += 1
+                continue
+            if _is_list_item_continuation_line(result[cursor - 1], result[cursor]):
+                cursor += 1
+                continue
+            break
+
+        if len(markers) > 1:
+            for item_index in item_indices:
+                line = result[item_index]
+                line_stripped = line.lstrip()
+                indent = line[: len(line) - len(line_stripped)]
+                result[item_index] = f"{indent}{first_marker}{line_stripped[1:]}"
+        index = cursor
+    return _join_lines(result, trailing_newline=trailing)
+
+
+def _fix_mixed_hard_break_styles(text: str) -> str:
+    r"""When a file mixes `\` and two-space hard breaks, normalize to two spaces (H075)."""
+    lines, trailing = _split_lines(text)
+    if not lines:
+        return text
+    fence_info = list(_identify_code_blocks(lines))
+    seen_backslash = False
+    seen_spaces = False
+    for index, (_line, in_code) in enumerate(fence_info):
+        if in_code:
+            continue
+        next_line = lines[index + 1] if index + 1 < len(lines) else ""
+        if index + 1 < len(fence_info) and fence_info[index + 1][1]:
+            continue
+        if _line_has_single_backslash_hard_break(lines[index], next_line=next_line):
+            seen_backslash = True
+        elif _line_has_space_hard_break(lines[index], next_line=next_line):
+            seen_spaces = True
+        if seen_backslash and seen_spaces:
+            break
+    if not (seen_backslash and seen_spaces):
+        return text
+
+    result: list[str] = []
+    for index, (line, in_code) in enumerate(fence_info):
+        if in_code:
+            result.append(line)
+            continue
+        next_line = lines[index + 1] if index + 1 < len(lines) else ""
+        if index + 1 < len(fence_info) and fence_info[index + 1][1]:
+            result.append(line)
+            continue
+        if _line_has_single_backslash_hard_break(line, next_line=next_line):
+            result.append(f"{line[:-1]}  ")
+        else:
+            result.append(line)
+    return _join_lines(result, trailing_newline=trailing)
+
+
 def _fix_multiplication_sign(line: str) -> str:
     """Replace Latin/Cyrillic `x` used as multiply with the multiplication sign (H024)."""
     if "x" not in line and "\u0445" not in line:  # ignore: HP001
@@ -710,6 +822,44 @@ def _fix_russian_polite_pronouns(line: str) -> str:
 
         line = pattern.sub(replacer, line)
     return line
+
+
+def _fix_setext_headings_to_atx(text: str) -> str:
+    """Convert Setext headings to ATX (H072)."""
+    lines, trailing = _split_lines(text)
+    if not lines:
+        return text
+    fence_info = list(_identify_code_blocks(lines))
+    result: list[str] = []
+    index = 0
+    while index < len(lines):
+        line, in_code = fence_info[index]
+        if in_code or index + 1 >= len(lines):
+            result.append(line)
+            index += 1
+            continue
+        next_line, next_in_code = fence_info[index + 1]
+        if next_in_code or not line.strip():
+            result.append(line)
+            index += 1
+            continue
+        if line.lstrip().startswith(("#", ">", "|", "```", "- ", "* ", "+ ")) or re.match(r"^\d+[.)]\s", line.lstrip()):
+            result.append(line)
+            index += 1
+            continue
+        if _SETEXT_H1_UNDERLINE_PATTERN.match(next_line):
+            indent = line[: len(line) - len(line.lstrip())]
+            result.append(f"{indent}# {line.strip()}")
+            index += 2
+            continue
+        if _SETEXT_H2_UNDERLINE_PATTERN.match(next_line):
+            indent = line[: len(line) - len(line.lstrip())]
+            result.append(f"{indent}## {line.strip()}")
+            index += 2
+            continue
+        result.append(line)
+        index += 1
+    return _join_lines(result, trailing_newline=trailing)
 
 
 def _fix_space_before_percent_or_degree(segment: str) -> str:

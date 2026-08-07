@@ -39,7 +39,6 @@ Python source location corresponding to a generated Markdown docs line.
 
 ```python
 class DocsSourceLoc(NamedTuple):
-
     path: Path
     line: int
     col: int
@@ -1208,13 +1207,16 @@ def _helper_function():
     """Helper function."""
     pass
 
+
 def multiply(a, b):
     """Returns the product of two numbers."""
     return a * b
 
+
 def add(a, b):
     """Returns the sum of two numbers."""
     return a + b
+
 
 class Point:
     def _internal_method(self):
@@ -1258,13 +1260,16 @@ class Point:
         """Internal method."""
         pass
 
+
 def add(a, b):
     """Returns the sum of two numbers."""
     return a + b
 
+
 def multiply(a, b):
     """Returns the product of two numbers."""
     return a * b
+
 
 def _helper_function():
     """Helper function."""

@@ -35,7 +35,6 @@ Format Markdown inside Python docstrings, similar to `MdFormatter` for `.md` fil
 
 ```python
 class PyDocstringFormatter:
-
     def __call__(self, source: str) -> str:
         """Format Markdown inside docstrings in Python source text.
 
@@ -244,7 +243,7 @@ Returns:
 
 ```python
 def __call__(self, source: str) -> str:
-        return self.format(source)
+    return self.format(source)
 ```
 
 </details>
@@ -272,19 +271,19 @@ Args:
 
 ```python
 def __init__(
-        self,
-        *,
-        end_of_line: str = "lf",
-        prose_wrap: str = "preserve",
-        print_width: int = 80,
-        apply_prose_fixes: bool = True,
-    ) -> None:
-        self.md_formatter = MdFormatter(
-            end_of_line=end_of_line,
-            prose_wrap=prose_wrap,
-            print_width=print_width,
-            apply_prose_fixes=apply_prose_fixes,
-        )
+    self,
+    *,
+    end_of_line: str = "lf",
+    prose_wrap: str = "preserve",
+    print_width: int = 80,
+    apply_prose_fixes: bool = True,
+) -> None:
+    self.md_formatter = MdFormatter(
+        end_of_line=end_of_line,
+        prose_wrap=prose_wrap,
+        print_width=print_width,
+        apply_prose_fixes=apply_prose_fixes,
+    )
 ```
 
 </details>
@@ -310,9 +309,9 @@ Returns:
 
 ```python
 def format(self, source: str) -> str:
-        module = cst.parse_module(source)
-        transformer = _DocstringMdFormatTransformer(self)
-        return module.visit(transformer).code
+    module = cst.parse_module(source)
+    transformer = _DocstringMdFormatTransformer(self)
+    return module.visit(transformer).code
 ```
 
 </details>
@@ -349,30 +348,30 @@ Returns:
 
 ```python
 def format_file(self, filename: Path | str) -> str:
-        path = Path(filename)
-        raw = path.read_bytes()
-        original = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+    path = Path(filename)
+    raw = path.read_bytes()
+    original = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
 
-        # Cheap ast precheck: skip libcst when no docstring would change.
-        needs_format = _source_needs_docstring_format(original, md_formatter=self.md_formatter)
-        if needs_format is False:
-            return "File is not changed."
+    # Cheap ast precheck: skip libcst when no docstring would change.
+    needs_format = _source_needs_docstring_format(original, md_formatter=self.md_formatter)
+    if needs_format is False:
+        return "File is not changed."
 
-        try:
-            module = cst.parse_module(original)
-        except Exception as e:
-            return f"⚠️ Skip {path}: parse error: {e}"
+    try:
+        module = cst.parse_module(original)
+    except Exception as e:
+        return f"⚠️ Skip {path}: parse error: {e}"
 
-        transformer = _DocstringMdFormatTransformer(self)
-        updated = module.visit(transformer)
-        new_code = updated.code
-        if new_code == original:
-            if transformer.skipped:
-                return f"⚠️ File {path}: skipped {transformer.skipped} docstring(s); unchanged."
-            return "File is not changed."
-        path.write_text(new_code, encoding="utf-8", newline="\n")
-        skip_note = f" (skipped {transformer.skipped})" if transformer.skipped else ""
-        return f"✅ File {path} docstring Markdown formatted.{skip_note}"
+    transformer = _DocstringMdFormatTransformer(self)
+    updated = module.visit(transformer)
+    new_code = updated.code
+    if new_code == original:
+        if transformer.skipped:
+            return f"⚠️ File {path}: skipped {transformer.skipped} docstring(s); unchanged."
+        return "File is not changed."
+    path.write_text(new_code, encoding="utf-8", newline="\n")
+    skip_note = f" (skipped {transformer.skipped})" if transformer.skipped else ""
+    return f"✅ File {path} docstring Markdown formatted.{skip_note}"
 ```
 
 </details>
@@ -398,9 +397,9 @@ Returns:
 
 ```python
 def format_folder(self, folder: Path | str) -> str:
-        from harrix_pylib import funcs_file  # noqa: PLC0415
+    from harrix_pylib import funcs_file  # noqa: PLC0415
 
-        return funcs_file.apply_func(folder, ".py", self.format_file)
+    return funcs_file.apply_func(folder, ".py", self.format_file)
 ```
 
 </details>
@@ -426,18 +425,18 @@ Yields:
 
 ```python
 def iter_code_span_issues(text: str) -> Iterator[tuple[int, int, str]]:
-        lines = text.split("\n")
-        for line_index, (line, in_fence) in enumerate(_identify_code_blocks(lines)):
-            if in_fence:
-                continue
-            offset = 0
-            for segment, in_code in _identify_code_blocks_line(line):
-                if not in_code:
-                    for match in _QUOTED_CODE_RE.finditer(segment):
-                        yield line_index, offset + match.start() + 1, match.group(0)
-                    for match in _BARE_LITERAL_RE.finditer(segment):
-                        yield line_index, offset + match.start() + 1, match.group(1)
-                offset += len(segment)
+    lines = text.split("\n")
+    for line_index, (line, in_fence) in enumerate(_identify_code_blocks(lines)):
+        if in_fence:
+            continue
+        offset = 0
+        for segment, in_code in _identify_code_blocks_line(line):
+            if not in_code:
+                for match in _QUOTED_CODE_RE.finditer(segment):
+                    yield line_index, offset + match.start() + 1, match.group(0)
+                for match in _BARE_LITERAL_RE.finditer(segment):
+                    yield line_index, offset + match.start() + 1, match.group(1)
+            offset += len(segment)
 ```
 
 </details>
@@ -468,23 +467,23 @@ Returns:
 
 ```python
 def normalize_code_spans(text: str) -> str:
-        lines = text.split("\n")
-        out_lines: list[str] = []
-        for line, in_fence in _identify_code_blocks(lines):
-            if in_fence:
-                out_lines.append(line)
-                continue
-            parts: list[str] = []
-            for segment, in_code in _identify_code_blocks_line(line):
-                if in_code:
-                    parts.append(segment)
-                else:
-                    parts.append(_normalize_prose_segment(segment))
-            out_lines.append("".join(parts))
-        result = "\n".join(out_lines)
-        if text.endswith("\n") and not result.endswith("\n"):
-            result += "\n"
-        return result
+    lines = text.split("\n")
+    out_lines: list[str] = []
+    for line, in_fence in _identify_code_blocks(lines):
+        if in_fence:
+            out_lines.append(line)
+            continue
+        parts: list[str] = []
+        for segment, in_code in _identify_code_blocks_line(line):
+            if in_code:
+                parts.append(segment)
+            else:
+                parts.append(_normalize_prose_segment(segment))
+        out_lines.append("".join(parts))
+    result = "\n".join(out_lines)
+    if text.endswith("\n") and not result.endswith("\n"):
+        result += "\n"
+    return result
 ```
 
 </details>

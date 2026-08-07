@@ -49,7 +49,6 @@ Examples for ignore directives:
 
 ```python
 class PyChecker:
-
     # Rule constants for easier maintenance
     RULES: ClassVar[dict[str, str]] = {
         "HP001": "Presence of Russian letters in the code",
@@ -563,9 +562,9 @@ Returns:
 
 ```python
 def __call__(
-        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
-    ) -> list[str]:
-        return self.check(filename, select=select, exclude_rules=exclude_rules)
+    self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+) -> list[str]:
+    return self.check(filename, select=select, exclude_rules=exclude_rules)
 ```
 
 </details>
@@ -588,8 +587,8 @@ Args:
 
 ```python
 def __init__(self, project_root: Path | str | None = None) -> None:
-        self.all_rules = set(self.RULES.keys())
-        self.project_root = self._determine_project_root(project_root)
+    self.all_rules = set(self.RULES.keys())
+    self.project_root = self._determine_project_root(project_root)
 ```
 
 </details>
@@ -617,11 +616,11 @@ Returns:
 
 ```python
 def check(
-        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
-    ) -> list[str]:
-        filename = Path(filename)
-        active_rules = self._determine_active_rules(select, exclude_rules)
-        return list(self._check_all_rules(filename, active_rules))
+    self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+) -> list[str]:
+    filename = Path(filename)
+    active_rules = self._determine_active_rules(select, exclude_rules)
+    return list(self._check_all_rules(filename, active_rules))
 ```
 
 </details>
@@ -650,19 +649,19 @@ Returns:
 
 ```python
 def check_directory(
-        self,
-        directory: Path | str,
-        *,
-        select: set[str] | None = None,
-        exclude_rules: set[str] | None = None,
-        additional_ignore_patterns: list[str] | None = None,
-    ) -> dict[str, list[str]]:
-        results: dict[str, list[str]] = {}
-        for py_file in self.find_python_files(directory, additional_ignore_patterns):
-            errors = self.check(py_file, select=select, exclude_rules=exclude_rules)
-            if errors:
-                results[str(py_file)] = errors
-        return results
+    self,
+    directory: Path | str,
+    *,
+    select: set[str] | None = None,
+    exclude_rules: set[str] | None = None,
+    additional_ignore_patterns: list[str] | None = None,
+) -> dict[str, list[str]]:
+    results: dict[str, list[str]] = {}
+    for py_file in self.find_python_files(directory, additional_ignore_patterns):
+        errors = self.check(py_file, select=select, exclude_rules=exclude_rules)
+        if errors:
+            results[str(py_file)] = errors
+    return results
 ```
 
 </details>
@@ -689,18 +688,18 @@ Yields:
 
 ```python
 def find_python_files(
-        self, directory: Path | str, additional_ignore_patterns: list[str] | None = None
-    ) -> Generator[Path, None, None]:
-        directory = Path(directory)
-        if not directory.is_dir():
-            return
-        if h.file.should_ignore_path(directory, additional_ignore_patterns):
-            return
-        for item in directory.iterdir():
-            if item.is_file() and item.suffix.lower() == ".py":
-                yield item
-            elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
-                yield from self.find_python_files(item, additional_ignore_patterns)
+    self, directory: Path | str, additional_ignore_patterns: list[str] | None = None
+) -> Generator[Path, None, None]:
+    directory = Path(directory)
+    if not directory.is_dir():
+        return
+    if h.file.should_ignore_path(directory, additional_ignore_patterns):
+        return
+    for item in directory.iterdir():
+        if item.is_file() and item.suffix.lower() == ".py":
+            yield item
+        elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
+            yield from self.find_python_files(item, additional_ignore_patterns)
 ```
 
 </details>

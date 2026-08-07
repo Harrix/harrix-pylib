@@ -167,7 +167,6 @@ Note:
 
 ````python
 class MdChecker:
-
     # Placeholder image alt texts (H031); compared case-insensitively
     _IMAGE_ALT_PLACEHOLDERS: ClassVar[frozenset[str]] = frozenset({"alt", "alt text"})
 
@@ -3940,9 +3939,9 @@ Returns:
 
 ```python
 def __call__(
-        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
-    ) -> list[str]:
-        return self.check(filename, select=select, exclude_rules=exclude_rules)
+    self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+) -> list[str]:
+    return self.check(filename, select=select, exclude_rules=exclude_rules)
 ```
 
 </details>
@@ -3969,8 +3968,8 @@ Returns:
 
 ```python
 def __init__(self, project_root: Path | str | None = None) -> None:
-        self.all_rules = set(self.RULES.keys())
-        self.project_root = self._determine_project_root(project_root)
+    self.all_rules = set(self.RULES.keys())
+    self.project_root = self._determine_project_root(project_root)
 ```
 
 </details>
@@ -3998,11 +3997,11 @@ Returns:
 
 ```python
 def check(
-        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
-    ) -> list[str]:
-        filename = Path(filename)
-        active_rules = self._determine_active_rules(select, exclude_rules)
-        return list(self._check_all_rules(filename, active_rules))
+    self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+) -> list[str]:
+    filename = Path(filename)
+    active_rules = self._determine_active_rules(select, exclude_rules)
+    return list(self._check_all_rules(filename, active_rules))
 ```
 
 </details>
@@ -4033,19 +4032,19 @@ Returns:
 
 ```python
 def check_directory(
-        self,
-        directory: Path | str,
-        *,
-        select: set[str] | None = None,
-        exclude_rules: set[str] | None = None,
-        additional_ignore_patterns: list[str] | None = None,
-    ) -> dict[str, list[str]]:
-        results = {}
-        for md_file in self.find_markdown_files(directory, additional_ignore_patterns):
-            errors = self.check(md_file, select=select, exclude_rules=exclude_rules)
-            if errors:
-                results[str(md_file)] = errors
-        return results
+    self,
+    directory: Path | str,
+    *,
+    select: set[str] | None = None,
+    exclude_rules: set[str] | None = None,
+    additional_ignore_patterns: list[str] | None = None,
+) -> dict[str, list[str]]:
+    results = {}
+    for md_file in self.find_markdown_files(directory, additional_ignore_patterns):
+        errors = self.check(md_file, select=select, exclude_rules=exclude_rules)
+        if errors:
+            results[str(md_file)] = errors
+    return results
 ```
 
 </details>
@@ -4073,18 +4072,18 @@ Yields:
 
 ```python
 def find_markdown_files(
-        self, directory: Path | str, additional_ignore_patterns: list[str] | None = None
-    ) -> Generator[Path, None, None]:
-        directory = Path(directory)
-        if not directory.is_dir():
-            return
-        if h.file.should_ignore_path(directory, additional_ignore_patterns):
-            return
-        for item in directory.iterdir():
-            if item.is_file() and item.suffix.lower() in {".md", ".markdown"}:
-                yield item
-            elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
-                yield from self.find_markdown_files(item, additional_ignore_patterns)
+    self, directory: Path | str, additional_ignore_patterns: list[str] | None = None
+) -> Generator[Path, None, None]:
+    directory = Path(directory)
+    if not directory.is_dir():
+        return
+    if h.file.should_ignore_path(directory, additional_ignore_patterns):
+        return
+    for item in directory.iterdir():
+        if item.is_file() and item.suffix.lower() in {".md", ".markdown"}:
+            yield item
+        elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
+            yield from self.find_markdown_files(item, additional_ignore_patterns)
 ```
 
 </details>
