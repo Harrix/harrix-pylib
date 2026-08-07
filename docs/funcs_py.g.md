@@ -12,6 +12,13 @@ lang: en
 ## Contents
 
 - [🏛️ Class `DocsSourceLoc`](#%EF%B8%8F-class-docssourceloc)
+- [🏛️ Class `DocsSymbolIndex`](#%EF%B8%8F-class-docssymbolindex)
+  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
+  - [⚙️ Method `add`](#%EF%B8%8F-method-add)
+  - [⚙️ Method `add_module`](#%EF%B8%8F-method-add_module)
+  - [⚙️ Method `resolve`](#%EF%B8%8F-method-resolve)
+  - [⚙️ Method `target_for_heading`](#%EF%B8%8F-method-target_for_heading)
+- [🏛️ Class `DocsSymbolTarget`](#%EF%B8%8F-class-docssymboltarget)
 - [🔧 Function `check_python_docstring_markdown_errors`](#-function-check_python_docstring_markdown_errors)
 - [🔧 Function `create_uv_new_library`](#-function-create_uv_new_library)
 - [🔧 Function `create_uv_new_notebook`](#-function-create_uv_new_notebook)
@@ -43,6 +50,179 @@ class DocsSourceLoc(NamedTuple):
     path: Path
     line: int
     col: int
+```
+
+</details>
+
+## 🏛️ Class `DocsSymbolIndex`
+
+```python
+class DocsSymbolIndex
+```
+
+Maps unambiguous symbol names to documentation heading targets.
+
+<details>
+<summary>Code:</summary>
+
+```python
+class DocsSymbolIndex:
+
+    def __init__(self) -> None:
+        """Create an empty symbol index."""
+        self._key_to_targets: dict[str, list[DocsSymbolTarget]] = {}
+        self._heading_targets: dict[tuple[str, str], DocsSymbolTarget] = {}
+
+    def add(self, keys: list[str], target: DocsSymbolTarget, heading_title: str) -> None:
+        """Register lookup keys and heading title for a documentation target."""
+        self._heading_targets[(target.docs_path, heading_title)] = target
+        for key in keys:
+            self._key_to_targets.setdefault(key, []).append(target)
+
+    def add_module(self, tree: ast.Module, docs_relative_path: Path, *, include_private: bool) -> None:
+        """Index all documented headings from one module in emit order."""
+        docs_path = docs_relative_path.as_posix()
+        existing_ids: set[str] = set()
+        for keys, heading_title in _iter_docs_heading_entries(tree, include_private=include_private):
+            anchor = h.md.generate_id(heading_title, existing_ids)
+            self.add(keys, DocsSymbolTarget(docs_path, anchor), heading_title)
+
+    def resolve(self, key: str) -> DocsSymbolTarget | None:
+        """Return the unique target for `key`, or `None` when missing or ambiguous."""
+        targets = self._key_to_targets.get(key)
+        if not targets:
+            return None
+        unique = list(dict.fromkeys(targets))
+        if len(unique) != 1:
+            return None
+        return unique[0]
+
+    def target_for_heading(self, docs_path: str, heading_title: str) -> DocsSymbolTarget | None:
+        """Return the target registered for an exact heading title in a docs file."""
+        return self._heading_targets.get((docs_path, heading_title))
+```
+
+</details>
+
+### ⚙️ Method `__init__`
+
+```python
+def __init__(self) -> None
+```
+
+Create an empty symbol index.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def __init__(self) -> None:
+        self._key_to_targets: dict[str, list[DocsSymbolTarget]] = {}
+        self._heading_targets: dict[tuple[str, str], DocsSymbolTarget] = {}
+```
+
+</details>
+
+### ⚙️ Method `add`
+
+```python
+def add(self, keys: list[str], target: DocsSymbolTarget, heading_title: str) -> None
+```
+
+Register lookup keys and heading title for a documentation target.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def add(self, keys: list[str], target: DocsSymbolTarget, heading_title: str) -> None:
+        self._heading_targets[(target.docs_path, heading_title)] = target
+        for key in keys:
+            self._key_to_targets.setdefault(key, []).append(target)
+```
+
+</details>
+
+### ⚙️ Method `add_module`
+
+```python
+def add_module(self, tree: ast.Module, docs_relative_path: Path, *, include_private: bool) -> None
+```
+
+Index all documented headings from one module in emit order.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def add_module(self, tree: ast.Module, docs_relative_path: Path, *, include_private: bool) -> None:
+        docs_path = docs_relative_path.as_posix()
+        existing_ids: set[str] = set()
+        for keys, heading_title in _iter_docs_heading_entries(tree, include_private=include_private):
+            anchor = h.md.generate_id(heading_title, existing_ids)
+            self.add(keys, DocsSymbolTarget(docs_path, anchor), heading_title)
+```
+
+</details>
+
+### ⚙️ Method `resolve`
+
+```python
+def resolve(self, key: str) -> DocsSymbolTarget | None
+```
+
+Return the unique target for `key`, or `None` when missing or ambiguous.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def resolve(self, key: str) -> DocsSymbolTarget | None:
+        targets = self._key_to_targets.get(key)
+        if not targets:
+            return None
+        unique = list(dict.fromkeys(targets))
+        if len(unique) != 1:
+            return None
+        return unique[0]
+```
+
+</details>
+
+### ⚙️ Method `target_for_heading`
+
+```python
+def target_for_heading(self, docs_path: str, heading_title: str) -> DocsSymbolTarget | None
+```
+
+Return the target registered for an exact heading title in a docs file.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def target_for_heading(self, docs_path: str, heading_title: str) -> DocsSymbolTarget | None:
+        return self._heading_targets.get((docs_path, heading_title))
+```
+
+</details>
+
+## 🏛️ Class `DocsSymbolTarget`
+
+```python
+class DocsSymbolTarget(NamedTuple)
+```
+
+Resolved documentation target for an API symbol cross-link.
+
+<details>
+<summary>Code:</summary>
+
+```python
+class DocsSymbolTarget(NamedTuple):
+
+    docs_path: str
+    anchor: str
 ```
 
 </details>
@@ -657,6 +837,7 @@ def generate_md_docs(
 
     list_funcs_all = ""
     src_folder = folder / "src"
+    documented_modules: list[tuple[Path, Path, ast.Module]] = []
 
     for filename in src_folder.rglob("*.py"):
         if not _is_docs_python_file(filename):
@@ -671,6 +852,11 @@ def generate_md_docs(
             result_lines.append(f"File {filename.name} is skipped ({skip_reason}).")
             continue
 
+        documented_modules.append((filename, _docs_g_md_relative_path(filename, src_folder), tree))
+
+    symbol_index = _build_docs_symbol_index(documented_modules, include_private=include_private)
+
+    for filename, docs_relative_path, _tree in documented_modules:
         list_funcs = h.py.extract_functions_and_classes(
             filename,
             is_add_link_demo=True,
@@ -678,9 +864,13 @@ def generate_md_docs(
             src_folder=src_folder,
             include_private=include_private,
         )
-        docs = generate_md_docs_content(filename, include_private=include_private)
+        docs = generate_md_docs_content(
+            filename,
+            include_private=include_private,
+            symbol_index=symbol_index,
+            docs_relative_path=docs_relative_path,
+        )
 
-        docs_relative_path = _docs_g_md_relative_path(filename, src_folder)
         filename_docs = output_docs / docs_relative_path
 
         # Create parent directories if they don't exist
@@ -747,7 +937,7 @@ def generate_md_docs(
 ## 🔧 Function `generate_md_docs_content`
 
 ```python
-def generate_md_docs_content(file_path: Path | str, *, include_private: bool = False) -> str
+def generate_md_docs_content(file_path: Path | str, *, include_private: bool = False, symbol_index: DocsSymbolIndex | None = None, docs_relative_path: Path | str | None = None) -> str
 ```
 
 Generate Markdown documentation for a single Python file.
@@ -758,6 +948,10 @@ Args:
   a `Path` object or a string.
 - `include_private` (`bool`): Whether to include private names (starting with `_`, except magic dunders).
   Defaults to `False`.
+- `symbol_index` (`DocsSymbolIndex | None`): Optional project-wide symbol index for docstring
+  cross-links. When omitted, an index is built from this file only.
+- `docs_relative_path` (`Path | str | None`): Relative `.g.md` path under `docs/` for this file.
+  Inferred from a `src/` parent when omitted.
 
 Returns:
 
@@ -777,8 +971,19 @@ result = h.py.generate_md_docs_content(filename)
 <summary>Code:</summary>
 
 ```python
-def generate_md_docs_content(file_path: Path | str, *, include_private: bool = False) -> str:
-    content, _line_map = generate_md_docs_content_with_source_map(file_path, include_private=include_private)
+def generate_md_docs_content(
+    file_path: Path | str,
+    *,
+    include_private: bool = False,
+    symbol_index: DocsSymbolIndex | None = None,
+    docs_relative_path: Path | str | None = None,
+) -> str:
+    content, _line_map = generate_md_docs_content_with_source_map(
+        file_path,
+        include_private=include_private,
+        symbol_index=symbol_index,
+        docs_relative_path=docs_relative_path,
+    )
     return content
 ```
 
@@ -787,7 +992,7 @@ def generate_md_docs_content(file_path: Path | str, *, include_private: bool = F
 ## 🔧 Function `generate_md_docs_content_with_source_map`
 
 ```python
-def generate_md_docs_content_with_source_map(file_path: Path | str, *, include_private: bool = False) -> tuple[str, list[DocsSourceLoc | None]]
+def generate_md_docs_content_with_source_map(file_path: Path | str, *, include_private: bool = False, symbol_index: DocsSymbolIndex | None = None, docs_relative_path: Path | str | None = None) -> tuple[str, list[DocsSourceLoc | None]]
 ```
 
 Generate Markdown docs for a Python file and a per-line map to Python source.
@@ -799,6 +1004,10 @@ Args:
 
 - `file_path` (`Path | str`): Path to the Python file.
 - `include_private` (`bool`): Also document private names. Defaults to `False`.
+- `symbol_index` (`DocsSymbolIndex | None`): Optional project-wide symbol index for docstring
+  cross-links. When omitted, an index is built from this file only.
+- `docs_relative_path` (`Path | str | None`): Relative `.g.md` path under `docs/` for this file.
+  Inferred from a `src/` parent when omitted.
 
 Returns:
 
@@ -822,12 +1031,20 @@ def generate_md_docs_content_with_source_map(
     file_path: Path | str,
     *,
     include_private: bool = False,
+    symbol_index: DocsSymbolIndex | None = None,
+    docs_relative_path: Path | str | None = None,
 ) -> tuple[str, list[DocsSourceLoc | None]]:
     file_path = Path(file_path).resolve()
     with file_path.open(encoding="utf-8") as f:
         source = f.read()
     source_lines = source.splitlines(keepends=True)
     tree = ast.parse(source)
+
+    docs_rel = Path(docs_relative_path) if docs_relative_path is not None else _infer_docs_g_md_relative_path(file_path)
+    docs_path_str = docs_rel.as_posix()
+    if symbol_index is None:
+        symbol_index = DocsSymbolIndex()
+        symbol_index.add_module(tree, docs_rel, include_private=include_private)
 
     out_lines: list[str] = []
     line_map: list[DocsSourceLoc | None] = []
@@ -922,7 +1139,12 @@ def generate_md_docs_content_with_source_map(
         emit_structural(close_fence, fallback)
         emit_blank(fallback)
 
-    def emit_docstring_or_placeholder(node: ast.AST, docstring: str | None, fallback: DocsSourceLoc) -> None:
+    def emit_docstring_or_placeholder(
+        node: ast.AST,
+        docstring: str | None,
+        fallback: DocsSourceLoc,
+        current_target: DocsSymbolTarget | None = None,
+    ) -> None:
         if docstring:
             locs = docstring_content_locs(node, docstring)
             parts = docstring.splitlines() or [""]
@@ -933,7 +1155,17 @@ def generate_md_docs_content_with_source_map(
                     in_fence = not in_fence
                     emit(part, loc)
                     continue
-                emit(part if in_fence else _strip_trailing_linter_comments(part), loc)
+                if in_fence:
+                    emit(part, loc)
+                    continue
+                text = _strip_trailing_linter_comments(part)
+                text = _linkify_docs_symbol_line(
+                    text,
+                    index=symbol_index,
+                    current_docs_path=docs_path_str,
+                    current_target=current_target,
+                )
+                emit(text, loc)
             emit_blank(locs[-1] if locs else fallback)
         else:
             emit_structural("_No docstring provided._", fallback)
@@ -950,7 +1182,9 @@ def generate_md_docs_content_with_source_map(
         emit_blank(loc)
         code, code_start = get_node_code(node)
         append_fenced_code(signature, loc.line, loc)
-        emit_docstring_or_placeholder(node, docstring, loc)
+        heading_title = heading.lstrip("#").strip()
+        current_target = symbol_index.target_for_heading(docs_path_str, heading_title)
+        emit_docstring_or_placeholder(node, docstring, loc, current_target)
         emit_structural("<details>", loc)
         emit_structural("<summary>Code:</summary>", loc)
         emit_blank(loc)
@@ -1165,7 +1399,7 @@ Args:
 
 - `error` (`str`): Error message produced by MdChecker for generated Markdown docs.
 - `line_map` (`list[DocsSourceLoc | None]`): Per-line map from
-  `generate_md_docs_content_with_source_map`.
+  [`generate_md_docs_content_with_source_map`](#-function-generate_md_docs_content_with_source_map).
 
 Returns:
 

@@ -1209,6 +1209,131 @@ __all__ = ["Helper"]
         assert "Re-export" not in result
 
 
+def test_generate_md_docs_content_cross_links_same_file() -> None:
+    content = '''
+def helper() -> str:
+    """Return helper text."""
+    return "ok"
+
+def main() -> None:
+    """Call `helper` and mention `missing`."""
+    helper()
+
+class Alpha:
+    """Alpha class."""
+
+    def run(self) -> None:
+        """Run Alpha."""
+        return None
+
+class Beta:
+    """See `Alpha.run` and ambiguous `run`."""
+
+    def run(self) -> None:
+        """Run Beta."""
+        return None
+'''
+
+    helper_anchor = h.md.generate_id("🔧 Function `helper`", set())
+    alpha_run_anchor = h.md.generate_id("⚙️ Method `run`", set())
+
+    with TemporaryDirectory() as temp_folder:
+        test_file = Path(temp_folder) / "cross_links.py"
+        test_file.write_text(content, encoding="utf-8")
+        md_content = h.py.generate_md_docs_content(str(test_file))
+
+    assert f"[`helper`](#{helper_anchor})" in md_content
+    assert "`missing`" in md_content
+    assert "[`missing`]" not in md_content
+    assert f"[`Alpha.run`](#{alpha_run_anchor})" in md_content
+    assert "ambiguous `run`" in md_content
+    assert "[`run`](" not in md_content
+
+
+def test_generate_md_docs_content_cross_links_skips_fences_and_existing_links() -> None:
+    content = '''
+def helper() -> str:
+    """Return helper text."""
+    return "ok"
+
+def main() -> None:
+    """Keep fence and existing link intact.
+
+    ```python
+    value = helper()
+    ```
+
+    Already linked: [`helper`](#custom).
+    Plain: `helper`.
+    """
+    helper()
+'''
+
+    helper_anchor = h.md.generate_id("🔧 Function `helper`", set())
+
+    with TemporaryDirectory() as temp_folder:
+        test_file = Path(temp_folder) / "cross_links_skip.py"
+        test_file.write_text(content, encoding="utf-8")
+        md_content = h.py.generate_md_docs_content(str(test_file))
+
+    assert "```python\nvalue = helper()\n```" in md_content
+    assert "[`helper`](#custom)" in md_content
+    assert f"[`helper`](#{helper_anchor})" in md_content
+
+
+def test_generate_md_docs_content_cross_links_skips_self_reference() -> None:
+    content = '''
+def helper() -> str:
+    """`helper` documents itself and points to `main`."""
+    return "ok"
+
+def main() -> None:
+    """Entry point."""
+    helper()
+'''
+
+    main_anchor = h.md.generate_id("🔧 Function `main`", set())
+
+    with TemporaryDirectory() as temp_folder:
+        test_file = Path(temp_folder) / "cross_links_self.py"
+        test_file.write_text(content, encoding="utf-8")
+        md_content = h.py.generate_md_docs_content(str(test_file))
+
+    helper_section = md_content.split("## 🔧 Function `helper`")[1].split("## 🔧 Function `main`")[0]
+    assert "`helper`" in helper_section
+    assert "[`helper`]" not in helper_section
+    assert f"[`main`](#{main_anchor})" in helper_section
+
+
+def test_generate_md_docs_cross_links_across_files() -> None:
+    with TemporaryDirectory() as temp_folder:
+        temp_path = Path(temp_folder)
+        src = temp_path / "src" / "pkg"
+        src.mkdir(parents=True)
+        (src / "helper.py").write_text(
+            '''
+def helper() -> str:
+    """Helper function."""
+    return "ok"
+''',
+            encoding="utf-8",
+        )
+        (src / "main.py").write_text(
+            '''
+def main() -> None:
+    """Call `helper` from the other module."""
+    return None
+''',
+            encoding="utf-8",
+        )
+        (temp_path / "README.md").write_text("# Test\n\n## 📚 List of functions\n", encoding="utf-8")
+        h.py.generate_md_docs(temp_path, "---\nlang: en\n---\n", "https://example.com/test")
+        main_docs = (temp_path / "docs" / "main.g.md").read_text(encoding="utf-8")
+
+    helper_anchor = h.md.generate_id("🔧 Function `helper`", set())
+    assert f"[`helper`](helper.g.md#{helper_anchor})" in main_docs
+
+
 def test_sort_py_code() -> None:
     current_folder = h.dev.get_project_root()
     py = Path(current_folder / "tests/data/sort_py_code__before.txt").read_text(encoding="utf8")

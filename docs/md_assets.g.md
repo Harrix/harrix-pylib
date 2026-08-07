@@ -193,7 +193,7 @@ def iter_misplaced_note_assets(folder: Path | str) -> Iterator[tuple[Path, Path]
 Yield `(source, destination)` for misplaced direct assets in a note folder.
 
 Destination may already exist; callers that move files should skip collisions.
-Project roots are skipped (see `is_note_asset_folder`).
+Project roots are skipped (see [`is_note_asset_folder`](#-function-is_note_asset_folder)).
 
 Args:
 
@@ -247,7 +247,7 @@ def organize_note_folder_assets(folder: Path | str) -> str
 
 Move misplaced note assets into `img/` / `files/` and rewrite Markdown links.
 
-No-op for software project roots (see `is_note_asset_folder`).
+No-op for software project roots (see [`is_note_asset_folder`](#-function-is_note_asset_folder)).
 
 Args:
 

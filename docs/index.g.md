@@ -233,6 +233,8 @@ Doc: [funcs_py.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs
 | Function/Class | Description |
 |----------------|-------------|
 | 🏛️ Class [`DocsSourceLoc (NamedTuple)`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#%EF%B8%8F-class-docssourceloc) | Python source location corresponding to a generated Markdown docs line. |
+| 🏛️ Class [`DocsSymbolIndex`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#%EF%B8%8F-class-docssymbolindex) | Maps unambiguous symbol names to documentation heading targets. |
+| 🏛️ Class [`DocsSymbolTarget (NamedTuple)`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#%EF%B8%8F-class-docssymboltarget) | Resolved documentation target for an API symbol cross-link. |
 | 🔧 [`check_python_docstring_markdown_errors`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-check_python_docstring_markdown_errors) | Check docstring Markdown typography for Python sources; errors point at `.py` locations. |
 | 🔧 [`create_uv_new_library`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-create_uv_new_library) | Create a new library using uv, initializes it, and sets up necessary files. |
 | 🔧 [`create_uv_new_notebook`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-create_uv_new_notebook) | Create a new Jupyter notebook project using uv and set up necessary files. |

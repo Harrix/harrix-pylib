@@ -775,7 +775,7 @@ Note:
   fenced code block in the combined `.g.md`; the flag itself is not merged
   into the combined YAML.
 - Per-note UI metadata such as `icon` is not merged into the combined YAML
-  (along with `date`, `update`, `permalink`, `related-id`, `sort-section`,
+  (along with `date`, [`update`](progress.g.md#%EF%B8%8F-method-update), `permalink`, `related-id`, `sort-section`,
   and `raw-markdown`).
 - Heading levels in the content will be increased by one level.
 - Local links and image paths will be adjusted to maintain proper references.
@@ -1140,7 +1140,7 @@ Returns:
 
 Note:
 
-- Code blocks are detected using the helper function `identify_code_blocks` and are not modified.
+- Code blocks are detected using the helper function [`identify_code_blocks`](#-function-identify_code_blocks) and are not modified.
 - Headings with only one '#' (h1) remain unchanged to maintain valid Markdown structure.
 
 Example:
@@ -3125,7 +3125,7 @@ Returns:
 
 Note:
 
-- Code blocks are detected using the helper function `identify_code_blocks` and are not modified.
+- Code blocks are detected using the helper function [`identify_code_blocks`](#-function-identify_code_blocks) and are not modified.
 
 Example:
 

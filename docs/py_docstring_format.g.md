@@ -28,7 +28,7 @@ lang: en
 class PyDocstringFormatter
 ```
 
-Format Markdown inside Python docstrings, similar to `MdFormatter` for `.md` files.
+Format Markdown inside Python docstrings, similar to [`MdFormatter`](md_format/formatter.g.md#%EF%B8%8F-class-mdformatter) for `.md` files.
 
 <details>
 <summary>Code:</summary>
@@ -259,7 +259,7 @@ Initialize the docstring formatter.
 
 Args:
 
-- `end_of_line` (`str`): Line ending style passed to `MdFormatter` for docstring
+- `end_of_line` (`str`): Line ending style passed to [`MdFormatter`](md_format/formatter.g.md#%EF%B8%8F-class-mdformatter) for docstring
   bodies (`crlf` or `lf`). Defaults to `lf` (matches typical Python sources).
 - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`).
   Defaults to `preserve`.
@@ -325,7 +325,7 @@ def format_file(self, filename: Path | str) -> str
 
 Format Markdown inside Python docstrings in a file.
 
-Uses `MdFormatter` on multiline docstring bodies, then writes them back so that:
+Uses [`MdFormatter`](md_format/formatter.g.md#%EF%B8%8F-class-mdformatter) on multiline docstring bodies, then writes them back so that:
 
 - Multiline docstrings keep a blank line before the closing quotes
 - When the formatted body contains backslashes, the literal gets an `r`

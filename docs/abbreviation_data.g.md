@@ -83,7 +83,7 @@ Load RU+EN abbreviation JSON (always both; not gated by document lang).
 
 Returns:
 
-- `AbbreviationData`: Compiled forms and patterns, cached after the first call.
+- [`AbbreviationData`](#%EF%B8%8F-class-abbreviationdata): Compiled forms and patterns, cached after the first call.
 
 <details>
 <summary>Code:</summary>

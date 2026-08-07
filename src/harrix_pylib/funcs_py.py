@@ -33,6 +33,50 @@ class DocsSourceLoc(NamedTuple):
     col: int
 
 
+class DocsSymbolIndex:
+    """Maps unambiguous symbol names to documentation heading targets."""
+
+    def __init__(self) -> None:
+        """Create an empty symbol index."""
+        self._key_to_targets: dict[str, list[DocsSymbolTarget]] = {}
+        self._heading_targets: dict[tuple[str, str], DocsSymbolTarget] = {}
+
+    def add(self, keys: list[str], target: DocsSymbolTarget, heading_title: str) -> None:
+        """Register lookup keys and heading title for a documentation target."""
+        self._heading_targets[(target.docs_path, heading_title)] = target
+        for key in keys:
+            self._key_to_targets.setdefault(key, []).append(target)
+
+    def add_module(self, tree: ast.Module, docs_relative_path: Path, *, include_private: bool) -> None:
+        """Index all documented headings from one module in emit order."""
+        docs_path = docs_relative_path.as_posix()
+        existing_ids: set[str] = set()
+        for keys, heading_title in _iter_docs_heading_entries(tree, include_private=include_private):
+            anchor = h.md.generate_id(heading_title, existing_ids)
+            self.add(keys, DocsSymbolTarget(docs_path, anchor), heading_title)
+
+    def resolve(self, key: str) -> DocsSymbolTarget | None:
+        """Return the unique target for `key`, or `None` when missing or ambiguous."""
+        targets = self._key_to_targets.get(key)
+        if not targets:
+            return None
+        unique = list(dict.fromkeys(targets))
+        if len(unique) != 1:
+            return None
+        return unique[0]
+
+    def target_for_heading(self, docs_path: str, heading_title: str) -> DocsSymbolTarget | None:
+        """Return the target registered for an exact heading title in a docs file."""
+        return self._heading_targets.get((docs_path, heading_title))
+
+
+class DocsSymbolTarget(NamedTuple):
+    """Resolved documentation target for an API symbol cross-link."""
+
+    docs_path: str
+    anchor: str
+
+
 def check_python_docstring_markdown_errors(
     folder: Path | str,
     *,
@@ -579,6 +623,7 @@ def generate_md_docs(
 
     list_funcs_all = ""
     src_folder = folder / "src"
+    documented_modules: list[tuple[Path, Path, ast.Module]] = []
 
     for filename in src_folder.rglob("*.py"):
         if not _is_docs_python_file(filename):
@@ -593,6 +638,11 @@ def generate_md_docs(
             result_lines.append(f"File {filename.name} is skipped ({skip_reason}).")
             continue
 
+        documented_modules.append((filename, _docs_g_md_relative_path(filename, src_folder), tree))
+
+    symbol_index = _build_docs_symbol_index(documented_modules, include_private=include_private)
+
+    for filename, docs_relative_path, _tree in documented_modules:
         list_funcs = h.py.extract_functions_and_classes(
             filename,
             is_add_link_demo=True,
@@ -600,9 +650,13 @@ def generate_md_docs(
             src_folder=src_folder,
             include_private=include_private,
         )
-        docs = generate_md_docs_content(filename, include_private=include_private)
+        docs = generate_md_docs_content(
+            filename,
+            include_private=include_private,
+            symbol_index=symbol_index,
+            docs_relative_path=docs_relative_path,
+        )
 
-        docs_relative_path = _docs_g_md_relative_path(filename, src_folder)
         filename_docs = output_docs / docs_relative_path
 
         # Create parent directories if they don't exist
@@ -664,7 +718,13 @@ def generate_md_docs(
     return "\n".join(result_lines)
 
 
-def generate_md_docs_content(file_path: Path | str, *, include_private: bool = False) -> str:
+def generate_md_docs_content(
+    file_path: Path | str,
+    *,
+    include_private: bool = False,
+    symbol_index: DocsSymbolIndex | None = None,
+    docs_relative_path: Path | str | None = None,
+) -> str:
     """Generate Markdown documentation for a single Python file.
 
     Args:
@@ -673,6 +733,10 @@ def generate_md_docs_content(file_path: Path | str, *, include_private: bool = F
       a `Path` object or a string.
     - `include_private` (`bool`): Whether to include private names (starting with `_`, except magic dunders).
       Defaults to `False`.
+    - `symbol_index` (`DocsSymbolIndex | None`): Optional project-wide symbol index for docstring
+      cross-links. When omitted, an index is built from this file only.
+    - `docs_relative_path` (`Path | str | None`): Relative `.g.md` path under `docs/` for this file.
+      Inferred from a `src/` parent when omitted.
 
     Returns:
 
@@ -689,7 +753,12 @@ def generate_md_docs_content(file_path: Path | str, *, include_private: bool = F
     ```
 
     """
-    content, _line_map = generate_md_docs_content_with_source_map(file_path, include_private=include_private)
+    content, _line_map = generate_md_docs_content_with_source_map(
+        file_path,
+        include_private=include_private,
+        symbol_index=symbol_index,
+        docs_relative_path=docs_relative_path,
+    )
     return content
 
 
@@ -697,6 +766,8 @@ def generate_md_docs_content_with_source_map(
     file_path: Path | str,
     *,
     include_private: bool = False,
+    symbol_index: DocsSymbolIndex | None = None,
+    docs_relative_path: Path | str | None = None,
 ) -> tuple[str, list[DocsSourceLoc | None]]:
     """Generate Markdown docs for a Python file and a per-line map to Python source.
 
@@ -707,6 +778,10 @@ def generate_md_docs_content_with_source_map(
 
     - `file_path` (`Path | str`): Path to the Python file.
     - `include_private` (`bool`): Also document private names. Defaults to `False`.
+    - `symbol_index` (`DocsSymbolIndex | None`): Optional project-wide symbol index for docstring
+      cross-links. When omitted, an index is built from this file only.
+    - `docs_relative_path` (`Path | str | None`): Relative `.g.md` path under `docs/` for this file.
+      Inferred from a `src/` parent when omitted.
 
     Returns:
 
@@ -728,6 +803,12 @@ def generate_md_docs_content_with_source_map(
         source = f.read()
     source_lines = source.splitlines(keepends=True)
     tree = ast.parse(source)
+
+    docs_rel = Path(docs_relative_path) if docs_relative_path is not None else _infer_docs_g_md_relative_path(file_path)
+    docs_path_str = docs_rel.as_posix()
+    if symbol_index is None:
+        symbol_index = DocsSymbolIndex()
+        symbol_index.add_module(tree, docs_rel, include_private=include_private)
 
     out_lines: list[str] = []
     line_map: list[DocsSourceLoc | None] = []
@@ -822,7 +903,12 @@ def generate_md_docs_content_with_source_map(
         emit_structural(close_fence, fallback)
         emit_blank(fallback)
 
-    def emit_docstring_or_placeholder(node: ast.AST, docstring: str | None, fallback: DocsSourceLoc) -> None:
+    def emit_docstring_or_placeholder(
+        node: ast.AST,
+        docstring: str | None,
+        fallback: DocsSourceLoc,
+        current_target: DocsSymbolTarget | None = None,
+    ) -> None:
         if docstring:
             locs = docstring_content_locs(node, docstring)
             parts = docstring.splitlines() or [""]
@@ -833,7 +919,17 @@ def generate_md_docs_content_with_source_map(
                     in_fence = not in_fence
                     emit(part, loc)
                     continue
-                emit(part if in_fence else _strip_trailing_linter_comments(part), loc)
+                if in_fence:
+                    emit(part, loc)
+                    continue
+                text = _strip_trailing_linter_comments(part)
+                text = _linkify_docs_symbol_line(
+                    text,
+                    index=symbol_index,
+                    current_docs_path=docs_path_str,
+                    current_target=current_target,
+                )
+                emit(text, loc)
             emit_blank(locs[-1] if locs else fallback)
         else:
             emit_structural("_No docstring provided._", fallback)
@@ -850,7 +946,9 @@ def generate_md_docs_content_with_source_map(
         emit_blank(loc)
         code, code_start = get_node_code(node)
         append_fenced_code(signature, loc.line, loc)
-        emit_docstring_or_placeholder(node, docstring, loc)
+        heading_title = heading.lstrip("#").strip()
+        current_target = symbol_index.target_for_heading(docs_path_str, heading_title)
+        emit_docstring_or_placeholder(node, docstring, loc, current_target)
         emit_structural("<details>", loc)
         emit_structural("<summary>Code:</summary>", loc)
         emit_blank(loc)
@@ -1440,6 +1538,18 @@ def _append_readme_title_and_cli(project_path: Path, name: str, cli_commands: st
         return res + f"I/O error: {e}"
 
 
+def _build_docs_symbol_index(
+    modules: list[tuple[Path, Path, ast.Module]],
+    *,
+    include_private: bool,
+) -> DocsSymbolIndex:
+    """Build a project-wide symbol index from documented modules."""
+    index = DocsSymbolIndex()
+    for _py_file, docs_relative_path, tree in modules:
+        index.add_module(tree, docs_relative_path, include_private=include_private)
+    return index
+
+
 def _const_str_sequence(node: ast.AST | None) -> set[str] | None:
     """Return string names from a list/tuple of constants, or `None` if dynamic."""
     if not isinstance(node, (ast.List, ast.Tuple)):
@@ -1464,12 +1574,36 @@ def _decorator_name(decorator: ast.expr) -> str | None:
     return None
 
 
+def _docs_callable_lookup_keys(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    heading_name: str,
+    class_qualified: str | None,
+) -> list[str]:
+    """Return lookup keys for a documented function or method heading."""
+    keys: list[str] = []
+    if not _is_overload(node):
+        keys.append(node.name)
+        if class_qualified:
+            keys.append(f"{class_qualified}.{node.name}")
+    if heading_name != node.name:
+        keys.append(heading_name)
+    return list(dict.fromkeys(keys))
+
+
 def _docs_g_md_relative_path(py_file: Path, src_folder: Path) -> Path:
     """Return the relative `.g.md` path under `docs/` for a Python source file."""
     relative_path = py_file.relative_to(src_folder)
     if len(relative_path.parts) > 1:
         return Path(*relative_path.parts[1:]).with_suffix(".g.md")
     return relative_path.with_suffix(".g.md")
+
+
+def _docs_symbol_href(current_docs_path: str, target: DocsSymbolTarget) -> str:
+    """Return a Markdown href from the current docs file to `target`."""
+    if current_docs_path == target.docs_path:
+        return f"#{target.anchor}"
+    relative = Path(os.path.relpath(Path(target.docs_path), start=Path(current_docs_path).parent))
+    return f"{relative.as_posix()}#{target.anchor}"
 
 
 def _docstring_expr(node: ast.AST) -> ast.Expr | None:
@@ -1603,6 +1737,15 @@ def _has_public_documented_entities(tree: ast.Module) -> bool:
     return _has_documented_entities(tree, include_private=False)
 
 
+def _infer_docs_g_md_relative_path(py_file: Path) -> Path:
+    """Infer the relative `.g.md` path under `docs/` from a Python file path."""
+    py_file = Path(py_file)
+    for parent in py_file.parents:
+        if parent.name == "src":
+            return _docs_g_md_relative_path(py_file, parent)
+    return Path(py_file.with_suffix(".g.md").name)
+
+
 def _is_ast_type_alias(node: ast.AST) -> bool:
     """Return whether `node` is a PEP 695 `type` alias statement."""
     return bool(_AST_TYPE_ALIAS) and isinstance(node, _AST_TYPE_ALIAS)
@@ -1631,6 +1774,129 @@ def _is_private_name(name: str) -> bool:
 def _is_type_alias_annotation(annotation: ast.expr) -> bool:
     """Return whether an annotation denotes `TypeAlias`."""
     return _decorator_name(annotation) == "TypeAlias"
+
+
+def _iter_docs_heading_entries(
+    tree: ast.Module,
+    *,
+    include_private: bool,
+) -> list[tuple[list[str], str]]:
+    """Return `(lookup_keys, heading_title)` pairs in the same order as docs emit."""
+    entries: list[tuple[list[str], str]] = []
+    dunder_all = _parse_dunder_all(tree)
+    module_overload_counts: dict[str, int] = {}
+    module_other_counts: dict[str, int] = {}
+
+    def append_callable(
+        node: ast.FunctionDef | ast.AsyncFunctionDef,
+        *,
+        kind: str,
+        overload_counts: dict[str, int],
+        other_counts: dict[str, int],
+        class_qualified: str | None,
+    ) -> None:
+        heading_name = _next_callable_heading_name(node, overload_counts=overload_counts, other_counts=other_counts)
+        heading_title = f"{kind} `{heading_name}`"
+        keys = _docs_callable_lookup_keys(node, heading_name, class_qualified)
+        entries.append((keys, heading_title))
+
+    def append_class(class_node: ast.ClassDef, qualified_name: str) -> None:
+        keys = [qualified_name]
+        if class_node.name != qualified_name:
+            keys.append(class_node.name)
+        entries.append((list(dict.fromkeys(keys)), f"🏛️ Class `{qualified_name}`"))
+        overload_counts: dict[str, int] = {}
+        other_counts: dict[str, int] = {}
+        for body_node in class_node.body:
+            if isinstance(body_node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _should_document_name(
+                body_node.name, include_private=include_private
+            ):
+                append_callable(
+                    body_node,
+                    kind="⚙️ Method",
+                    overload_counts=overload_counts,
+                    other_counts=other_counts,
+                    class_qualified=qualified_name,
+                )
+            elif isinstance(body_node, ast.ClassDef) and _should_document_name(
+                body_node.name, include_private=include_private
+            ):
+                append_class(body_node, f"{qualified_name}.{body_node.name}")
+
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef):
+            if not _should_document_module_name(node.name, include_private=include_private, dunder_all=dunder_all):
+                continue
+            append_class(node, node.name)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if not _should_document_module_name(node.name, include_private=include_private, dunder_all=dunder_all):
+                continue
+            append_callable(
+                node,
+                kind="🔧 Function",
+                overload_counts=module_overload_counts,
+                other_counts=module_other_counts,
+                class_qualified=None,
+            )
+        elif _is_ast_type_alias(node):
+            alias_name = _type_alias_name(node)
+            if alias_name is None or not _should_document_module_data(
+                alias_name,
+                include_private=include_private,
+                dunder_all=dunder_all,
+            ):
+                continue
+            entries.append(([alias_name], f"🏷️ Type alias `{alias_name}`"))
+        elif isinstance(node, ast.AnnAssign):
+            target = _ann_assign_name(node)
+            if target is None or target == "__all__":
+                continue
+            if not _should_document_module_data(target, include_private=include_private, dunder_all=dunder_all):
+                continue
+            is_alias = _is_type_alias_annotation(node.annotation)
+            heading = f"🏷️ Type alias `{target}`" if is_alias else f"📎 Constant `{target}`"
+            entries.append(([target], heading))
+        elif isinstance(node, ast.Assign):
+            target = _simple_assign_name(node)
+            if target is None or target == "__all__":
+                continue
+            if not _should_document_module_data(target, include_private=include_private, dunder_all=dunder_all):
+                continue
+            entries.append(([target], f"📎 Constant `{target}`"))
+
+    return entries
+
+
+def _linkify_docs_symbol_line(
+    line: str,
+    *,
+    index: DocsSymbolIndex,
+    current_docs_path: str,
+    current_target: DocsSymbolTarget | None,
+) -> str:
+    """Turn unambiguous `` `Symbol` `` mentions into Markdown links to docs headings."""
+
+    def transform_segment(segment: str) -> str:
+        """Replace backtick symbol names inside one unprotected segment."""
+
+        def replace(match: re.Match[str]) -> str:
+            name = match.group("name")
+            target = index.resolve(name)
+            if target is None or target == current_target:
+                return match.group(0)
+            href = _docs_symbol_href(current_docs_path, target)
+            return f"[`{name}`]({href})"
+
+        return _DOCS_SYMBOL_BACKTICK_RE.sub(replace, segment)
+
+    parts: list[str] = []
+    last = 0
+    for match in _MD_INLINE_LINK_OR_IMAGE_RE.finditer(line):
+        parts.append(transform_segment(line[last : match.start()]))
+        parts.append(match.group(0))
+        last = match.end()
+    parts.append(transform_segment(line[last:]))
+    return "".join(parts)
 
 
 def _max_backtick_run(text: str) -> int:
@@ -1817,6 +2083,11 @@ def _write_vscode_dev_terminal_config(project_path: Path) -> None:
 # `ast.TypeAlias` exists only on Python 3.12+.
 _AST_TYPE_ALIAS: type[ast.AST] | tuple[()] = getattr(ast, "TypeAlias", ())
 
+# Inline `` `Name` `` / `` `Class.method` `` mentions for API docs cross-links.
+_DOCS_SYMBOL_BACKTICK_RE = re.compile(r"`(?P<name>[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)`")
+
+# Existing Markdown links/images — leave their labels and destinations untouched.
+_MD_INLINE_LINK_OR_IMAGE_RE = re.compile(r"!?\[(?:[^\]\\]|\\.)*\]\([^)]*\)")
 
 # Trailing harrix / ruff / ty / type-checker suppressions at end of a line.
 # `file-ignore` is matched before `ignore`. Requires leading whitespace so mid-line

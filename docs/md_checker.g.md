@@ -154,12 +154,12 @@ Text with several ignored rules. <!-- ignore: H021, H024 -->
 Note:
 
 - Files with `raw-markdown: true` in YAML: prose and structure checks skip the
-  body after the first ATX H1 (same span that `combine_markdown_files` wraps in a
+  body after the first ATX H1 (same span that [`combine_markdown_files`](funcs_md.g.md#-function-combine_markdown_files) wraps in a
   fenced code block). Filename, YAML, BOM, line endings, and H060/H061/H078 asset
   layout rules still apply; H060 still scans the full file for asset references.
 - `<!-- ignore: ... -->` suppresses the listed rules on its own line, and
   `<!-- file-ignore: ... -->` suppresses them for the whole file, mirroring the
-  `# ignore:` / `# file-ignore:` comments of `PyChecker`.
+  `# ignore:` / `# file-ignore:` comments of [`PyChecker`](py_checker.g.md#%EF%B8%8F-class-pychecker).
 
 <details>
 <summary>Code:</summary>
