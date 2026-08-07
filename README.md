@@ -282,7 +282,7 @@ Doc: [`md_decimal_separators.g.md`](https://github.com/Harrix/harrix-pylib/blob/
 | Function/Class                                                                                                                                                       | Description                                                                  |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | 🔧 [`classify_decimal_separator_issue`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_decimal_separators.g.md#-function-classify_decimal_separator_issue) | Return autofix kind for a compact numeric token, or `None` if allowed.       |
-| 🔧 [`fix_decimal_separators`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_decimal_separators.g.md#-function-fix_decimal_separators)                     | Rewrite wrong decimal separators in `segment` for `lang` (`en` / `ru`).      |
+| 🔧 [`fix_decimal_separators`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_decimal_separators.g.md#-function-fix_decimal_separators)                     | Rewrite comma decimals to points in `segment` for `lang` (`en` / `ru`).      |
 | 🔧 [`iter_decimal_separator_issues`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_decimal_separators.g.md#-function-iter_decimal_separator_issues)       | Yield `(start, end, token, kind)` for wrong decimal separators in `segment`. |
 
 ### 📄 File `progress.py`

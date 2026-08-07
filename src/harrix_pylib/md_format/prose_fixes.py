@@ -651,12 +651,11 @@ def _fix_prose_line(line: str, *, lang: str) -> str:
     line = _fix_emphasis_colon_space(line)  # H029
     line = _fix_lowercase_after_punctuation(line)  # H021
     line = _map_non_code(line, _fix_missing_space_after_punctuation)  # H050
+    if lang in {"en", "ru"}:
+        line = _map_non_code(line, lambda segment, language=lang: fix_decimal_separators(segment, language))  # H062
     if lang == "ru":
         line = _map_non_code(line, _fix_space_before_percent_or_degree)  # H044
-        line = _map_non_code(line, lambda segment: fix_decimal_separators(segment, "ru"))  # H062
         line = _fix_russian_polite_pronouns(line)  # H023
-    elif lang == "en":
-        line = _map_non_code(line, lambda segment: fix_decimal_separators(segment, "en"))  # H062
     if _CYRILLIC_PATTERN.search(line):
         line = _map_non_code(line, _fix_punctuation_before_closing_guillemet)  # H058
 

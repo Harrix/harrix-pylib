@@ -113,9 +113,8 @@ Rules:
   under `img/` or in the note root is wrong; nested folders other than `img/` / `files/`
   are ignored; software project roots (`.git`, `pyproject.toml`, …) and
   README/LICENSE-only folders are skipped.
-- **H062** - Wrong decimal separator for YAML `lang`: `en` uses `.` (thousands `,`
-  allowed, e.g. `1,234.5`); `ru` uses `,` (simple `.` decimals flagged; European
-  `1.234` / `1.234,5` and multi-dot versions/IPs are skipped).
+- **H062** - Wrong decimal separator: both `lang: en` and `lang: ru` require `.`
+  (thousands `,` allowed, e.g. `1,234.5`); comma decimals like `0,5` are flagged.
 - **H063** - Bare filename or path with a known extension not wrapped in inline code
   (link/image destinations, link labels, and angle autolinks are skipped; product
   names like `node.js` are allowed).
@@ -1528,19 +1527,18 @@ class MdChecker:
     def _check_decimal_separators(
         self, filename: Path, line: str, line_num: int, *, lang: str
     ) -> Generator[str, None, None]:
-        """Check decimal separators against YAML `lang` (H062).
+        """Check that decimals use a point for YAML `lang` en/ru (H062).
 
-        Skips inline code and math spans. English thousands commas and Russian
-        European dot-grouped thousands are allowed; multi-dot versions/IPs are skipped.
+        Skips inline code and math spans. English thousands commas (`1,234`) are
+        allowed; dots are never flagged.
 
         """
         offset = 0
         for segment, protected in iter_code_and_math_segments(h.md.identify_code_blocks_line(line)):
             if not protected:
-                for start, _end, token, kind in iter_decimal_separator_issues(segment, lang):
-                    expected = "." if kind == "fix_en_comma_to_dot" else ","
+                for start, _end, token, _kind in iter_decimal_separator_issues(segment, lang):
                     col = offset + start + 1
-                    error_msg = f'{self.RULES["H062"]}: "{token}" should use "{expected}"'
+                    error_msg = f'{self.RULES["H062"]}: "{token}" should use "."'
                     yield self._format_error("H062", error_msg, filename, line_num=line_num, col=col)
                     return
             offset += len(segment)

@@ -2755,7 +2755,7 @@ def test_md_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H062: Wrong decimal separator
+        # H062: Wrong decimal separator (decimal point required for en and ru)
         # =====================================================================
         en_comma_decimal_file = temp_path / "en_comma_decimal.md"
         en_comma_decimal_file.write_text(
@@ -2768,58 +2768,49 @@ def test_md_checker() -> None:
         errors = checker.check(en_comma_decimal_file, select={"H062"})
         assert any("H062" in e for e in errors)
 
-        en_dot_ok_file = temp_path / "en_dot_ok.md"
-        en_dot_ok_file.write_text(
-            "---\nlang: en\n---\n\nValues -0.5 and 0.5 are fine. Count 1,234 or 1,234.5.\n",
+        ru_comma_decimal_file = temp_path / "ru_comma_decimal.md"
+        ru_comma_decimal_file.write_text(
+            "---\nlang: ru\n---\n\nЗначения -0,5 и 0,5 неверны.\n",  # ignore: HP001
             encoding="utf-8",
         )
-        errors = checker.check(en_dot_ok_file, select={"H062"})
-        assert not errors
-
-        en_list_ok_file = temp_path / "en_list_ok.md"
-        en_list_ok_file.write_text("---\nlang: en\n---\n\nSee items 1, 2, 3.\n", encoding="utf-8")
-        errors = checker.check(en_list_ok_file, select={"H062"})
-        assert not errors
-
-        ru_dot_decimal_file = temp_path / "ru_dot_decimal.md"
-        ru_dot_decimal_file.write_text(
-            "---\nlang: ru\n---\n\nЗначения -0.5 и 0.5 неверны.\n",  # ignore: HP001
-            encoding="utf-8",
-        )
-        errors = checker.check(ru_dot_decimal_file, select={"H062"})
+        errors = checker.check(ru_comma_decimal_file, select={"H062"})
         assert any("H062" in e for e in errors)
 
-        ru_comma_ok_file = temp_path / "ru_comma_ok.md"
-        ru_comma_ok_file.write_text(
-            "---\nlang: ru\n---\n\nЗначения -0,5 и 0,5 верны.\n",  # ignore: HP001
-            encoding="utf-8",
-        )
-        errors = checker.check(ru_comma_ok_file, select={"H062"})
-        assert not errors
+        for lang in ("en", "ru"):
+            dot_ok_file = temp_path / f"{lang}_dot_ok.md"
+            dot_ok_file.write_text(
+                f"---\nlang: {lang}\n---\n\n"
+                "Values -0.5 and 0.5 are fine. USB 2.0, Bluetooth 4.1, CC 4.0, "
+                "title 3.0. Count 1,234 or 1,234.5. Version 3.12.1 and 192.168.0.1.\n",
+                encoding="utf-8",
+            )
+            errors = checker.check(dot_ok_file, select={"H062"})
+            assert not errors, errors
 
-        ru_skip_version_ip_file = temp_path / "ru_skip_version_ip.md"
-        ru_skip_version_ip_file.write_text(
-            "---\nlang: ru\n---\n\nPython 3.12.1 и адрес 192.168.0.1.\n",
-            encoding="utf-8",
-        )
-        errors = checker.check(ru_skip_version_ip_file, select={"H062"})
-        assert not errors
-
-        ru_eu_thousands_ok_file = temp_path / "ru_eu_thousands_ok.md"
-        ru_eu_thousands_ok_file.write_text(
-            "---\nlang: ru\n---\n\nЧисла 1.234 и 1.234,56.\n",  # ignore: HP001
-            encoding="utf-8",
-        )
-        errors = checker.check(ru_eu_thousands_ok_file, select={"H062"})
-        assert not errors
+            list_ok_file = temp_path / f"{lang}_list_ok.md"
+            list_ok_file.write_text(
+                f"---\nlang: {lang}\n---\n\nSee items 1, 2, 3.\n",
+                encoding="utf-8",
+            )
+            errors = checker.check(list_ok_file, select={"H062"})
+            assert not errors
 
         ru_code_ok_file = temp_path / "ru_code_ok.md"
         ru_code_ok_file.write_text(
-            "---\nlang: ru\n---\n\nUse `0.5` in code.\n\n```python\nx = 0.5\n```\n",
+            "---\nlang: ru\n---\n\nUse `0,5` in code.\n\n```python\nx = 0,5\n```\n",
             encoding="utf-8",
         )
         errors = checker.check(ru_code_ok_file, select={"H062"})
         assert not errors
+
+        # European mixed form with comma decimal is still flagged
+        ru_eu_comma_file = temp_path / "ru_eu_comma.md"
+        ru_eu_comma_file.write_text(
+            "---\nlang: ru\n---\n\nЧисло 1.234,56.\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_eu_comma_file, select={"H062"})
+        assert any("H062" in e for e in errors)
 
         # =====================================================================
         # H063: Bare filename or path not in inline code

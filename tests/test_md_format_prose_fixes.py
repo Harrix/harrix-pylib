@@ -81,29 +81,31 @@ def test_formatter_fixes_russian_lang_gated_rules(tmp_path: Path) -> None:
 
 
 def test_formatter_fixes_decimal_separators_by_lang(tmp_path: Path) -> None:
-    en_source = "---\nlang: en\n---\n\nScale -0,5 to 0,5. Keep 1,234 and 1,234.5. Lists 1, 2 stay.\n"
-    assert _checker_errors(tmp_path, en_source, {"H062"})
-    en_result = _format(en_source)
-    assert "-0.5" in en_result
-    assert "0.5" in en_result
-    assert "1,234" in en_result
-    assert "1,234.5" in en_result
-    assert "1, 2" in en_result
-    assert not _checker_errors(tmp_path, en_result, {"H062"}), en_result
+    for lang in ("en", "ru"):
+        source = (
+            f"---\nlang: {lang}\n---\n\n"
+            "Scale -0,5 to 0,5. Keep 1,234 and 1,234.5. Lists 1, 2 stay. "
+            "USB 2.0 and version 3.12.1 stay dotted.\n"
+        )
+        assert _checker_errors(tmp_path, source, {"H062"})
+        result = _format(source)
+        assert "-0.5" in result
+        assert "0.5" in result
+        assert "1,234" in result
+        assert "1,234.5" in result
+        assert "1, 2" in result
+        assert "USB 2.0" in result
+        assert "3.12.1" in result
+        assert "-0,5" not in result
+        assert not _checker_errors(tmp_path, result, {"H062"}), result
 
-    ru_source = (
-        "---\nlang: ru\n---\n\n"
-        "Значения -0.5 и 0.5. Версия 3.12.1, IP 192.168.0.1, тысячи 1.234 и 1.234,56.\n"  # ignore: HP001
-    )
-    assert _checker_errors(tmp_path, ru_source, {"H062"})
-    ru_result = _format(ru_source)
-    assert "-0,5" in ru_result
-    assert "0,5" in ru_result
-    assert "3.12.1" in ru_result
-    assert "192.168.0.1" in ru_result
-    assert "1.234" in ru_result
-    assert "1.234,56" in ru_result
-    assert not _checker_errors(tmp_path, ru_result, {"H062"}), ru_result
+    # lang: ru must not convert decimal points to commas
+    ru_dots = "---\nlang: ru\n---\n\nЗначения -0.5 и 0.5.\n"  # ignore: HP001
+    ru_dots_result = _format(ru_dots)
+    assert "-0.5" in ru_dots_result
+    assert "0.5" in ru_dots_result
+    assert "-0,5" not in ru_dots_result
+    assert not _checker_errors(tmp_path, ru_dots_result, {"H062"}), ru_dots_result
 
 
 def test_formatter_preserves_russian_polite_pronouns_in_quotes() -> None:
