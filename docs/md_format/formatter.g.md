@@ -12,13 +12,13 @@ lang: en
 ## Contents
 
 - [🏛️ Class `MdFormatter`](#%EF%B8%8F-class-mdformatter)
-  - [⚙️ Method `MdFormatter.__call__`](#%EF%B8%8F-method-mdformatter__call__)
-  - [⚙️ Method `MdFormatter.__init__`](#%EF%B8%8F-method-mdformatter__init__)
-  - [⚙️ Method `MdFormatter.format`](#%EF%B8%8F-method-mdformatterformat)
-  - [⚙️ Method `MdFormatter.format_file`](#%EF%B8%8F-method-mdformatterformat_file)
-  - [⚙️ Method `MdFormatter.format_folder`](#%EF%B8%8F-method-mdformatterformat_folder)
-  - [⚙️ Method `MdFormatter.normalize_line_endings`](#%EF%B8%8F-method-mdformatternormalize_line_endings)
-  - [⚙️ Method `MdFormatter.read_markdown_text`](#%EF%B8%8F-method-mdformatterread_markdown_text)
+  - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
+  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
+  - [⚙️ Method `format`](#%EF%B8%8F-method-format)
+  - [⚙️ Method `format_file`](#%EF%B8%8F-method-format_file)
+  - [⚙️ Method `format_folder`](#%EF%B8%8F-method-format_folder)
+  - [⚙️ Method `normalize_line_endings`](#%EF%B8%8F-method-normalize_line_endings)
+  - [⚙️ Method `read_markdown_text`](#%EF%B8%8F-method-read_markdown_text)
 
 </details>
 
@@ -228,7 +228,7 @@ class MdFormatter:
 
 </details>
 
-### ⚙️ Method `MdFormatter.__call__`
+### ⚙️ Method `__call__`
 
 ```python
 def __call__(self, text: str) -> str
@@ -254,7 +254,7 @@ def __call__(self, text: str) -> str:
 
 </details>
 
-### ⚙️ Method `MdFormatter.__init__`
+### ⚙️ Method `__init__`
 
 ```python
 def __init__(self) -> None
@@ -300,7 +300,7 @@ def __init__(
 
 </details>
 
-### ⚙️ Method `MdFormatter.format`
+### ⚙️ Method `format`
 
 ```python
 def format(self, text: str) -> str
@@ -333,7 +333,7 @@ def format(self, text: str) -> str:
 
 </details>
 
-### ⚙️ Method `MdFormatter.format_file`
+### ⚙️ Method `format_file`
 
 ```python
 def format_file(self, filename: Path | str) -> str
@@ -379,7 +379,7 @@ def format_file(self, filename: Path | str) -> str:
 
 </details>
 
-### ⚙️ Method `MdFormatter.format_folder`
+### ⚙️ Method `format_folder`
 
 ```python
 def format_folder(self, folder: Path | str) -> str
@@ -428,7 +428,7 @@ def format_folder(self, folder: Path | str) -> str:
 
 </details>
 
-### ⚙️ Method `MdFormatter.normalize_line_endings`
+### ⚙️ Method `normalize_line_endings`
 
 ```python
 def normalize_line_endings(text: str) -> str
@@ -458,7 +458,7 @@ def normalize_line_endings(text: str) -> str:
 
 </details>
 
-### ⚙️ Method `MdFormatter.read_markdown_text`
+### ⚙️ Method `read_markdown_text`
 
 ```python
 def read_markdown_text(filename: Path | str) -> str

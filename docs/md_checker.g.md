@@ -12,11 +12,11 @@ lang: en
 ## Contents
 
 - [🏛️ Class `MdChecker`](#%EF%B8%8F-class-mdchecker)
-  - [⚙️ Method `MdChecker.__call__`](#%EF%B8%8F-method-mdchecker__call__)
-  - [⚙️ Method `MdChecker.__init__`](#%EF%B8%8F-method-mdchecker__init__)
-  - [⚙️ Method `MdChecker.check`](#%EF%B8%8F-method-mdcheckercheck)
-  - [⚙️ Method `MdChecker.check_directory`](#%EF%B8%8F-method-mdcheckercheck_directory)
-  - [⚙️ Method `MdChecker.find_markdown_files`](#%EF%B8%8F-method-mdcheckerfind_markdown_files)
+  - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
+  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
+  - [⚙️ Method `check`](#%EF%B8%8F-method-check)
+  - [⚙️ Method `check_directory`](#%EF%B8%8F-method-check_directory)
+  - [⚙️ Method `find_markdown_files`](#%EF%B8%8F-method-find_markdown_files)
 
 </details>
 
@@ -3890,7 +3890,7 @@ class MdChecker:
 
 </details>
 
-### ⚙️ Method `MdChecker.__call__`
+### ⚙️ Method `__call__`
 
 ```python
 def __call__(self, filename: Path | str) -> list[str]
@@ -3920,7 +3920,7 @@ def __call__(
 
 </details>
 
-### ⚙️ Method `MdChecker.__init__`
+### ⚙️ Method `__init__`
 
 ```python
 def __init__(self, project_root: Path | str | None = None) -> None
@@ -3948,7 +3948,7 @@ def __init__(self, project_root: Path | str | None = None) -> None:
 
 </details>
 
-### ⚙️ Method `MdChecker.check`
+### ⚙️ Method `check`
 
 ```python
 def check(self, filename: Path | str) -> list[str]
@@ -3980,7 +3980,7 @@ def check(
 
 </details>
 
-### ⚙️ Method `MdChecker.check_directory`
+### ⚙️ Method `check_directory`
 
 ```python
 def check_directory(self, directory: Path | str) -> dict[str, list[str]]
@@ -4023,7 +4023,7 @@ def check_directory(
 
 </details>
 
-### ⚙️ Method `MdChecker.find_markdown_files`
+### ⚙️ Method `find_markdown_files`
 
 ```python
 def find_markdown_files(self, directory: Path | str, additional_ignore_patterns: list[str] | None = None) -> Generator[Path, None, None]

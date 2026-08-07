@@ -994,7 +994,7 @@ def generate_md_docs_content_with_source_map(
                     class_node.name, include_private=include_private
                 ):
                     method_suffix = _property_accessor_suffix(class_node)
-                    base_heading = f"{node.name}.{class_node.name}{method_suffix}"
+                    base_heading = f"{class_node.name}{method_suffix}"
                     occurrence = seen_method_headings.get(base_heading, 0) + 1
                     seen_method_headings[base_heading] = occurrence
                     heading_name = base_heading if occurrence == 1 else f"{base_heading} ({occurrence})"
