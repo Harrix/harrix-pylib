@@ -106,7 +106,6 @@ Doc: [abbreviation_data.g.md](https://github.com/Harrix/harrix-pylib/blob/main/d
 
 | Function/Class | Description |
 |----------------|-------------|
-| 📎 Constant [`SOFT_HYPHEN`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-constant-soft_hyphen) |  |
 | 🏛️ Class [`AbbreviationData`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#%EF%B8%8F-class-abbreviationdata) | Compiled abbreviation data for H006 spacing and H021 masking. |
 | 🔧 [`is_spaced_multipart`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-is_spaced_multipart) | Return `True` if form is a multi-part dotted abbrev with spaces (H006 candidate). |
 | 🔧 [`load_abbreviation_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-load_abbreviation_data) | Load RU+EN abbreviation JSON (always both; not gated by document lang). |
@@ -120,7 +119,6 @@ Doc: [funcs_dev.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/func
 
 | Function/Class | Description |
 |----------------|-------------|
-| 📎 Constant [`DEFAULT_END_OF_LINE`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-constant-default_end_of_line) |  |
 | 🔧 [`config_load`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-config_load) | Load configuration from a JSON file. |
 | 🔧 [`config_save`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-config_save) | Save configuration to a JSON file. |
 | 🔧 [`config_update_value`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-config_update_value) | Update a single configuration value and save it to a JSON file. |
@@ -165,7 +163,6 @@ Doc: [funcs_img.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/func
 
 | Function/Class | Description |
 |----------------|-------------|
-| 📎 Constant [`EXE_RASTER_EXTENSIONS`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-constant-exe_raster_extensions) |  |
 | 🔧 [`optimize_image_with_tools`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_image_with_tools) | Optimize GIF, MP4, or AVIF using ffmpeg, avifenc, and avifdec. |
 | 🔧 [`optimize_svg`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg) | Optimize an SVG file and write the result. |
 | 🔧 [`optimize_svg_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg_content) | Optimize SVG markup to a compact form similar to SVGO preset-default. |
@@ -257,7 +254,6 @@ Doc: [img_tools.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_
 
 | Function/Class | Description |
 |----------------|-------------|
-| 📎 Constant [`EXE_RASTER_EXTENSIONS`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-constant-exe_raster_extensions) |  |
 | 🔧 [`convert_gif_mp4_to_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-convert_gif_mp4_to_avif) | Convert GIF or MP4 to AVIF using ffmpeg. |
 | 🔧 [`get_frame_rate`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-get_frame_rate) | Detect frame rate from media file using ffmpeg output. |
 | 🔧 [`is_avif_animated`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-is_avif_animated) | Return `True` if AVIF contains more than one frame. |
@@ -272,7 +268,6 @@ Doc: [md_assets.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_a
 
 | Function/Class | Description |
 |----------------|-------------|
-| 📎 Constant [`MEDIA_EXTENSIONS`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-constant-media_extensions) |  |
 | 🔧 [`desired_note_asset_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-desired_note_asset_path) | Return the correct path for a note asset, or `None` if already correct / ignored. |
 | 🔧 [`is_featured_image_name`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-is_featured_image_name) | Return whether `name` is a featured-image asset (`featured-image.*`). |
 | 🔧 [`is_media_file`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-is_media_file) | Return whether `path` has a media extension used for the `img/` folder. |
@@ -305,7 +300,6 @@ Doc: [progress.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/progr
 
 | Function/Class | Description |
 |----------------|-------------|
-| 📎 Constant [`T`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md#-constant-t) |  |
 | 🏛️ Class [`ProgressBar`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md#%EF%B8%8F-class-progressbar) | In-place progress bar written to a stream (default: stderr when it is a TTY). |
 | 🔧 [`iter_with_progress`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md#-function-iter_with_progress) | Yield items while updating a progress bar. |
 | 🔧 [`render_progress`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md#-function-render_progress) | Return a single-line progress string. |

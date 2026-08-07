@@ -12,13 +12,6 @@ lang: en
 ## Contents
 
 - [🏛️ Class `MdChecker`](#%EF%B8%8F-class-mdchecker)
-  - [📎 Attribute `RULES`](#-attribute-rules)
-  - [📎 Attribute `IGNORE_PATTERN`](#-attribute-ignore_pattern)
-  - [📎 Attribute `FILE_IGNORE_PATTERN`](#-attribute-file_ignore_pattern)
-  - [📎 Attribute `RUSSIAN_POLITE_PRONOUNS_CAPITALIZED`](#-attribute-russian_polite_pronouns_capitalized)
-  - [📎 Attribute `INCORRECT_WORDS`](#-attribute-incorrect_words)
-  - [📎 Attribute `INCORRECT_LANGUAGES`](#-attribute-incorrect_languages)
-  - [📎 Attribute `FORBIDDEN_HTML_TAGS`](#-attribute-forbidden_html_tags)
   - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
   - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
   - [⚙️ Method `check`](#%EF%B8%8F-method-check)
@@ -3896,62 +3889,6 @@ class MdChecker:
 ````
 
 </details>
-
-### 📎 Attribute `RULES`
-
-```python
-RULES: ClassVar[dict[str, str]] = {'H001': 'Presence of a space in the Markdown file name', 'H002': 'Presence of a space in the path to the Markdown file', 'H003': 'YAML is missing', 'H004': 'The lang field is missing in YAML', 'H005': 'In YAML, lang is not set to en or ru', 'H006': 'Incorrect word form used', 'H007': 'Incorrect code block language identifier', 'H008': 'Trailing whitespace at end of line', 'H009': 'Double spaces in line', 'H010': 'Tab character found', 'H011': 'No empty line at end of file', 'H012': 'Two consecutive empty lines', 'H013': 'Missing colon before code block', 'H014': 'Missing colon before image', 'H015': 'Space before punctuation mark', 'H016': 'Incorrect dash/hyphen usage', 'H017': 'Three dots instead of ellipsis character', 'H018': 'Curly/straight quotes instead of angle quotes', 'H019': 'HTML tags in markdown content', 'H020': 'Image caption starts with lowercase letter', 'H021': 'Lowercase letter after sentence-ending punctuation', 'H022': 'Non-breaking space character found', 'H023': 'Capitalized Russian polite pronoun (use lowercase when addressing reader)', 'H024': 'Latin x or Cyrillic x used instead of multiplication sign ×', 'H025': 'Image markdown ![ found not at start of line', 'H026': 'Horizontal bar ― (dialogue dash) should not be used', 'H027': 'Space required after №', 'H028': 'Incorrect ?./!. / ?.../!... / ?…/!… (use ?.. / !..)', 'H029': 'Space required after colon in inline emphasis', 'H030': 'Colon outside inline emphasis (should be inside)', 'H031': 'Invalid or placeholder image alt text', 'H032': 'Two consecutive dots', 'H033': 'Unclosed fenced code block', 'H034': 'Code fence without language identifier', 'H035': 'Missing figure caption after image', 'H036': 'Missing space after # in ATX heading', 'H037': 'Skipped heading level', 'H038': 'Multiple H1 headings in one file', 'H039': 'Backslash in local Markdown path', 'H040': 'lang field does not match document language', 'H041': 'Bare URL in text', 'H042': 'Invisible Unicode character found', 'H043': 'Unmatched guillemet', 'H044': 'Missing space before % or °', 'H045': 'Broken relative Markdown link', 'H046': 'Wrong line endings', 'H047': 'BOM at start of file', 'H048': 'Unicode replacement character found', 'H049': 'Mixed Latin and Cyrillic letters in one word', 'H050': 'Missing space after punctuation mark', 'H051': 'Malformed punctuation sequence', 'H052': 'Heading level deeper than H6', 'H053': 'Unbalanced details or summary HTML tags', 'H054': 'Repeated adjacent word', 'H055': 'Broken internal fragment link', 'H056': 'Unbalanced inline code in table cell', 'H057': 'Trailing period at end of ATX heading', 'H058': 'Punctuation before closing guillemet', 'H059': 'Missing colon before list', 'H060': 'Asset file not referenced in Markdown', 'H061': 'Misplaced note asset file', 'H062': 'Wrong decimal separator', 'H063': 'Bare filename or path not in inline code', 'H064': 'Missing blank line after list', 'H065': 'Missing blank line after table', 'H066': 'Blank line inside YAML front matter', 'H067': 'Unclosed or empty wiki link', 'H068': 'Figure caption format does not match lang', 'H069': 'Undefined or unused reference-style link', 'H071': 'Mixed bullet markers in one list', 'H072': 'Setext heading used (prefer ATX)', 'H073': 'Unbalanced math delimiters', 'H074': 'Table row has wrong column count', 'H075': 'Mixed hard-break styles in one file', 'H076': 'Invalid or incomplete TOC details block', 'H077': 'Featured image convention violation', 'H078': 'Local asset link outside sibling img/ or files/'}
-```
-
-_No docstring provided._
-
-### 📎 Attribute `IGNORE_PATTERN`
-
-```python
-IGNORE_PATTERN: ClassVar[re.Pattern] = re.compile('<!--\\s*ignore:\\s*([A-Z0-9,\\s]+?)\\s*-->', re.IGNORECASE)
-```
-
-_No docstring provided._
-
-### 📎 Attribute `FILE_IGNORE_PATTERN`
-
-```python
-FILE_IGNORE_PATTERN: ClassVar[re.Pattern] = re.compile('<!--\\s*file-ignore:\\s*([A-Z0-9,\\s]+?)\\s*-->', re.IGNORECASE)
-```
-
-_No docstring provided._
-
-### 📎 Attribute `RUSSIAN_POLITE_PRONOUNS_CAPITALIZED`
-
-```python
-RUSSIAN_POLITE_PRONOUNS_CAPITALIZED: ClassVar[tuple[str, ...]] = ('Вы', 'Вас', 'Вам', 'Вами', 'Ваш', 'Вашего', 'Ваше', 'Вашу', 'Вашей', 'Ваша', 'Вашему', 'Вашим', 'Вашем', 'Вашею', 'Ваши', 'Ваших', 'Вашими')
-```
-
-_No docstring provided._
-
-### 📎 Attribute `INCORRECT_WORDS`
-
-```python
-INCORRECT_WORDS: ClassVar[dict[str, str]] = {'Latex': 'LaTeX', 'latex': 'LaTeX', 'e-mail': 'email', 'cms': 'CMS', 'СЬS': 'CMS', 'СMS': 'CMS', 'СМS': 'CMS', 'сms': 'CMS', 'смs': 'CMS', 'СМС': 'CMS', 'смс': 'CMS', 'css': 'CSS', 'html': 'HTML', 'pdf': 'PDF', 'php': 'PHP', 'svg': 'SVG', 'xml': 'XML', 'odf': 'ODF', 'odt': 'ODT', 'dll': 'DLL', 'Dll': 'DLL', 'exe': 'EXE', 'qml': 'QML', 'web документ': 'веб-документ', 'Web документ': 'веб-документ', 'WEB документ': 'веб-документ', 'web приложение': 'веб-приложение', 'Web приложение': 'веб-приложение', 'WEB приложение': 'веб-приложение', 'web приложения': 'веб-приложения', 'Web приложения': 'веб-приложения', 'WEB приложения': 'веб-приложения', 'c++': 'C++', 'с++': 'C++', 'С++': 'C++', 'с#': 'C#', 'С#': 'C#', 'сpp': 'cpp', 'срр': 'cpp', 'pascal': 'Pascal', 'c++11': 'C++11', 'с++11': 'C++11', 'С++11': 'C++11', 'c++17': 'C++17', 'с++17': 'C++17', 'С++17': 'C++17', 'c++20': 'C++20', 'с++20': 'C++20', 'С++20': 'C++20', 'ok': 'OK', 'Ok': 'OK', 'ОК': 'OK', 'ок': 'OK', 'id': 'ID', 'Id': 'ID', 'javaScript': 'JavaScript', 'Javascript': 'JavaScript', 'javascript': 'JavaScript', 'Php': 'PHP', 'Йе': 'Qt', 'йе': 'Qt', 'qt': 'Qt', 'android': 'Android', 'java': 'Java', 'apk': 'APK', 'markdon': 'Markdown', 'markdown': 'Markdown', 'Github': 'GitHub', 'github': 'GitHub', 'git': 'Git', 'typescript': 'TypeScript', 'Typescript': 'TypeScript', 'nodejs': 'Node.js', 'Nodejs': 'Node.js', 'node.js': 'Node.js', 'NODE.js': 'Node.js', 'Node.JS': 'Node.js', 'NODE.JS': 'Node.js', 'node.JS': 'Node.js', 'vscode': 'VS Code', 'Vscode': 'VS Code', 'wifi': 'Wi-Fi', 'Wifi': 'Wi-Fi', 'WIFI': 'Wi-Fi', 'json': 'JSON', 'yaml': 'YAML', 'sql': 'SQL', 'api': 'API', 'ui': 'UI', 'ux': 'UX', 'windows': 'Windows', 'linux': 'Linux', 'macos': 'macOS', 'Macos': 'macOS', 'MacOS': 'macOS', 'powershell': 'PowerShell', 'Powershell': 'PowerShell', 'docker': 'Docker', 'python': 'Python', 'интернет': 'Интернет', 'интернета': 'Интернета', 'интернету': 'Интернету', 'интернетом': 'Интернетом', 'интернете': 'Интернете', 'он-лайн': 'онлайн', 'Он-лайн': 'Онлайн', 'ОН-ЛАЙН': 'онлайн', 'on-line': 'онлайн', 'On-line': 'Онлайн', 'ON-LINE': 'онлайн', 'ВУЗ': 'вуз', 'ВУЗа': 'вуза', 'ВУЗу': 'вузу', 'ВУЗом': 'вузом', 'ВУЗе': 'вузе', 'ВУЗы': 'вузы', 'ВУЗов': 'вузов', 'ВУЗам': 'вузам', 'ВУЗами': 'вузами', 'ВУЗах': 'вузах'}
-```
-
-_No docstring provided._
-
-### 📎 Attribute `INCORRECT_LANGUAGES`
-
-```python
-INCORRECT_LANGUAGES: ClassVar[dict[str, str]] = {'console': 'shell', 'py': 'python'}
-```
-
-_No docstring provided._
-
-### 📎 Attribute `FORBIDDEN_HTML_TAGS`
-
-```python
-FORBIDDEN_HTML_TAGS: ClassVar[list[str]] = ['<pre class', '<table', '<strong', '<b>', '<b ', '<a>', '<a ', '<i>', '<i ', '<p>', '<p ', '<h1', '<h2', '<h3', '<h4', '<h5', '<h6', '<br', '<div', '<span', '<img', '<ul', '<ol', '<li', '<font', '</']
-```
-
-_No docstring provided._
 
 ### ⚙️ Method `__call__`
 

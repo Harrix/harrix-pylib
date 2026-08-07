@@ -11,7 +11,6 @@ lang: en
 
 ## Contents
 
-- [📎 Constant `MEDIA_EXTENSIONS`](#-constant-media_extensions)
 - [🔧 Function `desired_note_asset_path`](#-function-desired_note_asset_path)
 - [🔧 Function `is_featured_image_name`](#-function-is_featured_image_name)
 - [🔧 Function `is_media_file`](#-function-is_media_file)
@@ -21,14 +20,6 @@ lang: en
 - [🔧 Function `rewrite_note_asset_links`](#-function-rewrite_note_asset_links)
 
 </details>
-
-## 📎 Constant `MEDIA_EXTENSIONS`
-
-```python
-MEDIA_EXTENSIONS: frozenset[str] = frozenset({'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.svg', '.ico', '.webp', '.avif', '.mp4', '.webm'})
-```
-
-_No docstring provided._
 
 ## 🔧 Function `desired_note_asset_path`
 

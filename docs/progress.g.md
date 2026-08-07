@@ -11,7 +11,6 @@ lang: en
 
 ## Contents
 
-- [📎 Constant `T`](#-constant-t)
 - [🏛️ Class `ProgressBar`](#%EF%B8%8F-class-progressbar)
   - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
   - [⚙️ Method `finish`](#%EF%B8%8F-method-finish)
@@ -21,14 +20,6 @@ lang: en
 - [🔧 Function `render_progress_ascii`](#-function-render_progress_ascii)
 
 </details>
-
-## 📎 Constant `T`
-
-```python
-T = TypeVar('T')
-```
-
-_No docstring provided._
 
 ## 🏛️ Class `ProgressBar`
 

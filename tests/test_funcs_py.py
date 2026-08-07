@@ -1153,9 +1153,32 @@ __all__ = ["VISIBLE_CONST", "Greeting", "AliasT", "greet", "parse", "identity", 
     assert "## 🔧 Function `parse`" in md_content
     assert "def identity[T](value: T) -> T" in md_content
     assert "class Box[T](metaclass=Meta)" in md_content
-    assert "### 📎 Attribute `size`" in md_content
+    assert "### 📎 Attribute `size`" not in md_content
     assert "### ⚙️ Method `clear (abstractmethod)`" in md_content
     assert "### ⚙️ Method `label (cached_property)`" in md_content
+
+
+def test_generate_md_docs_skips_data_without_dunder_all() -> None:
+    content = '''
+from typing import TypeAlias
+
+MenuItem: TypeAlias = str
+DEFAULT_WIDTH = 40
+
+class Demo:
+    """Demo class."""
+    size: int = 1
+'''
+
+    with TemporaryDirectory() as temp_folder:
+        test_file = Path(temp_folder) / "no_all.py"
+        test_file.write_text(content, encoding="utf8")
+        md_content = h.py.generate_md_docs_content(str(test_file))
+
+    assert "## 🏛️ Class `Demo`" in md_content
+    assert "Type alias" not in md_content
+    assert "Constant" not in md_content
+    assert "Attribute" not in md_content
 
 
 def test_generate_md_docs_processes_init_reexports() -> None:

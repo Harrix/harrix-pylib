@@ -12,9 +12,6 @@ lang: en
 ## Contents
 
 - [🏛️ Class `PyChecker`](#%EF%B8%8F-class-pychecker)
-  - [📎 Attribute `RULES`](#-attribute-rules)
-  - [📎 Attribute `IGNORE_PATTERN`](#-attribute-ignore_pattern)
-  - [📎 Attribute `FILE_IGNORE_PATTERN`](#-attribute-file_ignore_pattern)
   - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
   - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
   - [⚙️ Method `check`](#%EF%B8%8F-method-check)
@@ -542,30 +539,6 @@ class PyChecker:
 ```
 
 </details>
-
-### 📎 Attribute `RULES`
-
-```python
-RULES: ClassVar[dict[str, str]] = {'HP001': 'Presence of Russian letters in the code', 'HP002': 'Old-style docstring formatting (non-Markdown style)', 'HP003': 'Code token in docstring prose should use backticks'}
-```
-
-_No docstring provided._
-
-### 📎 Attribute `IGNORE_PATTERN`
-
-```python
-IGNORE_PATTERN: ClassVar[re.Pattern] = re.compile('#\\s*ignore:\\s*([A-Z0-9,\\s]+)', re.IGNORECASE)
-```
-
-_No docstring provided._
-
-### 📎 Attribute `FILE_IGNORE_PATTERN`
-
-```python
-FILE_IGNORE_PATTERN: ClassVar[re.Pattern] = re.compile('#\\s*file-ignore:\\s*([A-Z0-9,\\s]+)', re.IGNORECASE)
-```
-
-_No docstring provided._
 
 ### ⚙️ Method `__call__`
 

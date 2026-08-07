@@ -12,9 +12,6 @@ lang: en
 ## Contents
 
 - [🏛️ Class `DocsSourceLoc`](#%EF%B8%8F-class-docssourceloc)
-  - [📎 Attribute `path`](#-attribute-path)
-  - [📎 Attribute `line`](#-attribute-line)
-  - [📎 Attribute `col`](#-attribute-col)
 - [🔧 Function `check_python_docstring_markdown_errors`](#-function-check_python_docstring_markdown_errors)
 - [🔧 Function `create_uv_new_library`](#-function-create_uv_new_library)
 - [🔧 Function `create_uv_new_notebook`](#-function-create_uv_new_notebook)
@@ -49,30 +46,6 @@ class DocsSourceLoc(NamedTuple):
 ```
 
 </details>
-
-### 📎 Attribute `path`
-
-```python
-path: Path
-```
-
-_No docstring provided._
-
-### 📎 Attribute `line`
-
-```python
-line: int
-```
-
-_No docstring provided._
-
-### 📎 Attribute `col`
-
-```python
-col: int
-```
-
-_No docstring provided._
 
 ## 🔧 Function `check_python_docstring_markdown_errors`
 
@@ -509,7 +482,6 @@ def extract_functions_and_classes(
     # Parse the code into an Abstract Syntax Tree (AST)
     tree = ast.parse(code, filename)
     dunder_all = _parse_dunder_all(tree)
-    has_callables = _module_has_documented_callables(tree, include_private=include_private, dunder_all=dunder_all)
 
     # List of entries for the table (source order)
     entries: list[tuple[str, str]] = []
@@ -559,7 +531,6 @@ def extract_functions_and_classes(
                 alias_name,
                 include_private=include_private,
                 dunder_all=dunder_all,
-                has_callables=has_callables,
             ):
                 continue
             heading_text = f"🏷️ Type alias `{alias_name}`"
@@ -574,13 +545,7 @@ def extract_functions_and_classes(
             if target is None or target == "__all__":
                 continue
             is_alias = _is_type_alias_annotation(node.annotation)
-            if not _should_document_module_data(
-                target,
-                include_private=include_private,
-                dunder_all=dunder_all,
-                has_callables=has_callables,
-                require_upper_snake=not is_alias,
-            ):
+            if not _should_document_module_data(target, include_private=include_private, dunder_all=dunder_all):
                 continue
             kind = "Type alias" if is_alias else "Constant"
             emoji = "🏷️" if is_alias else "📎"
@@ -595,13 +560,7 @@ def extract_functions_and_classes(
             target = _simple_assign_name(node)
             if target is None or target == "__all__":
                 continue
-            if not _should_document_module_data(
-                target,
-                include_private=include_private,
-                dunder_all=dunder_all,
-                has_callables=has_callables,
-                require_upper_snake=True,
-            ):
+            if not _should_document_module_data(target, include_private=include_private, dunder_all=dunder_all):
                 continue
             heading_text = f"📎 Constant `{target}`"
             if is_add_link_demo and domain:
@@ -1046,7 +1005,6 @@ def generate_md_docs_content_with_source_map(
             ast.get_docstring(class_node),
         )
         member_level = heading_level + 1
-        member_hashes = "#" * member_level
         overload_counts: dict[str, int] = {}
         other_counts: dict[str, int] = {}
         for body_node in class_node.body:
@@ -1064,19 +1022,8 @@ def generate_md_docs_content_with_source_map(
                 body_node.name, include_private=include_private
             ):
                 emit_class_docs(body_node, member_level, f"{qualified_name}.{body_node.name}")
-            elif isinstance(body_node, ast.AnnAssign):
-                attr_name = _ann_assign_name(body_node)
-                if attr_name is None or not _should_document_name(attr_name, include_private=include_private):
-                    continue
-                emit_declaration_docs(
-                    f"{member_hashes} 📎 Attribute `{attr_name}`",
-                    ast.unparse(body_node),
-                    body_node,
-                    "_No docstring provided._",
-                )
 
     dunder_all = _parse_dunder_all(tree)
-    has_callables = _module_has_documented_callables(tree, include_private=include_private, dunder_all=dunder_all)
     file_loc = DocsSourceLoc(file_path, 1, 1)
     emit_structural(f"# 📄 File `{file_path.name}`", file_loc)
     emit_blank(file_loc)
@@ -1105,7 +1052,6 @@ def generate_md_docs_content_with_source_map(
                 alias_name,
                 include_private=include_private,
                 dunder_all=dunder_all,
-                has_callables=has_callables,
             ):
                 continue
             emit_declaration_docs(
@@ -1119,13 +1065,7 @@ def generate_md_docs_content_with_source_map(
             if target is None or target == "__all__":
                 continue
             is_alias = _is_type_alias_annotation(node.annotation)
-            if not _should_document_module_data(
-                target,
-                include_private=include_private,
-                dunder_all=dunder_all,
-                has_callables=has_callables,
-                require_upper_snake=not is_alias,
-            ):
+            if not _should_document_module_data(target, include_private=include_private, dunder_all=dunder_all):
                 continue
             heading = f"## 🏷️ Type alias `{target}`" if is_alias else f"## 📎 Constant `{target}`"
             emit_declaration_docs(heading, ast.unparse(node), node, "_No docstring provided._")
@@ -1133,13 +1073,7 @@ def generate_md_docs_content_with_source_map(
             target = _simple_assign_name(node)
             if target is None or target == "__all__":
                 continue
-            if not _should_document_module_data(
-                target,
-                include_private=include_private,
-                dunder_all=dunder_all,
-                has_callables=has_callables,
-                require_upper_snake=True,
-            ):
+            if not _should_document_module_data(target, include_private=include_private, dunder_all=dunder_all):
                 continue
             emit_declaration_docs(
                 f"## 📎 Constant `{target}`",

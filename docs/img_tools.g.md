@@ -11,7 +11,6 @@ lang: en
 
 ## Contents
 
-- [📎 Constant `EXE_RASTER_EXTENSIONS`](#-constant-exe_raster_extensions)
 - [🔧 Function `convert_gif_mp4_to_avif`](#-function-convert_gif_mp4_to_avif)
 - [🔧 Function `get_frame_rate`](#-function-get_frame_rate)
 - [🔧 Function `is_avif_animated`](#-function-is_avif_animated)
@@ -21,14 +20,6 @@ lang: en
 - [🔧 Function `process_static_avif`](#-function-process_static_avif)
 
 </details>
-
-## 📎 Constant `EXE_RASTER_EXTENSIONS`
-
-```python
-EXE_RASTER_EXTENSIONS = frozenset({'.gif', '.mp4', '.avif'})
-```
-
-_No docstring provided._
 
 ## 🔧 Function `convert_gif_mp4_to_avif`
 

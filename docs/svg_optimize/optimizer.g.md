@@ -12,7 +12,6 @@ lang: en
 ## Contents
 
 - [🏛️ Class `SvgOptimizer`](#%EF%B8%8F-class-svgoptimizer)
-  - [📎 Attribute `MAX_MULTIPASS`](#-attribute-max_multipass)
   - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
   - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
   - [⚙️ Method `optimize`](#%EF%B8%8F-method-optimize)
@@ -146,14 +145,6 @@ class SvgOptimizer:
 ```
 
 </details>
-
-### 📎 Attribute `MAX_MULTIPASS`
-
-```python
-MAX_MULTIPASS: ClassVar[int] = 3
-```
-
-_No docstring provided._
 
 ### ⚙️ Method `__call__`
 

@@ -415,7 +415,6 @@ def extract_functions_and_classes(
     # Parse the code into an Abstract Syntax Tree (AST)
     tree = ast.parse(code, filename)
     dunder_all = _parse_dunder_all(tree)
-    has_callables = _module_has_documented_callables(tree, include_private=include_private, dunder_all=dunder_all)
 
     # List of entries for the table (source order)
     entries: list[tuple[str, str]] = []
@@ -465,7 +464,6 @@ def extract_functions_and_classes(
                 alias_name,
                 include_private=include_private,
                 dunder_all=dunder_all,
-                has_callables=has_callables,
             ):
                 continue
             heading_text = f"🏷️ Type alias `{alias_name}`"
@@ -480,13 +478,7 @@ def extract_functions_and_classes(
             if target is None or target == "__all__":
                 continue
             is_alias = _is_type_alias_annotation(node.annotation)
-            if not _should_document_module_data(
-                target,
-                include_private=include_private,
-                dunder_all=dunder_all,
-                has_callables=has_callables,
-                require_upper_snake=not is_alias,
-            ):
+            if not _should_document_module_data(target, include_private=include_private, dunder_all=dunder_all):
                 continue
             kind = "Type alias" if is_alias else "Constant"
             emoji = "🏷️" if is_alias else "📎"
@@ -501,13 +493,7 @@ def extract_functions_and_classes(
             target = _simple_assign_name(node)
             if target is None or target == "__all__":
                 continue
-            if not _should_document_module_data(
-                target,
-                include_private=include_private,
-                dunder_all=dunder_all,
-                has_callables=has_callables,
-                require_upper_snake=True,
-            ):
+            if not _should_document_module_data(target, include_private=include_private, dunder_all=dunder_all):
                 continue
             heading_text = f"📎 Constant `{target}`"
             if is_add_link_demo and domain:
@@ -919,7 +905,6 @@ def generate_md_docs_content_with_source_map(
             ast.get_docstring(class_node),
         )
         member_level = heading_level + 1
-        member_hashes = "#" * member_level
         overload_counts: dict[str, int] = {}
         other_counts: dict[str, int] = {}
         for body_node in class_node.body:
@@ -937,19 +922,8 @@ def generate_md_docs_content_with_source_map(
                 body_node.name, include_private=include_private
             ):
                 emit_class_docs(body_node, member_level, f"{qualified_name}.{body_node.name}")
-            elif isinstance(body_node, ast.AnnAssign):
-                attr_name = _ann_assign_name(body_node)
-                if attr_name is None or not _should_document_name(attr_name, include_private=include_private):
-                    continue
-                emit_declaration_docs(
-                    f"{member_hashes} 📎 Attribute `{attr_name}`",
-                    ast.unparse(body_node),
-                    body_node,
-                    "_No docstring provided._",
-                )
 
     dunder_all = _parse_dunder_all(tree)
-    has_callables = _module_has_documented_callables(tree, include_private=include_private, dunder_all=dunder_all)
     file_loc = DocsSourceLoc(file_path, 1, 1)
     emit_structural(f"# 📄 File `{file_path.name}`", file_loc)
     emit_blank(file_loc)
@@ -978,7 +952,6 @@ def generate_md_docs_content_with_source_map(
                 alias_name,
                 include_private=include_private,
                 dunder_all=dunder_all,
-                has_callables=has_callables,
             ):
                 continue
             emit_declaration_docs(
@@ -992,13 +965,7 @@ def generate_md_docs_content_with_source_map(
             if target is None or target == "__all__":
                 continue
             is_alias = _is_type_alias_annotation(node.annotation)
-            if not _should_document_module_data(
-                target,
-                include_private=include_private,
-                dunder_all=dunder_all,
-                has_callables=has_callables,
-                require_upper_snake=not is_alias,
-            ):
+            if not _should_document_module_data(target, include_private=include_private, dunder_all=dunder_all):
                 continue
             heading = f"## 🏷️ Type alias `{target}`" if is_alias else f"## 📎 Constant `{target}`"
             emit_declaration_docs(heading, ast.unparse(node), node, "_No docstring provided._")
@@ -1006,13 +973,7 @@ def generate_md_docs_content_with_source_map(
             target = _simple_assign_name(node)
             if target is None or target == "__all__":
                 continue
-            if not _should_document_module_data(
-                target,
-                include_private=include_private,
-                dunder_all=dunder_all,
-                has_callables=has_callables,
-                require_upper_snake=True,
-            ):
+            if not _should_document_module_data(target, include_private=include_private, dunder_all=dunder_all):
                 continue
             emit_declaration_docs(
                 f"## 📎 Constant `{target}`",
@@ -1633,20 +1594,18 @@ def _has_documented_entities(tree: ast.Module, *, include_private: bool = False)
                 alias_name,
                 include_private=include_private,
                 dunder_all=dunder_all,
-                has_callables=has_callables,
             ):
                 return True
         elif isinstance(node, ast.AnnAssign):
             target = _ann_assign_name(node)
-            if target is None or target == "__all__":
-                continue
-            is_alias = _is_type_alias_annotation(node.annotation)
-            if _should_document_module_data(
-                target,
-                include_private=include_private,
-                dunder_all=dunder_all,
-                has_callables=has_callables,
-                require_upper_snake=not is_alias,
+            if (
+                target is not None
+                and target != "__all__"
+                and _should_document_module_data(
+                    target,
+                    include_private=include_private,
+                    dunder_all=dunder_all,
+                )
             ):
                 return True
         elif isinstance(node, ast.Assign):
@@ -1655,8 +1614,6 @@ def _has_documented_entities(tree: ast.Module, *, include_private: bool = False)
                 target,
                 include_private=include_private,
                 dunder_all=dunder_all,
-                has_callables=has_callables,
-                require_upper_snake=True,
             ):
                 return True
         elif isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -1699,11 +1656,6 @@ def _is_private_name(name: str) -> bool:
 def _is_type_alias_annotation(annotation: ast.expr) -> bool:
     """Return whether an annotation denotes `TypeAlias`."""
     return _decorator_name(annotation) == "TypeAlias"
-
-
-def _is_upper_snake_name(name: str) -> bool:
-    """Return whether `name` looks like an UPPER_SNAKE constant."""
-    return bool(re.fullmatch(r"[A-Z][A-Z0-9_]*", name))
 
 
 def _iter_import_exports(node: ast.Import | ast.ImportFrom) -> list[tuple[str, str]]:
@@ -1806,32 +1758,17 @@ def _parse_dunder_all(tree: ast.Module) -> set[str] | None:
 def _should_document_module_data(
     name: str,
     *,
-    include_private: bool,
+    include_private: bool,  # noqa: ARG001
     dunder_all: set[str] | None,
-    has_callables: bool,
-    require_upper_snake: bool = False,
 ) -> bool:
     """Return whether a module-level constant/alias should be documented.
 
-    Without `__all__`, data names are documented only alongside public callables
-    so internal helper modules with constants alone stay skipped.
+    Aliases and constants are documented only when listed in `__all__`.
 
     """
-    if name == "__all__":
+    if name == "__all__" or dunder_all is None:
         return False
-    if dunder_all is not None:
-        return name in dunder_all
-    if include_private:
-        if require_upper_snake:
-            return _is_upper_snake_name(name.lstrip("_"))
-        return True
-    if not has_callables:
-        return False
-    if _is_private_name(name):
-        return False
-    if require_upper_snake:
-        return _is_upper_snake_name(name)
-    return True
+    return name in dunder_all
 
 
 def _should_document_module_name(name: str, *, include_private: bool, dunder_all: set[str] | None) -> bool:
