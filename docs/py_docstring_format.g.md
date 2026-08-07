@@ -12,13 +12,13 @@ lang: en
 ## Contents
 
 - [🏛️ Class `PyDocstringFormatter`](#%EF%B8%8F-class-pydocstringformatter)
-  - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
-  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
-  - [⚙️ Method `format`](#%EF%B8%8F-method-format)
-  - [⚙️ Method `format_file`](#%EF%B8%8F-method-format_file)
-  - [⚙️ Method `format_folder`](#%EF%B8%8F-method-format_folder)
-  - [⚙️ Method `iter_code_span_issues`](#%EF%B8%8F-method-iter_code_span_issues)
-  - [⚙️ Method `normalize_code_spans`](#%EF%B8%8F-method-normalize_code_spans)
+  - [⚙️ Method `PyDocstringFormatter.__call__`](#%EF%B8%8F-method-pydocstringformatter__call__)
+  - [⚙️ Method `PyDocstringFormatter.__init__`](#%EF%B8%8F-method-pydocstringformatter__init__)
+  - [⚙️ Method `PyDocstringFormatter.format`](#%EF%B8%8F-method-pydocstringformatterformat)
+  - [⚙️ Method `PyDocstringFormatter.format_file`](#%EF%B8%8F-method-pydocstringformatterformat_file)
+  - [⚙️ Method `PyDocstringFormatter.format_folder`](#%EF%B8%8F-method-pydocstringformatterformat_folder)
+  - [⚙️ Method `PyDocstringFormatter.iter_code_span_issues`](#%EF%B8%8F-method-pydocstringformatteriter_code_span_issues)
+  - [⚙️ Method `PyDocstringFormatter.normalize_code_spans`](#%EF%B8%8F-method-pydocstringformatternormalize_code_spans)
 
 </details>
 
@@ -223,7 +223,7 @@ class PyDocstringFormatter:
 
 </details>
 
-### ⚙️ Method `__call__`
+### ⚙️ Method `PyDocstringFormatter.__call__`
 
 ```python
 def __call__(self, source: str) -> str
@@ -249,7 +249,7 @@ def __call__(self, source: str) -> str:
 
 </details>
 
-### ⚙️ Method `__init__`
+### ⚙️ Method `PyDocstringFormatter.__init__`
 
 ```python
 def __init__(self) -> None
@@ -289,7 +289,7 @@ def __init__(
 
 </details>
 
-### ⚙️ Method `format`
+### ⚙️ Method `PyDocstringFormatter.format`
 
 ```python
 def format(self, source: str) -> str
@@ -317,7 +317,7 @@ def format(self, source: str) -> str:
 
 </details>
 
-### ⚙️ Method `format_file`
+### ⚙️ Method `PyDocstringFormatter.format_file`
 
 ```python
 def format_file(self, filename: Path | str) -> str
@@ -377,7 +377,7 @@ def format_file(self, filename: Path | str) -> str:
 
 </details>
 
-### ⚙️ Method `format_folder`
+### ⚙️ Method `PyDocstringFormatter.format_folder`
 
 ```python
 def format_folder(self, folder: Path | str) -> str
@@ -405,7 +405,7 @@ def format_folder(self, folder: Path | str) -> str:
 
 </details>
 
-### ⚙️ Method `iter_code_span_issues`
+### ⚙️ Method `PyDocstringFormatter.iter_code_span_issues`
 
 ```python
 def iter_code_span_issues(text: str) -> Iterator[tuple[int, int, str]]
@@ -442,7 +442,7 @@ def iter_code_span_issues(text: str) -> Iterator[tuple[int, int, str]]:
 
 </details>
 
-### ⚙️ Method `normalize_code_spans`
+### ⚙️ Method `PyDocstringFormatter.normalize_code_spans`
 
 ```python
 def normalize_code_spans(text: str) -> str

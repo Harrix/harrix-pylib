@@ -2822,6 +2822,288 @@ def test_md_checker() -> None:
         assert not errors
 
         # =====================================================================
+        # H063: Bare filename or path not in inline code
+        # =====================================================================
+        bare_filename_file = temp_path / "bare_filename.md"
+        bare_filename_file.write_text("---\nlang: en\n---\n\nSee config.json here.\n", encoding="utf-8")
+        errors = checker.check(bare_filename_file, select={"H063"})
+        assert any("H063" in e for e in errors)
+
+        bare_filename_ok_file = temp_path / "bare_filename_ok.md"
+        bare_filename_ok_file.write_text("---\nlang: en\n---\n\nSee `config.json` here.\n", encoding="utf-8")
+        errors = checker.check(bare_filename_ok_file, select={"H063"})
+        assert not errors
+
+        bare_filename_link_ok = temp_path / "bare_filename_link_ok.md"
+        bare_filename_link_ok.write_text(
+            "---\nlang: en\n---\n\nDownload [cfg](config.json) now.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(bare_filename_link_ok, select={"H063"})
+        assert not errors
+
+        bare_filename_label_ok = temp_path / "bare_filename_label_ok.md"
+        bare_filename_label_ok.write_text(
+            "---\nlang: en\n---\n\nDoc: [abbreviation_data.g.md](https://example.com/a.md)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(bare_filename_label_ok, select={"H063"})
+        assert not errors
+
+        # =====================================================================
+        # H064: Missing blank line after list
+        # =====================================================================
+        list_no_blank_file = temp_path / "list_no_blank.md"
+        list_no_blank_file.write_text("---\nlang: en\n---\n\n- a\n- b\n# Next\n", encoding="utf-8")
+        errors = checker.check(list_no_blank_file, select={"H064"})
+        assert any("H064" in e for e in errors)
+
+        list_blank_ok_file = temp_path / "list_blank_ok.md"
+        list_blank_ok_file.write_text("---\nlang: en\n---\n\n- a\n- b\n\n# Next\n", encoding="utf-8")
+        errors = checker.check(list_blank_ok_file, select={"H064"})
+        assert not errors
+
+        # =====================================================================
+        # H065: Missing blank line after table
+        # =====================================================================
+        table_no_blank_file = temp_path / "table_no_blank.md"
+        table_no_blank_file.write_text(
+            "---\nlang: en\n---\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\nNext.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(table_no_blank_file, select={"H065"})
+        assert any("H065" in e for e in errors)
+
+        table_blank_ok_file = temp_path / "table_blank_ok.md"
+        table_blank_ok_file.write_text(
+            "---\nlang: en\n---\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\nNext.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(table_blank_ok_file, select={"H065"})
+        assert not errors
+
+        # =====================================================================
+        # H066: Blank line inside YAML front matter
+        # =====================================================================
+        yaml_blank_file = temp_path / "yaml_blank.md"
+        yaml_blank_file.write_text("---\nlang: en\n\ntitle: x\n---\n\n# T\n", encoding="utf-8")
+        errors = checker.check(yaml_blank_file, select={"H066"})
+        assert any("H066" in e for e in errors)
+
+        yaml_compact_ok_file = temp_path / "yaml_compact_ok.md"
+        yaml_compact_ok_file.write_text("---\nlang: en\ntitle: x\n---\n\n# T\n", encoding="utf-8")
+        errors = checker.check(yaml_compact_ok_file, select={"H066"})
+        assert not errors
+
+        # =====================================================================
+        # H067: Unclosed or empty wiki link
+        # =====================================================================
+        wiki_unclosed_file = temp_path / "wiki_unclosed.md"
+        wiki_unclosed_file.write_text("---\nlang: en\n---\n\nSee [[broken link.\n", encoding="utf-8")
+        errors = checker.check(wiki_unclosed_file, select={"H067"})
+        assert any("H067" in e for e in errors)
+
+        wiki_empty_file = temp_path / "wiki_empty.md"
+        wiki_empty_file.write_text("---\nlang: en\n---\n\nSee [[]].\n", encoding="utf-8")
+        errors = checker.check(wiki_empty_file, select={"H067"})
+        assert any("H067" in e for e in errors)
+
+        wiki_ok_file = temp_path / "wiki_ok.md"
+        wiki_ok_file.write_text("---\nlang: en\n---\n\nSee [[ok page]].\n", encoding="utf-8")
+        errors = checker.check(wiki_ok_file, select={"H067"})
+        assert not errors
+
+        # =====================================================================
+        # H068: Figure caption format does not match lang
+        # =====================================================================
+        caption_lang_mismatch = temp_path / "caption_lang_mismatch.md"
+        caption_lang_mismatch.write_text(
+            "---\nlang: en\n---\n\n![Alt](img/a.png)\n\n_Рисунок 1 — Alt_\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(caption_lang_mismatch, select={"H068"})
+        assert any("H068" in e for e in errors)
+
+        caption_lang_ok = temp_path / "caption_lang_ok.md"
+        caption_lang_ok.write_text(
+            "---\nlang: en\n---\n\n![Alt](img/a.png)\n\n_Figure 1: Alt_\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(caption_lang_ok, select={"H068"})
+        assert not errors
+
+        # =====================================================================
+        # H069: Undefined or unused reference-style link
+        # =====================================================================
+        ref_undefined = temp_path / "ref_undefined.md"
+        ref_undefined.write_text("---\nlang: en\n---\n\nSee [x][missing].\n", encoding="utf-8")
+        errors = checker.check(ref_undefined, select={"H069"})
+        assert any("H069" in e and "undefined" in e for e in errors)
+
+        ref_unused = temp_path / "ref_unused.md"
+        ref_unused.write_text("---\nlang: en\n---\n\n[unused]: https://example.com\n", encoding="utf-8")
+        errors = checker.check(ref_unused, select={"H069"})
+        assert any("H069" in e and "unused" in e for e in errors)
+
+        ref_ok = temp_path / "ref_ok.md"
+        ref_ok.write_text(
+            "---\nlang: en\n---\n\nSee [x][ref].\n\n[ref]: https://example.com\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ref_ok, select={"H069"})
+        assert not errors
+
+        hidden_comment_ok = temp_path / "hidden_comment_ok.md"
+        hidden_comment_ok.write_text('---\nlang: en\n---\n\n[//]: # "note"\n', encoding="utf-8")
+        errors = checker.check(hidden_comment_ok, select={"H069"})
+        assert not errors
+
+        # =====================================================================
+        # H070: Duplicate heading anchor
+        # =====================================================================
+        dup_heading = temp_path / "dup_heading.md"
+        dup_heading.write_text("---\nlang: en\n---\n\n# Title\n\n## Same\n\n## Same\n", encoding="utf-8")
+        errors = checker.check(dup_heading, select={"H070"})
+        assert any("H070" in e for e in errors)
+
+        unique_heading = temp_path / "unique_heading.md"
+        unique_heading.write_text("---\nlang: en\n---\n\n# Title\n\n## One\n\n## Two\n", encoding="utf-8")
+        errors = checker.check(unique_heading, select={"H070"})
+        assert not errors
+
+        # =====================================================================
+        # H071: Mixed bullet markers in one list
+        # =====================================================================
+        mixed_bullets = temp_path / "mixed_bullets.md"
+        mixed_bullets.write_text("---\nlang: en\n---\n\n- a\n* b\n", encoding="utf-8")
+        errors = checker.check(mixed_bullets, select={"H071"})
+        assert any("H071" in e for e in errors)
+
+        same_bullets = temp_path / "same_bullets.md"
+        same_bullets.write_text("---\nlang: en\n---\n\n- a\n- b\n", encoding="utf-8")
+        errors = checker.check(same_bullets, select={"H071"})
+        assert not errors
+
+        # =====================================================================
+        # H072: Setext heading used
+        # =====================================================================
+        setext_file = temp_path / "setext.md"
+        setext_file.write_text("---\nlang: en\n---\n\nTitle\n=====\n", encoding="utf-8")
+        errors = checker.check(setext_file, select={"H072"})
+        assert any("H072" in e for e in errors)
+
+        atx_ok_file = temp_path / "atx_ok.md"
+        atx_ok_file.write_text("---\nlang: en\n---\n\n# Title\n", encoding="utf-8")
+        errors = checker.check(atx_ok_file, select={"H072"})
+        assert not errors
+
+        # =====================================================================
+        # H073: Unbalanced math delimiters
+        # =====================================================================
+        math_unbalanced = temp_path / "math_unbalanced.md"
+        math_unbalanced.write_text("---\nlang: en\n---\n\nValue $x is broken.\n", encoding="utf-8")
+        errors = checker.check(math_unbalanced, select={"H073"})
+        assert any("H073" in e for e in errors)
+
+        math_ok = temp_path / "math_ok.md"
+        math_ok.write_text("---\nlang: en\n---\n\nValue $x$ is fine.\n", encoding="utf-8")
+        errors = checker.check(math_ok, select={"H073"})
+        assert not errors
+
+        math_display_unclosed = temp_path / "math_display_unclosed.md"
+        math_display_unclosed.write_text("---\nlang: en\n---\n\n$$\nx\n", encoding="utf-8")
+        errors = checker.check(math_display_unclosed, select={"H073"})
+        assert any("H073" in e for e in errors)
+
+        # =====================================================================
+        # H074: Table row has wrong column count
+        # =====================================================================
+        table_cols_bad = temp_path / "table_cols_bad.md"
+        table_cols_bad.write_text(
+            "---\nlang: en\n---\n\n| a | b |\n| --- | --- |\n| 1 |\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(table_cols_bad, select={"H074"})
+        assert any("H074" in e for e in errors)
+
+        table_cols_ok = temp_path / "table_cols_ok.md"
+        table_cols_ok.write_text(
+            "---\nlang: en\n---\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(table_cols_ok, select={"H074"})
+        assert not errors
+
+        # =====================================================================
+        # H075: Mixed hard-break styles in one file
+        # =====================================================================
+        mixed_breaks = temp_path / "mixed_breaks.md"
+        mixed_breaks.write_text("---\nlang: en\n---\n\nline one\\\nline two  \nline three\n", encoding="utf-8")
+        errors = checker.check(mixed_breaks, select={"H075"})
+        assert any("H075" in e for e in errors)
+
+        backslash_only = temp_path / "backslash_only.md"
+        backslash_only.write_text("---\nlang: en\n---\n\nline one\\\nline two\n", encoding="utf-8")
+        errors = checker.check(backslash_only, select={"H075"})
+        assert not errors
+
+        # =====================================================================
+        # H076: Invalid or incomplete TOC details block
+        # =====================================================================
+        toc_lang_mismatch = temp_path / "toc_lang_mismatch.md"
+        toc_lang_mismatch.write_text(
+            "---\nlang: en\n---\n\n"
+            "<details>\n<summary>📖 Contents ⬇️</summary>\n\n"
+            "## Содержание\n\n</details>\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(toc_lang_mismatch, select={"H076"})
+        assert any("H076" in e for e in errors)
+
+        toc_ok = temp_path / "toc_ok.md"
+        toc_ok.write_text(
+            "---\nlang: en\n---\n\n<details>\n<summary>📖 Contents ⬇️</summary>\n\n## Contents\n\n</details>\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(toc_ok, select={"H076"})
+        assert not errors
+
+        # =====================================================================
+        # H077: Featured image convention
+        # =====================================================================
+        featured_bad = temp_path / "featured_bad.md"
+        featured_bad.write_text(
+            "---\nlang: en\n---\n\n![Featured image](img/cover.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(featured_bad, select={"H077"})
+        assert any("H077" in e for e in errors)
+
+        featured_ok = temp_path / "featured_ok.md"
+        featured_ok.write_text(
+            "---\nlang: en\n---\n\n![Featured image](img/featured-image.png)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(featured_ok, select={"H077"})
+        assert not errors
+
+        # =====================================================================
+        # H078: Local asset link outside sibling img/ or files/
+        # =====================================================================
+        note_folder = temp_path / "asset-note"
+        note_folder.mkdir()
+        (note_folder / "img").mkdir()
+        asset_bad = note_folder / "note.md"
+        asset_bad.write_text("---\nlang: en\n---\n\n![Alt](photo.png)\n", encoding="utf-8")
+        errors = checker.check(asset_bad, select={"H078"})
+        assert any("H078" in e for e in errors)
+
+        asset_ok = note_folder / "note_ok.md"
+        asset_ok.write_text("---\nlang: en\n---\n\n![Alt](img/photo.png)\n", encoding="utf-8")
+        errors = checker.check(asset_ok, select={"H078"})
+        assert not errors
+
+        # =====================================================================
         # raw-markdown: true — skip body after first ATX H1
         # =====================================================================
         raw_md_file = temp_path / "raw_markdown_note.md"
@@ -2866,6 +3148,8 @@ def test_md_checker() -> None:
         assert "H057" in checker.all_rules
         assert "H059" in checker.all_rules
         assert "H060" in checker.all_rules
+        assert "H063" in checker.all_rules
+        assert "H078" in checker.all_rules
         assert "H033" in checker.all_rules
         assert checker.all_rules == set(checker.RULES.keys())
 

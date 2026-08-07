@@ -12,11 +12,11 @@ lang: en
 ## Contents
 
 - [🏛️ Class `SvgOptimizer`](#%EF%B8%8F-class-svgoptimizer)
-  - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
-  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
-  - [⚙️ Method `optimize`](#%EF%B8%8F-method-optimize)
-  - [⚙️ Method `optimize_file`](#%EF%B8%8F-method-optimize_file)
-  - [⚙️ Method `optimize_folder`](#%EF%B8%8F-method-optimize_folder)
+  - [⚙️ Method `SvgOptimizer.__call__`](#%EF%B8%8F-method-svgoptimizer__call__)
+  - [⚙️ Method `SvgOptimizer.__init__`](#%EF%B8%8F-method-svgoptimizer__init__)
+  - [⚙️ Method `SvgOptimizer.optimize`](#%EF%B8%8F-method-svgoptimizeroptimize)
+  - [⚙️ Method `SvgOptimizer.optimize_file`](#%EF%B8%8F-method-svgoptimizeroptimize_file)
+  - [⚙️ Method `SvgOptimizer.optimize_folder`](#%EF%B8%8F-method-svgoptimizeroptimize_folder)
 
 </details>
 
@@ -146,7 +146,7 @@ class SvgOptimizer:
 
 </details>
 
-### ⚙️ Method `__call__`
+### ⚙️ Method `SvgOptimizer.__call__`
 
 ```python
 def __call__(self, svg_text: str) -> str
@@ -173,7 +173,7 @@ def __call__(self, svg_text: str, *, multipass: bool | None = None) -> str:
 
 </details>
 
-### ⚙️ Method `__init__`
+### ⚙️ Method `SvgOptimizer.__init__`
 
 ```python
 def __init__(self) -> None
@@ -195,7 +195,7 @@ def __init__(self, *, multipass: bool = True) -> None:
 
 </details>
 
-### ⚙️ Method `optimize`
+### ⚙️ Method `SvgOptimizer.optimize`
 
 ```python
 def optimize(self, svg_text: str) -> str
@@ -243,7 +243,7 @@ def optimize(self, svg_text: str, *, multipass: bool | None = None) -> str:
 
 </details>
 
-### ⚙️ Method `optimize_file`
+### ⚙️ Method `SvgOptimizer.optimize_file`
 
 ```python
 def optimize_file(self, filename: Path | str, output_filename: Path | str | None = None) -> str
@@ -276,7 +276,7 @@ def optimize_file(self, filename: Path | str, output_filename: Path | str | None
 
 </details>
 
-### ⚙️ Method `optimize_folder`
+### ⚙️ Method `SvgOptimizer.optimize_folder`
 
 ```python
 def optimize_folder(self, input_folder: Path | str, output_folder: Path | str) -> str

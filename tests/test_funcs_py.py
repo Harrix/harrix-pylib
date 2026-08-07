@@ -323,8 +323,10 @@ class ExampleClass:
             "Example function should be documented with emoji."
         )
         assert "## 🏛️ Class `ExampleClass`" in test_file_content, "Example class should be documented with emoji."
-        assert "### ⚙️ Method `__init__`" in test_file_content, "Class method should be documented with emoji."
-        assert "### ⚙️ Method `example_method`" in test_file_content, (
+        assert "### ⚙️ Method `ExampleClass.__init__`" in test_file_content, (
+            "Class method should be documented with emoji."
+        )
+        assert "### ⚙️ Method `ExampleClass.example_method`" in test_file_content, (
             "Another class method should be documented with emoji."
         )
 
@@ -396,11 +398,15 @@ class ExampleClass:
         assert "class ExampleClass" in md_content, "Class signature should be present."
         assert "A class for demonstration" in md_content, "Class docstring should be included."
 
-        assert "### ⚙️ Method `__init__`" in md_content, "Class __init__ method should be documented with emoji."
+        assert "### ⚙️ Method `ExampleClass.__init__`" in md_content, (
+            "Class __init__ method should be documented with emoji."
+        )
         assert "def __init__(self, value: str)" in md_content, "Method signature should be present."
         assert "Initialize the class" in md_content, "Method docstring should be included."
 
-        assert "### ⚙️ Method `example_method`" in md_content, "Class method should be documented with emoji."
+        assert "### ⚙️ Method `ExampleClass.example_method`" in md_content, (
+            "Class method should be documented with emoji."
+        )
         assert "def example_method(self)" in md_content, "Method signature should be present."
         assert "A method that does nothing" in md_content, "Method docstring should be included."
 
@@ -458,11 +464,11 @@ class PublicClass:
         assert "# 📄 File `private_symbols.py`" in md_content
         assert "## 🔧 Function `public_function`" in md_content
         assert "## 🏛️ Class `PublicClass`" in md_content
-        assert "### ⚙️ Method `__init__`" in md_content
-        assert "### ⚙️ Method `public_method`" in md_content
+        assert "### ⚙️ Method `PublicClass.__init__`" in md_content
+        assert "### ⚙️ Method `PublicClass.public_method`" in md_content
         assert "_private_function" not in md_content
         assert "_PrivateClass" not in md_content
-        assert "### ⚙️ Method `_internal_method`" not in md_content
+        assert "### ⚙️ Method `PublicClass._internal_method`" not in md_content
 
 
 def test_extract_functions_and_classes_excludes_private_symbols() -> None:
@@ -597,10 +603,10 @@ class PublicClass:
         assert "## 🔧 Function `_private_function`" in md_content
         assert "## 🏛️ Class `PublicClass`" in md_content
         assert "## 🏛️ Class `_PrivateClass`" in md_content
-        assert "### ⚙️ Method `__init__`" in md_content
-        assert "### ⚙️ Method `public_method`" in md_content
-        assert "### ⚙️ Method `_internal_method`" in md_content
-        assert "### ⚙️ Method `method`" in md_content
+        assert "### ⚙️ Method `PublicClass.__init__`" in md_content
+        assert "### ⚙️ Method `PublicClass.public_method`" in md_content
+        assert "### ⚙️ Method `PublicClass._internal_method`" in md_content
+        assert "### ⚙️ Method `_PrivateClass.method`" in md_content
 
 
 def test_extract_functions_and_classes_includes_private_symbols() -> None:

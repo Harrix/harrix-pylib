@@ -11,9 +11,26 @@ import yaml
 
 import harrix_pylib as h
 from harrix_pylib.abbreviation_data import load_abbreviation_data, mask_abbreviations
+from harrix_pylib.md_assets import is_featured_image_name, is_media_file, is_note_asset_folder
 from harrix_pylib.md_decimal_separators import iter_decimal_separator_issues
+from harrix_pylib.md_format.hard_break_format import (
+    _line_has_single_backslash_hard_break,
+    _line_has_space_hard_break,
+)
+from harrix_pylib.md_format.list_format import (
+    BULLET_LIST_ITEM_RE,
+    _is_list_continuation,
+    _is_list_item_continuation_line,
+    _is_list_line,
+)
 from harrix_pylib.md_format.math_spans import iter_code_and_math_segments
-from harrix_pylib.md_format.prose_fixes import _is_russian_polite_pronoun_at_sentence_start
+from harrix_pylib.md_format.prose_fixes import (
+    _BARE_FILENAME_PATTERN,
+    _BARE_FILENAME_PRODUCT_BASENAMES,
+    _extract_url_regions,
+    _is_russian_polite_pronoun_at_sentence_start,
+)
+from harrix_pylib.md_format.table_format import _is_table_line
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -110,6 +127,32 @@ class MdChecker:
     - **H062** - Wrong decimal separator for YAML `lang`: `en` uses `.` (thousands `,`
       allowed, e.g. `1,234.5`); `ru` uses `,` (simple `.` decimals flagged; European
       `1.234` / `1.234,5` and multi-dot versions/IPs are skipped).
+    - **H063** - Bare filename or path with a known extension not wrapped in inline code
+      (link/image destinations, link labels, and angle autolinks are skipped; product
+      names like `node.js` are allowed).
+    - **H064** - Missing blank line after a list before the next non-list block
+      (same cases as the formatter: headings, fences, images, tables, etc.; lazy
+      list-item continuations without a blank line are allowed).
+    - **H065** - Missing blank line after a GFM table before the next non-table block.
+    - **H066** - Blank line inside YAML front matter (front matter must be compact).
+    - **H067** - Unclosed or empty wiki link (`[[…]]`).
+    - **H068** - Figure caption after an image does not match YAML `lang` template
+      (`_Figure N: …_` for `en`; localized Russian figure template for `ru`).
+    - **H069** - Undefined or unused reference-style link (`[text][ref]` / `[ref]: url`;
+      hidden `[//]: #` comments are ignored).
+    - **H070** - Duplicate heading anchor (two ATX headings share the same GitHub slug).
+    - **H071** - Mixed bullet markers (`-` / `*` / `+`) inside one contiguous list.
+    - **H072** - Setext heading used (prefer ATX `#` headings).
+    - **H073** - Unbalanced math delimiters (`$…$` / `$$…$$`); currency `$` amounts and
+      lone `$` symbols among punctuation are allowed.
+    - **H074** - GFM table row has a different column count than the table header.
+    - **H075** - Mixed hard-break styles in one file (trailing `\\` and two spaces).
+    - **H076** - Invalid TOC `<details>` block (summary / Contents heading /
+      language mismatch).
+    - **H077** - Featured image convention: alt must be `Featured image` and the
+      destination basename must start with `featured-image`.
+    - **H078** - Local media/file link outside sibling `img/` or `files/` in a note
+      folder (`featured-image.*` may stay in the note root or `img/`).
 
     Example for ignore directives:
 
@@ -125,7 +168,7 @@ class MdChecker:
 
     - Files with `raw-markdown: true` in YAML: prose and structure checks skip the
       body after the first ATX H1 (same span that `combine_markdown_files` wraps in a
-      fenced code block). Filename, YAML, BOM, line endings, and H060/H061 asset
+      fenced code block). Filename, YAML, BOM, line endings, and H060/H061/H078 asset
       layout rules still apply; H060 still scans the full file for asset references.
     - `<!-- ignore: ... -->` suppresses the listed rules on its own line, and
       `<!-- file-ignore: ... -->` suppresses them for the whole file, mirroring the
@@ -169,6 +212,37 @@ class MdChecker:
     _IMAGE_CAPTION_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
         r"^_\s*(?:Figure\s+\d+:|Рисунок\s+\d+\s+—).+_$"  # ignore: HP001
     )
+    # Lang-specific figure captions (H068)
+    _IMAGE_CAPTION_EN_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^_\s*Figure\s+\d+:.+_$")
+    _IMAGE_CAPTION_RU_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
+        r"^_\s*Рисунок\s+\d+\s+—.+_$"  # ignore: HP001
+    )
+    # Any italic-only caption line (H068 malformed / wrong-lang detection)
+    _ITALIC_CAPTION_LINE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^_.+_$")
+
+    # Reference-style link definition / use (H069); `[//]:` hidden comments excluded in logic
+    _REF_LINK_DEFINITION_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
+        r"""^\s{0,3}\[([^\]]+)\]:\s+(\S+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*$"""
+    )
+    _REF_LINK_EXPLICIT_USE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<!!)\[([^\]]*)\]\[([^\]]+)\]")
+    _REF_LINK_COLLAPSED_USE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<!!)\[([^\]]+)\]\[\]")
+
+    # Setext heading underline (H072); at least three `=` or `-`
+    _SETEXT_H1_UNDERLINE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s{0,3}=+\s*$")
+    _SETEXT_H2_UNDERLINE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s{0,3}-{3,}\s*$")
+
+    # Wiki links are scanned manually in `_check_wiki_links` (H067)
+
+    # TOC details (H076)
+    _TOC_SUMMARY_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
+        r"<summary>\s*📖\s*(Contents|Содержание)\s*⬇️\s*</summary>",  # ignore: HP001
+        re.IGNORECASE,
+    )
+    _TOC_HEADING_EN: ClassVar[str] = "## Contents"
+    _TOC_HEADING_RU: ClassVar[str] = "## Содержание"  # ignore: HP001
+
+    # Featured image alt (H077)
+    _FEATURED_IMAGE_ALT: ClassVar[str] = "Featured image"
 
     # ATX heading without space after hash marks (H036)
     _ATX_HEADING_NO_SPACE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s{0,3}#{1,6}[^\s#]")
@@ -346,6 +420,22 @@ class MdChecker:
         "H060": "Asset file not referenced in Markdown",
         "H061": "Misplaced note asset file",
         "H062": "Wrong decimal separator",
+        "H063": "Bare filename or path not in inline code",
+        "H064": "Missing blank line after list",
+        "H065": "Missing blank line after table",
+        "H066": "Blank line inside YAML front matter",
+        "H067": "Unclosed or empty wiki link",
+        "H068": "Figure caption format does not match lang",
+        "H069": "Undefined or unused reference-style link",
+        "H070": "Duplicate heading anchor",
+        "H071": "Mixed bullet markers in one list",
+        "H072": "Setext heading used (prefer ATX)",
+        "H073": "Unbalanced math delimiters",
+        "H074": "Table row has wrong column count",
+        "H075": "Mixed hard-break styles in one file",
+        "H076": "Invalid or incomplete TOC details block",
+        "H077": "Featured image convention violation",
+        "H078": "Local asset link outside sibling img/ or files/",
     }
 
     # HTML comment for ignoring checks on specific lines
@@ -890,6 +980,37 @@ class MdChecker:
                     yield self._format_error("H039", self.RULES["H039"], filename, line_num=line_num, col=col)
             offset += len(segment)
 
+    def _check_bare_filenames(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for bare filenames/paths that should be inline code (H063)."""
+        masked, _stored = _extract_url_regions(line)
+        offset = 0
+        for segment, protected in iter_code_and_math_segments(h.md.identify_code_blocks_line(masked)):
+            if not protected:
+                for match in _BARE_FILENAME_PATTERN.finditer(segment):
+                    leading_dot_name = match.group(1)
+                    bare_extension = match.group(2)
+                    matched = match.group(0)
+                    if (
+                        leading_dot_name is None
+                        and bare_extension is None
+                        and "/" not in matched
+                        and "\\" not in matched
+                        and matched.casefold() in _BARE_FILENAME_PRODUCT_BASENAMES
+                    ):
+                        continue
+                    abs_start = offset + match.start()
+                    abs_end = offset + match.end()
+                    if self._is_inside_markdown_link_label(masked, abs_start, abs_end):
+                        continue
+                    col = abs_start + 1
+                    shown = matched if leading_dot_name is None else f".{leading_dot_name}"
+                    if bare_extension is not None and leading_dot_name is None:
+                        shown = f".{bare_extension}"
+                    error_msg = f'{self.RULES["H063"]}: "{shown}" should be in backticks'
+                    yield self._format_error("H063", error_msg, filename, line_num=line_num, col=col)
+                    return
+            offset += len(segment)
+
     def _check_bare_url(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check for bare URL in prose (H041)."""
         offset = 0
@@ -899,6 +1020,52 @@ class MdChecker:
                     col = offset + match.start(1) + 1
                     yield self._format_error("H041", self.RULES["H041"], filename, line_num=line_num, col=col)
             offset += len(segment)
+
+    def _check_blank_line_after_lists(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check for a blank line after a list before the next block (H064)."""
+        in_list_context = False
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                in_list_context = False
+                continue
+            stripped = line.strip()
+            if _is_list_line(line):
+                in_list_context = True
+                continue
+            if not stripped:
+                in_list_context = False
+                continue
+            previous = code_block_info[index - 1][0] if index > 0 else ""
+            if in_list_context and _is_list_item_continuation_line(previous, line):
+                continue
+            if in_list_context and not _is_table_line(line) and not _is_list_continuation(line):
+                actual_line_num = (yaml_end_line - 1) + index + 1
+                yield self._format_error("H064", self.RULES["H064"], filename, line_num=actual_line_num, col=1)
+                in_list_context = False
+            if not _is_list_continuation(line):
+                in_list_context = False
+
+    def _check_blank_line_after_tables(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check for a blank line after a GFM table before the next block (H065)."""
+        in_table = False
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                in_table = False
+                continue
+            if _is_table_line(line):
+                in_table = True
+                continue
+            if not line.strip():
+                in_table = False
+                continue
+            if in_table:
+                actual_line_num = (yaml_end_line - 1) + index + 1
+                yield self._format_error("H065", self.RULES["H065"], filename, line_num=actual_line_num, col=1)
+                in_table = False
 
     def _check_broken_internal_fragments(
         self, filename: Path, code_block_info: list, yaml_end_line: int
@@ -1415,6 +1582,108 @@ class MdChecker:
                 return
             offset += len(segment)
 
+    def _check_duplicate_heading_anchors(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check for ATX headings that collide on the same GitHub slug (H070)."""
+        existing_ids: set[str] = set()
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                continue
+            match = self._ATX_HEADING_PATTERN.match(line)
+            if not match:
+                continue
+            level = len(match.group(1))
+            title = line[level:].strip()
+            title = title.replace(" <!-- top-section -->", "").replace("<!-- top-section -->", "")
+            base_ids: set[str] = set()
+            base_slug = h.md.generate_id(title, base_ids)
+            if unquote(base_slug) in {unquote(item) for item in existing_ids}:
+                actual_line_num = (yaml_end_line - 1) + index + 1
+                error_msg = f'{self.RULES["H070"]}: "{base_slug}"'
+                yield self._format_error("H070", error_msg, filename, line_num=actual_line_num, col=1)
+            h.md.generate_id(title, existing_ids)
+
+    def _check_featured_image_convention(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check featured-image alt/filename pairing (H077)."""
+        image_pattern = re.compile(r"!\[([^\]]*)\]\(([^)]*)\)")
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code or "![" not in line:
+                continue
+            offset = 0
+            for segment, protected in iter_code_and_math_segments(h.md.identify_code_blocks_line(line)):
+                if not protected:
+                    for match in image_pattern.finditer(segment):
+                        alt = match.group(1)
+                        destination = self._extract_link_destination(match.group(2))
+                        path_part = unquote(destination.split("#", maxsplit=1)[0])
+                        basename = Path(path_part).name if path_part else ""
+                        is_featured_alt = alt == self._FEATURED_IMAGE_ALT
+                        is_featured_name = bool(basename) and is_featured_image_name(basename)
+                        if not is_featured_alt and not is_featured_name:
+                            continue
+                        actual_line_num = (yaml_end_line - 1) + index + 1
+                        col = offset + match.start() + 1
+                        if is_featured_name and not is_featured_alt:
+                            error_msg = (
+                                f'{self.RULES["H077"]}: alt should be "{self._FEATURED_IMAGE_ALT}" for "{basename}"'
+                            )
+                            yield self._format_error("H077", error_msg, filename, line_num=actual_line_num, col=col)
+                        elif is_featured_alt and not is_featured_name:
+                            shown = basename or path_part or destination
+                            error_msg = (
+                                f"{self.RULES['H077']}: destination basename should start with "
+                                f'"featured-image" (got "{shown}")'
+                            )
+                            yield self._format_error("H077", error_msg, filename, line_num=actual_line_num, col=col)
+                offset += len(segment)
+
+    def _check_figure_caption_lang(
+        self, filename: Path, code_block_info: list, yaml_end_line: int, *, lang: str
+    ) -> Generator[str, None, None]:
+        """Check figure caption template against YAML `lang` (H068)."""
+        expected = self._IMAGE_CAPTION_EN_PATTERN if lang == "en" else self._IMAGE_CAPTION_RU_PATTERN
+        index = 0
+        while index < len(code_block_info):
+            line, in_code = code_block_info[index]
+            if in_code or "![" not in line.strip():
+                index += 1
+                continue
+            stripped = line.strip()
+            if not stripped.startswith(("[![", "![")):
+                index += 1
+                continue
+            if any(sub in line for sub in self._IMAGE_H014_SKIP_SUBSTRINGS):
+                index += 1
+                continue
+
+            actual_line_num = (yaml_end_line - 1) + index + 1
+            search_index = index + 1
+            caption_line = ""
+            caption_line_num = actual_line_num
+            while search_index < len(code_block_info):
+                next_line, next_in_code = code_block_info[search_index]
+                if next_in_code:
+                    break
+                if not next_line.strip():
+                    search_index += 1
+                    continue
+                caption_line = next_line.strip()
+                caption_line_num = (yaml_end_line - 1) + search_index + 1
+                break
+
+            if (
+                caption_line
+                and self._ITALIC_CAPTION_LINE_PATTERN.match(caption_line)
+                and not expected.match(caption_line)
+            ):
+                expected_name = "Figure" if lang == "en" else "Russian figure"
+                error_msg = f"{self.RULES['H068']}: expected {expected_name} template"
+                yield self._format_error("H068", error_msg, filename, line_num=caption_line_num, col=1)
+            index += 1
+
     def _check_file_level_rules(
         self,
         filename: Path,
@@ -1479,6 +1748,45 @@ class MdChecker:
 
         if "H055" in rules and code_block_info is not None:
             yield from self._check_broken_internal_fragments(filename, code_block_info, yaml_end_line)
+
+        if "H064" in rules and code_block_info is not None:
+            yield from self._check_blank_line_after_lists(filename, code_block_info, yaml_end_line)
+
+        if "H065" in rules and code_block_info is not None:
+            yield from self._check_blank_line_after_tables(filename, code_block_info, yaml_end_line)
+
+        if "H068" in rules and code_block_info is not None and lang in {"en", "ru"}:
+            yield from self._check_figure_caption_lang(filename, code_block_info, yaml_end_line, lang=lang)
+
+        if "H069" in rules and code_block_info is not None:
+            yield from self._check_reference_style_links(filename, code_block_info, yaml_end_line)
+
+        if "H070" in rules and code_block_info is not None:
+            yield from self._check_duplicate_heading_anchors(filename, code_block_info, yaml_end_line)
+
+        if "H071" in rules and code_block_info is not None:
+            yield from self._check_mixed_bullet_markers(filename, code_block_info, yaml_end_line)
+
+        if "H072" in rules and code_block_info is not None:
+            yield from self._check_setext_headings(filename, code_block_info, yaml_end_line)
+
+        if "H073" in rules and code_block_info is not None:
+            yield from self._check_unbalanced_math(filename, code_block_info, yaml_end_line)
+
+        if "H074" in rules and code_block_info is not None:
+            yield from self._check_table_column_counts(filename, code_block_info, yaml_end_line)
+
+        if "H075" in rules and code_block_info is not None:
+            yield from self._check_mixed_hard_break_styles(filename, code_block_info, yaml_end_line)
+
+        if "H076" in rules and code_block_info is not None:
+            yield from self._check_toc_details(filename, code_block_info, yaml_end_line, lang=lang)
+
+        if "H077" in rules and code_block_info is not None:
+            yield from self._check_featured_image_convention(filename, code_block_info, yaml_end_line)
+
+        if "H078" in rules:
+            yield from self._check_local_asset_path_layout(filename, content, yaml_end_line)
 
     # =========================================================================
     # Filename Rules (H001, H002)
@@ -1698,6 +2006,48 @@ class MdChecker:
             error_msg = f"{self.RULES['H046']}: LF line endings instead of CRLF"
             yield self._format_error("H046", error_msg, filename, line_num=1, col=1)
 
+    def _check_local_asset_path_layout(
+        self, filename: Path, content: str, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check local media/file destinations use sibling `img/` or `files/` (H078)."""
+        if not is_note_asset_folder(filename.parent):
+            return
+        all_lines = content.splitlines()
+        content_lines = all_lines[yaml_end_line - 1 :] if yaml_end_line > 1 else all_lines
+        for index, (line, in_code) in enumerate(h.md.identify_code_blocks(content_lines)):
+            if in_code:
+                continue
+            clean_line = "".join(
+                segment for segment, in_inline_code in h.md.identify_code_blocks_line(line) if not in_inline_code
+            )
+            for match in self._INLINE_IMAGE_OR_LINK_PATTERN.finditer(clean_line):
+                destination = self._extract_link_destination(match.group(3))
+                if not destination or destination.startswith(("#", "mailto:", "data:", "http://", "https://")):
+                    continue
+                path_part = unquote(destination.split("#", maxsplit=1)[0])
+                if not path_part or path_part.startswith(("/", "\\")):
+                    continue
+                rel = Path(path_part)
+                if not rel.suffix or rel.suffix.lower() in {".md", ".markdown"}:
+                    continue
+                name = rel.name
+                parts = rel.parts
+                is_image = match.group(1) == "!"
+                actual_line_num = (yaml_end_line - 1) + index + 1
+                col = match.start() + 1
+                if is_featured_image_name(name):
+                    if parts and parts[0] == "files":
+                        error_msg = f'{self.RULES["H078"]}: featured image "{path_part}" must not be under files/'
+                        yield self._format_error("H078", error_msg, filename, line_num=actual_line_num, col=col)
+                    continue
+                if is_image or is_media_file(name):
+                    if not parts or parts[0] != "img":
+                        error_msg = f'{self.RULES["H078"]}: media "{path_part}" should be under img/'
+                        yield self._format_error("H078", error_msg, filename, line_num=actual_line_num, col=col)
+                elif not parts or parts[0] != "files":
+                    error_msg = f'{self.RULES["H078"]}: file "{path_part}" should be under files/'
+                    yield self._format_error("H078", error_msg, filename, line_num=actual_line_num, col=col)
+
     def _check_lowercase_after_punctuation(
         self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
@@ -1833,6 +2183,73 @@ class MdChecker:
             reported_cols.add(col)
             error_msg = f'{self.RULES["H050"]}: "{snippet}"'
             yield self._format_error("H050", error_msg, filename, line_num=line_num, col=col + 1)
+
+    def _check_mixed_bullet_markers(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check for mixed `-` / `*` / `+` markers in one list (H071)."""
+        markers: set[str] = set()
+        first_line_num = 0
+        in_list = False
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                markers.clear()
+                in_list = False
+                continue
+            stripped = line.strip()
+            if not stripped:
+                markers.clear()
+                in_list = False
+                continue
+            bullet = BULLET_LIST_ITEM_RE.match(stripped)
+            if bullet:
+                marker = stripped[0]
+                actual_line_num = (yaml_end_line - 1) + index + 1
+                if not in_list:
+                    in_list = True
+                    markers = {marker}
+                    first_line_num = actual_line_num
+                    continue
+                markers.add(marker)
+                if len(markers) > 1:
+                    error_msg = f"{self.RULES['H071']}: mixed markers {sorted(markers)}"
+                    yield self._format_error("H071", error_msg, filename, line_num=first_line_num, col=1)
+                    markers.clear()
+                    in_list = False
+                continue
+            if _is_list_line(line) or _is_list_continuation(line):
+                continue
+            previous = code_block_info[index - 1][0] if index > 0 else ""
+            if in_list and _is_list_item_continuation_line(previous, line):
+                continue
+            markers.clear()
+            in_list = False
+
+    def _check_mixed_hard_break_styles(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        r"""Check that a file does not mix `\` and two-space hard breaks (H075)."""
+        seen_backslash = False
+        seen_spaces = False
+        first_backslash_line = 0
+        first_spaces_line = 0
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                continue
+            next_line = code_block_info[index + 1][0] if index + 1 < len(code_block_info) else ""
+            if code_block_info[index + 1][1] if index + 1 < len(code_block_info) else False:
+                continue
+            actual_line_num = (yaml_end_line - 1) + index + 1
+            if _line_has_single_backslash_hard_break(line, next_line=next_line) and not seen_backslash:
+                seen_backslash = True
+                first_backslash_line = actual_line_num
+            elif _line_has_space_hard_break(line, next_line=next_line) and not seen_spaces:
+                seen_spaces = True
+                first_spaces_line = actual_line_num
+            if seen_backslash and seen_spaces:
+                line_num = max(first_backslash_line, first_spaces_line)
+                yield self._format_error("H075", self.RULES["H075"], filename, line_num=line_num, col=1)
+                return
 
     def _check_mixed_script_words(
         self, filename: Path, line: str, clean_line: str, line_num: int
@@ -2012,6 +2429,12 @@ class MdChecker:
         if "H056" in rules:
             yield from self._check_unbalanced_table_inline_code(filename, line, line_num)
 
+        if "H063" in rules:
+            yield from self._check_bare_filenames(filename, line, line_num)
+
+        if "H067" in rules:
+            yield from self._check_wiki_links(filename, line, line_num)
+
     def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that `№` is followed by a space (H027).
 
@@ -2175,6 +2598,45 @@ class MdChecker:
                     return
                 search_from = pos + 1
 
+    def _check_reference_style_links(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check undefined and unused reference-style links (H069)."""
+        definitions: dict[str, int] = {}
+        uses: dict[str, int] = {}
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                continue
+            actual_line_num = (yaml_end_line - 1) + index + 1
+            def_match = self._REF_LINK_DEFINITION_PATTERN.match(line)
+            if def_match:
+                label = def_match.group(1).strip()
+                if label != "//":
+                    definitions.setdefault(label.casefold(), actual_line_num)
+                continue
+            clean_line = "".join(
+                segment
+                for segment, protected in iter_code_and_math_segments(h.md.identify_code_blocks_line(line))
+                if not protected
+            )
+            for match in self._REF_LINK_EXPLICIT_USE_PATTERN.finditer(clean_line):
+                label = match.group(2).strip()
+                if label:
+                    uses.setdefault(label.casefold(), actual_line_num)
+            for match in self._REF_LINK_COLLAPSED_USE_PATTERN.finditer(clean_line):
+                label = match.group(1).strip()
+                if label:
+                    uses.setdefault(label.casefold(), actual_line_num)
+
+        for label, line_num in uses.items():
+            if label not in definitions:
+                error_msg = f'{self.RULES["H069"]}: undefined reference "[{label}]"'
+                yield self._format_error("H069", error_msg, filename, line_num=line_num, col=1)
+        for label, line_num in definitions.items():
+            if label not in uses:
+                error_msg = f'{self.RULES["H069"]}: unused reference definition "[{label}]"'
+                yield self._format_error("H069", error_msg, filename, line_num=line_num, col=1)
+
     def _check_repeated_adjacent_words(
         self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
@@ -2252,6 +2714,28 @@ class MdChecker:
                 error_msg = f'{self.RULES["H023"]}: use lowercase "{word.lower()}" when addressing reader'
                 yield self._format_error("H023", error_msg, filename, line_num=line_num, col=match.start() + 1)
                 return
+
+    def _check_setext_headings(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check for Setext headings; ATX is preferred (H072)."""
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code or index == 0:
+                continue
+            prev_line, prev_in_code = code_block_info[index - 1]
+            if prev_in_code or not prev_line.strip():
+                continue
+            if prev_line.lstrip().startswith(("#", ">", "|", "```", "- ", "* ", "+ ")) or re.match(
+                r"^\d+[.)]\s", prev_line.lstrip()
+            ):
+                continue
+            if self._SETEXT_H1_UNDERLINE_PATTERN.match(line) or self._SETEXT_H2_UNDERLINE_PATTERN.match(line):
+                # Horizontal rules are alone; Setext requires preceding text (already checked).
+                # Avoid treating table separator / thematic breaks after blank — prev is non-empty.
+                if self._HORIZONTAL_RULE_PATTERN.match(line.strip()) and not prev_line.strip():
+                    continue
+                actual_line_num = (yaml_end_line - 1) + index + 1
+                yield self._format_error("H072", self.RULES["H072"], filename, line_num=actual_line_num, col=1)
 
     def _check_skipped_heading_levels(
         self, filename: Path, code_block_info: list, yaml_end_line: int
@@ -2362,6 +2846,101 @@ class MdChecker:
                 error_msg = f'{self.RULES["H015"]}: found " !"'
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
 
+    def _check_table_column_counts(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check GFM table rows share the header column count (H074)."""
+        expected = 0
+        in_table = False
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code or not _is_table_line(line):
+                in_table = False
+                expected = 0
+                continue
+            count = self._table_column_count(line)
+            actual_line_num = (yaml_end_line - 1) + index + 1
+            if not in_table:
+                in_table = True
+                expected = count
+                continue
+            if count != expected:
+                error_msg = f"{self.RULES['H074']}: found {count} columns, expected {expected}"
+                yield self._format_error("H074", error_msg, filename, line_num=actual_line_num, col=1)
+
+    def _check_toc_details(
+        self, filename: Path, code_block_info: list, yaml_end_line: int, *, lang: str = ""
+    ) -> Generator[str, None, None]:
+        """Check TOC `<details>` blocks follow project conventions (H076)."""
+        index = 0
+        while index < len(code_block_info):
+            line, in_code = code_block_info[index]
+            if in_code or line.strip() != "<details>":
+                index += 1
+                continue
+            open_line_num = (yaml_end_line - 1) + index + 1
+            search = index + 1
+            summary_line = ""
+            summary_line_num = open_line_num
+            while search < len(code_block_info):
+                next_line, next_in_code = code_block_info[search]
+                if next_in_code:
+                    break
+                if not next_line.strip():
+                    search += 1
+                    continue
+                summary_line = next_line.strip()
+                summary_line_num = (yaml_end_line - 1) + search + 1
+                break
+            if "📖 Contents" not in summary_line and "📖 Содержание" not in summary_line:  # ignore: HP001
+                index += 1
+                continue
+            if not self._TOC_SUMMARY_PATTERN.search(summary_line):
+                yield self._format_error("H076", self.RULES["H076"], filename, line_num=summary_line_num, col=1)
+
+            heading_search = search + 1
+            heading_line = ""
+            heading_line_num = summary_line_num
+            while heading_search < len(code_block_info):
+                next_line, next_in_code = code_block_info[heading_search]
+                if next_in_code:
+                    break
+                if not next_line.strip():
+                    heading_search += 1
+                    continue
+                heading_line = next_line.strip()
+                heading_line_num = (yaml_end_line - 1) + heading_search + 1
+                break
+
+            expected_heading = self._TOC_HEADING_RU if lang == "ru" else self._TOC_HEADING_EN
+            if lang in {"en", "ru"} and heading_line != expected_heading:
+                # Allow the other language only when lang is unset; otherwise require match.
+                if heading_line not in {self._TOC_HEADING_EN, self._TOC_HEADING_RU}:
+                    error_msg = f'{self.RULES["H076"]}: missing "{expected_heading}"'
+                    yield self._format_error("H076", error_msg, filename, line_num=heading_line_num, col=1)
+                elif heading_line != expected_heading:
+                    error_msg = f'{self.RULES["H076"]}: expected "{expected_heading}" for lang={lang}'
+                    yield self._format_error("H076", error_msg, filename, line_num=heading_line_num, col=1)
+
+            close_found = False
+            close_search = heading_search + 1 if heading_line else search + 1
+            while close_search < len(code_block_info):
+                next_line, next_in_code = code_block_info[close_search]
+                if not next_in_code and next_line.strip() == "</details>":
+                    close_found = True
+                    break
+                if not next_in_code and next_line.strip() == "<details>":
+                    break
+                close_search += 1
+            if not close_found:
+                yield self._format_error(
+                    "H076",
+                    f"{self.RULES['H076']}: unclosed TOC details",
+                    filename,
+                    line_num=open_line_num,
+                    col=1,
+                )
+            index = close_search + 1 if close_found else index + 1
+
     def _check_two_dots(self, filename: Path, _line: str, clean_line: str, line_num: int) -> Generator[str, None, None]:
         """Check for exactly two consecutive dots (H032).
 
@@ -2412,6 +2991,45 @@ class MdChecker:
         if first_error_line is not None or details_depth != 0 or summary_depth != 0:
             line_num = first_error_line or ((yaml_end_line - 1) + len(code_block_info))
             yield self._format_error("H053", self.RULES["H053"], filename, line_num=line_num, col=1)
+
+    def _check_unbalanced_math(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check for unbalanced `$` / `$$` math delimiters (H073).
+
+        Currency mentions like `$5` or a lone `$` among punctuation are ignored;
+        only leftover `$` that looks like an opened TeX/math span is flagged.
+
+        """
+        in_display = False
+        display_start_line = 0
+        math_open_pattern = re.compile(r"\$(?=[A-Za-z\\{])")
+        for index, (line, in_code) in enumerate(code_block_info):
+            actual_line_num = (yaml_end_line - 1) + index + 1
+            if in_code:
+                continue
+            if self._MATH_DELIMITER_PATTERN.match(line):
+                if in_display:
+                    in_display = False
+                else:
+                    in_display = True
+                    display_start_line = actual_line_num
+                continue
+            if in_display:
+                continue
+            offset = 0
+            for segment, protected in iter_code_and_math_segments(h.md.identify_code_blocks_line(line)):
+                if not protected:
+                    match = math_open_pattern.search(segment)
+                    if match:
+                        col = offset + match.start() + 1
+                        yield self._format_error(
+                            "H073", self.RULES["H073"], filename, line_num=actual_line_num, col=col
+                        )
+                        return
+                offset += len(segment)
+        if in_display:
+            yield self._format_error("H073", self.RULES["H073"], filename, line_num=display_start_line, col=1)
 
     def _check_unbalanced_table_inline_code(
         self, filename: Path, line: str, line_num: int
@@ -2506,6 +3124,39 @@ class MdChecker:
 
         yield from flush_unit()
 
+    def _check_wiki_links(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for empty or unclosed wiki links (H067)."""
+        offset = 0
+        for segment, protected in iter_code_and_math_segments(h.md.identify_code_blocks_line(line)):
+            if not protected:
+                search_from = 0
+                while True:
+                    start = segment.find("[[", search_from)
+                    if start < 0:
+                        break
+                    close = segment.find("]]", start + 2)
+                    if close < 0:
+                        yield self._format_error(
+                            "H067",
+                            f'{self.RULES["H067"]}: unclosed "[["',
+                            filename,
+                            line_num=line_num,
+                            col=offset + start + 1,
+                        )
+                        return
+                    inner = segment[start + 2 : close]
+                    if not inner.strip():
+                        yield self._format_error(
+                            "H067",
+                            f"{self.RULES['H067']}: empty wiki link",
+                            filename,
+                            line_num=line_num,
+                            col=offset + start + 1,
+                        )
+                        return
+                    search_from = close + 2
+            offset += len(segment)
+
     def _check_x_instead_of_times(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         r"""Check for Latin `x` or Cyrillic `x` used instead of multiplication sign '\*' (H024).
 
@@ -2546,6 +3197,18 @@ class MdChecker:
                     yield self._format_error("H024", error_msg, filename, line_num=line_num, col=offset + pos + 1)
             offset += len(segment)
 
+    def _check_yaml_blank_lines(self, filename: Path, all_lines: list[str]) -> Generator[str, None, None]:
+        """Check that YAML front matter has no blank lines (H066)."""
+        if not all_lines or all_lines[0].strip() != "---":
+            return
+        for index in range(1, len(all_lines)):
+            line = all_lines[index]
+            if line.strip() == "---":
+                return
+            if not line.strip():
+                yield self._format_error("H066", self.RULES["H066"], filename, line_num=index + 1, col=1)
+                return
+
     # =========================================================================
     # YAML Rules (H003-H005)
     # =========================================================================
@@ -2578,6 +3241,9 @@ class MdChecker:
                     line_num = self._find_yaml_field_line_in_original(all_lines, "lang")
                     col = self._find_yaml_field_column(all_lines, line_num, "lang")
                     yield self._format_error("H005", self.RULES["H005"], filename, line_num=line_num, col=col)
+
+            if "H066" in rules and yaml_content:
+                yield from self._check_yaml_blank_lines(filename, all_lines)
 
         except yaml.YAMLError as e:
             yield self._format_error("H000", f"YAML parsing error: {e}", filename, line_num=1)
@@ -3087,6 +3753,15 @@ class MdChecker:
             return False
         return False
 
+    def _is_inside_markdown_link_label(self, line: str, start: int, end: int) -> bool:
+        """Return whether `[start, end)` lies inside a Markdown link/image label."""
+        for match in re.finditer(r"!?\[([^\]]*)\]\(", line):
+            label_start = match.start(1)
+            label_end = match.end(1)
+            if label_start <= start and end <= label_end:
+                return True
+        return False
+
     def _is_markdown_table_line(self, line: str) -> bool:
         """Return whether the line is a GFM table row (`|...|`)."""
         stripped = line.strip()
@@ -3235,3 +3910,15 @@ class MdChecker:
                 start = i + 1
         cells.append((line[start:], start))
         return cells
+
+    def _table_column_count(self, line: str) -> int:
+        """Return the number of GFM table cells in a row (handles escaped pipes)."""
+        stripped = line.strip()
+        placeholder = "\0"
+        escaped = stripped.replace(r"\|", placeholder)
+        parts = escaped.split("|")
+        if escaped.startswith("|"):
+            parts = parts[1:]
+        if escaped.endswith("|"):
+            parts = parts[:-1]
+        return len(parts)

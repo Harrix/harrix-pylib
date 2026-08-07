@@ -95,7 +95,8 @@ def check_python_docstring_markdown_errors(
         return []
 
     # File-level / front-matter / EOF rules do not apply to ephemeral docstring extracts.
-    exclude_rules = {"H001", "H002", "H003", "H004", "H005", "H011", "H046", "H047"}
+    # H070: generated extracts often repeat method names across classes (`__init__`, …).
+    exclude_rules = {"H001", "H002", "H003", "H004", "H005", "H011", "H046", "H047", "H070"}
     checker = h.md_check.MdChecker()
     errors: list[str] = []
 
@@ -988,12 +989,18 @@ def generate_md_docs_content_with_source_map(
                 node,
                 ast.get_docstring(node),
             )
+            seen_method_headings: dict[str, int] = {}
             for class_node in node.body:
                 if isinstance(class_node, ast.FunctionDef) and _should_document_name(
                     class_node.name, include_private=include_private
                 ):
+                    method_suffix = _property_accessor_suffix(class_node)
+                    base_heading = f"{node.name}.{class_node.name}{method_suffix}"
+                    occurrence = seen_method_headings.get(base_heading, 0) + 1
+                    seen_method_headings[base_heading] = occurrence
+                    heading_name = base_heading if occurrence == 1 else f"{base_heading} ({occurrence})"
                     emit_callable_docs(
-                        f"### ⚙️ Method `{class_node.name}`",
+                        f"### ⚙️ Method `{heading_name}`",
                         get_function_signature(class_node),
                         class_node,
                         ast.get_docstring(class_node),

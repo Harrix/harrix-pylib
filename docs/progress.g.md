@@ -12,9 +12,9 @@ lang: en
 ## Contents
 
 - [🏛️ Class `ProgressBar`](#%EF%B8%8F-class-progressbar)
-  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
-  - [⚙️ Method `finish`](#%EF%B8%8F-method-finish)
-  - [⚙️ Method `update`](#%EF%B8%8F-method-update)
+  - [⚙️ Method `ProgressBar.__init__`](#%EF%B8%8F-method-progressbar__init__)
+  - [⚙️ Method `ProgressBar.finish`](#%EF%B8%8F-method-progressbarfinish)
+  - [⚙️ Method `ProgressBar.update`](#%EF%B8%8F-method-progressbarupdate)
 - [🔧 Function `iter_with_progress`](#-function-iter_with_progress)
 - [🔧 Function `render_progress`](#-function-render_progress)
 - [🔧 Function `render_progress_ascii`](#-function-render_progress_ascii)
@@ -142,7 +142,7 @@ class ProgressBar:
 
 </details>
 
-### ⚙️ Method `__init__`
+### ⚙️ Method `ProgressBar.__init__`
 
 ```python
 def __init__(self, total: int) -> None
@@ -184,7 +184,7 @@ def __init__(
 
 </details>
 
-### ⚙️ Method `finish`
+### ⚙️ Method `ProgressBar.finish`
 
 ```python
 def finish(self) -> None
@@ -218,7 +218,7 @@ def finish(self) -> None:
 
 </details>
 
-### ⚙️ Method `update`
+### ⚙️ Method `ProgressBar.update`
 
 ```python
 def update(self, done: int | None = None) -> None

@@ -12,11 +12,11 @@ lang: en
 ## Contents
 
 - [🏛️ Class `PyChecker`](#%EF%B8%8F-class-pychecker)
-  - [⚙️ Method `__call__`](#%EF%B8%8F-method-__call__)
-  - [⚙️ Method `__init__`](#%EF%B8%8F-method-__init__)
-  - [⚙️ Method `check`](#%EF%B8%8F-method-check)
-  - [⚙️ Method `check_directory`](#%EF%B8%8F-method-check_directory)
-  - [⚙️ Method `find_python_files`](#%EF%B8%8F-method-find_python_files)
+  - [⚙️ Method `PyChecker.__call__`](#%EF%B8%8F-method-pychecker__call__)
+  - [⚙️ Method `PyChecker.__init__`](#%EF%B8%8F-method-pychecker__init__)
+  - [⚙️ Method `PyChecker.check`](#%EF%B8%8F-method-pycheckercheck)
+  - [⚙️ Method `PyChecker.check_directory`](#%EF%B8%8F-method-pycheckercheck_directory)
+  - [⚙️ Method `PyChecker.find_python_files`](#%EF%B8%8F-method-pycheckerfind_python_files)
 
 </details>
 
@@ -540,7 +540,7 @@ class PyChecker:
 
 </details>
 
-### ⚙️ Method `__call__`
+### ⚙️ Method `PyChecker.__call__`
 
 ```python
 def __call__(self, filename: Path | str) -> list[str]
@@ -570,7 +570,7 @@ def __call__(
 
 </details>
 
-### ⚙️ Method `__init__`
+### ⚙️ Method `PyChecker.__init__`
 
 ```python
 def __init__(self, project_root: Path | str | None = None) -> None
@@ -594,7 +594,7 @@ def __init__(self, project_root: Path | str | None = None) -> None:
 
 </details>
 
-### ⚙️ Method `check`
+### ⚙️ Method `PyChecker.check`
 
 ```python
 def check(self, filename: Path | str) -> list[str]
@@ -626,7 +626,7 @@ def check(
 
 </details>
 
-### ⚙️ Method `check_directory`
+### ⚙️ Method `PyChecker.check_directory`
 
 ```python
 def check_directory(self, directory: Path | str) -> dict[str, list[str]]
@@ -667,7 +667,7 @@ def check_directory(
 
 </details>
 
-### ⚙️ Method `find_python_files`
+### ⚙️ Method `PyChecker.find_python_files`
 
 ```python
 def find_python_files(self, directory: Path | str, additional_ignore_patterns: list[str] | None = None) -> Generator[Path, None, None]
