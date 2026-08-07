@@ -35,6 +35,7 @@ Format Markdown text inspired by Prettier Markdown parser.
 
 ```python
 class MdFormatter:
+
     def __call__(self, text: str) -> str:
         """Format Markdown text.
 
@@ -248,7 +249,7 @@ Returns:
 
 ```python
 def __call__(self, text: str) -> str:
-    return self.format(text)
+        return self.format(text)
 ```
 
 </details>
@@ -278,23 +279,23 @@ Args:
 
 ```python
 def __init__(
-    self,
-    *,
-    end_of_line: str = "crlf",
-    prose_wrap: str = "preserve",
-    print_width: int = 80,
-    apply_prose_fixes: bool = True,
-    format_math: bool = True,
-    format_code_blocks: bool = True,
-) -> None:
-    self.options = _FormatOptions(
-        end_of_line=end_of_line,
-        prose_wrap=prose_wrap,
-        print_width=print_width,
-        apply_prose_fixes=apply_prose_fixes,
-        format_math=format_math,
-        format_code_blocks=format_code_blocks,
-    )
+        self,
+        *,
+        end_of_line: str = "crlf",
+        prose_wrap: str = "preserve",
+        print_width: int = 80,
+        apply_prose_fixes: bool = True,
+        format_math: bool = True,
+        format_code_blocks: bool = True,
+    ) -> None:
+        self.options = _FormatOptions(
+            end_of_line=end_of_line,
+            prose_wrap=prose_wrap,
+            print_width=print_width,
+            apply_prose_fixes=apply_prose_fixes,
+            format_math=format_math,
+            format_code_blocks=format_code_blocks,
+        )
 ```
 
 </details>
@@ -323,11 +324,11 @@ Returns:
 
 ```python
 def format(self, text: str) -> str:
-    from harrix_pylib.funcs_md import is_raw_markdown_enabled  # noqa: PLC0415
+        from harrix_pylib.funcs_md import is_raw_markdown_enabled  # noqa: PLC0415
 
-    if is_raw_markdown_enabled(text):
-        return text
-    return _format_with_options(text, self.options)
+        if is_raw_markdown_enabled(text):
+            return text
+        return _format_with_options(text, self.options)
 ```
 
 </details>
@@ -356,24 +357,24 @@ Returns:
 
 ```python
 def format_file(self, filename: Path | str) -> str:
-    from harrix_pylib.funcs_md import is_raw_markdown_enabled  # noqa: PLC0415
-    from harrix_pylib.md_assets import organize_note_folder_assets  # noqa: PLC0415
+        from harrix_pylib.funcs_md import is_raw_markdown_enabled  # noqa: PLC0415
+        from harrix_pylib.md_assets import organize_note_folder_assets  # noqa: PLC0415
 
-    path = Path(filename)
-    organize_msg = organize_note_folder_assets(path.parent)
-    raw = path.read_bytes()
-    document = self.read_markdown_text(path)
-    if is_raw_markdown_enabled(document):
-        skip_msg = f"Skipped {path}: raw-markdown."
-        return f"{organize_msg}\n{skip_msg}" if organize_msg else skip_msg
-    document_new = self.format(document)
-    if document != document_new or self._needs_end_of_line_rewrite(raw):
-        path.write_text(document_new, encoding="utf-8", newline="")
-        applied = f"✅ File {path} applied."
-        return f"{organize_msg}\n{applied}" if organize_msg else applied
-    if organize_msg:
-        return organize_msg
-    return "File is not changed."
+        path = Path(filename)
+        organize_msg = organize_note_folder_assets(path.parent)
+        raw = path.read_bytes()
+        document = self.read_markdown_text(path)
+        if is_raw_markdown_enabled(document):
+            skip_msg = f"Skipped {path}: raw-markdown."
+            return f"{organize_msg}\n{skip_msg}" if organize_msg else skip_msg
+        document_new = self.format(document)
+        if document != document_new or self._needs_end_of_line_rewrite(raw):
+            path.write_text(document_new, encoding="utf-8", newline="")
+            applied = f"✅ File {path} applied."
+            return f"{organize_msg}\n{applied}" if organize_msg else applied
+        if organize_msg:
+            return organize_msg
+        return "File is not changed."
 ```
 
 </details>
@@ -402,27 +403,27 @@ Returns:
 
 ```python
 def format_folder(self, folder: Path | str) -> str:
-    from harrix_pylib import funcs_file  # noqa: PLC0415
-    from harrix_pylib.md_assets import organize_note_folder_assets  # noqa: PLC0415
+        from harrix_pylib import funcs_file  # noqa: PLC0415
+        from harrix_pylib.md_assets import organize_note_folder_assets  # noqa: PLC0415
 
-    root = Path(folder).resolve()
-    lines: list[str] = []
-    organized_parents: set[Path] = set()
-    for md_file in root.rglob("*.md"):
-        if funcs_file.should_ignore_path(md_file):
-            continue
-        parent = md_file.parent.resolve()
-        if parent in organized_parents:
-            continue
-        organized_parents.add(parent)
-        organize_msg = organize_note_folder_assets(parent)
-        if organize_msg:
-            lines.append(organize_msg)
+        root = Path(folder).resolve()
+        lines: list[str] = []
+        organized_parents: set[Path] = set()
+        for md_file in root.rglob("*.md"):
+            if funcs_file.should_ignore_path(md_file):
+                continue
+            parent = md_file.parent.resolve()
+            if parent in organized_parents:
+                continue
+            organized_parents.add(parent)
+            organize_msg = organize_note_folder_assets(parent)
+            if organize_msg:
+                lines.append(organize_msg)
 
-    format_msg = funcs_file.apply_func(folder, ".md", self.format_file)
-    if format_msg:
-        lines.append(format_msg)
-    return "\n".join(lines)
+        format_msg = funcs_file.apply_func(folder, ".md", self.format_file)
+        if format_msg:
+            lines.append(format_msg)
+        return "\n".join(lines)
 ```
 
 </details>
@@ -452,7 +453,7 @@ Returns:
 
 ```python
 def normalize_line_endings(text: str) -> str:
-    return re.sub(r"\r+\n", "\n", text).replace("\r", "\n")
+        return re.sub(r"\r+\n", "\n", text).replace("\r", "\n")
 ```
 
 </details>
@@ -478,11 +479,11 @@ Returns:
 
 ```python
 def read_markdown_text(filename: Path | str) -> str:
-    path = Path(filename)
-    data = path.read_bytes()
-    if data.startswith(b"\xef\xbb\xbf"):
-        data = data[3:]
-    return MdFormatter.normalize_line_endings(data.decode("utf-8"))
+        path = Path(filename)
+        data = path.read_bytes()
+        if data.startswith(b"\xef\xbb\xbf"):
+            data = data[3:]
+        return MdFormatter.normalize_line_endings(data.decode("utf-8"))
 ```
 
 </details>

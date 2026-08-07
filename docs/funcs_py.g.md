@@ -39,6 +39,7 @@ Python source location corresponding to a generated Markdown docs line.
 
 ```python
 class DocsSourceLoc(NamedTuple):
+
     path: Path
     line: int
     col: int
@@ -94,8 +95,7 @@ def check_python_docstring_markdown_errors(
         return []
 
     # File-level / front-matter / EOF rules do not apply to ephemeral docstring extracts.
-    # H070: generated extracts often repeat method names across classes (`__init__`, …).
-    exclude_rules = {"H001", "H002", "H003", "H004", "H005", "H011", "H046", "H047", "H070"}
+    exclude_rules = {"H001", "H002", "H003", "H004", "H005", "H011", "H046", "H047"}
     checker = h.md_check.MdChecker()
     errors: list[str] = []
 
@@ -1207,16 +1207,13 @@ def _helper_function():
     """Helper function."""
     pass
 
-
 def multiply(a, b):
     """Returns the product of two numbers."""
     return a * b
 
-
 def add(a, b):
     """Returns the sum of two numbers."""
     return a + b
-
 
 class Point:
     def _internal_method(self):
@@ -1260,16 +1257,13 @@ class Point:
         """Internal method."""
         pass
 
-
 def add(a, b):
     """Returns the sum of two numbers."""
     return a + b
 
-
 def multiply(a, b):
     """Returns the product of two numbers."""
     return a * b
-
 
 def _helper_function():
     """Helper function."""

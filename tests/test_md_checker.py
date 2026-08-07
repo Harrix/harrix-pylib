@@ -2950,19 +2950,6 @@ def test_md_checker() -> None:
         assert not errors
 
         # =====================================================================
-        # H070: Duplicate heading anchor
-        # =====================================================================
-        dup_heading = temp_path / "dup_heading.md"
-        dup_heading.write_text("---\nlang: en\n---\n\n# Title\n\n## Same\n\n## Same\n", encoding="utf-8")
-        errors = checker.check(dup_heading, select={"H070"})
-        assert any("H070" in e for e in errors)
-
-        unique_heading = temp_path / "unique_heading.md"
-        unique_heading.write_text("---\nlang: en\n---\n\n# Title\n\n## One\n\n## Two\n", encoding="utf-8")
-        errors = checker.check(unique_heading, select={"H070"})
-        assert not errors
-
-        # =====================================================================
         # H071: Mixed bullet markers in one list
         # =====================================================================
         mixed_bullets = temp_path / "mixed_bullets.md"

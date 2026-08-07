@@ -72,8 +72,7 @@ def check_python_docstring_markdown_errors(
         return []
 
     # File-level / front-matter / EOF rules do not apply to ephemeral docstring extracts.
-    # H070: generated extracts often repeat method names across classes (`__init__`, …).
-    exclude_rules = {"H001", "H002", "H003", "H004", "H005", "H011", "H046", "H047", "H070"}
+    exclude_rules = {"H001", "H002", "H003", "H004", "H005", "H011", "H046", "H047"}
     checker = h.md_check.MdChecker()
     errors: list[str] = []
 

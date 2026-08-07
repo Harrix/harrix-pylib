@@ -284,12 +284,12 @@ Example:
 ```python
 import harrix_pylib as h
 
-yaml_front_matter = """---
+yaml_front_matter = '''---
 author: Jane Doe
 author-email: jane.doe@example.com
 lang: en
 ---
-"""
+'''
 
 new_entry_path = h.md.add_diary_new_diary("C:/Diary/", yaml_front_matter, is_with_images=True)
 print(new_entry_path)
@@ -346,12 +346,12 @@ Example:
 ```python
 import harrix_pylib as h
 
-yaml_front_matter = """---
+yaml_front_matter = '''---
 author: Jane Doe
 author-email: jane.doe@example.com
 lang: en
 ---
-"""
+'''
 
 new_entry_path = h.md.add_diary_new_dream("C:/Dreams/", yaml_front_matter, is_with_images=True)
 print(new_entry_path)
@@ -724,10 +724,8 @@ Example:
 ```python
 import harrix_pylib as h
 
-
 def include_md(path: Path) -> bool:
     return path.suffix == ".md" and not path.name.endswith(".g.md")
-
 
 files = h.md.collect_subfolder_md(Path("C:/Notes/Chapter1"), include_md)
 ```
@@ -1550,7 +1548,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-markdown_text = """They can get a big bang out of buying a blanket.
+markdown_text = '''They can get a big bang out of buying a blanket.
 
 The Catcher in the Rye
 J.D. Salinger
@@ -1559,7 +1557,7 @@ J.D. Salinger
 I just mean that I used to think about old Spencer quite a lot
 
 The Catcher in the Rye
-J.D. Salinger"""
+J.D. Salinger'''
 
 # > They can get a big bang out of buying a blanket.
 # >
@@ -1638,7 +1636,7 @@ Example:
 import harrix_pylib as h
 from pathlib import Path
 
-path = Path("example.md")
+path = Path('example.md')
 print(h.md.format_yaml(path))
 ```
 
@@ -1688,7 +1686,7 @@ Example:
 import harrix_pylib as h
 from pathlib import Path
 
-text = Path("example.md").read_text(encoding="utf-8")
+text = Path('example.md').read_text(encoding="utf-8")
 print(h.md.format_yaml_content(text))
 ```
 
@@ -2095,7 +2093,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-text = Path("example.md").read_text(encoding="utf-8")
+text = Path('example.md').read_text(encoding="utf-8")
 print(h.md.generate_image_captions(text))
 ```
 
@@ -3814,7 +3812,7 @@ import harrix_pylib as h
 from pathlib import Path
 
 new_content = "New list of commands:\n\n- new command1\n- new command2"
-text = Path("C:/Notes/note.md").read_text(encoding="utf-8")
+text = Path('C:/Notes/note.md').read_text(encoding="utf-8")
 print(h.md.replace_section_content(text, new_content, "## 📋 List of commands"))
 ```
 
@@ -4077,7 +4075,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-markdown = """
+markdown = '''
 ---
 sort-section: true
 ---
@@ -4095,7 +4093,7 @@ Alpha content
 
 ## Important Info<!-- top-section -->
 This will appear first
-"""
+'''
 
 # Always sort sections
 sorted_markdown = h.md.sort_sections_content(markdown)
@@ -4407,7 +4405,7 @@ Example:
 ```python
 import harrix_pylib as h
 
-md = Path("C:/Notes/note.md").read_text(encoding="utf-8")
+md = Path('C:/Notes/note.md').read_text(encoding="utf-8")
 yaml, content = h.md.split_yaml_content(md)
 ```
 

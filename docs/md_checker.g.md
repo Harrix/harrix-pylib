@@ -128,7 +128,6 @@ Rules:
   (`_Figure N: …_` for `en`; localized Russian figure template for `ru`).
 - **H069** - Undefined or unused reference-style link (`[text][ref]` / `[ref]: url`;
   hidden `[//]: #` comments are ignored).
-- **H070** - Duplicate heading anchor (two ATX headings share the same GitHub slug).
 - **H071** - Mixed bullet markers (`-` / `*` / `+`) inside one contiguous list.
 - **H072** - Setext heading used (prefer ATX `#` headings).
 - **H073** - Unbalanced math delimiters (`$…$` / `$$…$$`); currency `$` amounts and
@@ -167,6 +166,7 @@ Note:
 
 ````python
 class MdChecker:
+
     # Placeholder image alt texts (H031); compared case-insensitively
     _IMAGE_ALT_PLACEHOLDERS: ClassVar[frozenset[str]] = frozenset({"alt", "alt text"})
 
@@ -418,7 +418,6 @@ class MdChecker:
         "H067": "Unclosed or empty wiki link",
         "H068": "Figure caption format does not match lang",
         "H069": "Undefined or unused reference-style link",
-        "H070": "Duplicate heading anchor",
         "H071": "Mixed bullet markers in one list",
         "H072": "Setext heading used (prefer ATX)",
         "H073": "Unbalanced math delimiters",
@@ -1572,28 +1571,6 @@ class MdChecker:
                 return
             offset += len(segment)
 
-    def _check_duplicate_heading_anchors(
-        self, filename: Path, code_block_info: list, yaml_end_line: int
-    ) -> Generator[str, None, None]:
-        """Check for ATX headings that collide on the same GitHub slug (H070)."""
-        existing_ids: set[str] = set()
-        for index, (line, in_code) in enumerate(code_block_info):
-            if in_code:
-                continue
-            match = self._ATX_HEADING_PATTERN.match(line)
-            if not match:
-                continue
-            level = len(match.group(1))
-            title = line[level:].strip()
-            title = title.replace(" <!-- top-section -->", "").replace("<!-- top-section -->", "")
-            base_ids: set[str] = set()
-            base_slug = h.md.generate_id(title, base_ids)
-            if unquote(base_slug) in {unquote(item) for item in existing_ids}:
-                actual_line_num = (yaml_end_line - 1) + index + 1
-                error_msg = f'{self.RULES["H070"]}: "{base_slug}"'
-                yield self._format_error("H070", error_msg, filename, line_num=actual_line_num, col=1)
-            h.md.generate_id(title, existing_ids)
-
     def _check_featured_image_convention(
         self, filename: Path, code_block_info: list, yaml_end_line: int
     ) -> Generator[str, None, None]:
@@ -1750,9 +1727,6 @@ class MdChecker:
 
         if "H069" in rules and code_block_info is not None:
             yield from self._check_reference_style_links(filename, code_block_info, yaml_end_line)
-
-        if "H070" in rules and code_block_info is not None:
-            yield from self._check_duplicate_heading_anchors(filename, code_block_info, yaml_end_line)
 
         if "H071" in rules and code_block_info is not None:
             yield from self._check_mixed_bullet_markers(filename, code_block_info, yaml_end_line)
@@ -3939,9 +3913,9 @@ Returns:
 
 ```python
 def __call__(
-    self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
-) -> list[str]:
-    return self.check(filename, select=select, exclude_rules=exclude_rules)
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
+        return self.check(filename, select=select, exclude_rules=exclude_rules)
 ```
 
 </details>
@@ -3968,8 +3942,8 @@ Returns:
 
 ```python
 def __init__(self, project_root: Path | str | None = None) -> None:
-    self.all_rules = set(self.RULES.keys())
-    self.project_root = self._determine_project_root(project_root)
+        self.all_rules = set(self.RULES.keys())
+        self.project_root = self._determine_project_root(project_root)
 ```
 
 </details>
@@ -3997,11 +3971,11 @@ Returns:
 
 ```python
 def check(
-    self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
-) -> list[str]:
-    filename = Path(filename)
-    active_rules = self._determine_active_rules(select, exclude_rules)
-    return list(self._check_all_rules(filename, active_rules))
+        self, filename: Path | str, *, select: set[str] | None = None, exclude_rules: set[str] | None = None
+    ) -> list[str]:
+        filename = Path(filename)
+        active_rules = self._determine_active_rules(select, exclude_rules)
+        return list(self._check_all_rules(filename, active_rules))
 ```
 
 </details>
@@ -4032,19 +4006,19 @@ Returns:
 
 ```python
 def check_directory(
-    self,
-    directory: Path | str,
-    *,
-    select: set[str] | None = None,
-    exclude_rules: set[str] | None = None,
-    additional_ignore_patterns: list[str] | None = None,
-) -> dict[str, list[str]]:
-    results = {}
-    for md_file in self.find_markdown_files(directory, additional_ignore_patterns):
-        errors = self.check(md_file, select=select, exclude_rules=exclude_rules)
-        if errors:
-            results[str(md_file)] = errors
-    return results
+        self,
+        directory: Path | str,
+        *,
+        select: set[str] | None = None,
+        exclude_rules: set[str] | None = None,
+        additional_ignore_patterns: list[str] | None = None,
+    ) -> dict[str, list[str]]:
+        results = {}
+        for md_file in self.find_markdown_files(directory, additional_ignore_patterns):
+            errors = self.check(md_file, select=select, exclude_rules=exclude_rules)
+            if errors:
+                results[str(md_file)] = errors
+        return results
 ```
 
 </details>
@@ -4072,18 +4046,18 @@ Yields:
 
 ```python
 def find_markdown_files(
-    self, directory: Path | str, additional_ignore_patterns: list[str] | None = None
-) -> Generator[Path, None, None]:
-    directory = Path(directory)
-    if not directory.is_dir():
-        return
-    if h.file.should_ignore_path(directory, additional_ignore_patterns):
-        return
-    for item in directory.iterdir():
-        if item.is_file() and item.suffix.lower() in {".md", ".markdown"}:
-            yield item
-        elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
-            yield from self.find_markdown_files(item, additional_ignore_patterns)
+        self, directory: Path | str, additional_ignore_patterns: list[str] | None = None
+    ) -> Generator[Path, None, None]:
+        directory = Path(directory)
+        if not directory.is_dir():
+            return
+        if h.file.should_ignore_path(directory, additional_ignore_patterns):
+            return
+        for item in directory.iterdir():
+            if item.is_file() and item.suffix.lower() in {".md", ".markdown"}:
+                yield item
+            elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
+                yield from self.find_markdown_files(item, additional_ignore_patterns)
 ```
 
 </details>
