@@ -23,6 +23,7 @@
   - [📄 File `img_tools.py`](#-file-img_toolspy)
   - [📄 File `md_assets.py`](#-file-md_assetspy)
   - [📄 File `md_checker.py`](#-file-md_checkerpy)
+  - [📄 File `md_decimal_separators.py`](#-file-md_decimal_separatorspy)
   - [📄 File `progress.py`](#-file-progresspy)
   - [📄 File `py_checker.py`](#-file-py_checkerpy)
   - [📄 File `py_docstring_format.py`](#-file-py_docstring_formatpy)
@@ -273,6 +274,16 @@ Doc: [`md_checker.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/m
 | Function/Class                                                                                                 | Description                                                            |
 | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | 🏛️ Class [`MdChecker`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_checker.g.md#️-class-mdchecker) | Class for checking Markdown files for compliance with specified rules. |
+
+### 📄 File `md_decimal_separators.py`
+
+Doc: [`md_decimal_separators.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_decimal_separators.g.md)
+
+| Function/Class                                                                                                                                                       | Description                                                                  |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 🔧 [`classify_decimal_separator_issue`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_decimal_separators.g.md#-function-classify_decimal_separator_issue) | Return autofix kind for a compact numeric token, or `None` if allowed.       |
+| 🔧 [`fix_decimal_separators`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_decimal_separators.g.md#-function-fix_decimal_separators)                     | Rewrite wrong decimal separators in `segment` for `lang` (`en` / `ru`).      |
+| 🔧 [`iter_decimal_separator_issues`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_decimal_separators.g.md#-function-iter_decimal_separator_issues)       | Yield `(start, end, token, kind)` for wrong decimal separators in `segment`. |
 
 ### 📄 File `progress.py`
 

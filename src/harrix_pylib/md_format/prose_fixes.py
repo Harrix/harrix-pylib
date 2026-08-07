@@ -3,7 +3,7 @@
 Runs before the Prettier-style parse/render pipeline so source-preserving paths
 keep fixed prose. Skips fenced and inline code the same way as MdChecker
 (H006, H007, H015-H017, H020-H024, H026-H030, H036, H039, H042, H044, H050,
-H057, H058).
+H057, H058, H062).
 
 Bare filenames and paths (for example `config.json`, `src/app/recover.sql`) are
 wrapped in inline code before H006 so file extensions are not uppercased.
@@ -19,6 +19,7 @@ from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from harrix_pylib.abbreviation_data import mask_abbreviations
+from harrix_pylib.md_decimal_separators import fix_decimal_separators
 from harrix_pylib.md_format.code_fence import _identify_code_blocks, _identify_code_blocks_line
 from harrix_pylib.md_format.math_spans import display_math_line_flags, iter_code_and_math_segments
 
@@ -197,7 +198,7 @@ def _apply_checker_prose_fixes(text: str, *, lang: str = "") -> str:
     Args:
 
     - `text` (`str`): Markdown body (typically without YAML front matter).
-    - `lang` (`str`): Document language from YAML (`en` / `ru`); gates H023/H044.
+    - `lang` (`str`): Document language from YAML (`en` / `ru`); gates H023/H044/H062.
 
     """
     if not text:
@@ -652,7 +653,10 @@ def _fix_prose_line(line: str, *, lang: str) -> str:
     line = _map_non_code(line, _fix_missing_space_after_punctuation)  # H050
     if lang == "ru":
         line = _map_non_code(line, _fix_space_before_percent_or_degree)  # H044
+        line = _map_non_code(line, lambda segment: fix_decimal_separators(segment, "ru"))  # H062
         line = _fix_russian_polite_pronouns(line)  # H023
+    elif lang == "en":
+        line = _map_non_code(line, lambda segment: fix_decimal_separators(segment, "en"))  # H062
     if _CYRILLIC_PATTERN.search(line):
         line = _map_non_code(line, _fix_punctuation_before_closing_guillemet)  # H058
 

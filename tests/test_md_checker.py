@@ -2755,6 +2755,73 @@ def test_md_checker() -> None:
         assert not errors
 
         # =====================================================================
+        # H062: Wrong decimal separator
+        # =====================================================================
+        en_comma_decimal_file = temp_path / "en_comma_decimal.md"
+        en_comma_decimal_file.write_text(
+            "---\nlang: en\n---\n\n"
+            "| -1 | -0,5 | 0 | 0,5 | 1 |\n"
+            "| --- | --- | --- | --- | --- |\n"
+            "| a | b | c | d | e |\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(en_comma_decimal_file, select={"H062"})
+        assert any("H062" in e for e in errors)
+
+        en_dot_ok_file = temp_path / "en_dot_ok.md"
+        en_dot_ok_file.write_text(
+            "---\nlang: en\n---\n\nValues -0.5 and 0.5 are fine. Count 1,234 or 1,234.5.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(en_dot_ok_file, select={"H062"})
+        assert not errors
+
+        en_list_ok_file = temp_path / "en_list_ok.md"
+        en_list_ok_file.write_text("---\nlang: en\n---\n\nSee items 1, 2, 3.\n", encoding="utf-8")
+        errors = checker.check(en_list_ok_file, select={"H062"})
+        assert not errors
+
+        ru_dot_decimal_file = temp_path / "ru_dot_decimal.md"
+        ru_dot_decimal_file.write_text(
+            "---\nlang: ru\n---\n\nЗначения -0.5 и 0.5 неверны.\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_dot_decimal_file, select={"H062"})
+        assert any("H062" in e for e in errors)
+
+        ru_comma_ok_file = temp_path / "ru_comma_ok.md"
+        ru_comma_ok_file.write_text(
+            "---\nlang: ru\n---\n\nЗначения -0,5 и 0,5 верны.\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_comma_ok_file, select={"H062"})
+        assert not errors
+
+        ru_skip_version_ip_file = temp_path / "ru_skip_version_ip.md"
+        ru_skip_version_ip_file.write_text(
+            "---\nlang: ru\n---\n\nPython 3.12.1 и адрес 192.168.0.1.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_skip_version_ip_file, select={"H062"})
+        assert not errors
+
+        ru_eu_thousands_ok_file = temp_path / "ru_eu_thousands_ok.md"
+        ru_eu_thousands_ok_file.write_text(
+            "---\nlang: ru\n---\n\nЧисла 1.234 и 1.234,56.\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_eu_thousands_ok_file, select={"H062"})
+        assert not errors
+
+        ru_code_ok_file = temp_path / "ru_code_ok.md"
+        ru_code_ok_file.write_text(
+            "---\nlang: ru\n---\n\nUse `0.5` in code.\n\n```python\nx = 0.5\n```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(ru_code_ok_file, select={"H062"})
+        assert not errors
+
+        # =====================================================================
         # raw-markdown: true — skip body after first ATX H1
         # =====================================================================
         raw_md_file = temp_path / "raw_markdown_note.md"

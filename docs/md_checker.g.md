@@ -113,6 +113,9 @@ Rules:
   under `img/` or in the note root is wrong; nested folders other than `img/` / `files/`
   are ignored; software project roots (`.git`, `pyproject.toml`, …) and
   README/LICENSE-only folders are skipped.
+- **H062** - Wrong decimal separator for YAML `lang`: `en` uses `.` (thousands `,`
+  allowed, e.g. `1,234.5`); `ru` uses `,` (simple `.` decimals flagged; European
+  `1.234` / `1.234,5` and multi-dot versions/IPs are skipped).
 
 Example for ignore directives:
 
@@ -352,6 +355,7 @@ class MdChecker:
         "H059": "Missing colon before list",
         "H060": "Asset file not referenced in Markdown",
         "H061": "Misplaced note asset file",
+        "H062": "Wrong decimal separator",
     }
 
     # HTML comment for ignoring checks on specific lines
@@ -1371,6 +1375,26 @@ class MdChecker:
                     error_msg = f'{self.RULES["H016"]}: em dash "—" should have spaces around it'
                     yield self._format_error("H016", error_msg, filename, line_num=line_num, col=pos + 1)
 
+    def _check_decimal_separators(
+        self, filename: Path, line: str, line_num: int, *, lang: str
+    ) -> Generator[str, None, None]:
+        """Check decimal separators against YAML `lang` (H062).
+
+        Skips inline code and math spans. English thousands commas and Russian
+        European dot-grouped thousands are allowed; multi-dot versions/IPs are skipped.
+
+        """
+        offset = 0
+        for segment, protected in iter_code_and_math_segments(h.md.identify_code_blocks_line(line)):
+            if not protected:
+                for start, _end, token, kind in iter_decimal_separator_issues(segment, lang):
+                    expected = "." if kind == "fix_en_comma_to_dot" else ","
+                    col = offset + start + 1
+                    error_msg = f'{self.RULES["H062"]}: "{token}" should use "{expected}"'
+                    yield self._format_error("H062", error_msg, filename, line_num=line_num, col=col)
+                    return
+            offset += len(segment)
+
     def _check_double_spaces(
         self, filename: Path, line: str, _clean_line: str, line_num: int, content_lines: list[str], line_index: int
     ) -> Generator[str, None, None]:
@@ -1970,6 +1994,9 @@ class MdChecker:
 
         if "H044" in rules and lang == "ru":
             yield from self._check_space_before_percent_or_degree(filename, line, clean_line, line_num)
+
+        if "H062" in rules and lang in {"en", "ru"}:
+            yield from self._check_decimal_separators(filename, line, line_num, lang=lang)
 
         if "H049" in rules:
             yield from self._check_mixed_script_words(filename, line, clean_line, line_num)
