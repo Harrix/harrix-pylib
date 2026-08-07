@@ -252,7 +252,7 @@ def __call__(self, source: str) -> str:
 ### ⚙️ Method `__init__`
 
 ```python
-def __init__(self, *, end_of_line: str = "lf", prose_wrap: str = "preserve", print_width: int = 80, apply_prose_fixes: bool = True) -> None
+def __init__(self, *, end_of_line: str = 'lf', prose_wrap: str = 'preserve', print_width: int = 80, apply_prose_fixes: bool = True) -> None
 ```
 
 Initialize the docstring formatter.

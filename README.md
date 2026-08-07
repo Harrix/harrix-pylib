@@ -27,9 +27,12 @@
   - [📄 File `progress.py`](#-file-progresspy)
   - [📄 File `py_checker.py`](#-file-py_checkerpy)
   - [📄 File `py_docstring_format.py`](#-file-py_docstring_formatpy)
+  - [📄 File `__init__.py`](#-file-__init__py)
   - [📄 File `formatter.py`](#-file-formatterpy)
   - [📄 File `math_spans.py`](#-file-math_spanspy)
+  - [📄 File `__init__.py`](#-file-__init__py-1)
   - [📄 File `optimizer.py`](#-file-optimizerpy)
+  - [📄 File `__init__.py`](#-file-__init__py-2)
 - [📄 License](#-license)
 - [👤 Author](#-author)
 
@@ -97,6 +100,7 @@ Doc: [`abbreviation_data.g.md`](https://github.com/Harrix/harrix-pylib/blob/main
 
 | Function/Class                                                                                                                               | Description                                                                       |
 | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 📎 Constant [`SOFT_HYPHEN`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-constant-soft_hyphen)              |                                                                                   |
 | 🏛️ Class [`AbbreviationData`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#️-class-abbreviationdata)          | Compiled abbreviation data for H006 spacing and H021 masking.                     |
 | 🔧 [`is_spaced_multipart`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-is_spaced_multipart)       | Return `True` if form is a multi-part dotted abbrev with spaces (H006 candidate). |
 | 🔧 [`load_abbreviation_data`](https://github.com/Harrix/harrix-pylib/blob/main/docs/abbreviation_data.g.md#-function-load_abbreviation_data) | Load RU+EN abbreviation JSON (always both; not gated by document lang).           |
@@ -110,6 +114,7 @@ Doc: [`funcs_dev.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/fu
 
 | Function/Class                                                                                                                                       | Description                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 📎 Constant [`DEFAULT_END_OF_LINE`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-constant-default_end_of_line)              |                                                                                    |
 | 🔧 [`config_load`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-config_load)                                       | Load configuration from a JSON file.                                               |
 | 🔧 [`config_save`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-config_save)                                       | Save configuration to a JSON file.                                                 |
 | 🔧 [`config_update_value`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-config_update_value)                       | Update a single configuration value and save it to a JSON file.                    |
@@ -152,12 +157,13 @@ Doc: [`funcs_file.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/f
 
 Doc: [`funcs_img.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md)
 
-| Function/Class                                                                                                                             | Description                                                           |
-| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| 🔧 [`optimize_image_with_tools`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_image_with_tools) | Optimize GIF, MP4, or AVIF using ffmpeg, avifenc, and avifdec.        |
-| 🔧 [`optimize_svg`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg)                           | Optimize an SVG file and write the result.                            |
-| 🔧 [`optimize_svg_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg_content)           | Optimize SVG markup to a compact form similar to SVGO preset-default. |
-| 🔧 [`optimize_svg_folder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg_folder)             | Optimize all SVG files in a folder.                                   |
+| Function/Class                                                                                                                              | Description                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 📎 Constant [`EXE_RASTER_EXTENSIONS`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-constant-exe_raster_extensions) |                                                                       |
+| 🔧 [`optimize_image_with_tools`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_image_with_tools)  | Optimize GIF, MP4, or AVIF using ffmpeg, avifenc, and avifdec.        |
+| 🔧 [`optimize_svg`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg)                            | Optimize an SVG file and write the result.                            |
+| 🔧 [`optimize_svg_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg_content)            | Optimize SVG markup to a compact form similar to SVGO preset-default. |
+| 🔧 [`optimize_svg_folder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_img.g.md#-function-optimize_svg_folder)              | Optimize all SVG files in a folder.                                   |
 
 ### 📄 File `funcs_md.py`
 
@@ -243,15 +249,16 @@ Doc: [`funcs_py.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/fun
 
 Doc: [`img_tools.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md)
 
-| Function/Class                                                                                                                             | Description                                                           |
-| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| 🔧 [`convert_gif_mp4_to_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-convert_gif_mp4_to_avif)     | Convert GIF or MP4 to AVIF using ffmpeg.                              |
-| 🔧 [`get_frame_rate`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-get_frame_rate)                       | Detect frame rate from media file using ffmpeg output.                |
-| 🔧 [`is_avif_animated`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-is_avif_animated)                   | Return `True` if AVIF contains more than one frame.                   |
-| 🔧 [`optimize_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-optimize_avif)                         | Optimize AVIF using ffmpeg or avifdec/avifenc depending on animation. |
-| 🔧 [`optimize_image_with_tools`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-optimize_image_with_tools) | Optimize a raster image using ffmpeg, avifenc, or avifdec.            |
-| 🔧 [`process_animated_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_animated_avif)         | Optimize animated AVIF with avifdec and avifenc or ffmpeg.            |
-| 🔧 [`process_static_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_static_avif)             | Optimize static AVIF with ffmpeg.                                     |
+| Function/Class                                                                                                                              | Description                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 📎 Constant [`EXE_RASTER_EXTENSIONS`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-constant-exe_raster_extensions) |                                                                       |
+| 🔧 [`convert_gif_mp4_to_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-convert_gif_mp4_to_avif)      | Convert GIF or MP4 to AVIF using ffmpeg.                              |
+| 🔧 [`get_frame_rate`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-get_frame_rate)                        | Detect frame rate from media file using ffmpeg output.                |
+| 🔧 [`is_avif_animated`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-is_avif_animated)                    | Return `True` if AVIF contains more than one frame.                   |
+| 🔧 [`optimize_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-optimize_avif)                          | Optimize AVIF using ffmpeg or avifdec/avifenc depending on animation. |
+| 🔧 [`optimize_image_with_tools`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-optimize_image_with_tools)  | Optimize a raster image using ffmpeg, avifenc, or avifdec.            |
+| 🔧 [`process_animated_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_animated_avif)          | Optimize animated AVIF with avifdec and avifenc or ffmpeg.            |
+| 🔧 [`process_static_avif`](https://github.com/Harrix/harrix-pylib/blob/main/docs/img_tools.g.md#-function-process_static_avif)              | Optimize static AVIF with ffmpeg.                                     |
 
 ### 📄 File `md_assets.py`
 
@@ -259,6 +266,7 @@ Doc: [`md_assets.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md
 
 | Function/Class                                                                                                                                 | Description                                                                       |
 | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 📎 Constant [`MEDIA_EXTENSIONS`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-constant-media_extensions)              |                                                                                   |
 | 🔧 [`desired_note_asset_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-desired_note_asset_path)         | Return the correct path for a note asset, or `None` if already correct / ignored. |
 | 🔧 [`is_featured_image_name`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-is_featured_image_name)           | Return whether `name` is a featured-image asset (`featured-image.*`).             |
 | 🔧 [`is_media_file`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_assets.g.md#-function-is_media_file)                             | Return whether `path` has a media extension used for the `img/` folder.           |
@@ -291,6 +299,7 @@ Doc: [`progress.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/pro
 
 | Function/Class                                                                                                                    | Description                                                                   |
 | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 📎 Constant [`T`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md#-constant-t)                                |                                                                               |
 | 🏛️ Class [`ProgressBar`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md#️-class-progressbar)                  | In-place progress bar written to a stream (default: stderr when it is a TTY). |
 | 🔧 [`iter_with_progress`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md#-function-iter_with_progress)       | Yield items while updating a progress bar.                                    |
 | 🔧 [`render_progress`](https://github.com/Harrix/harrix-pylib/blob/main/docs/progress.g.md#-function-render_progress)             | Return a single-line progress string.                                         |
@@ -312,6 +321,22 @@ Doc: [`py_docstring_format.g.md`](https://github.com/Harrix/harrix-pylib/blob/ma
 | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | 🏛️ Class [`PyDocstringFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_docstring_format.g.md#️-class-pydocstringformatter) | Format Markdown inside Python docstrings, similar to `MdFormatter` for `.md` files. |
 
+### 📄 File `__init__.py`
+
+Doc: [`__init__.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md)
+
+| Function/Class                                                                                                       | Description         |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| 📦 Re-export [`dev`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-dev)             | Re-exported symbol. |
+| 📦 Re-export [`file`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-file)           | Re-exported symbol. |
+| 📦 Re-export [`img`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-img)             | Re-exported symbol. |
+| 📦 Re-export [`md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-md)               | Re-exported symbol. |
+| 📦 Re-export [`py`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-py)               | Re-exported symbol. |
+| 📦 Re-export [`md_check`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-md_check)   | Re-exported symbol. |
+| 📦 Re-export [`md_format`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-md_format) | Re-exported symbol. |
+| 📦 Re-export [`py_check`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-py_check)   | Re-exported symbol. |
+| 📦 Re-export [`svg_opt`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-svg_opt)     | Re-exported symbol. |
+
 ### 📄 File `formatter.py`
 
 Doc: [`md_format/formatter.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/formatter.g.md)
@@ -329,6 +354,14 @@ Doc: [`md_format/math_spans.g.md`](https://github.com/Harrix/harrix-pylib/blob/m
 | 🔧 [`display_math_line_flags`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/math_spans.g.md#-function-display_math_line_flags)         | Return per-line flags for display-math `$$...$$` regions (including delimiters). |
 | 🔧 [`iter_code_and_math_segments`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/math_spans.g.md#-function-iter_code_and_math_segments) | Yield `(segment, protected)` where protected is inline code or dollar-math.      |
 
+### 📄 File `__init__.py`
+
+Doc: [`md_format/__init__.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/__init__.g.md)
+
+| Function/Class                                                                                                                     | Description         |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| 📦 Re-export [`MdFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/__init__.g.md#-re-export-mdformatter) | Re-exported symbol. |
+
 ### 📄 File `optimizer.py`
 
 Doc: [`svg_optimize/optimizer.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/svg_optimize/optimizer.g.md)
@@ -336,6 +369,14 @@ Doc: [`svg_optimize/optimizer.g.md`](https://github.com/Harrix/harrix-pylib/blob
 | Function/Class                                                                                                                   | Description                                                           |
 | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | 🏛️ Class [`SvgOptimizer`](https://github.com/Harrix/harrix-pylib/blob/main/docs/svg_optimize/optimizer.g.md#️-class-svgoptimizer) | Optimize SVG markup to a compact form similar to SVGO preset-default. |
+
+### 📄 File `__init__.py`
+
+Doc: [`svg_optimize/__init__.g.md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/svg_optimize/__init__.g.md)
+
+| Function/Class                                                                                                                          | Description         |
+| --------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| 📦 Re-export [`SvgOptimizer`](https://github.com/Harrix/harrix-pylib/blob/main/docs/svg_optimize/__init__.g.md#-re-export-svgoptimizer) | Re-exported symbol. |
 
 ## 📄 License
 

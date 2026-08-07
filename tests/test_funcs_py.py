@@ -1081,6 +1081,114 @@ def sync_item() -> None:
     assert "`sync_item`" in table
 
 
+def test_generate_md_docs_content_scope3_features() -> None:
+    content = '''
+from typing import TypeAlias, overload
+
+def abstractmethod(fn):
+    return fn
+
+def cached_property(fn):
+    return fn
+
+HIDDEN = 1
+VISIBLE_CONST = 2
+Greeting: TypeAlias = str
+type AliasT = list[int]
+
+def hidden_func() -> None:
+    """Not in __all__."""
+    pass
+
+def greet(name: str = "O'Brien") -> str:
+    """Public greeter."""
+    return name
+
+@overload
+def parse(value: int) -> int: ...
+@overload
+def parse(value: str) -> str: ...
+def parse(value: int | str) -> int | str:
+    """Parse value."""
+    return value
+
+def identity[T](value: T) -> T:
+    """Generic identity."""
+    return value
+
+class Meta(type):
+    """Metaclass."""
+
+class Box[T](metaclass=Meta):
+    """Generic box."""
+    size: int = 1
+
+    @abstractmethod
+    def clear(self) -> None:
+        """Clear box."""
+        raise NotImplementedError
+
+    @cached_property
+    def label(self) -> str:
+        """Cached label."""
+        return "box"
+
+__all__ = ["VISIBLE_CONST", "Greeting", "AliasT", "greet", "parse", "identity", "Box"]
+'''
+
+    with TemporaryDirectory() as temp_folder:
+        test_file = Path(temp_folder) / "scope3.py"
+        test_file.write_text(content, encoding="utf8")
+        md_content = h.py.generate_md_docs_content(str(test_file))
+
+    assert "## 🔧 Function `hidden_func`" not in md_content
+    assert "## 🏛️ Class `Meta`" not in md_content
+    assert "📎 Constant `HIDDEN`" not in md_content
+    assert "## 📎 Constant `VISIBLE_CONST`" in md_content
+    assert "## 🏷️ Type alias `Greeting`" in md_content
+    assert "## 🏷️ Type alias `AliasT`" in md_content
+    assert 'def greet(name: str = "O\'Brien") -> str' in md_content
+    assert "## 🔧 Function `parse (overload)`" in md_content
+    assert "## 🔧 Function `parse (overload 2)`" in md_content
+    assert "## 🔧 Function `parse`" in md_content
+    assert "def identity[T](value: T) -> T" in md_content
+    assert "class Box[T](metaclass=Meta)" in md_content
+    assert "### 📎 Attribute `size`" in md_content
+    assert "### ⚙️ Method `clear (abstractmethod)`" in md_content
+    assert "### ⚙️ Method `label (cached_property)`" in md_content
+
+
+def test_generate_md_docs_processes_init_reexports() -> None:
+    with TemporaryDirectory() as temp_folder:
+        temp_path = Path(temp_folder)
+        src = temp_path / "src" / "pkg"
+        src.mkdir(parents=True)
+        (src / "helper.py").write_text(
+            '''
+class Helper:
+    """Helper class."""
+    pass
+''',
+            encoding="utf-8",
+        )
+        (src / "__init__.py").write_text(
+            """
+from pkg.helper import Helper
+
+__all__ = ["Helper"]
+""",
+            encoding="utf-8",
+        )
+        (temp_path / "README.md").write_text("# Test\n\n## List of functions\n", encoding="utf-8")
+        result = h.py.generate_md_docs(temp_path, "# Docs\n", "https://example.com/test")
+        init_docs = temp_path / "docs" / "__init__.g.md"
+        assert "File __init__.py is processed." in result
+        assert init_docs.exists()
+        content = init_docs.read_text(encoding="utf-8")
+        assert "## 📦 Re-export `Helper`" in content
+        assert "from pkg.helper import Helper" in content
+
+
 def test_sort_py_code() -> None:
     current_folder = h.dev.get_project_root()
     py = Path(current_folder / "tests/data/sort_py_code__before.txt").read_text(encoding="utf8")

@@ -11,7 +11,14 @@ lang: en
 
 ## Contents
 
+- [📎 Constant `SOFT_HYPHEN`](#-constant-soft_hyphen)
 - [🏛️ Class `AbbreviationData`](#%EF%B8%8F-class-abbreviationdata)
+  - [📎 Attribute `all_forms`](#-attribute-all_forms)
+  - [📎 Attribute `dotted_forms`](#-attribute-dotted_forms)
+  - [📎 Attribute `spaced_forms`](#-attribute-spaced_forms)
+  - [📎 Attribute `h006_pairs`](#-attribute-h006_pairs)
+  - [📎 Attribute `h021_mask_pattern`](#-attribute-h021_mask_pattern)
+  - [📎 Attribute `h006_patterns`](#-attribute-h006_patterns)
 - [🔧 Function `is_spaced_multipart`](#-function-is_spaced_multipart)
 - [🔧 Function `load_abbreviation_data`](#-function-load_abbreviation_data)
 - [🔧 Function `mask_abbreviations`](#-function-mask_abbreviations)
@@ -19,6 +26,14 @@ lang: en
 - [🔧 Function `unspaced_variant`](#-function-unspaced_variant)
 
 </details>
+
+## 📎 Constant `SOFT_HYPHEN`
+
+```python
+SOFT_HYPHEN = '\xad'
+```
+
+_No docstring provided._
 
 ## 🏛️ Class `AbbreviationData`
 
@@ -43,6 +58,54 @@ class AbbreviationData:
 ```
 
 </details>
+
+### 📎 Attribute `all_forms`
+
+```python
+all_forms: tuple[str, ...]
+```
+
+_No docstring provided._
+
+### 📎 Attribute `dotted_forms`
+
+```python
+dotted_forms: tuple[str, ...]
+```
+
+_No docstring provided._
+
+### 📎 Attribute `spaced_forms`
+
+```python
+spaced_forms: tuple[str, ...]
+```
+
+_No docstring provided._
+
+### 📎 Attribute `h006_pairs`
+
+```python
+h006_pairs: dict[str, str]
+```
+
+_No docstring provided._
+
+### 📎 Attribute `h021_mask_pattern`
+
+```python
+h021_mask_pattern: re.Pattern[str] | None
+```
+
+_No docstring provided._
+
+### 📎 Attribute `h006_patterns`
+
+```python
+h006_patterns: dict[str, tuple[re.Pattern[str], str]]
+```
+
+_No docstring provided._
 
 ## 🔧 Function `is_spaced_multipart`
 
@@ -145,7 +208,7 @@ def load_abbreviation_data() -> AbbreviationData:
 ## 🔧 Function `mask_abbreviations`
 
 ```python
-def mask_abbreviations(text: str, pattern: re.Pattern[str] | None, placeholder: str = "·") -> str
+def mask_abbreviations(text: str, pattern: re.Pattern[str] | None, placeholder: str = '·') -> str
 ```
 
 Replace known dotted abbreviations with same-length placeholders for H021.

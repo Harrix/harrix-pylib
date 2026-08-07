@@ -257,7 +257,7 @@ def __call__(self, text: str) -> str:
 ### ⚙️ Method `__init__`
 
 ```python
-def __init__(self, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80, apply_prose_fixes: bool = True, format_math: bool = True, format_code_blocks: bool = True) -> None
+def __init__(self, *, end_of_line: str = 'crlf', prose_wrap: str = 'preserve', print_width: int = 80, apply_prose_fixes: bool = True, format_math: bool = True, format_code_blocks: bool = True) -> None
 ```
 
 Initialize the MdFormatter.

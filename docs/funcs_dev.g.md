@@ -11,6 +11,7 @@ lang: en
 
 ## Contents
 
+- [📎 Constant `DEFAULT_END_OF_LINE`](#-constant-default_end_of_line)
 - [🔧 Function `config_load`](#-function-config_load)
 - [🔧 Function `config_save`](#-function-config_save)
 - [🔧 Function `config_update_value`](#-function-config_update_value)
@@ -22,6 +23,14 @@ lang: en
 - [🔧 Function `write_in_output_txt`](#-function-write_in_output_txt)
 
 </details>
+
+## 📎 Constant `DEFAULT_END_OF_LINE`
+
+```python
+DEFAULT_END_OF_LINE: EndOfLine = 'crlf'
+```
+
+_No docstring provided._
 
 ## 🔧 Function `config_load`
 

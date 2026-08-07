@@ -11,12 +11,21 @@ lang: en
 
 ## Contents
 
+- [📎 Constant `EXE_RASTER_EXTENSIONS`](#-constant-exe_raster_extensions)
 - [🔧 Function `optimize_image_with_tools`](#-function-optimize_image_with_tools)
 - [🔧 Function `optimize_svg`](#-function-optimize_svg)
 - [🔧 Function `optimize_svg_content`](#-function-optimize_svg_content)
 - [🔧 Function `optimize_svg_folder`](#-function-optimize_svg_folder)
 
 </details>
+
+## 📎 Constant `EXE_RASTER_EXTENSIONS`
+
+```python
+EXE_RASTER_EXTENSIONS = img_tools.EXE_RASTER_EXTENSIONS
+```
+
+_No docstring provided._
 
 ## 🔧 Function `optimize_image_with_tools`
 

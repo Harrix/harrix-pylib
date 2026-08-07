@@ -12,6 +12,9 @@ lang: en
 ## Contents
 
 - [🏛️ Class `DocsSourceLoc`](#%EF%B8%8F-class-docssourceloc)
+  - [📎 Attribute `path`](#-attribute-path)
+  - [📎 Attribute `line`](#-attribute-line)
+  - [📎 Attribute `col`](#-attribute-col)
 - [🔧 Function `check_python_docstring_markdown_errors`](#-function-check_python_docstring_markdown_errors)
 - [🔧 Function `create_uv_new_library`](#-function-create_uv_new_library)
 - [🔧 Function `create_uv_new_notebook`](#-function-create_uv_new_notebook)
@@ -46,6 +49,30 @@ class DocsSourceLoc(NamedTuple):
 ```
 
 </details>
+
+### 📎 Attribute `path`
+
+```python
+path: Path
+```
+
+_No docstring provided._
+
+### 📎 Attribute `line`
+
+```python
+line: int
+```
+
+_No docstring provided._
+
+### 📎 Attribute `col`
+
+```python
+col: int
+```
+
+_No docstring provided._
 
 ## 🔧 Function `check_python_docstring_markdown_errors`
 
@@ -99,11 +126,7 @@ def check_python_docstring_markdown_errors(
     checker = h.md_check.MdChecker()
     errors: list[str] = []
 
-    py_files = [
-        py_file
-        for py_file in sorted(src_folder.rglob("*.py"))
-        if py_file.is_file() and not py_file.stem.startswith("__")
-    ]
+    py_files = [py_file for py_file in sorted(src_folder.rglob("*.py")) if _is_docs_python_file(py_file)]
 
     with tempfile.TemporaryDirectory(prefix="hsk-py-docstring-md-") as temp_dir:
         temp_root = Path(temp_dir)
@@ -132,7 +155,7 @@ def check_python_docstring_markdown_errors(
 ## 🔧 Function `create_uv_new_library`
 
 ```python
-def create_uv_new_library(library_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str
+def create_uv_new_library(library_name: str, folder: Path | str, editor: str = 'code', cli_commands: str = '') -> str
 ```
 
 Create a new library using uv, initializes it, and sets up necessary files.
@@ -219,7 +242,7 @@ __all__ = ["hello"]
 ## 🔧 Function `create_uv_new_notebook`
 
 ```python
-def create_uv_new_notebook(notebook_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str
+def create_uv_new_notebook(notebook_name: str, folder: Path | str, editor: str = 'code', cli_commands: str = '') -> str
 ```
 
 Create a new Jupyter notebook project using uv and set up necessary files.
@@ -316,7 +339,7 @@ def create_uv_new_notebook(notebook_name: str, folder: Path | str, editor: str =
 ## 🔧 Function `create_uv_new_project`
 
 ```python
-def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "code", cli_commands: str = "") -> str
+def create_uv_new_project(project_name: str, folder: Path | str, editor: str = 'code', cli_commands: str = '') -> str
 ```
 
 Create a new project using uv, initializes it, and sets up necessary files.
@@ -414,7 +437,7 @@ def create_uv_new_project(project_name: str, folder: Path | str, editor: str = "
 ## 🔧 Function `extract_functions_and_classes`
 
 ```python
-def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: bool = True, domain: str = "", src_folder: Path | str | None = None, include_private: bool = False) -> str
+def extract_functions_and_classes(filename: Path | str, *, is_add_link_demo: bool = True, domain: str = '', src_folder: Path | str | None = None, include_private: bool = False) -> str
 ```
 
 Extract all classes and functions from a Python file and formats them into a Markdown list.
@@ -485,69 +508,119 @@ def extract_functions_and_classes(
 
     # Parse the code into an Abstract Syntax Tree (AST)
     tree = ast.parse(code, filename)
+    dunder_all = _parse_dunder_all(tree)
+    has_callables = _module_has_documented_callables(tree, include_private=include_private, dunder_all=dunder_all)
 
-    functions = []
-    classes = []
+    # List of entries for the table (source order)
+    entries: list[tuple[str, str]] = []
+    existing_ids: set[str] = set()
+    seen_functions: set[str] = set()
 
-    # Traverse the AST to collect function and class definitions
     for node in tree.body:
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _should_document_name(
-            node.name, include_private=include_private
+        if isinstance(node, ast.ClassDef) and _should_document_module_name(
+            node.name, include_private=include_private, dunder_all=dunder_all
         ):
-            functions.append(node)
-        elif isinstance(node, ast.ClassDef) and _should_document_name(node.name, include_private=include_private):
-            classes.append(node)
-        # Skip other node types (imports, variables, etc.)
-
-    # List of entries for the table
-    entries = []
-    existing_ids = set()  # Track existing IDs to avoid duplicates
-
-    # Process classes
-    for class_node in classes:
-        # Get the class name
-        class_name = class_node.name
-        # Get base classes (inheritance)
-        base_classes = [ast.unparse(base) if base is not None else "" for base in class_node.bases]
-        base_classes_str = ", ".join(base_classes) if base_classes else ""
-        # Retrieve docstring and extract the first line (summary)
-        docstring = ast.get_docstring(class_node)
-        summary = _strip_trailing_linter_comments(docstring.splitlines()[0]) if docstring else ""
-
-        # Format the class entry with link
-        if is_add_link_demo and domain:
-            # Generate GitHub-compatible anchor using the same logic as GitHub
-            heading_text = f"🏛️ Class `{class_name}`"
-            anchor = h.md.generate_id(heading_text, existing_ids)
-            class_link = f"{domain}/blob/main/docs/{docs_path}#{anchor}"
-            if base_classes_str:
-                name = f"🏛️ Class [`{class_name} ({base_classes_str})`]({class_link})"
+            base_classes_str = ", ".join(ast.unparse(base) for base in node.bases)
+            docstring = ast.get_docstring(node)
+            summary = _strip_trailing_linter_comments(docstring.splitlines()[0]) if docstring else ""
+            if is_add_link_demo and domain:
+                anchor = h.md.generate_id(f"🏛️ Class `{node.name}`", existing_ids)
+                class_link = f"{domain}/blob/main/docs/{docs_path}#{anchor}"
+                if base_classes_str:
+                    name = f"🏛️ Class [`{node.name} ({base_classes_str})`]({class_link})"
+                else:
+                    name = f"🏛️ Class [`{node.name}`]({class_link})"
+                entries.append((name, summary))
             else:
-                name = f"🏛️ Class [`{class_name}`]({class_link})"
-        else:
-            name = f"🏛️ Class `{class_name} ({base_classes_str})`" if base_classes_str else f"🏛️ Class `{class_name}`"
-
-        description = summary
-        entries.append((name, description))
-
-    # Process functions
-    for func_node in functions:
-        func_name = func_node.name
-        # Retrieve docstring and extract the first line (summary)
-        docstring = ast.get_docstring(func_node)
-        summary = _strip_trailing_linter_comments(docstring.splitlines()[0]) if docstring else ""
-
-        # Format the function entry with link
-        if is_add_link_demo and domain:
-            # Generate GitHub-compatible anchor using the same logic as GitHub
-            heading_text = f"🔧 Function `{func_name}`"
-            anchor = h.md.generate_id(heading_text, existing_ids)
-            func_link = f"{domain}/blob/main/docs/{docs_path}#{anchor}"
-            name = f"🔧 [`{func_name}`]({func_link})"
-        else:
-            name = f"🔧 `{func_name}`"
-
-        entries.append((name, summary))
+                heading_text = (
+                    f"🏛️ Class `{node.name} ({base_classes_str})`" if base_classes_str else f"🏛️ Class `{node.name}`"
+                )
+                entries.append((heading_text, summary))
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if _is_overload(node):
+                continue
+            if node.name in seen_functions:
+                continue
+            if not _should_document_module_name(node.name, include_private=include_private, dunder_all=dunder_all):
+                continue
+            seen_functions.add(node.name)
+            docstring = ast.get_docstring(node)
+            summary = _strip_trailing_linter_comments(docstring.splitlines()[0]) if docstring else ""
+            if is_add_link_demo and domain:
+                heading_text = f"🔧 Function `{node.name}`"
+                anchor = h.md.generate_id(heading_text, existing_ids)
+                func_link = f"{domain}/blob/main/docs/{docs_path}#{anchor}"
+                entries.append((f"🔧 [`{node.name}`]({func_link})", summary))
+            else:
+                entries.append((f"🔧 `{node.name}`", summary))
+        elif _is_ast_type_alias(node):
+            alias_name = _type_alias_name(node)
+            if alias_name is None or not _should_document_module_data(
+                alias_name,
+                include_private=include_private,
+                dunder_all=dunder_all,
+                has_callables=has_callables,
+            ):
+                continue
+            heading_text = f"🏷️ Type alias `{alias_name}`"
+            if is_add_link_demo and domain:
+                anchor = h.md.generate_id(heading_text, existing_ids)
+                link = f"{domain}/blob/main/docs/{docs_path}#{anchor}"
+                entries.append((f"🏷️ Type alias [`{alias_name}`]({link})", ""))
+            else:
+                entries.append((heading_text, ""))
+        elif isinstance(node, ast.AnnAssign):
+            target = _ann_assign_name(node)
+            if target is None or target == "__all__":
+                continue
+            is_alias = _is_type_alias_annotation(node.annotation)
+            if not _should_document_module_data(
+                target,
+                include_private=include_private,
+                dunder_all=dunder_all,
+                has_callables=has_callables,
+                require_upper_snake=not is_alias,
+            ):
+                continue
+            kind = "Type alias" if is_alias else "Constant"
+            emoji = "🏷️" if is_alias else "📎"
+            heading_text = f"{emoji} {kind} `{target}`"
+            if is_add_link_demo and domain:
+                anchor = h.md.generate_id(heading_text, existing_ids)
+                link = f"{domain}/blob/main/docs/{docs_path}#{anchor}"
+                entries.append((f"{emoji} {kind} [`{target}`]({link})", ""))
+            else:
+                entries.append((heading_text, ""))
+        elif isinstance(node, ast.Assign):
+            target = _simple_assign_name(node)
+            if target is None or target == "__all__":
+                continue
+            if not _should_document_module_data(
+                target,
+                include_private=include_private,
+                dunder_all=dunder_all,
+                has_callables=has_callables,
+                require_upper_snake=True,
+            ):
+                continue
+            heading_text = f"📎 Constant `{target}`"
+            if is_add_link_demo and domain:
+                anchor = h.md.generate_id(heading_text, existing_ids)
+                link = f"{domain}/blob/main/docs/{docs_path}#{anchor}"
+                entries.append((f"📎 Constant [`{target}`]({link})", ""))
+            else:
+                entries.append((heading_text, ""))
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            for bound_name, _import_line in _iter_import_exports(node):
+                if not _should_document_reexport(bound_name, include_private=include_private, dunder_all=dunder_all):
+                    continue
+                heading_text = f"📦 Re-export `{bound_name}`"
+                if is_add_link_demo and domain:
+                    anchor = h.md.generate_id(heading_text, existing_ids)
+                    link = f"{domain}/blob/main/docs/{docs_path}#{anchor}"
+                    entries.append((f"📦 Re-export [`{bound_name}`]({link})", "Re-exported symbol."))
+                else:
+                    entries.append((heading_text, "Re-exported symbol."))
 
     if not entries:
         return ""
@@ -638,7 +711,7 @@ def generate_md_docs(
     src_folder = folder / "src"
 
     for filename in src_folder.rglob("*.py"):
-        if not (filename.is_file() and not filename.stem.startswith("__")):
+        if not _is_docs_python_file(filename):
             continue
 
         with filename.open(encoding="utf-8") as source_file:
@@ -860,14 +933,6 @@ def generate_md_docs_content_with_source_map(
             locs.append(DocsSourceLoc(file_path, py_line, max(1, idx + 1)))
         return locs
 
-    def get_class_signature(node: ast.ClassDef) -> str:
-        bases = [ast.unparse(base) for base in node.bases]
-        bases_str = ", ".join(bases)
-        signature = f"class {node.name}"
-        if bases_str:
-            signature += f"({bases_str})"
-        return signature
-
     def get_node_code(node: ast.FunctionDef | ast.ClassDef | ast.AsyncFunctionDef) -> tuple[str, int]:
         """Return code without docstring and the 1-based first source line of returned code."""
         start_line = node.lineno - 1
@@ -945,54 +1010,153 @@ def generate_md_docs_content_with_source_map(
         emit_structural("</details>", loc)
         emit_blank(loc)
 
+    def emit_declaration_docs(heading: str, signature: str, node: ast.AST, note: str) -> None:
+        loc = entity_loc(node)
+        emit_structural(heading, loc)
+        emit_blank(loc)
+        append_fenced_code(signature, loc.line, loc)
+        emit_structural(note, loc)
+        emit_blank(loc)
+
+    def emit_function_docs(
+        func_node: ast.FunctionDef | ast.AsyncFunctionDef,
+        heading_level: int,
+        *,
+        kind: str,
+        overload_counts: dict[str, int],
+        other_counts: dict[str, int],
+    ) -> None:
+        hashes = "#" * heading_level
+        heading_name = _next_callable_heading_name(
+            func_node, overload_counts=overload_counts, other_counts=other_counts
+        )
+        emit_callable_docs(
+            f"{hashes} {kind} `{heading_name}`",
+            _get_function_signature(func_node),
+            func_node,
+            None if _is_overload(func_node) else ast.get_docstring(func_node),
+        )
+
     def emit_class_docs(class_node: ast.ClassDef, heading_level: int, qualified_name: str) -> None:
         class_hashes = "#" * heading_level
         emit_callable_docs(
             f"{class_hashes} 🏛️ Class `{qualified_name}`",
-            get_class_signature(class_node),
+            _get_class_signature(class_node),
             class_node,
             ast.get_docstring(class_node),
         )
-        method_hashes = "#" * (heading_level + 1)
-        seen_method_headings: dict[str, int] = {}
+        member_level = heading_level + 1
+        member_hashes = "#" * member_level
+        overload_counts: dict[str, int] = {}
+        other_counts: dict[str, int] = {}
         for body_node in class_node.body:
             if isinstance(body_node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _should_document_name(
                 body_node.name, include_private=include_private
             ):
-                method_suffix = _method_heading_suffix(body_node)
-                base_heading = f"{body_node.name}{method_suffix}"
-                occurrence = seen_method_headings.get(base_heading, 0) + 1
-                seen_method_headings[base_heading] = occurrence
-                heading_name = base_heading if occurrence == 1 else f"{base_heading} ({occurrence})"
-                emit_callable_docs(
-                    f"{method_hashes} ⚙️ Method `{heading_name}`",
-                    _get_function_signature(body_node),
+                emit_function_docs(
                     body_node,
-                    ast.get_docstring(body_node),
+                    member_level,
+                    kind="⚙️ Method",
+                    overload_counts=overload_counts,
+                    other_counts=other_counts,
                 )
             elif isinstance(body_node, ast.ClassDef) and _should_document_name(
                 body_node.name, include_private=include_private
             ):
-                emit_class_docs(body_node, heading_level + 1, f"{qualified_name}.{body_node.name}")
+                emit_class_docs(body_node, member_level, f"{qualified_name}.{body_node.name}")
+            elif isinstance(body_node, ast.AnnAssign):
+                attr_name = _ann_assign_name(body_node)
+                if attr_name is None or not _should_document_name(attr_name, include_private=include_private):
+                    continue
+                emit_declaration_docs(
+                    f"{member_hashes} 📎 Attribute `{attr_name}`",
+                    ast.unparse(body_node),
+                    body_node,
+                    "_No docstring provided._",
+                )
 
+    dunder_all = _parse_dunder_all(tree)
+    has_callables = _module_has_documented_callables(tree, include_private=include_private, dunder_all=dunder_all)
     file_loc = DocsSourceLoc(file_path, 1, 1)
     emit_structural(f"# 📄 File `{file_path.name}`", file_loc)
     emit_blank(file_loc)
 
-    for node in ast.iter_child_nodes(tree):
+    module_overload_counts: dict[str, int] = {}
+    module_other_counts: dict[str, int] = {}
+
+    for node in tree.body:
         if isinstance(node, ast.ClassDef):
-            if not _should_document_name(node.name, include_private=include_private):
+            if not _should_document_module_name(node.name, include_private=include_private, dunder_all=dunder_all):
                 continue
             emit_class_docs(node, heading_level=2, qualified_name=node.name)
-        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _should_document_name(
-            node.name, include_private=include_private
-        ):
-            emit_callable_docs(
-                f"## 🔧 Function `{node.name}`",
-                _get_function_signature(node),
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if not _should_document_module_name(node.name, include_private=include_private, dunder_all=dunder_all):
+                continue
+            emit_function_docs(
                 node,
-                ast.get_docstring(node),
+                heading_level=2,
+                kind="🔧 Function",
+                overload_counts=module_overload_counts,
+                other_counts=module_other_counts,
             )
+        elif _is_ast_type_alias(node):
+            alias_name = _type_alias_name(node)
+            if alias_name is None or not _should_document_module_data(
+                alias_name,
+                include_private=include_private,
+                dunder_all=dunder_all,
+                has_callables=has_callables,
+            ):
+                continue
+            emit_declaration_docs(
+                f"## 🏷️ Type alias `{alias_name}`",
+                ast.unparse(node),
+                node,
+                "_No docstring provided._",
+            )
+        elif isinstance(node, ast.AnnAssign):
+            target = _ann_assign_name(node)
+            if target is None or target == "__all__":
+                continue
+            is_alias = _is_type_alias_annotation(node.annotation)
+            if not _should_document_module_data(
+                target,
+                include_private=include_private,
+                dunder_all=dunder_all,
+                has_callables=has_callables,
+                require_upper_snake=not is_alias,
+            ):
+                continue
+            heading = f"## 🏷️ Type alias `{target}`" if is_alias else f"## 📎 Constant `{target}`"
+            emit_declaration_docs(heading, ast.unparse(node), node, "_No docstring provided._")
+        elif isinstance(node, ast.Assign):
+            target = _simple_assign_name(node)
+            if target is None or target == "__all__":
+                continue
+            if not _should_document_module_data(
+                target,
+                include_private=include_private,
+                dunder_all=dunder_all,
+                has_callables=has_callables,
+                require_upper_snake=True,
+            ):
+                continue
+            emit_declaration_docs(
+                f"## 📎 Constant `{target}`",
+                ast.unparse(node),
+                node,
+                "_No docstring provided._",
+            )
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            for bound_name, import_line in _iter_import_exports(node):
+                if not _should_document_reexport(bound_name, include_private=include_private, dunder_all=dunder_all):
+                    continue
+                emit_declaration_docs(
+                    f"## 📦 Re-export `{bound_name}`",
+                    import_line,
+                    node,
+                    "_Re-exported symbol._",
+                )
 
     while out_lines and out_lines[-1] == "":
         out_lines.pop()

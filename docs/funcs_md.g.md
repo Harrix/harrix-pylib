@@ -1288,7 +1288,7 @@ def download_and_replace_images(filename: Path | str) -> str:
 ## 🔧 Function `download_and_replace_images_content`
 
 ```python
-def download_and_replace_images_content(markdown_text: str, path_md: Path | str, image_folder: str = "img") -> str
+def download_and_replace_images_content(markdown_text: str, path_md: Path | str, image_folder: str = 'img') -> str
 ```
 
 Download remote images in Markdown text and replaces their URLs with local paths.
@@ -1404,7 +1404,7 @@ def download_and_replace_images_content(markdown_text: str, path_md: Path | str,
 ## 🔧 Function `format_markdown`
 
 ```python
-def format_markdown(filename: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80, apply_prose_fixes: bool = True) -> str
+def format_markdown(filename: Path | str, *, end_of_line: str = 'crlf', prose_wrap: str = 'preserve', print_width: int = 80, apply_prose_fixes: bool = True) -> str
 ```
 
 Format a Markdown file in place when content changes.
@@ -1446,7 +1446,7 @@ def format_markdown(
 ## 🔧 Function `format_markdown_content`
 
 ```python
-def format_markdown_content(markdown_text: str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80, apply_prose_fixes: bool = True) -> str
+def format_markdown_content(markdown_text: str, *, end_of_line: str = 'crlf', prose_wrap: str = 'preserve', print_width: int = 80, apply_prose_fixes: bool = True) -> str
 ```
 
 Format Markdown content using the harrix-pylib Markdown formatter.
@@ -1488,7 +1488,7 @@ def format_markdown_content(
 ## 🔧 Function `format_markdown_folder`
 
 ```python
-def format_markdown_folder(folder: Path | str, *, end_of_line: str = "crlf", prose_wrap: str = "preserve", print_width: int = 80, apply_prose_fixes: bool = True) -> str
+def format_markdown_folder(folder: Path | str, *, end_of_line: str = 'crlf', prose_wrap: str = 'preserve', print_width: int = 80, apply_prose_fixes: bool = True) -> str
 ```
 
 Recursively format Markdown files in a folder.
@@ -3724,7 +3724,7 @@ def remove_yaml_content(markdown_text: str) -> str:
 ## 🔧 Function `replace_section`
 
 ```python
-def replace_section(filename: Path | str, replace_content: str, title_section: str = "## 📋 List of commands") -> str
+def replace_section(filename: Path | str, replace_content: str, title_section: str = '## 📋 List of commands') -> str
 ```
 
 Replace a section in a file defined by `title_section` with the provided `replace_content`.
@@ -3780,7 +3780,7 @@ def replace_section(filename: Path | str, replace_content: str, title_section: s
 ## 🔧 Function `replace_section_content`
 
 ```python
-def replace_section_content(markdown_text: str, replace_content: str, title_section: str = "## 📋 List of commands") -> str
+def replace_section_content(markdown_text: str, replace_content: str, title_section: str = '## 📋 List of commands') -> str
 ```
 
 Replace a section in the Markdown text defined by `title_section` with the provided `replace_content`.
