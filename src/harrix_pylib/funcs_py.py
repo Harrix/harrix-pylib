@@ -502,17 +502,6 @@ def extract_functions_and_classes(
                 entries.append((f"📎 Constant [`{target}`]({link})", ""))
             else:
                 entries.append((heading_text, ""))
-        elif isinstance(node, (ast.Import, ast.ImportFrom)):
-            for bound_name, _import_line in _iter_import_exports(node):
-                if not _should_document_reexport(bound_name, include_private=include_private, dunder_all=dunder_all):
-                    continue
-                heading_text = f"📦 Re-export `{bound_name}`"
-                if is_add_link_demo and domain:
-                    anchor = h.md.generate_id(heading_text, existing_ids)
-                    link = f"{domain}/blob/main/docs/{docs_path}#{anchor}"
-                    entries.append((f"📦 Re-export [`{bound_name}`]({link})", "Re-exported symbol."))
-                else:
-                    entries.append((heading_text, "Re-exported symbol."))
 
     if not entries:
         return ""
@@ -981,16 +970,6 @@ def generate_md_docs_content_with_source_map(
                 node,
                 "_No docstring provided._",
             )
-        elif isinstance(node, (ast.Import, ast.ImportFrom)):
-            for bound_name, import_line in _iter_import_exports(node):
-                if not _should_document_reexport(bound_name, include_private=include_private, dunder_all=dunder_all):
-                    continue
-                emit_declaration_docs(
-                    f"## 📦 Re-export `{bound_name}`",
-                    import_line,
-                    node,
-                    "_Re-exported symbol._",
-                )
 
     while out_lines and out_lines[-1] == "":
         out_lines.pop()
@@ -1616,10 +1595,6 @@ def _has_documented_entities(tree: ast.Module, *, include_private: bool = False)
                 dunder_all=dunder_all,
             ):
                 return True
-        elif isinstance(node, (ast.Import, ast.ImportFrom)):
-            for bound_name, _line in _iter_import_exports(node):
-                if _should_document_reexport(bound_name, include_private=include_private, dunder_all=dunder_all):
-                    return True
     return False
 
 
@@ -1656,26 +1631,6 @@ def _is_private_name(name: str) -> bool:
 def _is_type_alias_annotation(annotation: ast.expr) -> bool:
     """Return whether an annotation denotes `TypeAlias`."""
     return _decorator_name(annotation) == "TypeAlias"
-
-
-def _iter_import_exports(node: ast.Import | ast.ImportFrom) -> list[tuple[str, str]]:
-    """Return `(bound_name, import_line)` pairs for import statements."""
-    results: list[tuple[str, str]] = []
-    if isinstance(node, ast.Import):
-        for alias in node.names:
-            bound = alias.asname or alias.name.split(".", 1)[0]
-            line = f"import {alias.name}" + (f" as {alias.asname}" if alias.asname else "")
-            results.append((bound, line))
-        return results
-
-    if any(alias.name == "*" for alias in node.names):
-        return []
-    module = "." * node.level + (node.module or "")
-    for alias in node.names:
-        bound = alias.asname or alias.name
-        line = f"from {module} import {alias.name}" + (f" as {alias.asname}" if alias.asname else "")
-        results.append((bound, line))
-    return results
 
 
 def _max_backtick_run(text: str) -> int:
@@ -1783,16 +1738,6 @@ def _should_document_module_name(name: str, *, include_private: bool, dunder_all
 def _should_document_name(name: str, *, include_private: bool) -> bool:
     """Return whether a class member name should appear in generated documentation."""
     return include_private or not _is_private_name(name)
-
-
-def _should_document_reexport(name: str, *, include_private: bool, dunder_all: set[str] | None) -> bool:  # noqa: ARG001
-    """Return whether an imported name should be documented as a re-export.
-
-    Re-exports are only emitted when `__all__` lists the name, so ordinary
-    third-party imports are never treated as package API.
-
-    """
-    return dunder_all is not None and name in dunder_all
 
 
 def _simple_assign_name(node: ast.Assign) -> str | None:

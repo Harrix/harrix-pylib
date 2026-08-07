@@ -1181,7 +1181,7 @@ class Demo:
     assert "Attribute" not in md_content
 
 
-def test_generate_md_docs_processes_init_reexports() -> None:
+def test_generate_md_docs_skips_init_reexports_only() -> None:
     with TemporaryDirectory() as temp_folder:
         temp_path = Path(temp_folder)
         src = temp_path / "src" / "pkg"
@@ -1204,12 +1204,9 @@ __all__ = ["Helper"]
         )
         (temp_path / "README.md").write_text("# Test\n\n## List of functions\n", encoding="utf-8")
         result = h.py.generate_md_docs(temp_path, "# Docs\n", "https://example.com/test")
-        init_docs = temp_path / "docs" / "__init__.g.md"
-        assert "File __init__.py is processed." in result
-        assert init_docs.exists()
-        content = init_docs.read_text(encoding="utf-8")
-        assert "## 📦 Re-export `Helper`" in content
-        assert "from pkg.helper import Helper" in content
+        assert "File __init__.py is skipped (no public API)." in result
+        assert not (temp_path / "docs" / "__init__.g.md").exists()
+        assert "Re-export" not in result
 
 
 def test_sort_py_code() -> None:

@@ -569,17 +569,6 @@ def extract_functions_and_classes(
                 entries.append((f"📎 Constant [`{target}`]({link})", ""))
             else:
                 entries.append((heading_text, ""))
-        elif isinstance(node, (ast.Import, ast.ImportFrom)):
-            for bound_name, _import_line in _iter_import_exports(node):
-                if not _should_document_reexport(bound_name, include_private=include_private, dunder_all=dunder_all):
-                    continue
-                heading_text = f"📦 Re-export `{bound_name}`"
-                if is_add_link_demo and domain:
-                    anchor = h.md.generate_id(heading_text, existing_ids)
-                    link = f"{domain}/blob/main/docs/{docs_path}#{anchor}"
-                    entries.append((f"📦 Re-export [`{bound_name}`]({link})", "Re-exported symbol."))
-                else:
-                    entries.append((heading_text, "Re-exported symbol."))
 
     if not entries:
         return ""
@@ -1081,16 +1070,6 @@ def generate_md_docs_content_with_source_map(
                 node,
                 "_No docstring provided._",
             )
-        elif isinstance(node, (ast.Import, ast.ImportFrom)):
-            for bound_name, import_line in _iter_import_exports(node):
-                if not _should_document_reexport(bound_name, include_private=include_private, dunder_all=dunder_all):
-                    continue
-                emit_declaration_docs(
-                    f"## 📦 Re-export `{bound_name}`",
-                    import_line,
-                    node,
-                    "_Re-exported symbol._",
-                )
 
     while out_lines and out_lines[-1] == "":
         out_lines.pop()

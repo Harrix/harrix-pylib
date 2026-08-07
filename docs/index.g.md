@@ -33,12 +33,9 @@ lang: en
   - [📄 File `progress.py`](#-file-progresspy)
   - [📄 File `py_checker.py`](#-file-py_checkerpy)
   - [📄 File `py_docstring_format.py`](#-file-py_docstring_formatpy)
-  - [📄 File `__init__.py`](#-file-__init__py)
   - [📄 File `formatter.py`](#-file-formatterpy)
   - [📄 File `math_spans.py`](#-file-math_spanspy)
-  - [📄 File `__init__.py`](#-file-__init__py-1)
   - [📄 File `optimizer.py`](#-file-optimizerpy)
-  - [📄 File `__init__.py`](#-file-__init__py-2)
 - [📄 License](#-license)
 - [👤 Author](#-author)
 
@@ -321,22 +318,6 @@ Doc: [py_docstring_format.g.md](https://github.com/Harrix/harrix-pylib/blob/main
 |----------------|-------------|
 | 🏛️ Class [`PyDocstringFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/py_docstring_format.g.md#%EF%B8%8F-class-pydocstringformatter) | Format Markdown inside Python docstrings, similar to `MdFormatter` for `.md` files. |
 
-### 📄 File `__init__.py`
-
-Doc: [__init__.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md)
-
-| Function/Class | Description |
-|----------------|-------------|
-| 📦 Re-export [`dev`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-dev) | Re-exported symbol. |
-| 📦 Re-export [`file`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-file) | Re-exported symbol. |
-| 📦 Re-export [`img`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-img) | Re-exported symbol. |
-| 📦 Re-export [`md`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-md) | Re-exported symbol. |
-| 📦 Re-export [`py`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-py) | Re-exported symbol. |
-| 📦 Re-export [`md_check`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-md_check) | Re-exported symbol. |
-| 📦 Re-export [`md_format`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-md_format) | Re-exported symbol. |
-| 📦 Re-export [`py_check`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-py_check) | Re-exported symbol. |
-| 📦 Re-export [`svg_opt`](https://github.com/Harrix/harrix-pylib/blob/main/docs/__init__.g.md#-re-export-svg_opt) | Re-exported symbol. |
-
 ### 📄 File `formatter.py`
 
 Doc: [md_format/formatter.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/formatter.g.md)
@@ -354,14 +335,6 @@ Doc: [md_format/math_spans.g.md](https://github.com/Harrix/harrix-pylib/blob/mai
 | 🔧 [`display_math_line_flags`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/math_spans.g.md#-function-display_math_line_flags) | Return per-line flags for display-math `$$...$$` regions (including delimiters). |
 | 🔧 [`iter_code_and_math_segments`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/math_spans.g.md#-function-iter_code_and_math_segments) | Yield `(segment, protected)` where protected is inline code or dollar-math. |
 
-### 📄 File `__init__.py`
-
-Doc: [md_format/__init__.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/__init__.g.md)
-
-| Function/Class | Description |
-|----------------|-------------|
-| 📦 Re-export [`MdFormatter`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_format/__init__.g.md#-re-export-mdformatter) | Re-exported symbol. |
-
 ### 📄 File `optimizer.py`
 
 Doc: [svg_optimize/optimizer.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/svg_optimize/optimizer.g.md)
@@ -369,14 +342,6 @@ Doc: [svg_optimize/optimizer.g.md](https://github.com/Harrix/harrix-pylib/blob/m
 | Function/Class | Description |
 |----------------|-------------|
 | 🏛️ Class [`SvgOptimizer`](https://github.com/Harrix/harrix-pylib/blob/main/docs/svg_optimize/optimizer.g.md#%EF%B8%8F-class-svgoptimizer) | Optimize SVG markup to a compact form similar to SVGO preset-default. |
-
-### 📄 File `__init__.py`
-
-Doc: [svg_optimize/__init__.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/svg_optimize/__init__.g.md)
-
-| Function/Class | Description |
-|----------------|-------------|
-| 📦 Re-export [`SvgOptimizer`](https://github.com/Harrix/harrix-pylib/blob/main/docs/svg_optimize/__init__.g.md#-re-export-svgoptimizer) | Re-exported symbol. |
 
 ## 📄 License
 
