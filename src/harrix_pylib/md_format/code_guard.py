@@ -102,6 +102,8 @@ def _format_markdown_code_body(body: str, *, options: _FormatOptions | None = No
         apply_prose_fixes=options.apply_prose_fixes if options is not None else True,
         format_math=options.format_math if options is not None else True,
         format_code_blocks=options.format_code_blocks if options is not None else True,
+        # Nested fragments often start with ## / examples; never force H1 (H092).
+        promote_first_heading_to_h1=False,
     )
     return _format_with_options(body, nested).strip("\n")
 

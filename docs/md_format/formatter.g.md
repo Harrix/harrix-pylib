@@ -59,6 +59,7 @@ class MdFormatter:
         apply_prose_fixes: bool = True,
         format_math: bool = True,
         format_code_blocks: bool = True,
+        promote_first_heading_to_h1: bool = True,
     ) -> None:
         """Initialize the MdFormatter.
 
@@ -68,11 +69,14 @@ class MdFormatter:
         - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
         - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
         - `apply_prose_fixes` (`bool`): Apply mechanical MdChecker autofixes (typography,
-          H006 — H062 subset, H071/H072/H075; H063 bare filenames). Defaults to `True`.
-          H064 — H066 are applied by the structural format pipeline regardless.
+          H006 — H062 subset, H071/H072/H075, H080 — H084, H088, H090 — H092; H063 bare
+          filenames). Defaults to `True`. H064 — H066 are applied by the structural
+          format pipeline regardless.
         - `format_math` (`bool`): Format TeX/LaTeX content inside `$...$` / `$$...$$`. Defaults to `True`.
         - `format_code_blocks` (`bool`): Format fenced code block bodies for supported languages
           (`latex` / `tex`, `md` / `markdown`). Defaults to `True`.
+        - `promote_first_heading_to_h1` (`bool`): Apply H092 (first ATX heading → H1). Defaults to
+          `True` for documents; docstring and nested Markdown fragments should pass `False`.
 
         """
         self.options = _FormatOptions(
@@ -82,6 +86,7 @@ class MdFormatter:
             apply_prose_fixes=apply_prose_fixes,
             format_math=format_math,
             format_code_blocks=format_code_blocks,
+            promote_first_heading_to_h1=promote_first_heading_to_h1,
         )
 
     def format(self, text: str) -> str:
@@ -257,7 +262,7 @@ def __call__(self, text: str) -> str:
 ### ⚙️ Method `__init__`
 
 ```python
-def __init__(self, *, end_of_line: str = 'crlf', prose_wrap: str = 'preserve', print_width: int = 80, apply_prose_fixes: bool = True, format_math: bool = True, format_code_blocks: bool = True) -> None
+def __init__(self, *, end_of_line: str = 'crlf', prose_wrap: str = 'preserve', print_width: int = 80, apply_prose_fixes: bool = True, format_math: bool = True, format_code_blocks: bool = True, promote_first_heading_to_h1: bool = True) -> None
 ```
 
 Initialize the MdFormatter.
@@ -268,11 +273,14 @@ Args:
 - `prose_wrap` (`str`): Prettier-style prose wrap (`preserve`, `always`, `never`). Defaults to `preserve`.
 - `print_width` (`int`): Wrap width when `prose_wrap` is `always`. Defaults to `80`.
 - `apply_prose_fixes` (`bool`): Apply mechanical MdChecker autofixes (typography,
-  H006 — H062 subset, H071/H072/H075; H063 bare filenames). Defaults to `True`.
-  H064 — H066 are applied by the structural format pipeline regardless.
+  H006 — H062 subset, H071/H072/H075, H080 — H084, H088, H090 — H092; H063 bare
+  filenames). Defaults to `True`. H064 — H066 are applied by the structural
+  format pipeline regardless.
 - `format_math` (`bool`): Format TeX/LaTeX content inside `$...$` / `$$...$$`. Defaults to `True`.
 - `format_code_blocks` (`bool`): Format fenced code block bodies for supported languages
   (`latex` / `tex`, `md` / `markdown`). Defaults to `True`.
+- `promote_first_heading_to_h1` (`bool`): Apply H092 (first ATX heading → H1). Defaults to
+  `True` for documents; docstring and nested Markdown fragments should pass `False`.
 
 <details>
 <summary>Code:</summary>
@@ -287,6 +295,7 @@ def __init__(
         apply_prose_fixes: bool = True,
         format_math: bool = True,
         format_code_blocks: bool = True,
+        promote_first_heading_to_h1: bool = True,
     ) -> None:
         self.options = _FormatOptions(
             end_of_line=end_of_line,
@@ -295,6 +304,7 @@ def __init__(
             apply_prose_fixes=apply_prose_fixes,
             format_math=format_math,
             format_code_blocks=format_code_blocks,
+            promote_first_heading_to_h1=promote_first_heading_to_h1,
         )
 ```
 

@@ -3,7 +3,8 @@
 Runs before the Prettier-style parse/render pipeline so source-preserving paths
 keep fixed prose. Skips fenced and inline code the same way as MdChecker
 (H006, H007, H015-H017, H020-H024, H026-H030, H036, H039, H042, H044, H050,
-H057, H058, H062, H071, H072, H075, H081 code/links only, H084, H088, H090, H091).
+H057, H058, H062, H071, H072, H075, H080, H081 code/links only, H082, H083,
+H084, H088, H090, H091, H092).
 
 Bare filenames and paths (for example `config.json`, `src/app/recover.sql`) are
 wrapped in inline code before H006 so file extensions are not uppercased
@@ -210,13 +211,19 @@ _BARE_FILENAME_PATTERN = re.compile(
 )
 
 
-def _apply_checker_prose_fixes(text: str, *, lang: str = "") -> str:
+def _apply_checker_prose_fixes(
+    text: str,
+    *,
+    lang: str = "",
+    promote_first_heading_to_h1: bool = True,
+) -> str:
     """Apply mechanical MdChecker autofixes to Markdown body text.
 
     Args:
 
     - `text` (`str`): Markdown body (typically without YAML front matter).
     - `lang` (`str`): Document language from YAML (`en` / `ru`); gates H023/H044/H062.
+    - `promote_first_heading_to_h1` (`bool`): Apply H092. Defaults to `True`.
 
     """
     if not text:
@@ -246,6 +253,10 @@ def _apply_checker_prose_fixes(text: str, *, lang: str = "") -> str:
         output += "\n"
     # Multi-line structural autofixes (need fence awareness across lines).
     output = _fix_setext_headings_to_atx(output)  # H072
+    if promote_first_heading_to_h1:
+        output = _fix_first_heading_to_h1(output)  # H092
+    output = _fix_blanks_around_headings(output)  # H082
+    output = _fix_blanks_around_fences(output)  # H083
     output = _fix_mixed_bullet_markers(output)  # H071
     output = _fix_mixed_hard_break_styles(output)  # H075
     output = _fix_blockquote_quirks(output)  # H090
@@ -343,20 +354,81 @@ def _fix_bare_filenames_to_inline_code(segment: str) -> str:
     return _BARE_FILENAME_PATTERN.sub(replacer, segment)
 
 
-def _fix_blockquote_quirks(text: str) -> str:
-    """Normalize blockquote marker spacing and strip trailing spaces (H090)."""
+def _fix_blanks_around_fences(text: str) -> str:
+    """Insert blank lines before opening and after closing top-level fences (H083)."""
     lines, trailing = _split_lines(text)
     if not lines:
         return text
     fence_info = list(_identify_code_blocks(lines))
     result: list[str] = []
+    delimiter: str | None = None
+    for index, (line, _in_code) in enumerate(fence_info):
+        match = _FENCE_LINE_RE.match(line)
+        if not match:
+            result.append(line)
+            continue
+        indent, ticks = match.group(1), match.group(2)
+        if indent:
+            result.append(line)
+            continue
+        if delimiter is None:
+            if index > 0 and fence_info[index - 1][0].strip() and (not result or result[-1].strip()):
+                result.append("")
+            result.append(line)
+            delimiter = ticks
+            continue
+        if ticks.startswith(delimiter[0]) and len(ticks) >= len(delimiter):
+            result.append(line)
+            delimiter = None
+            if index + 1 < len(fence_info) and fence_info[index + 1][0].strip():
+                result.append("")
+            continue
+        result.append(line)
+    return _join_lines(result, trailing_newline=trailing)
+
+
+def _fix_blanks_around_headings(text: str) -> str:
+    """Insert blank lines before and after ATX headings (H082)."""
+    lines, trailing = _split_lines(text)
+    if not lines:
+        return text
+    fence_info = list(_identify_code_blocks(lines))
+    first_content_index = next(
+        (i for i, (line, in_code) in enumerate(fence_info) if not in_code and line.strip()),
+        None,
+    )
+    result: list[str] = []
+    for index, (line, in_code) in enumerate(fence_info):
+        if in_code or not _ATX_HEADING_PATTERN.match(line):
+            result.append(line)
+            continue
+        if (
+            index != first_content_index
+            and index > 0
+            and fence_info[index - 1][0].strip()
+            and (not result or result[-1].strip())
+        ):
+            result.append("")
+        result.append(line)
+        if index + 1 < len(fence_info) and fence_info[index + 1][0].strip():
+            result.append("")
+    return _join_lines(result, trailing_newline=trailing)
+
+
+def _fix_blockquote_quirks(text: str) -> str:
+    """Normalize blockquote marker spacing, trailing spaces, and MD028 blanks (H090)."""
+    lines, trailing = _split_lines(text)
+    if not lines:
+        return text
+    fence_info = list(_identify_code_blocks(lines))
+    normalized: list[str] = []
     for line, in_code in fence_info:
         if in_code:
-            result.append(line)
+            normalized.append(line)
             continue
         match = _BLOCKQUOTE_LINE_RE.match(line)
         if not match:
-            result.append(line)
+            normalized.append(line)
             continue
         indent, after = match.group(1), match.group(2)
         if after.startswith(" "):
@@ -367,7 +439,25 @@ def _fix_blockquote_quirks(text: str) -> str:
             content = f" {after}" if after else ""
         else:
             content = after
-        result.append(f"{indent}>{content}".rstrip())
+        normalized.append(f"{indent}>{content}".rstrip())
+
+    fence_info = list(_identify_code_blocks(normalized))
+    result: list[str] = []
+    for index, (line, in_code) in enumerate(fence_info):
+        if (
+            not in_code
+            and not line.strip()
+            and index > 0
+            and index + 1 < len(fence_info)
+            and not fence_info[index - 1][1]
+            and not fence_info[index + 1][1]
+        ):
+            prev_match = _BLOCKQUOTE_LINE_RE.match(fence_info[index - 1][0])
+            next_match = _BLOCKQUOTE_LINE_RE.match(fence_info[index + 1][0])
+            if prev_match and next_match:
+                result.append(f"{prev_match.group(1)}>")
+                continue
+        result.append(line)
     return _join_lines(result, trailing_newline=trailing)
 
 
@@ -479,6 +569,25 @@ def _fix_fence_or_code_line(line: str) -> str:
     if correct is None:
         return line
     return f"{match.group(1)}{match.group(2)}{match.group(3)}{correct}{match.group(5)}"
+
+
+def _fix_first_heading_to_h1(text: str) -> str:
+    """Rewrite the first content ATX heading to H1 (H092)."""
+    lines, trailing = _split_lines(text)
+    if not lines:
+        return text
+    fence_info = list(_identify_code_blocks(lines))
+    for index, (line, in_code) in enumerate(fence_info):
+        if in_code:
+            continue
+        match = _ATX_HEADING_PATTERN.match(line)
+        if not match:
+            continue
+        if len(match.group(1)) != 1:
+            lines[index] = f"# {match.group(2)}"
+            return _join_lines(lines, trailing_newline=trailing)
+        return text
+    return text
 
 
 def _fix_heading_trailing_period(line: str) -> str:
@@ -828,6 +937,7 @@ def _fix_prose_line(line: str, *, lang: str) -> str:
     line = _fix_spaces_after_list_marker(line)  # H088
     line = _fix_spaces_inside_markup(line)  # H081
     line = _fix_image_alt_capitalization(line)  # H020
+    line = _map_non_code(line, _fix_reversed_link_syntax)  # H080
 
     # Protect link/image destinations and angle autolinks from typography fixes
     # (H050 would turn `?logo=` into `? logo=` and break shields.io badges).
@@ -867,6 +977,11 @@ def _fix_punctuation_before_closing_guillemet(segment: str) -> str:
         return f"»{punct_run}"
 
     return _PUNCT_BEFORE_CLOSING_GUILLEMET_PATTERN.sub(replacer, segment)
+
+
+def _fix_reversed_link_syntax(segment: str) -> str:
+    """Rewrite reversed link syntax `](url)[text]` to `[text](url)` (H080)."""
+    return _REVERSED_LINK_RE.sub(r"[\2](\1)", segment)
 
 
 def _fix_russian_polite_pronouns(line: str) -> str:
@@ -1309,6 +1424,8 @@ _SPACES_IN_LINK_LABEL_FIX_RE = re.compile(r"(!?\[)([ \t]+)([^\]]*?)([ \t]*)(\])"
 _SPACES_IN_LINK_LABEL_TRAILING_FIX_RE = re.compile(r"(!?\[)([^\]]*?)([ \t]+)(\])")
 _BLOCKQUOTE_LINE_RE = re.compile(r"^(\s*)>(.*)$")
 _HORIZONTAL_RULE_RE = re.compile(r"^(?:\*\s*){3,}$|^(?:-\s*){3,}$|^(?:_\s*){3,}$")
+_REVERSED_LINK_RE = re.compile(r"\]\(([^)]+)\)\[([^\]]*)\]")
+_FENCE_LINE_RE = re.compile(r"^(\s*)(`{3,}|~{3,})(.*)$")
 
 
 _URL_PLACEHOLDER_PREFIX = "HSKPROSEURL"

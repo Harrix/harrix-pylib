@@ -76,6 +76,8 @@ class PyDocstringFormatter:
             prose_wrap=prose_wrap,
             print_width=print_width,
             apply_prose_fixes=apply_prose_fixes,
+            # Docstring sections usually start at ## under the API title H1.
+            promote_first_heading_to_h1=False,
         )
 
     def format(self, source: str) -> str:
@@ -284,6 +286,8 @@ def __init__(
             prose_wrap=prose_wrap,
             print_width=print_width,
             apply_prose_fixes=apply_prose_fixes,
+            # Docstring sections usually start at ## under the API title H1.
+            promote_first_heading_to_h1=False,
         )
 ```
 

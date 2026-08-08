@@ -46,23 +46,28 @@ def _checker_errors(tmp_path: Path, text: str, rules: set[str]) -> list[str]:
         ("Неужели!... Ну.\n", {"H028"}, "Неужели!.. Ну."),
         ("**Note:**text\n", {"H029"}, "**Note:** text"),
         ("**Note**: text\n", {"H030"}, "**Note:** text"),
-        ("##Title\n", {"H036"}, "## Title"),
+        ("##Title\n", {"H036"}, "# Title"),
         ("[Link](folder\\file.md)\n", {"H039"}, "[Link](folder/file.md)"),
         ("[jsfiddle.net](https:\\jsfiddle.net)\n", {"H039"}, "<https://jsfiddle.net>"),
         ("a\u200bb\n", {"H042"}, "ab"),
         ("Привет,мир\n", {"H050"}, "Привет, мир"),  # ignore: HP001
-        ("## Title.\n", {"H057"}, "## Title\n"),
+        ("## Title.\n", {"H057"}, "# Title\n"),
         ("Слово.»\n", {"H058"}, "Слово»."),  # ignore: HP001
         ("- a\n* b\n", {"H071"}, "- a\n- b\n"),
         ("Title\n=====\n", {"H072"}, "# Title\n"),
-        ("Subtitle\n-------\n", {"H072"}, "## Subtitle\n"),
+        ("Subtitle\n-------\n", {"H072"}, "# Subtitle\n"),
         ("line one\\\nline two  \nline three\n", {"H075"}, "line one  \nline two  \n"),
         ("` code `\n", {"H081"}, "`code`"),
         ("[ text](https://example.com)\n", {"H081"}, "[text](https://example.com)"),
-        ("  ## Title\n", {"H084"}, "## Title\n"),
+        ("](https://example.com)[text]\n", {"H080"}, "[text](https://example.com)"),
+        ("Para\n# Title\nNext\n", {"H082"}, "\n# Title\n\n"),
+        ("Para\n```\ncode\n```\nNext\n", {"H083"}, "```\ncode\n```\n\n"),
+        ("  ## Title\n", {"H084"}, "# Title\n"),
         ("-  a\n", {"H088"}, "- a\n"),
         (">  quoted\n", {"H090"}, "> quoted\n"),
+        ("> a\n\n> b\n", {"H090"}, "> a\n>\n> b\n"),
         ("Para\n\n***\n\nMore\n\n___\n", {"H091"}, "---\n"),
+        ("## Title\n\nBody\n", {"H092"}, "# Title\n"),
     ],
 )
 def test_formatter_fixes_checker_rules(tmp_path: Path, source: str, rules: set[str], expected_snippet: str) -> None:
@@ -204,8 +209,8 @@ def test_formatter_preserves_russian_polite_pronouns_at_markdown_title_start() -
     assert "[вам и не снилось" not in toc_fixed  # ignore: HP001
 
     heading_fixed = _apply_checker_prose_fixes("## Вам сюда\n", lang="ru")  # ignore: HP001
-    assert "## Вам сюда" in heading_fixed  # ignore: HP001
-    assert "## вам сюда" not in heading_fixed  # ignore: HP001
+    assert "# Вам сюда" in heading_fixed  # ignore: HP001
+    assert "вам сюда" not in heading_fixed  # ignore: HP001
 
     # Mid-sentence link text is still an address → lowercase.
     mid_fixed = _apply_checker_prose_fixes(

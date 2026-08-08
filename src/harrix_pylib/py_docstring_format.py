@@ -71,6 +71,8 @@ class PyDocstringFormatter:
             prose_wrap=prose_wrap,
             print_width=print_width,
             apply_prose_fixes=apply_prose_fixes,
+            # Docstring sections usually start at ## under the API title H1.
+            promote_first_heading_to_h1=False,
         )
 
     def format(self, source: str) -> str:
@@ -454,7 +456,10 @@ def _format_one_line_docstring(
 
     new_content = content
     if md_formatter.options.apply_prose_fixes:
-        new_content = _apply_checker_prose_fixes(new_content)
+        new_content = _apply_checker_prose_fixes(
+            new_content,
+            promote_first_heading_to_h1=md_formatter.options.promote_first_heading_to_h1,
+        )
     new_content = PyDocstringFormatter.normalize_code_spans(new_content)
     # Keep a single physical line inside """...""" (prose fixes are line-based).
     if "\n" in new_content:

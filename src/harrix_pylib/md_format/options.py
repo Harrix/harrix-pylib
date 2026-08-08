@@ -18,6 +18,8 @@ class _FormatOptions:
     apply_prose_fixes: bool = True
     format_math: bool = True
     format_code_blocks: bool = True
+    # H092: rewrite first ATX heading to H1. Off for docstring / nested md fragments.
+    promote_first_heading_to_h1: bool = True
 
     def __post_init__(self) -> None:
         """Validate formatter options after initialization."""
