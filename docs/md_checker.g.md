@@ -127,7 +127,8 @@ Rules:
 - **H068** - Figure caption after an image does not match YAML `lang` template
   (`_Figure N: …_` for `en`; localized Russian figure template for `ru`).
 - **H069** - Undefined or unused reference-style link (`[text][ref]` / `[ref]: url`;
-  hidden `[//]: #` comments and GFM footnotes `[^id]` / `[^id]:` are ignored).
+  hidden `[//]: #` comments and GFM footnotes `[^id]` / `[^id]:` are ignored;
+  undefined uses need an ASCII-like label so editorial prose brackets are allowed).
 - **H071** - Mixed bullet markers (`-` / `*` / `+`) inside one contiguous list.
 - **H072** - Setext heading used (prefer ATX `#` headings).
 - **H073** - Unbalanced math delimiters (`$…$` / `$$…$$`); currency `$` amounts,
@@ -238,12 +239,17 @@ class MdChecker:
     _ITALIC_CAPTION_LINE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^_.+_$")
 
     # Reference-style link definition / use (H069); `[//]:` hidden comments and
-    # GFM footnotes (`[^id]` / `[^id]:`) are excluded in `_check_reference_style_links`
+    # GFM footnotes (`[^id]` / `[^id]:`) are excluded in `_check_reference_style_links`.
+    # Undefined uses are only flagged when the label looks like an ASCII reference id
+    # (`my-ref`), so editorial adjacent brackets in prose are ignored.
     _REF_LINK_DEFINITION_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
         r"""^\s{0,3}\[([^\]]+)\]:\s+(\S+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*$"""
     )
     _REF_LINK_EXPLICIT_USE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<!!)\[([^\]]*)\]\[([^\]]+)\]")
     _REF_LINK_COLLAPSED_USE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<!!)\[([^\]]+)\]\[\]")
+    _REF_LINK_ASCII_LABEL_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
+        r"^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$"
+    )
 
     # Setext heading underline (H072); at least three `=` or `-`
     _SETEXT_H1_UNDERLINE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s{0,3}=+\s*$")
@@ -2997,6 +3003,12 @@ class MdChecker:
         GFM footnote markers (`[^id]` / `[^id]: …`) are not reference-style links and
         are ignored. Hidden comment definitions (`[//]: # …`) are also ignored.
 
+        Undefined uses are reported only when the label looks like an ASCII reference
+        ID (`ref`, `my-ref`, `a1`). Adjacent editorial brackets in prose (for example
+        translated Bible insertions split across two bracket pairs) are therefore not
+        treated as reference links. Unused definitions are still reported for any
+        non-comment / non-footnote label.
+
         """
         definitions: dict[str, int] = {}
         uses: dict[str, int] = {}
@@ -3017,11 +3029,11 @@ class MdChecker:
             )
             for match in self._REF_LINK_EXPLICIT_USE_PATTERN.finditer(clean_line):
                 label = match.group(2).strip()
-                if label and not label.startswith("^"):
+                if label and not label.startswith("^") and self._is_reference_link_label(label):
                     uses.setdefault(label.casefold(), actual_line_num)
             for match in self._REF_LINK_COLLAPSED_USE_PATTERN.finditer(clean_line):
                 label = match.group(1).strip()
-                if label and not label.startswith("^"):
+                if label and not label.startswith("^") and self._is_reference_link_label(label):
                     uses.setdefault(label.casefold(), actual_line_num)
 
         for label, line_num in uses.items():
@@ -3511,8 +3523,8 @@ class MdChecker:
 
         Currency mentions like `$5`, a lone `$` among punctuation, and mid-word
         `$` in titles like `Ca$h` are ignored; only leftover `$` that looks like
-        an opened TeX/math span (word-boundary `$` followed by a letter/`\`/`{`)
-        is flagged. Escaped `\$` is also ignored.
+        an opened TeX/math span (word-boundary `$` followed by a letter, backslash,
+        or `{`) is flagged. Escaped `\$` is also ignored.
 
         """
         in_display = False
@@ -4281,6 +4293,10 @@ class MdChecker:
         """Return whether the line is a GFM table row (`|...|`)."""
         stripped = line.strip()
         return bool(stripped) and stripped.startswith("|") and stripped.endswith("|")
+
+    def _is_reference_link_label(self, label: str) -> bool:
+        """Return whether `label` looks like an intentional ASCII reference ID (H069)."""
+        return bool(self._REF_LINK_ASCII_LABEL_PATTERN.fullmatch(label))
 
     def _is_table_cell_only_dash(self, line: str, pos: int) -> bool:
         """Return `True` if position pos in line is inside a table cell that contains only a hyphen."""

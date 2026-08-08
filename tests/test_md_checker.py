@@ -2963,6 +2963,17 @@ def test_md_checker() -> None:
         errors = checker.check(footnotes_ok, select={"H069"})
         assert not errors, errors
 
+        # Editorial adjacent brackets (Bible insertions) are not reference links
+        bible_brackets_ok = temp_path / "bible_brackets_ok.md"
+        bible_brackets_ok.write_text(
+            "---\nlang: ru\n---\n\n"
+            "> у которого [на][теле] есть недостаток, не должен приступать; "
+            "недостаток [на нём], поэтому не должен он приступать\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(bible_brackets_ok, select={"H069"})
+        assert not errors, errors
+
         # =====================================================================
         # H071: Mixed bullet markers in one list
         # =====================================================================
