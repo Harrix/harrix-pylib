@@ -44,7 +44,7 @@ Install the following software:
 
 2. Open the folder `C:/GitHub/harrix-pylib` in Cursor (or VSCode).
 
-3. Open a terminal `Ctrl` + ```.
+3. Open a terminal `Ctrl` + `` ` ``.
 
 4. Run `uv sync`.
 

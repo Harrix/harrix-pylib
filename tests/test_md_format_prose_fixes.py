@@ -57,7 +57,6 @@ def _checker_errors(tmp_path: Path, text: str, rules: set[str]) -> list[str]:
         ("Title\n=====\n", {"H072"}, "# Title\n"),
         ("Subtitle\n-------\n", {"H072"}, "## Subtitle\n"),
         ("line one\\\nline two  \nline three\n", {"H075"}, "line one  \nline two  \n"),
-        ("* text *\n", {"H081"}, "text"),
         ("` code `\n", {"H081"}, "`code`"),
         ("[ text](https://example.com)\n", {"H081"}, "[text](https://example.com)"),
         ("  ## Title\n", {"H084"}, "## Title\n"),
@@ -80,6 +79,28 @@ def test_formatter_preserves_single_hard_break_style(tmp_path: Path) -> None:
     result = _format(source)
     assert "line one\\" in result or "line one\\\n" in result.replace("\r\n", "\n")
     assert not _checker_errors(tmp_path, result, {"H075"}), result
+
+
+def test_formatter_preserves_spaces_around_adjacent_bold() -> None:
+    """H081 must not collapse spaces between neighboring `**…**` spans."""
+    source = "built **with** or **without** x.\nreleases of **BtbN/FFmpeg-Builds:** y.\nWin64 **GPL** build.\n"
+    result = _format(source)
+    assert "**with** or **without**" in result
+    assert "of **BtbN/FFmpeg-Builds:**" in result
+    assert "Win64 **GPL**" in result
+    assert "**with**or**without**" not in result
+    assert "of**BtbN" not in result
+    assert "Win64**GPL**" not in result
+
+
+def test_formatter_preserves_commonmark_padded_backtick_code(tmp_path: Path) -> None:
+    """H081 must keep CommonMark padding around a single backtick in inline code."""
+    source = "Open a terminal `Ctrl` + `` ` ``.\n"
+    assert not _checker_errors(tmp_path, source, {"H081"})
+    result = _format(source)
+    assert "`` ` ``" in result
+    assert "`````" not in result
+    assert not _checker_errors(tmp_path, result, {"H081"}), result
 
 
 def test_formatter_structural_pipeline_clears_h063_h064_h065_h066(tmp_path: Path) -> None:

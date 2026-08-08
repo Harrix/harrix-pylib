@@ -3,7 +3,7 @@
 Runs before the Prettier-style parse/render pipeline so source-preserving paths
 keep fixed prose. Skips fenced and inline code the same way as MdChecker
 (H006, H007, H015-H017, H020-H024, H026-H030, H036, H039, H042, H044, H050,
-H057, H058, H062, H071, H072, H075, H081, H084, H088, H090, H091).
+H057, H058, H062, H071, H072, H075, H081 code/links only, H084, H088, H090, H091).
 
 Bare filenames and paths (for example `config.json`, `src/app/recover.sql`) are
 wrapped in inline code before H006 so file extensions are not uppercased
@@ -1006,7 +1006,16 @@ def _fix_spaces_after_list_marker(line: str) -> str:
 
 
 def _fix_spaces_inside_markup(line: str) -> str:
-    """Trim spaces inside emphasis, inline code, and link labels (H081)."""
+    """Trim spaces inside inline code and link labels (H081).
+
+    Emphasis markers are check-only: autofixing `*…*` / `**…**` is unsafe next to
+    adjacent bold spans (e.g. `**with** or **without**` was collapsed to
+    `**with**or**without**` when a bridge match ate the outer spaces).
+
+    Inline-code edge spaces that pad content starting or ending with a backtick are kept
+    (CommonMark), so a padded single-backtick code span is not collapsed into five ticks.
+
+    """
     parts: list[str] = []
     for segment, in_code in _identify_code_blocks_line(line):
         if in_code:
@@ -1014,7 +1023,7 @@ def _fix_spaces_inside_markup(line: str) -> str:
                 open_ticks = len(segment) - len(segment.lstrip("`"))
                 close_ticks = len(segment) - len(segment.rstrip("`"))
                 if open_ticks and close_ticks and open_ticks == close_ticks:
-                    inner = segment[open_ticks:-close_ticks].strip(" \t")
+                    inner = _trim_inline_code_inner(segment[open_ticks:-close_ticks])
                     parts.append(f"{'`' * open_ticks}{inner}{'`' * close_ticks}")
                     continue
             parts.append(segment)
@@ -1022,28 +1031,7 @@ def _fix_spaces_inside_markup(line: str) -> str:
         fixed = _SPACES_IN_LINK_LABEL_FIX_RE.sub(r"\1\3\5", segment)
         fixed = _SPACES_IN_LINK_LABEL_TRAILING_FIX_RE.sub(r"\1\2\4", fixed)
         parts.append(fixed)
-
-    result = "".join(parts)
-    for _ in range(16):
-        masked_parts = [
-            ("x" * len(segment) if in_code else segment) for segment, in_code in _identify_code_blocks_line(result)
-        ]
-        masked = "".join(masked_parts)
-        match = next(
-            (
-                found
-                for pattern in _SPACES_IN_EMPHASIS_FIX_PATTERNS
-                for found in pattern.finditer(masked)
-                if found.group(2) or found.group(4)
-            ),
-            None,
-        )
-        if match is None:
-            break
-        marker = match.group(1)
-        replacement = f"{marker}{match.group(3).strip()}{marker}"
-        result = f"{result[: match.start()]}{replacement}{result[match.end() :]}"
-    return result
+    return "".join(parts)
 
 
 def _get_link_url_ranges(line: str) -> set[int]:
@@ -1101,6 +1089,18 @@ def _incorrect_word_patterns() -> dict[str, tuple[re.Pattern[str], str]]:
     from harrix_pylib.md_checker import MdChecker  # noqa: PLC0415
 
     return MdChecker._INCORRECT_WORD_PATTERNS  # noqa: SLF001
+
+
+def _inline_code_has_unjustified_edge_spaces(inner: str) -> bool:
+    """Return `True` when leading/trailing spaces are not CommonMark backtick padding (H081)."""
+    if not (inner.startswith((" ", "\t")) or inner.endswith((" ", "\t"))):
+        return False
+    stripped = inner.strip(" \t")
+    if not stripped:
+        return False
+    if inner.startswith((" ", "\t")) and not stripped.startswith("`"):
+        return True
+    return bool(inner.endswith((" ", "\t")) and not stripped.endswith("`"))
 
 
 def _inline_code_ranges(line: str) -> list[tuple[int, int]]:
@@ -1290,15 +1290,21 @@ def _restore_url_regions(line: str, stored: list[str]) -> str:
     return _URL_PLACEHOLDER_TOKEN_RE.sub(replacer, line)
 
 
+def _trim_inline_code_inner(inner: str) -> str:
+    """Strip edge spaces in inline code unless they pad backtick-edged content."""
+    stripped = inner.strip(" \t")
+    if not stripped:
+        return inner
+    # CommonMark requires a padding space when code content starts or ends with a backtick
+    # (e.g. double-tick fence around " ` "). Stripping those spaces collapses the span.
+    if stripped.startswith("`") or stripped.endswith("`"):
+        return inner
+    return stripped
+
+
 _INDENTED_ATX_HEADING_RE = re.compile(r"^[\t ]+(#{1,6}(?:\s|$))")
 _BULLET_LIST_MARKER_RE = re.compile(r"^(\s*)([-*+])(\s+)(\S.*)?$")
 _ORDERED_LIST_MARKER_RE = re.compile(r"^(\s*)(\d+[.)])(\s+)(\S.*)?$")
-_SPACES_IN_EMPHASIS_FIX_PATTERNS = (
-    re.compile(r"(?:^|(?<=\s))(?<!\*)(\*{1,3})(\s+)([^*\n]*?)(\s*)\1(?!\w)(?!\*)"),
-    re.compile(r"(?:^|(?<=\s))(?<!\*)(\*{1,3})(\s*)([^*\n]*?)(\s+)\1(?!\w)(?!\*)"),
-    re.compile(r"(?:^|(?<=\s))(?<!_)(_{1,3})(\s+)([^_\n]*?)(\s*)\1(?!\w)(?!_)"),
-    re.compile(r"(?:^|(?<=\s))(?<!_)(_{1,3})(\s*)([^_\n]*?)(\s+)\1(?!\w)(?!_)"),
-)
 _SPACES_IN_LINK_LABEL_FIX_RE = re.compile(r"(!?\[)([ \t]+)([^\]]*?)([ \t]*)(\])")
 _SPACES_IN_LINK_LABEL_TRAILING_FIX_RE = re.compile(r"(!?\[)([^\]]*?)([ \t]+)(\])")
 _BLOCKQUOTE_LINE_RE = re.compile(r"^(\s*)>(.*)$")

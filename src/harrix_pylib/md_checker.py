@@ -28,6 +28,7 @@ from harrix_pylib.md_format.prose_fixes import (
     _BARE_FILENAME_PATTERN,
     _BARE_FILENAME_PRODUCT_BASENAMES,
     _extract_url_regions,
+    _inline_code_has_unjustified_edge_spaces,
     _is_russian_polite_pronoun_at_sentence_start,
 )
 from harrix_pylib.md_format.table_format import _is_table_line
@@ -3323,7 +3324,7 @@ class MdChecker:
                     close_ticks = len(segment) - len(segment.rstrip("`"))
                     if open_ticks and close_ticks and open_ticks == close_ticks:
                         inner = segment[open_ticks:-close_ticks]
-                        if inner.startswith(" ") or inner.endswith(" "):
+                        if _inline_code_has_unjustified_edge_spaces(inner):
                             yield self._format_error(
                                 "H081", self.RULES["H081"], filename, line_num=line_num, col=offset + 1
                             )

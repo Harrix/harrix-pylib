@@ -3133,6 +3133,15 @@ def test_md_checker() -> None:
         errors = checker.check(spaces_ok, select={"H081"})
         assert not errors
 
+        # CommonMark padding around a literal backtick must not trigger H081
+        spaces_padded_tick = temp_path / "spaces_padded_tick.md"
+        spaces_padded_tick.write_text(
+            "---\nlang: en\n---\n\n# T\n\nOpen a terminal `Ctrl` + `` ` ``.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(spaces_padded_tick, select={"H081"})
+        assert not errors, errors
+
         # =====================================================================
         # H082: Blanks around headings
         # =====================================================================
