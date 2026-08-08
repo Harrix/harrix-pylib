@@ -1256,6 +1256,10 @@ def _inline_code_has_unjustified_edge_spaces(
     Spaces that only separate the span from an adjacent word character are treated as
     justified (same glue guard as the H081 autofix).
 
+    When the stripped content starts or ends with a backtick, CommonMark padding may use
+    a space on both sides (so a leading+trailing pair can be stripped on render). Forms
+    like ` ` ```py ` ` are therefore allowed.
+
     """
     if not (inner.startswith((" ", "\t")) or inner.endswith((" ", "\t"))):
         return False
@@ -1264,9 +1268,18 @@ def _inline_code_has_unjustified_edge_spaces(
         return False
     if _inline_code_edge_space_prevents_gluing(inner, before=before, after=after):
         return False
-    if inner.startswith((" ", "\t")) and not stripped.startswith("`"):
+    # Backtick-edged content: allow symmetric CommonMark padding on both sides.
+    if stripped.startswith("`") or stripped.endswith("`"):
+        has_lead = inner.startswith((" ", "\t"))
+        has_trail = inner.endswith((" ", "\t"))
+        if has_lead and has_trail:
+            return False
+        if has_lead and stripped.startswith("`"):
+            return False
+        return not (has_trail and stripped.endswith("`"))
+    if inner.startswith((" ", "\t")):
         return True
-    return bool(inner.endswith((" ", "\t")) and not stripped.endswith("`"))
+    return bool(inner.endswith((" ", "\t")))
 
 
 def _inline_code_ranges(line: str) -> list[tuple[int, int]]:

@@ -108,6 +108,16 @@ def test_formatter_preserves_commonmark_padded_backtick_code(tmp_path: Path) -> 
     assert not _checker_errors(tmp_path, result, {"H081"}), result
 
 
+def test_formatter_preserves_padded_fence_language_examples(tmp_path: Path) -> None:
+    """H081 must allow ` ```lang ` padding used to show fence openers inline."""
+    source = "Prefer ` ```python ` over ` ```py `, and ` ```markdown ` over ` ```md `.\n"
+    assert not _checker_errors(tmp_path, source, {"H081"}), _checker_errors(tmp_path, source, {"H081"})
+    result = _format(source)
+    assert "` ```python `" in result
+    assert "` ```py `" in result
+    assert not _checker_errors(tmp_path, result, {"H081"}), result
+
+
 def test_formatter_preserves_trailing_space_in_code_before_word(tmp_path: Path) -> None:
     """H081 must not strip a trailing code space that separates the span from a word."""
     # Awkward but real: describes output shaped like File `path`.

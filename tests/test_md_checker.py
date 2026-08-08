@@ -3156,6 +3156,15 @@ def test_md_checker() -> None:
         errors = checker.check(spaces_padded_tick, select={"H081"})
         assert not errors, errors
 
+        # Symmetric padding around fence-language examples (content starts with backticks)
+        spaces_padded_fence = temp_path / "spaces_padded_fence.md"
+        spaces_padded_fence.write_text(
+            "---\nlang: en\n---\n\n# T\n\nUse ` ```python ` not ` ```py `.\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(spaces_padded_fence, select={"H081"})
+        assert not errors, errors
+
         # GFM task-list checkboxes must not trigger H081
         task_checkbox_ok = temp_path / "task_checkbox_ok.md"
         task_checkbox_ok.write_text(
