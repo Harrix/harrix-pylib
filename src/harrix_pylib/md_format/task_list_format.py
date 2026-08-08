@@ -65,6 +65,6 @@ def _task_list_entry_for_text(text: str, markers: list[_TaskListMarker]) -> tupl
 
 
 def _task_list_marker_for_text(text: str, markers: list[_TaskListMarker]) -> str | None:
-    """Return `[ ] ` or `[x] ` when paragraph text starts with a task placeholder."""
+    """Return `[ ]` or `[x]` when paragraph text starts with a task placeholder."""
     entry = _task_list_entry_for_text(text, markers)
     return entry[0] if entry else None

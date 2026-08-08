@@ -3082,6 +3082,236 @@ def test_md_checker() -> None:
         assert not errors
 
         # =====================================================================
+        # H079: Empty link or image label/destination
+        # =====================================================================
+        empty_link = temp_path / "empty_link.md"
+        empty_link.write_text("---\nlang: en\n---\n\n# T\n\n[](https://example.com)\n", encoding="utf-8")
+        errors = checker.check(empty_link, select={"H079"})
+        assert any("H079" in e for e in errors)
+
+        empty_dest = temp_path / "empty_dest.md"
+        empty_dest.write_text("---\nlang: en\n---\n\n# T\n\n[text]()\n", encoding="utf-8")
+        errors = checker.check(empty_dest, select={"H079"})
+        assert any("H079" in e for e in errors)
+
+        link_ok = temp_path / "link_ok_h079.md"
+        link_ok.write_text("---\nlang: en\n---\n\n# T\n\n[text](https://example.com)\n", encoding="utf-8")
+        errors = checker.check(link_ok, select={"H079"})
+        assert not errors
+
+        # =====================================================================
+        # H080: Reversed link syntax
+        # =====================================================================
+        reversed_link = temp_path / "reversed_link.md"
+        reversed_link.write_text(
+            "---\nlang: en\n---\n\n# T\n\n](https://example.com)[text]\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(reversed_link, select={"H080"})
+        assert any("H080" in e for e in errors)
+
+        # =====================================================================
+        # H081: Spaces inside emphasis / code / link text
+        # =====================================================================
+        spaces_markup = temp_path / "spaces_markup.md"
+        spaces_markup.write_text("---\nlang: en\n---\n\n# T\n\n* text *\n", encoding="utf-8")
+        errors = checker.check(spaces_markup, select={"H081"})
+        assert any("H081" in e for e in errors)
+
+        spaces_code = temp_path / "spaces_code.md"
+        spaces_code.write_text("---\nlang: en\n---\n\n# T\n\n` code `\n", encoding="utf-8")
+        errors = checker.check(spaces_code, select={"H081"})
+        assert any("H081" in e for e in errors)
+
+        spaces_link = temp_path / "spaces_link.md"
+        spaces_link.write_text("---\nlang: en\n---\n\n# T\n\n[ text](https://example.com)\n", encoding="utf-8")
+        errors = checker.check(spaces_link, select={"H081"})
+        assert any("H081" in e for e in errors)
+
+        spaces_ok = temp_path / "spaces_ok.md"
+        spaces_ok.write_text("---\nlang: en\n---\n\n# T\n\n*text* and `code`\n", encoding="utf-8")
+        errors = checker.check(spaces_ok, select={"H081"})
+        assert not errors
+
+        # =====================================================================
+        # H082: Blanks around headings
+        # =====================================================================
+        heading_no_blank = temp_path / "heading_no_blank.md"
+        heading_no_blank.write_text("---\nlang: en\n---\n\n# Title\nNext line\n", encoding="utf-8")
+        errors = checker.check(heading_no_blank, select={"H082"})
+        assert any("H082" in e for e in errors)
+
+        heading_blank_ok = temp_path / "heading_blank_ok.md"
+        heading_blank_ok.write_text("---\nlang: en\n---\n\n# Title\n\nNext line\n", encoding="utf-8")
+        errors = checker.check(heading_blank_ok, select={"H082"})
+        assert not errors
+
+        # =====================================================================
+        # H083: Blanks around fences
+        # =====================================================================
+        fence_no_blank = temp_path / "fence_no_blank.md"
+        fence_no_blank.write_text("---\nlang: en\n---\n\n# T\n\nText\n```python\nx\n```\nMore\n", encoding="utf-8")
+        errors = checker.check(fence_no_blank, select={"H083"})
+        assert any("H083" in e for e in errors)
+
+        fence_blank_ok = temp_path / "fence_blank_ok.md"
+        fence_blank_ok.write_text(
+            "---\nlang: en\n---\n\n# T\n\nText\n\n```python\nx\n```\n\nMore\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(fence_blank_ok, select={"H083"})
+        assert not errors
+
+        # =====================================================================
+        # H084: Heading not at column 0
+        # =====================================================================
+        indented_heading = temp_path / "indented_heading.md"
+        indented_heading.write_text("---\nlang: en\n---\n\n  ## Title\n", encoding="utf-8")
+        errors = checker.check(indented_heading, select={"H084"})
+        assert any("H084" in e for e in errors)
+
+        # =====================================================================
+        # H085: Non-descriptive link text
+        # =====================================================================
+        click_here = temp_path / "click_here.md"
+        click_here.write_text(
+            "---\nlang: en\n---\n\n# T\n\nSee [click here](https://example.com).\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(click_here, select={"H085"})
+        assert any("H085" in e for e in errors)
+
+        descriptive_ok = temp_path / "descriptive_ok.md"
+        descriptive_ok.write_text(
+            "---\nlang: en\n---\n\n# T\n\nSee [the docs](https://example.com).\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(descriptive_ok, select={"H085"})
+        assert not errors
+
+        # =====================================================================
+        # H086: Ordered list marker style
+        # =====================================================================
+        ordered_mixed = temp_path / "ordered_mixed.md"
+        ordered_mixed.write_text("---\nlang: en\n---\n\n# T\n\n1. a\n3. b\n", encoding="utf-8")
+        errors = checker.check(ordered_mixed, select={"H086"})
+        assert any("H086" in e for e in errors)
+
+        ordered_ones_ok = temp_path / "ordered_ones_ok.md"
+        ordered_ones_ok.write_text("---\nlang: en\n---\n\n# T\n\n1. a\n1. b\n", encoding="utf-8")
+        errors = checker.check(ordered_ones_ok, select={"H086"})
+        assert not errors
+
+        ordered_seq_ok = temp_path / "ordered_seq_ok.md"
+        ordered_seq_ok.write_text("---\nlang: en\n---\n\n# T\n\n1. a\n2. b\n", encoding="utf-8")
+        errors = checker.check(ordered_seq_ok, select={"H086"})
+        assert not errors
+
+        # =====================================================================
+        # H087: List indentation
+        # =====================================================================
+        list_indent_bad = temp_path / "list_indent_bad.md"
+        list_indent_bad.write_text("---\nlang: en\n---\n\n# T\n\n - a\n", encoding="utf-8")
+        errors = checker.check(list_indent_bad, select={"H087"})
+        assert any("H087" in e for e in errors)
+
+        list_indent_ok = temp_path / "list_indent_ok.md"
+        list_indent_ok.write_text("---\nlang: en\n---\n\n# T\n\n- a\n  - b\n", encoding="utf-8")
+        errors = checker.check(list_indent_ok, select={"H087"})
+        assert not errors
+
+        # =====================================================================
+        # H088: Spaces after list marker
+        # =====================================================================
+        list_spaces_bad = temp_path / "list_spaces_bad.md"
+        list_spaces_bad.write_text("---\nlang: en\n---\n\n# T\n\n-  a\n", encoding="utf-8")
+        errors = checker.check(list_spaces_bad, select={"H088"})
+        assert any("H088" in e for e in errors)
+
+        list_spaces_ok = temp_path / "list_spaces_ok.md"
+        list_spaces_ok.write_text("---\nlang: en\n---\n\n# T\n\n- a\n", encoding="utf-8")
+        errors = checker.check(list_spaces_ok, select={"H088"})
+        assert not errors
+
+        # =====================================================================
+        # H089: Emphasis used as heading
+        # =====================================================================
+        emph_heading = temp_path / "emph_heading.md"
+        emph_heading.write_text("---\nlang: en\n---\n\n# T\n\n**Section title**\n", encoding="utf-8")
+        errors = checker.check(emph_heading, select={"H089"})
+        assert any("H089" in e for e in errors)
+
+        emph_inline_ok = temp_path / "emph_inline_ok.md"
+        emph_inline_ok.write_text("---\nlang: en\n---\n\n# T\n\nUse **bold** in a sentence.\n", encoding="utf-8")
+        errors = checker.check(emph_inline_ok, select={"H089"})
+        assert not errors
+
+        # =====================================================================
+        # H090: Blockquote quirks
+        # =====================================================================
+        bq_spaces = temp_path / "bq_spaces.md"
+        bq_spaces.write_text("---\nlang: en\n---\n\n# T\n\n>  too many spaces\n", encoding="utf-8")
+        errors = checker.check(bq_spaces, select={"H090"})
+        assert any("H090" in e for e in errors)
+
+        bq_blank_split = temp_path / "bq_blank_split.md"
+        bq_blank_split.write_text("---\nlang: en\n---\n\n# T\n\n> one\n\n> two\n", encoding="utf-8")
+        errors = checker.check(bq_blank_split, select={"H090"})
+        assert any("H090" in e for e in errors)
+
+        bq_ok = temp_path / "bq_ok.md"
+        bq_ok.write_text("---\nlang: en\n---\n\n# T\n\n> one\n> two\n", encoding="utf-8")
+        errors = checker.check(bq_ok, select={"H090"})
+        assert not errors
+
+        # =====================================================================
+        # H091: HR style consistency
+        # =====================================================================
+        hr_mixed = temp_path / "hr_mixed.md"
+        hr_mixed.write_text("---\nlang: en\n---\n\n# T\n\n---\n\nText\n\n***\n", encoding="utf-8")
+        errors = checker.check(hr_mixed, select={"H091"})
+        assert any("H091" in e for e in errors)
+
+        hr_ok = temp_path / "hr_ok.md"
+        hr_ok.write_text("---\nlang: en\n---\n\n# T\n\n---\n\nText\n\n---\n", encoding="utf-8")
+        errors = checker.check(hr_ok, select={"H091"})
+        assert not errors
+
+        # =====================================================================
+        # H092: First content heading is H1
+        # =====================================================================
+        first_h2 = temp_path / "first_h2.md"
+        first_h2.write_text("---\nlang: en\n---\n\n## Title\n", encoding="utf-8")
+        errors = checker.check(first_h2, select={"H092"})
+        assert any("H092" in e for e in errors)
+
+        first_h1_ok = temp_path / "first_h1_ok.md"
+        first_h1_ok.write_text("---\nlang: en\n---\n\n# Title\n", encoding="utf-8")
+        errors = checker.check(first_h1_ok, select={"H092"})
+        assert not errors
+
+        readme_h2_ok = temp_path / "README.md"
+        readme_h2_ok.write_text("## Title\n", encoding="utf-8")
+        errors = checker.check(readme_h2_ok, select={"H092"})
+        assert not errors
+
+        # =====================================================================
+        # H093: Dollar prompt in shell fence without output
+        # =====================================================================
+        shell_dollar = temp_path / "shell_dollar.md"
+        shell_dollar.write_text("---\nlang: en\n---\n\n# T\n\n```bash\n$ ls\n```\n", encoding="utf-8")
+        errors = checker.check(shell_dollar, select={"H093"})
+        assert any("H093" in e for e in errors)
+
+        shell_with_output = temp_path / "shell_with_output.md"
+        shell_with_output.write_text(
+            "---\nlang: en\n---\n\n# T\n\n```bash\n$ ls\nfile.txt\n```\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(shell_with_output, select={"H093"})
+        assert not errors
+
+        # =====================================================================
         # raw-markdown: true — skip body after first ATX H1
         # =====================================================================
         raw_md_file = temp_path / "raw_markdown_note.md"
@@ -3128,6 +3358,8 @@ def test_md_checker() -> None:
         assert "H060" in checker.all_rules
         assert "H063" in checker.all_rules
         assert "H078" in checker.all_rules
+        assert "H079" in checker.all_rules
+        assert "H093" in checker.all_rules
         assert "H033" in checker.all_rules
         assert checker.all_rules == set(checker.RULES.keys())
 

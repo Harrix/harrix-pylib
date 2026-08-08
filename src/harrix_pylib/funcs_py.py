@@ -115,8 +115,27 @@ def check_python_docstring_markdown_errors(
     if not src_folder.is_dir():
         return []
 
-    # File-level / front-matter / EOF rules do not apply to ephemeral docstring extracts.
-    exclude_rules = {"H001", "H002", "H003", "H004", "H005", "H011", "H046", "H047"}
+    # File-level / front-matter / EOF / document-structure rules do not apply to
+    # ephemeral docstring extracts (API docs have dense fences/headings by design).
+    exclude_rules = {
+        "H001",
+        "H002",
+        "H003",
+        "H004",
+        "H005",
+        "H011",
+        "H046",
+        "H047",
+        "H082",
+        "H083",
+        "H086",
+        "H087",
+        "H089",
+        "H090",
+        "H091",
+        "H092",
+        "H093",
+    }
     checker = h.md_check.MdChecker()
     errors: list[str] = []
 
@@ -1874,7 +1893,7 @@ def _linkify_docs_symbol_line(
     current_docs_path: str,
     current_target: DocsSymbolTarget | None,
 ) -> str:
-    """Turn unambiguous `` `Symbol` `` mentions into Markdown links to docs headings."""
+    """Turn unambiguous ```Symbol``` mentions into Markdown links to docs headings."""
 
     def transform_segment(segment: str) -> str:
         """Replace backtick symbol names inside one unprotected segment."""

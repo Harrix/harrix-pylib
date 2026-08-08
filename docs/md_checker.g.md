@@ -140,6 +140,25 @@ Rules:
   destination basename must start with `featured-image`.
 - **H078** - Local media/file link outside sibling `img/` or `files/` in a note
   folder (`featured-image.*` may stay in the note root or `img/`).
+- **H079** - Empty link or image label/destination (`[](…)`, `[text]()`, `![]()`).
+- **H080** - Reversed link syntax (`](url)[text]`).
+- **H081** - Spaces inside emphasis, inline code, or link/image label text
+  (e.g. `* text *`, spaced backticks, `[ text](url)`).
+- **H082** - Missing blank line before or after an ATX heading.
+- **H083** - Missing blank line before or after a fenced code block (nested list
+  fences are skipped).
+- **H084** - ATX heading not at column 0 (leading spaces/tabs).
+- **H085** - Non-descriptive link text (`click here`, `сюда`, …; lang-aware).
+- **H086** - Ordered list marker style is neither all-`1.` nor strictly sequential.
+- **H087** - Inconsistent list indentation (top level must be column 0; nested
+  levels must be deeper than the parent with a consistent indent per level).
+- **H088** - Wrong number of spaces after a list marker (exactly one required).
+- **H089** - Emphasis used as a heading (lone `**Title**` / `__Title__` paragraph).
+- **H090** - Blockquote quirks: multiple spaces after `>`, trailing spaces on
+  quote lines, or a blank line splitting a blockquote without `>`.
+- **H091** - Mixed horizontal-rule styles in one file (`---` / `***` / `___`).
+- **H092** - First content ATX heading is not H1 (except `README.md` / `LICENSE.md`).
+- **H093** - Shell fence uses `$` prompt lines without showing command output.
 
 Example for ignore directives:
 
@@ -172,6 +191,12 @@ class MdChecker:
 
     # Minimum length for a line to be treated as italic-only caption (e.g. _text_)
     _MIN_ITALIC_CAPTION_LEN: ClassVar[int] = 2
+
+    # Minimum inline-code segment length including backticks (H081)
+    _MIN_INLINE_CODE_SEGMENT_LEN: ClassVar[int] = 2
+
+    # Minimum ordered-list items before style can be judged (H086)
+    _ORDERED_LIST_STYLE_MIN_ITEMS: ClassVar[int] = 2
 
     # Length of empty single-line display math `$$$$`; real content must be longer
     _EMPTY_SINGLE_LINE_DISPLAY_MATH_LEN: ClassVar[int] = 4
@@ -277,6 +302,63 @@ class MdChecker:
 
     # Inline image or link with destination (H060); group 1 is `!` for images
     _INLINE_IMAGE_OR_LINK_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(!?)\[([^\]]*)\]\(([^)]+)\)")
+
+    # Inline image or link allowing empty destination (H079)
+    _INLINE_IMAGE_OR_LINK_EMPTY_OK_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(!?)\[([^\]]*)\]\(([^)]*)\)")
+
+    # Reversed Markdown link syntax (H080): `](url)[text]`
+    _REVERSED_LINK_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"\]\([^)]+\)\[[^\]]*\]")
+
+    # Spaces inside emphasis markers (H081). Content may not contain the marker char so
+    # spans cannot cross adjacent emphasis regions. Opener must follow start/whitespace
+    # so a closer in `**Label:**` cannot start a new match.
+    _SPACES_IN_EMPHASIS_PATTERNS: ClassVar[tuple[re.Pattern[str], ...]] = (
+        re.compile(r"(?:^|(?<=\s))(?<!\*)(\*{1,3})(\s+)([^*\n]*?)(\s*)\1(?!\w)(?!\*)"),
+        re.compile(r"(?:^|(?<=\s))(?<!\*)(\*{1,3})(\s*)([^*\n]*?)(\s+)\1(?!\w)(?!\*)"),
+        re.compile(r"(?:^|(?<=\s))(?<!_)(_{1,3})(\s+)([^_\n]*?)(\s*)\1(?!\w)(?!_)"),
+        re.compile(r"(?:^|(?<=\s))(?<!_)(_{1,3})(\s*)([^_\n]*?)(\s+)\1(?!\w)(?!_)"),
+    )
+    # Spaces inside link/image label (H081)
+    _SPACES_IN_LINK_LABEL_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!?\[([^\]]*)\]")
+
+    # ATX heading with leading indent (H084)
+    _INDENTED_ATX_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^[\t ]+(#{1,6})(?:\s|$)")
+
+    # Non-descriptive link labels (H085); compared casefolded as whole label
+    _NON_DESCRIPTIVE_LINK_EN: ClassVar[frozenset[str]] = frozenset(
+        {"click here", "here", "link", "this link", "read more"}
+    )
+    _NON_DESCRIPTIVE_LINK_RU: ClassVar[frozenset[str]] = frozenset(
+        {
+            "сюда",  # ignore: HP001
+            "здесь",  # ignore: HP001
+            "ссылка",  # ignore: HP001
+            "подробнее",  # ignore: HP001
+            "читать далее",  # ignore: HP001
+        }
+    )
+
+    # Ordered / bullet list marker with capture groups for indent and spaces (H086-H088)
+    _ORDERED_LIST_MARKER_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(\s*)(\d+)([.)])(\s*)(.*)$")
+    # Real bullet items require whitespace after the marker (excludes `**bold**`, `***`, `---`)
+    _BULLET_LIST_MARKER_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(\s*)([-*+])(\s+)(.*)$")
+    # Excess spaces after list marker (H088); missing space uses separate checks
+    _LIST_MARKER_MULTI_SPACE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(\s*)([-*+]|\d+[.)])( {2,}|\t+)(\S)")
+    _ORDERED_LIST_NO_SPACE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(\s*)(\d+[.)])(\S)")
+    _BULLET_LIST_NO_SPACE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(\s*)([-*+])(?![*\-_])(\S)")
+
+    # Emphasis-only paragraph used as a heading (H089); trailing `:` label style allowed
+    _EMPHASIS_AS_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(\*\*|__)(.+)\1\s*$")
+
+    # Blockquote line (H090)
+    _BLOCKQUOTE_LINE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(\s*)>(.*)$")
+
+    # Fenced code block open/close (H083, H093)
+    _FENCE_LINE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(\s*)(`{3,}|~{3,})(.*)$")
+    _SHELL_FENCE_LANGUAGES: ClassVar[frozenset[str]] = frozenset(
+        {"bash", "sh", "shell", "zsh", "console", "powershell", "ps1", "cmd"}
+    )
+    _SHELL_PROMPT_LINE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*\$\s+\S")
 
     # Sibling asset folders checked by H060
     _ASSET_DIR_NAMES: ClassVar[tuple[str, ...]] = ("img", "files")
@@ -426,6 +508,21 @@ class MdChecker:
         "H076": "Invalid or incomplete TOC details block",
         "H077": "Featured image convention violation",
         "H078": "Local asset link outside sibling img/ or files/",
+        "H079": "Empty link or image label or destination",
+        "H080": "Reversed link syntax",
+        "H081": "Spaces inside emphasis, inline code, or link text",
+        "H082": "Missing blank line around ATX heading",
+        "H083": "Missing blank line around fenced code block",
+        "H084": "ATX heading not at column 0",
+        "H085": "Non-descriptive link text",
+        "H086": "Ordered list marker style is inconsistent",
+        "H087": "Inconsistent list indentation",
+        "H088": "Wrong number of spaces after list marker",
+        "H089": "Emphasis used as heading",
+        "H090": "Blockquote spacing or blank-line quirk",
+        "H091": "Mixed horizontal-rule styles in one file",
+        "H092": "First content heading is not H1",
+        "H093": "Dollar prompt in shell fence without output",
     }
 
     # HTML comment for ignoring checks on specific lines
@@ -805,6 +902,8 @@ class MdChecker:
             return
         for item in directory.iterdir():
             if item.is_file() and item.suffix.lower() in {".md", ".markdown"}:
+                if h.file.should_ignore_path(item, additional_ignore_patterns):
+                    continue
                 yield item
             elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
                 yield from self.find_markdown_files(item, additional_ignore_patterns)
@@ -1056,6 +1155,77 @@ class MdChecker:
                 actual_line_num = (yaml_end_line - 1) + index + 1
                 yield self._format_error("H065", self.RULES["H065"], filename, line_num=actual_line_num, col=1)
                 in_table = False
+
+    def _check_blanks_around_fences(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check for blank lines before opening and after closing fences (H083)."""
+        delimiter: str | None = None
+        open_index = -1
+        for index, (line, _in_code) in enumerate(code_block_info):
+            match = self._FENCE_LINE_PATTERN.match(line)
+            if not match:
+                continue
+            indent, ticks, _info = match.group(1), match.group(2), match.group(3)
+            # Nested list fences (indented) are skipped.
+            if indent:
+                continue
+            if delimiter is None:
+                delimiter = ticks
+                open_index = index
+                if index > 0 and code_block_info[index - 1][0].strip():
+                    actual_line_num = (yaml_end_line - 1) + index + 1
+                    yield self._format_error("H083", self.RULES["H083"], filename, line_num=actual_line_num, col=1)
+                continue
+            if ticks.startswith(delimiter[0]) and len(ticks) >= len(delimiter):
+                close_index = index
+                delimiter = None
+                if close_index + 1 < len(code_block_info) and code_block_info[close_index + 1][0].strip():
+                    actual_line_num = (yaml_end_line - 1) + close_index + 1
+                    yield self._format_error("H083", self.RULES["H083"], filename, line_num=actual_line_num, col=1)
+                _ = open_index
+
+    def _check_blanks_around_headings(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check for blank lines before and after ATX headings (H082)."""
+        first_content_index = next(
+            (i for i, (line, in_code) in enumerate(code_block_info) if not in_code and line.strip()),
+            None,
+        )
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                continue
+            if not self._ATX_HEADING_PATTERN.match(line):
+                continue
+            actual_line_num = (yaml_end_line - 1) + index + 1
+            if index != first_content_index and index > 0 and code_block_info[index - 1][0].strip():
+                yield self._format_error("H082", self.RULES["H082"], filename, line_num=actual_line_num, col=1)
+            if index + 1 < len(code_block_info) and code_block_info[index + 1][0].strip():
+                yield self._format_error("H082", self.RULES["H082"], filename, line_num=actual_line_num, col=1)
+
+    def _check_blockquote_quirks(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check blockquote spacing and blank-line splits (H090)."""
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                continue
+            actual_line_num = (yaml_end_line - 1) + index + 1
+            match = self._BLOCKQUOTE_LINE_PATTERN.match(line)
+            if match:
+                after = match.group(2)
+                # MD027: more than one space/tab after `>`, or trailing whitespace on the line.
+                if after.startswith(("  ", "\t", " \t")) or line != line.rstrip():
+                    yield self._format_error("H090", self.RULES["H090"], filename, line_num=actual_line_num, col=1)
+                continue
+            # MD028: blank line between blockquote chunks without `>`
+            if line.strip():
+                continue
+            prev_line = code_block_info[index - 1][0] if index > 0 else ""
+            next_line = code_block_info[index + 1][0] if index + 1 < len(code_block_info) else ""
+            if self._BLOCKQUOTE_LINE_PATTERN.match(prev_line) and self._BLOCKQUOTE_LINE_PATTERN.match(next_line):
+                yield self._format_error("H090", self.RULES["H090"], filename, line_num=actual_line_num, col=1)
 
     def _check_broken_internal_fragments(
         self, filename: Path, code_block_info: list, yaml_end_line: int
@@ -1341,7 +1511,7 @@ class MdChecker:
     def _check_colon_outside_emphasis(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         r"""Check for colon outside inline emphasis (H030).
 
-        Colon after \*, \*\*, \_, __, ~~ labels should be inside emphasis markers when
+        Colon after \*, \*\*, _,__, ~~ labels should be inside emphasis markers when
         the same line continues after the colon. A trailing colon at end of line is allowed.
         Uses original line; matches inside inline code and URLs are skipped.
 
@@ -1457,7 +1627,7 @@ class MdChecker:
 
         - `--` at the start of blockquote attribution lines (e.g. `> -- Author`).
         - Em dash with a space before it and a trailing Markdown hard line break
-          (` —\`), typical for poetic / quoted line endings.
+          (`—\`), typical for poetic / quoted line endings.
 
         """
         # Single pass over segments: check for " - ", " − " (Unicode minus), and " -- "  # noqa: RUF003
@@ -1541,6 +1711,29 @@ class MdChecker:
                     return
             offset += len(segment)
 
+    def _check_descriptive_link_text(
+        self, filename: Path, line: str, line_num: int, *, lang: str = ""
+    ) -> Generator[str, None, None]:
+        """Check for non-descriptive link labels (H085)."""
+        if lang == "ru":
+            banned = self._NON_DESCRIPTIVE_LINK_RU
+        elif lang == "en":
+            banned = self._NON_DESCRIPTIVE_LINK_EN
+        else:
+            banned = self._NON_DESCRIPTIVE_LINK_EN | self._NON_DESCRIPTIVE_LINK_RU
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                for match in self._INLINE_IMAGE_OR_LINK_EMPTY_OK_PATTERN.finditer(segment):
+                    if match.group(1):
+                        continue
+                    label = match.group(2).strip().casefold()
+                    if label in banned:
+                        col = offset + match.start(2) + 1
+                        error_msg = f'{self.RULES["H085"]}: "{match.group(2).strip()}"'
+                        yield self._format_error("H085", error_msg, filename, line_num=line_num, col=col)
+            offset += len(segment)
+
     def _check_double_spaces(
         self, filename: Path, line: str, _clean_line: str, line_num: int, content_lines: list[str], line_index: int
     ) -> Generator[str, None, None]:
@@ -1549,7 +1742,7 @@ class MdChecker:
         Scans the original line segment-by-segment so that:
 
         - double spaces inside inline code are ignored;
-        - concatenating prose after stripping inline code cannot invent a `False` `  `.
+        - concatenating prose after stripping inline code cannot invent a `False` ``.
 
         """
         if "  " not in line:
@@ -1569,6 +1762,37 @@ class MdChecker:
                 col = offset + segment.index("  ") + 1
                 yield self._format_error("H009", self.RULES["H009"], filename, line_num=line_num, col=col)
                 return
+            offset += len(segment)
+
+    def _check_emphasis_as_heading(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for a lone emphasis paragraph used as a heading (H089)."""
+        stripped = line.strip()
+        if not stripped:
+            return
+        match = self._EMPHASIS_AS_HEADING_PATTERN.match(stripped)
+        if not match:
+            return
+        inner = match.group(2).strip()
+        # Skip bold label lines like `**Note:**`, definition-style markers, and
+        # bold lines that wrap inline code (e.g. **`tool.exe` is missing.**).
+        if not inner or "*" in inner or "_" in inner or inner.endswith(":") or "`" in inner:
+            return
+        yield self._format_error("H089", self.RULES["H089"], filename, line_num=line_num, col=1)
+
+    def _check_empty_links(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for empty link/image labels or destinations (H079)."""
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                for match in self._INLINE_IMAGE_OR_LINK_EMPTY_OK_PATTERN.finditer(segment):
+                    label = match.group(2)
+                    dest = match.group(3).strip()
+                    # Strip optional title after destination.
+                    if dest:
+                        dest = dest.split(None, 1)[0].strip("<>")
+                    if not label.strip() or not dest:
+                        col = offset + match.start() + 1
+                        yield self._format_error("H079", self.RULES["H079"], filename, line_num=line_num, col=col)
             offset += len(segment)
 
     def _check_featured_image_convention(
@@ -1752,6 +1976,30 @@ class MdChecker:
         if "H078" in rules:
             yield from self._check_local_asset_path_layout(filename, content, yaml_end_line)
 
+        if "H082" in rules and code_block_info is not None:
+            yield from self._check_blanks_around_headings(filename, code_block_info, yaml_end_line)
+
+        if "H083" in rules and code_block_info is not None:
+            yield from self._check_blanks_around_fences(filename, code_block_info, yaml_end_line)
+
+        if "H086" in rules and code_block_info is not None:
+            yield from self._check_ordered_list_marker_style(filename, code_block_info, yaml_end_line)
+
+        if "H087" in rules and code_block_info is not None:
+            yield from self._check_list_indentation(filename, code_block_info, yaml_end_line)
+
+        if "H090" in rules and code_block_info is not None:
+            yield from self._check_blockquote_quirks(filename, code_block_info, yaml_end_line)
+
+        if "H091" in rules and code_block_info is not None:
+            yield from self._check_hr_style_consistency(filename, code_block_info, yaml_end_line)
+
+        if "H092" in rules and code_block_info is not None:
+            yield from self._check_first_heading_is_h1(filename, code_block_info, yaml_end_line)
+
+        if "H093" in rules and code_block_info is not None:
+            yield from self._check_shell_dollar_prompts(filename, code_block_info, yaml_end_line)
+
     # =========================================================================
     # Filename Rules (H001, H002)
     # =========================================================================
@@ -1763,6 +2011,28 @@ class MdChecker:
 
         if "H002" in rules and " " in str(filename):
             yield self._format_error("H002", self.RULES["H002"], filename)
+
+    def _check_first_heading_is_h1(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check that the first content ATX heading is H1 (H092)."""
+        if filename.name.upper() in self._H003_EXEMPT_FILENAMES:
+            return
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                continue
+            match = self._ATX_HEADING_PATTERN.match(line)
+            if not match:
+                continue
+            if len(match.group(1)) != 1:
+                actual_line_num = (yaml_end_line - 1) + index + 1
+                yield self._format_error("H092", self.RULES["H092"], filename, line_num=actual_line_num, col=1)
+            return
+
+    def _check_heading_not_at_column_zero(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check that ATX headings start at column 0 (H084)."""
+        if self._INDENTED_ATX_HEADING_PATTERN.match(line):
+            yield self._format_error("H084", self.RULES["H084"], filename, line_num=line_num, col=1)
 
     def _check_heading_too_deep(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check for ATX headings deeper than H6 (H052)."""
@@ -1801,12 +2071,38 @@ class MdChecker:
         col = line.find("\u2015") + 1
         yield self._format_error("H026", self.RULES["H026"], filename, line_num=line_num, col=col)
 
+    def _check_hr_style_consistency(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check that all horizontal rules use one style (H091)."""
+        first_style: str | None = None
+        first_line_num = 0
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                continue
+            stripped = line.strip()
+            if not self._HORIZONTAL_RULE_PATTERN.match(stripped):
+                continue
+            # Distinguish from setext underlines: HR usually alone; still treat as HR.
+            style_char = next((ch for ch in stripped if ch in "-*_"), "")
+            if not style_char:
+                continue
+            actual_line_num = (yaml_end_line - 1) + index + 1
+            if first_style is None:
+                first_style = style_char
+                first_line_num = actual_line_num
+                continue
+            if style_char != first_style:
+                yield self._format_error("H091", self.RULES["H091"], filename, line_num=actual_line_num, col=1)
+                _ = first_line_num
+                return
+
     def _check_html_tags(
         self, filename: Path, line: str, _clean_line: str, line_num: int
     ) -> Generator[str, None, None]:
         """Check for HTML tags in content (H019). Exception: `<details>` and `<summary>` are allowed.
 
-        Skips inline code segments (e.g. `` `<file>...</file>` `` in backticks).
+        Skips inline code segments (e.g. `<file>...</file>` in backticks).
 
         """
         offset = 0
@@ -1860,7 +2156,7 @@ class MdChecker:
         Allowed before the first image:
 
         - leading whitespace (list continuations);
-        - a list marker (`- `, `* `, `1. `, …).
+        - a list marker (`-`, `*`, `1.`, …).
 
         A line may contain several image units in a row (e.g. badge rows), separated
         only by whitespace. An image unit is a bare `![…](…)` / `![…][ref]` or a
@@ -1969,6 +2265,57 @@ class MdChecker:
         if not has_crlf:
             error_msg = f"{self.RULES['H046']}: LF line endings instead of CRLF"
             yield self._format_error("H046", error_msg, filename, line_num=1, col=1)
+
+    def _check_list_indentation(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check list marker indentation consistency (H087)."""
+        stack: list[int] = []
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                stack.clear()
+                continue
+            stripped = line.strip()
+            if not stripped:
+                # Keep stack across blank lines inside loose lists.
+                continue
+            bullet = self._BULLET_LIST_MARKER_PATTERN.match(line)
+            ordered = self._ORDERED_LIST_MARKER_PATTERN.match(line)
+            if not bullet and not ordered:
+                if _is_list_continuation(line):
+                    continue
+                stack.clear()
+                continue
+            match = bullet or ordered
+            if match is None:
+                continue
+            indent = len(match.group(1).replace("\t", "    "))
+            spaces = match.group(3) if bullet else match.group(4)
+            rest = match.group(4) if bullet else match.group(5)
+            if not spaces:
+                continue
+            # Skip thematic breaks like `- - -` matched after a single marker+space
+            if bullet and match.group(2) == "-" and rest and set(rest.replace(" ", "")) <= {"-"}:
+                continue
+            actual_line_num = (yaml_end_line - 1) + index + 1
+            while stack and indent < stack[-1]:
+                stack.pop()
+            if not stack:
+                if indent != 0:
+                    yield self._format_error("H087", self.RULES["H087"], filename, line_num=actual_line_num, col=1)
+                stack = [indent]
+                continue
+            if indent == stack[-1]:
+                continue
+            if indent > stack[-1]:
+                # New nesting level: any deeper indent is allowed; siblings must match later.
+                stack.append(indent)
+                continue
+            if indent in stack:
+                while stack and stack[-1] != indent:
+                    stack.pop()
+                continue
+            yield self._format_error("H087", self.RULES["H087"], filename, line_num=actual_line_num, col=1)
 
     def _check_local_asset_path_layout(
         self, filename: Path, content: str, yaml_end_line: int
@@ -2399,6 +2746,27 @@ class MdChecker:
         if "H067" in rules:
             yield from self._check_wiki_links(filename, line, line_num)
 
+        if "H079" in rules:
+            yield from self._check_empty_links(filename, line, line_num)
+
+        if "H080" in rules:
+            yield from self._check_reversed_link_syntax(filename, line, line_num)
+
+        if "H081" in rules:
+            yield from self._check_spaces_inside_markup(filename, line, line_num)
+
+        if "H084" in rules:
+            yield from self._check_heading_not_at_column_zero(filename, line, line_num)
+
+        if "H085" in rules:
+            yield from self._check_descriptive_link_text(filename, line, line_num, lang=lang)
+
+        if "H088" in rules:
+            yield from self._check_spaces_after_list_marker(filename, line, line_num)
+
+        if "H089" in rules:
+            yield from self._check_emphasis_as_heading(filename, line, line_num)
+
     def _check_numero_space(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that `№` is followed by a space (H027).
 
@@ -2414,6 +2782,54 @@ class MdChecker:
                         "H027", self.RULES["H027"], filename, line_num=line_num, col=offset + match.start() + 1
                     )
             offset += len(segment)
+
+    def _check_ordered_list_marker_style(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check ordered list markers are all-`1.` or strictly sequential (H086)."""
+        numbers: list[int] = []
+        first_line_num = 0
+        current_indent: int | None = None
+
+        def flush() -> Generator[str, None, None]:
+            nonlocal numbers, first_line_num, current_indent
+            if len(numbers) >= self._ORDERED_LIST_STYLE_MIN_ITEMS:
+                all_ones = all(n == 1 for n in numbers)
+                sequential = all(numbers[i] == numbers[0] + i for i in range(len(numbers)))
+                if not (all_ones or sequential):
+                    yield self._format_error("H086", self.RULES["H086"], filename, line_num=first_line_num, col=1)
+            numbers = []
+            current_indent = None
+            first_line_num = 0
+
+        for index, (line, in_code) in enumerate(code_block_info):
+            if in_code:
+                yield from flush()
+                continue
+            stripped = line.strip()
+            if not stripped:
+                yield from flush()
+                continue
+            match = self._ORDERED_LIST_MARKER_PATTERN.match(line)
+            if match and match.group(4):  # has space(s) after marker → real list item
+                indent = len(match.group(1).replace("\t", "    "))
+                number = int(match.group(2))
+                actual_line_num = (yaml_end_line - 1) + index + 1
+                if current_indent is None or indent != current_indent:
+                    yield from flush()
+                    current_indent = indent
+                    numbers = [number]
+                    first_line_num = actual_line_num
+                else:
+                    numbers.append(number)
+                continue
+            if _is_list_line(line) or _is_list_continuation(line):
+                continue
+            previous = code_block_info[index - 1][0] if index > 0 else ""
+            if numbers and _is_list_item_continuation_line(previous, line):
+                continue
+            yield from flush()
+        yield from flush()
 
     def _check_orphan_asset_files(self, filename: Path, content: str, yaml_end_line: int) -> Generator[str, None, None]:  # noqa: ARG002
         """Check that sibling `img/` / `files/` assets are referenced in Markdown (H060).
@@ -2614,7 +3030,7 @@ class MdChecker:
         Hyphenated compounds count as one token (`Notes-Notes` is not a repeat).
         Title-case doubles (`Humbert Humbert`, `Knock Knock`) are allowed.
         Words separated by inline code or dollar-math are not adjacent
-        (e.g. `` `a` or `b` or `c` ``).
+        (e.g. ``a` or `b` or `c``).
 
         """
         offset = 0
@@ -2623,6 +3039,16 @@ class MdChecker:
                 yield from self._flag_repeated_adjacent_words_in_segment(
                     filename, segment, line_num, segment_offset=offset
                 )
+            offset += len(segment)
+
+    def _check_reversed_link_syntax(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for reversed link syntax `](url)[text]` (H080)."""
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if not in_code:
+                for match in self._REVERSED_LINK_PATTERN.finditer(segment):
+                    col = offset + match.start() + 1
+                    yield self._format_error("H080", self.RULES["H080"], filename, line_num=line_num, col=col)
             offset += len(segment)
 
     def _check_russian_polite_pronouns(
@@ -2701,6 +3127,46 @@ class MdChecker:
                 actual_line_num = (yaml_end_line - 1) + index + 1
                 yield self._format_error("H072", self.RULES["H072"], filename, line_num=actual_line_num, col=1)
 
+    def _check_shell_dollar_prompts(
+        self, filename: Path, code_block_info: list, yaml_end_line: int
+    ) -> Generator[str, None, None]:
+        """Check shell fences that use `$` prompts without output (H093)."""
+        delimiter: str | None = None
+        language = ""
+        body_start = 0
+        for index, (line, _in_code) in enumerate(code_block_info):
+            match = self._FENCE_LINE_PATTERN.match(line)
+            if not match:
+                continue
+            ticks, info = match.group(2), match.group(3).strip()
+            if delimiter is None:
+                delimiter = ticks
+                lang_match = re.match(r"^(\w+)", info)
+                language = lang_match.group(1).casefold() if lang_match else ""
+                body_start = index + 1
+                continue
+            if not (ticks.startswith(delimiter[0]) and len(ticks) >= len(delimiter)):
+                continue
+            body_end = index
+            delimiter = None
+            if language not in self._SHELL_FENCE_LANGUAGES:
+                continue
+            body_lines = [code_block_info[i][0] for i in range(body_start, body_end)]
+            non_empty = [ln for ln in body_lines if ln.strip()]
+            if not non_empty:
+                continue
+            prompt_lines = [ln for ln in non_empty if self._SHELL_PROMPT_LINE_PATTERN.match(ln)]
+            if not prompt_lines:
+                continue
+            has_output = any(not self._SHELL_PROMPT_LINE_PATTERN.match(ln) for ln in non_empty)
+            if has_output:
+                continue
+            for i in range(body_start, body_end):
+                if self._SHELL_PROMPT_LINE_PATTERN.match(code_block_info[i][0]):
+                    actual_line_num = (yaml_end_line - 1) + i + 1
+                    yield self._format_error("H093", self.RULES["H093"], filename, line_num=actual_line_num, col=1)
+                    break
+
     def _check_skipped_heading_levels(
         self, filename: Path, code_block_info: list, yaml_end_line: int
     ) -> Generator[str, None, None]:
@@ -2722,7 +3188,7 @@ class MdChecker:
     def _check_space_after_emphasis_colon(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         r"""Check for missing space after colon in or after inline emphasis (H029).
 
-        Colon inside or after \*, \*\*, \_, __, ~~ must be followed by a space before text.
+        Colon inside or after \*, \*\*, _,__, ~~ must be followed by a space before text.
         Uses original line; matches inside inline code and URLs are skipped.
 
         """
@@ -2765,7 +3231,7 @@ class MdChecker:
         """Check for space before punctuation marks (H015).
 
         Uses original line so that removal of inline code (e.g. `word`:)
-        does not create `False` ` :` when segments are concatenated.
+        does not create `False` `:` when segments are concatenated.
         Matches inside inline code (e.g. `cd ..`) are skipped.
         GFM table alignment colons (`| :---: |`) are skipped: `:` before `-`.
 
@@ -2809,6 +3275,67 @@ class MdChecker:
             ):
                 error_msg = f'{self.RULES["H015"]}: found " !"'
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
+
+    def _check_spaces_after_list_marker(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check that list markers are followed by exactly one space (H088)."""
+        stripped = line.lstrip()
+        if self._HORIZONTAL_RULE_PATTERN.match(stripped):
+            return
+        multi = self._LIST_MARKER_MULTI_SPACE_PATTERN.match(line)
+        if multi:
+            col = len(multi.group(1)) + len(multi.group(2)) + 1
+            yield self._format_error("H088", self.RULES["H088"], filename, line_num=line_num, col=col)
+            return
+        no_space_bullet = self._BULLET_LIST_NO_SPACE_PATTERN.match(line)
+        if no_space_bullet:
+            col = len(no_space_bullet.group(1)) + 2
+            yield self._format_error("H088", self.RULES["H088"], filename, line_num=line_num, col=col)
+            return
+        no_space_ordered = self._ORDERED_LIST_NO_SPACE_PATTERN.match(line)
+        if no_space_ordered:
+            col = len(no_space_ordered.group(1)) + len(no_space_ordered.group(2)) + 1
+            yield self._format_error("H088", self.RULES["H088"], filename, line_num=line_num, col=col)
+
+    def _check_spaces_inside_markup(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
+        """Check for spaces inside emphasis, inline code, or link labels (H081)."""
+        # Mask inline code so emphasis patterns do not see split `**`…`**` fragments
+        # around `` **`code`** ``.
+        masked_parts: list[str] = []
+        offset = 0
+        for segment, in_code in h.md.identify_code_blocks_line(line):
+            if in_code:
+                # Use a word char so emphasis open/close boundary checks stay valid
+                # across `` **`code`** `` (null bytes are non-word and re-join fragments).
+                masked_parts.append("x" * len(segment))
+                if (
+                    segment.startswith("`")
+                    and segment.endswith("`")
+                    and len(segment) >= self._MIN_INLINE_CODE_SEGMENT_LEN
+                ):
+                    open_ticks = len(segment) - len(segment.lstrip("`"))
+                    close_ticks = len(segment) - len(segment.rstrip("`"))
+                    if open_ticks and close_ticks and open_ticks == close_ticks:
+                        inner = segment[open_ticks:-close_ticks]
+                        if inner.startswith(" ") or inner.endswith(" "):
+                            yield self._format_error(
+                                "H081", self.RULES["H081"], filename, line_num=line_num, col=offset + 1
+                            )
+            else:
+                masked_parts.append(segment)
+                for match in self._SPACES_IN_LINK_LABEL_PATTERN.finditer(segment):
+                    label = match.group(1)
+                    if label.startswith((" ", "\t")) or label.endswith((" ", "\t")):
+                        col = offset + match.start() + 1
+                        yield self._format_error("H081", self.RULES["H081"], filename, line_num=line_num, col=col)
+            offset += len(segment)
+
+        masked = "".join(masked_parts)
+        for pattern in self._SPACES_IN_EMPHASIS_PATTERNS:
+            for match in pattern.finditer(masked):
+                if match.group(2) or match.group(4):
+                    yield self._format_error(
+                        "H081", self.RULES["H081"], filename, line_num=line_num, col=match.start() + 1
+                    )
 
     def _check_table_column_counts(
         self, filename: Path, code_block_info: list, yaml_end_line: int
@@ -3000,8 +3527,8 @@ class MdChecker:
     ) -> Generator[str, None, None]:
         r"""Check for unbalanced backticks inside Markdown table cells (H056).
 
-        Splits on unescaped `|` only so escaped pipes (`\\|` inside
-        `` `a \\| b` ``) stay inside one cell and do not trigger this rule.
+        Splits on unescaped `|` only so escaped pipes (`\\|` inside inline code)
+        stay inside one cell and do not trigger this rule.
 
         """
         stripped = line.strip()
@@ -4055,6 +4582,8 @@ def find_markdown_files(
             return
         for item in directory.iterdir():
             if item.is_file() and item.suffix.lower() in {".md", ".markdown"}:
+                if h.file.should_ignore_path(item, additional_ignore_patterns):
+                    continue
                 yield item
             elif item.is_dir() and not h.file.should_ignore_path(item, additional_ignore_patterns):
                 yield from self.find_markdown_files(item, additional_ignore_patterns)

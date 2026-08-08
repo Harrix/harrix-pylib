@@ -185,8 +185,8 @@ class PyDocstringFormatter:
 
         Outside fenced and inline code:
 
-        - Bare `True`, `False`, and `None` become `` `True` `` / `` `False` `` / `` `None` ``
-        - Quoted identifiers like `'name'` or `"HP001"` become `` `name` `` / `` `HP001` ``
+        - Bare `True`, `False`, and `None` become `True` / `False` / `None`
+        - Quoted identifiers like `'name'` or `"HP001"` become `name` / `HP001`
 
         Args:
 

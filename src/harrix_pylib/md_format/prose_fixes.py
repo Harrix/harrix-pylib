@@ -3,12 +3,12 @@
 Runs before the Prettier-style parse/render pipeline so source-preserving paths
 keep fixed prose. Skips fenced and inline code the same way as MdChecker
 (H006, H007, H015-H017, H020-H024, H026-H030, H036, H039, H042, H044, H050,
-H057, H058, H062, H071, H072, H075).
+H057, H058, H062, H071, H072, H075, H081, H084, H088, H090, H091).
 
 Bare filenames and paths (for example `config.json`, `src/app/recover.sql`) are
 wrapped in inline code before H006 so file extensions are not uppercased
 (H063). Product names that look like files (for example Node.js) are left as
-prose. A leading-dot mention like `.g.md` becomes `` `g.md` `` (not `` .`g.md` ``).
+prose. A leading-dot mention like `.g.md` becomes `g.md` (not ``.`g.md```).
 
 Structural rules cleared by the full `MdFormatter` pipeline (not only this
 module): H064 / H065 blank line after list or table, H066 compact YAML front
@@ -247,7 +247,9 @@ def _apply_checker_prose_fixes(text: str, *, lang: str = "") -> str:
     # Multi-line structural autofixes (need fence awareness across lines).
     output = _fix_setext_headings_to_atx(output)  # H072
     output = _fix_mixed_bullet_markers(output)  # H071
-    return _fix_mixed_hard_break_styles(output)  # H075
+    output = _fix_mixed_hard_break_styles(output)  # H075
+    output = _fix_blockquote_quirks(output)  # H090
+    return _fix_hr_style_consistency(output)  # H091
 
 
 def _extract_url_regions(line: str) -> tuple[str, list[str]]:
@@ -267,6 +269,14 @@ def _extract_url_regions(line: str) -> tuple[str, list[str]]:
     masked = _LINK_DESTINATION_RE.sub(repl_dest, line)
     masked = _ANGLE_AUTOLINK_RE.sub(repl_angle, masked)
     return masked, stored
+
+
+def _fix_atx_heading_indent(line: str) -> str:
+    """Strip leading whitespace before ATX headings (H084)."""
+    match = _INDENTED_ATX_HEADING_RE.match(line)
+    if not match:
+        return line
+    return line[match.start(1) :]
 
 
 def _fix_atx_heading_space(line: str) -> str:
@@ -307,10 +317,10 @@ def _fix_bare_filenames_and_cheap_typography(segment: str) -> str:
 def _fix_bare_filenames_to_inline_code(segment: str) -> str:
     """Wrap bare filenames and paths in backticks before H006 uppercase fixes.
 
-    Leading-dot mentions like `.g.md` become `` `g.md` `` so H015 cannot glue the
+    Leading-dot mentions like `.g.md` become `g.md` so H015 cannot glue the
     leftover period onto the previous word (`combined .` → `combined.`).
 
-    Bare extensions like `.exe` become `` `.exe` `` (dot kept) so H006 does not
+    Bare extensions like `.exe` become `.exe` (dot kept) so H006 does not
     rewrite them to `.EXE`.
 
     Product names such as `Node.js` are left unwrapped (not a file). Paths like
@@ -331,6 +341,34 @@ def _fix_bare_filenames_to_inline_code(segment: str) -> str:
         return f"`{matched}`"
 
     return _BARE_FILENAME_PATTERN.sub(replacer, segment)
+
+
+def _fix_blockquote_quirks(text: str) -> str:
+    """Normalize blockquote marker spacing and strip trailing spaces (H090)."""
+    lines, trailing = _split_lines(text)
+    if not lines:
+        return text
+    fence_info = list(_identify_code_blocks(lines))
+    result: list[str] = []
+    for line, in_code in fence_info:
+        if in_code:
+            result.append(line)
+            continue
+        match = _BLOCKQUOTE_LINE_RE.match(line)
+        if not match:
+            result.append(line)
+            continue
+        indent, after = match.group(1), match.group(2)
+        if after.startswith(" "):
+            after = after.lstrip(" ")
+            content = f" {after}" if after else ""
+        elif after.startswith("\t"):
+            after = after.lstrip("\t")
+            content = f" {after}" if after else ""
+        else:
+            content = after
+        result.append(f"{indent}>{content}".rstrip())
+    return _join_lines(result, trailing_newline=trailing)
 
 
 def _fix_dash_usage(line: str) -> str:
@@ -472,6 +510,46 @@ def _fix_heading_trailing_period(line: str) -> str:
 def _fix_horizontal_bar(segment: str) -> str:
     """Replace horizontal bar with em dash (H026)."""
     return segment.replace("\u2015", "—")
+
+
+def _fix_hr_style_consistency(text: str) -> str:
+    """Rewrite later horizontal rules to match the first style in the file (H091)."""
+    lines, trailing = _split_lines(text)
+    if not lines:
+        return text
+    fence_info = list(_identify_code_blocks(lines))
+    first_style: str | None = None
+    first_rule = ""
+    for line, in_code in fence_info:
+        if in_code:
+            continue
+        stripped = line.strip()
+        if not _HORIZONTAL_RULE_RE.match(stripped):
+            continue
+        style_char = next((ch for ch in stripped if ch in "-*_"), "")
+        if not style_char:
+            continue
+        first_style = style_char
+        # Prefer a compact form without spaces: --- / *** / ___
+        count = max(3, sum(1 for ch in stripped if ch == style_char))
+        first_rule = style_char * count
+        break
+    if first_style is None:
+        return text
+    result: list[str] = []
+    for line, in_code in fence_info:
+        if in_code:
+            result.append(line)
+            continue
+        stripped = line.strip()
+        if _HORIZONTAL_RULE_RE.match(stripped):
+            style_char = next((ch for ch in stripped if ch in "-*_"), "")
+            if style_char and style_char != first_style:
+                indent = line[: len(line) - len(line.lstrip())]
+                result.append(f"{indent}{first_rule}")
+                continue
+        result.append(line)
+    return _join_lines(result, trailing_newline=trailing)
 
 
 def _fix_image_alt_capitalization(line: str) -> str:
@@ -744,8 +822,11 @@ def _fix_prose_line(line: str, *, lang: str) -> str:
     for char in _INVISIBLE_CHARACTERS:
         line = line.replace(char, "")  # H042
 
+    line = _fix_atx_heading_indent(line)  # H084
     line = _fix_atx_heading_space(line)  # H036
     line = _fix_heading_trailing_period(line)  # H057
+    line = _fix_spaces_after_list_marker(line)  # H088
+    line = _fix_spaces_inside_markup(line)  # H081
     line = _fix_image_alt_capitalization(line)  # H020
 
     # Protect link/image destinations and angle autolinks from typography fixes
@@ -905,6 +986,64 @@ def _fix_space_before_punctuation(line: str) -> str:
                 continue
             pos_found += 2
     return line
+
+
+def _fix_spaces_after_list_marker(line: str) -> str:
+    """Collapse spaces after list markers to exactly one (H088)."""
+    bullet = _BULLET_LIST_MARKER_RE.match(line)
+    if bullet:
+        indent, marker, _spaces, rest = bullet.groups()
+        if rest is None:
+            return line
+        return f"{indent}{marker} {rest}"
+    ordered = _ORDERED_LIST_MARKER_RE.match(line)
+    if ordered:
+        indent, marker, _spaces, rest = ordered.groups()
+        if rest is None:
+            return line
+        return f"{indent}{marker} {rest}"
+    return line
+
+
+def _fix_spaces_inside_markup(line: str) -> str:
+    """Trim spaces inside emphasis, inline code, and link labels (H081)."""
+    parts: list[str] = []
+    for segment, in_code in _identify_code_blocks_line(line):
+        if in_code:
+            if segment.startswith("`") and segment.endswith("`") and len(segment) >= 2:
+                open_ticks = len(segment) - len(segment.lstrip("`"))
+                close_ticks = len(segment) - len(segment.rstrip("`"))
+                if open_ticks and close_ticks and open_ticks == close_ticks:
+                    inner = segment[open_ticks:-close_ticks].strip(" \t")
+                    parts.append(f"{'`' * open_ticks}{inner}{'`' * close_ticks}")
+                    continue
+            parts.append(segment)
+            continue
+        fixed = _SPACES_IN_LINK_LABEL_FIX_RE.sub(r"\1\3\5", segment)
+        fixed = _SPACES_IN_LINK_LABEL_TRAILING_FIX_RE.sub(r"\1\2\4", fixed)
+        parts.append(fixed)
+
+    result = "".join(parts)
+    for _ in range(16):
+        masked_parts = [
+            ("x" * len(segment) if in_code else segment) for segment, in_code in _identify_code_blocks_line(result)
+        ]
+        masked = "".join(masked_parts)
+        match = next(
+            (
+                found
+                for pattern in _SPACES_IN_EMPHASIS_FIX_PATTERNS
+                for found in pattern.finditer(masked)
+                if found.group(2) or found.group(4)
+            ),
+            None,
+        )
+        if match is None:
+            break
+        marker = match.group(1)
+        replacement = f"{marker}{match.group(3).strip()}{marker}"
+        result = f"{result[: match.start()]}{replacement}{result[match.end() :]}"
+    return result
 
 
 def _get_link_url_ranges(line: str) -> set[int]:
@@ -1149,6 +1288,21 @@ def _restore_url_regions(line: str, stored: list[str]) -> str:
         return match.group(0)
 
     return _URL_PLACEHOLDER_TOKEN_RE.sub(replacer, line)
+
+
+_INDENTED_ATX_HEADING_RE = re.compile(r"^[\t ]+(#{1,6}(?:\s|$))")
+_BULLET_LIST_MARKER_RE = re.compile(r"^(\s*)([-*+])(\s+)(\S.*)?$")
+_ORDERED_LIST_MARKER_RE = re.compile(r"^(\s*)(\d+[.)])(\s+)(\S.*)?$")
+_SPACES_IN_EMPHASIS_FIX_PATTERNS = (
+    re.compile(r"(?:^|(?<=\s))(?<!\*)(\*{1,3})(\s+)([^*\n]*?)(\s*)\1(?!\w)(?!\*)"),
+    re.compile(r"(?:^|(?<=\s))(?<!\*)(\*{1,3})(\s*)([^*\n]*?)(\s+)\1(?!\w)(?!\*)"),
+    re.compile(r"(?:^|(?<=\s))(?<!_)(_{1,3})(\s+)([^_\n]*?)(\s*)\1(?!\w)(?!_)"),
+    re.compile(r"(?:^|(?<=\s))(?<!_)(_{1,3})(\s*)([^_\n]*?)(\s+)\1(?!\w)(?!_)"),
+)
+_SPACES_IN_LINK_LABEL_FIX_RE = re.compile(r"(!?\[)([ \t]+)([^\]]*?)([ \t]*)(\])")
+_SPACES_IN_LINK_LABEL_TRAILING_FIX_RE = re.compile(r"(!?\[)([^\]]*?)([ \t]+)(\])")
+_BLOCKQUOTE_LINE_RE = re.compile(r"^(\s*)>(.*)$")
+_HORIZONTAL_RULE_RE = re.compile(r"^(?:\*\s*){3,}$|^(?:-\s*){3,}$|^(?:_\s*){3,}$")
 
 
 _URL_PLACEHOLDER_PREFIX = "HSKPROSEURL"

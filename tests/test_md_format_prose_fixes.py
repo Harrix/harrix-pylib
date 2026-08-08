@@ -57,6 +57,13 @@ def _checker_errors(tmp_path: Path, text: str, rules: set[str]) -> list[str]:
         ("Title\n=====\n", {"H072"}, "# Title\n"),
         ("Subtitle\n-------\n", {"H072"}, "## Subtitle\n"),
         ("line one\\\nline two  \nline three\n", {"H075"}, "line one  \nline two  \n"),
+        ("* text *\n", {"H081"}, "text"),
+        ("` code `\n", {"H081"}, "`code`"),
+        ("[ text](https://example.com)\n", {"H081"}, "[text](https://example.com)"),
+        ("  ## Title\n", {"H084"}, "## Title\n"),
+        ("-  a\n", {"H088"}, "- a\n"),
+        (">  quoted\n", {"H090"}, "> quoted\n"),
+        ("Para\n\n***\n\nMore\n\n___\n", {"H091"}, "---\n"),
     ],
 )
 def test_formatter_fixes_checker_rules(tmp_path: Path, source: str, rules: set[str], expected_snippet: str) -> None:
