@@ -1130,22 +1130,35 @@ def _fix_spaces_inside_markup(line: str) -> str:
     Inline-code edge spaces that pad content starting or ending with a backtick are kept
     (CommonMark), so a padded single-backtick code span is not collapsed into five ticks.
 
+    Edge spaces that are the only separator before/after an outside word character are
+    also kept, so trimming cannot glue a code span onto neighboring prose.
+
     """
     parts: list[str] = []
+    offset = 0
     for segment, in_code in _identify_code_blocks_line(line):
         if in_code:
             if segment.startswith("`") and segment.endswith("`") and len(segment) >= 2:
                 open_ticks = len(segment) - len(segment.lstrip("`"))
                 close_ticks = len(segment) - len(segment.rstrip("`"))
                 if open_ticks and close_ticks and open_ticks == close_ticks:
-                    inner = _trim_inline_code_inner(segment[open_ticks:-close_ticks])
-                    parts.append(f"{'`' * open_ticks}{inner}{'`' * close_ticks}")
+                    raw_inner = segment[open_ticks:-close_ticks]
+                    before = line[offset - 1] if offset > 0 else ""
+                    after = line[offset + len(segment)] if offset + len(segment) < len(line) else ""
+                    if _inline_code_edge_space_prevents_gluing(raw_inner, before=before, after=after):
+                        parts.append(segment)
+                    else:
+                        inner = _trim_inline_code_inner(raw_inner)
+                        parts.append(f"{'`' * open_ticks}{inner}{'`' * close_ticks}")
+                    offset += len(segment)
                     continue
             parts.append(segment)
+            offset += len(segment)
             continue
         fixed = _SPACES_IN_LINK_LABEL_FIX_RE.sub(r"\1\3\5", segment)
         fixed = _SPACES_IN_LINK_LABEL_TRAILING_FIX_RE.sub(r"\1\2\4", fixed)
         parts.append(fixed)
+        offset += len(segment)
     return "".join(parts)
 
 
@@ -1206,12 +1219,34 @@ def _incorrect_word_patterns() -> dict[str, tuple[re.Pattern[str], str]]:
     return MdChecker._INCORRECT_WORD_PATTERNS  # noqa: SLF001
 
 
-def _inline_code_has_unjustified_edge_spaces(inner: str) -> bool:
-    """Return `True` when leading/trailing spaces are not CommonMark backtick padding (H081)."""
+def _inline_code_edge_space_prevents_gluing(inner: str, *, before: str, after: str) -> bool:
+    """Return `True` when an edge space is the only separator from adjacent word text."""
+    stripped = inner.strip(" \t")
+    if not stripped or stripped.startswith("`") or stripped.endswith("`"):
+        return False
+    if inner.endswith((" ", "\t")) and after and (after.isalnum() or after == "_"):
+        return True
+    return bool(inner.startswith((" ", "\t")) and before and (before.isalnum() or before == "_"))
+
+
+def _inline_code_has_unjustified_edge_spaces(
+    inner: str,
+    *,
+    before: str = "",
+    after: str = "",
+) -> bool:
+    """Return `True` when leading/trailing spaces are not CommonMark backtick padding (H081).
+
+    Spaces that only separate the span from an adjacent word character are treated as
+    justified (same glue guard as the H081 autofix).
+
+    """
     if not (inner.startswith((" ", "\t")) or inner.endswith((" ", "\t"))):
         return False
     stripped = inner.strip(" \t")
     if not stripped:
+        return False
+    if _inline_code_edge_space_prevents_gluing(inner, before=before, after=after):
         return False
     if inner.startswith((" ", "\t")) and not stripped.startswith("`"):
         return True

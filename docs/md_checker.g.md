@@ -3322,7 +3322,9 @@ class MdChecker:
                     close_ticks = len(segment) - len(segment.rstrip("`"))
                     if open_ticks and close_ticks and open_ticks == close_ticks:
                         inner = segment[open_ticks:-close_ticks]
-                        if _inline_code_has_unjustified_edge_spaces(inner):
+                        before = line[offset - 1] if offset > 0 else ""
+                        after = line[offset + len(segment)] if offset + len(segment) < len(line) else ""
+                        if _inline_code_has_unjustified_edge_spaces(inner, before=before, after=after):
                             yield self._format_error(
                                 "H081", self.RULES["H081"], filename, line_num=line_num, col=offset + 1
                             )

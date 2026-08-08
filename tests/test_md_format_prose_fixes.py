@@ -108,6 +108,23 @@ def test_formatter_preserves_commonmark_padded_backtick_code(tmp_path: Path) -> 
     assert not _checker_errors(tmp_path, result, {"H081"}), result
 
 
+def test_formatter_preserves_trailing_space_in_code_before_word(tmp_path: Path) -> None:
+    """H081 must not strip a trailing code space that separates the span from a word."""
+    # Awkward but real: describes output shaped like File `path`.
+    source = "single `File `path`.` line\n"
+    assert not _checker_errors(tmp_path, source, {"H081"}), _checker_errors(tmp_path, source, {"H081"})
+    result = _format(source)
+    assert "`File `" in result
+    assert "`File`path`" not in result
+    assert not _checker_errors(tmp_path, result, {"H081"}), result
+
+    # Preferred CommonMark form with nested backticks stays intact.
+    preferred = "single ``File `path`.`` line\n"
+    preferred_fixed = _format(preferred)
+    assert "``File `path`.``" in preferred_fixed
+    assert not _checker_errors(tmp_path, preferred_fixed, {"H081"}), preferred_fixed
+
+
 def test_formatter_structural_pipeline_clears_h063_h064_h065_h066(tmp_path: Path) -> None:
     """H063-H066 are cleared by prose wrap / blank-line / compact-YAML format steps."""
     bare = "See config.json here.\n"
