@@ -3340,6 +3340,9 @@ class MdChecker:
                 masked_parts.append(segment)
                 for match in self._SPACES_IN_LINK_LABEL_PATTERN.finditer(segment):
                     label = match.group(1)
+                    # GFM task-list checkboxes (`[ ]` / `[x]`) are not link labels.
+                    if label in {" ", "\t", "x", "X"}:
+                        continue
                     if label.startswith((" ", "\t")) or label.endswith((" ", "\t")):
                         col = offset + match.start() + 1
                         yield self._format_error("H081", self.RULES["H081"], filename, line_num=line_num, col=col)

@@ -732,6 +732,20 @@ def _fix_incorrect_words(segment: str) -> str:
     return working
 
 
+def _fix_link_label_leading_spaces(match: re.Match[str]) -> str:
+    """Strip leading label spaces unless the match is a GFM task checkbox."""
+    if _is_gfm_task_checkbox_label(match.group(2) + match.group(3) + match.group(4)):
+        return match.group(0)
+    return f"{match.group(1)}{match.group(3)}{match.group(5)}"
+
+
+def _fix_link_label_trailing_spaces(match: re.Match[str]) -> str:
+    """Strip trailing label spaces unless the match is a GFM task checkbox."""
+    if _is_gfm_task_checkbox_label(match.group(2) + match.group(3)):
+        return match.group(0)
+    return f"{match.group(1)}{match.group(2)}{match.group(4)}"
+
+
 def _fix_lowercase_after_punctuation(line: str) -> str:
     """Capitalize lowercase letters after sentence-ending punctuation (H021)."""
     if not any(char in line for char in ".!?"):
@@ -1133,6 +1147,8 @@ def _fix_spaces_inside_markup(line: str) -> str:
     Edge spaces that are the only separator before/after an outside word character are
     also kept, so trimming cannot glue a code span onto neighboring prose.
 
+    GFM task-list checkboxes (`[ ]` / `[x]`) are not link labels and are left alone.
+
     """
     parts: list[str] = []
     offset = 0
@@ -1155,8 +1171,8 @@ def _fix_spaces_inside_markup(line: str) -> str:
             parts.append(segment)
             offset += len(segment)
             continue
-        fixed = _SPACES_IN_LINK_LABEL_FIX_RE.sub(r"\1\3\5", segment)
-        fixed = _SPACES_IN_LINK_LABEL_TRAILING_FIX_RE.sub(r"\1\2\4", fixed)
+        fixed = _SPACES_IN_LINK_LABEL_FIX_RE.sub(_fix_link_label_leading_spaces, segment)
+        fixed = _SPACES_IN_LINK_LABEL_TRAILING_FIX_RE.sub(_fix_link_label_trailing_spaces, fixed)
         parts.append(fixed)
         offset += len(segment)
     return "".join(parts)
@@ -1283,6 +1299,11 @@ def _is_blockquote_attribution_line(line: str) -> bool:
 def _is_file_extension_fragment(text: str, start: int, _end: int) -> bool:
     """Return `True` if span is a file extension after a dot (e.g. `recover.sql`, `.exe`)."""
     return start >= 1 and text[start - 1] == "."
+
+
+def _is_gfm_task_checkbox_label(label: str) -> bool:
+    """Return `True` for GFM task-list checkbox labels (` `, `x`, `X`)."""
+    return label in {" ", "\t", "x", "X"}
 
 
 def _is_h021_allowed_period(segment: str, period_pos: int) -> bool:

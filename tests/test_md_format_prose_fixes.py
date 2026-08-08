@@ -125,6 +125,17 @@ def test_formatter_preserves_trailing_space_in_code_before_word(tmp_path: Path) 
     assert not _checker_errors(tmp_path, preferred_fixed, {"H081"}), preferred_fixed
 
 
+def test_formatter_preserves_gfm_task_list_checkbox_space(tmp_path: Path) -> None:
+    """H081 must not turn GFM `- [ ]` task checkboxes into `- []`."""
+    source = "- [ ] Купить молоко\n- [x] Вбить гвоздь\n"  # ignore: HP001
+    assert not _checker_errors(tmp_path, source, {"H081"}), _checker_errors(tmp_path, source, {"H081"})
+    result = _format(source)
+    assert "- [ ] " in result
+    assert "- [] " not in result
+    assert "- [x] " in result
+    assert not _checker_errors(tmp_path, result, {"H081"}), result
+
+
 def test_formatter_structural_pipeline_clears_h063_h064_h065_h066(tmp_path: Path) -> None:
     """H063-H066 are cleared by prose wrap / blank-line / compact-YAML format steps."""
     bare = "See config.json here.\n"

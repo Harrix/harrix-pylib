@@ -3156,6 +3156,15 @@ def test_md_checker() -> None:
         errors = checker.check(spaces_padded_tick, select={"H081"})
         assert not errors, errors
 
+        # GFM task-list checkboxes must not trigger H081
+        task_checkbox_ok = temp_path / "task_checkbox_ok.md"
+        task_checkbox_ok.write_text(
+            "---\nlang: en\n---\n\n# T\n\n- [ ] Todo\n- [x] Done\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(task_checkbox_ok, select={"H081"})
+        assert not errors, errors
+
         # =====================================================================
         # H082: Blanks around headings
         # =====================================================================
