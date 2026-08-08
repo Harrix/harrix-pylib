@@ -3002,6 +3002,15 @@ def test_md_checker() -> None:
         errors = checker.check(math_ok, select={"H073"})
         assert not errors
 
+        # Mid-word `$` in titles (e.g. movie "Ca$h") must not trigger H073
+        math_midword = temp_path / "math_midword.md"
+        math_midword.write_text(
+            "---\nlang: en\n---\n\n- **Original or English title:** Ca$h\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(math_midword, select={"H073"})
+        assert not errors, errors
+
         math_display_unclosed = temp_path / "math_display_unclosed.md"
         math_display_unclosed.write_text("---\nlang: en\n---\n\n$$\nx\n", encoding="utf-8")
         errors = checker.check(math_display_unclosed, select={"H073"})

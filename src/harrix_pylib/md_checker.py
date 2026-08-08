@@ -142,8 +142,8 @@ class MdChecker:
       hidden `[//]: #` comments and GFM footnotes `[^id]` / `[^id]:` are ignored).
     - **H071** - Mixed bullet markers (`-` / `*` / `+`) inside one contiguous list.
     - **H072** - Setext heading used (prefer ATX `#` headings).
-    - **H073** - Unbalanced math delimiters (`$…$` / `$$…$$`); currency `$` amounts and
-      lone `$` symbols among punctuation are allowed.
+    - **H073** - Unbalanced math delimiters (`$…$` / `$$…$$`); currency `$` amounts,
+      lone `$` among punctuation, and mid-word `$` (e.g. `Ca$h`) are allowed.
     - **H074** - GFM table row has a different column count than the table header.
     - **H075** - Mixed hard-break styles in one file (trailing `\\` and two spaces).
     - **H076** - Invalid TOC `<details>` block (summary / Contents heading /
@@ -3515,15 +3515,18 @@ class MdChecker:
     def _check_unbalanced_math(
         self, filename: Path, code_block_info: list, yaml_end_line: int
     ) -> Generator[str, None, None]:
-        """Check for unbalanced `$` / `$$` math delimiters (H073).
+        r"""Check for unbalanced `$` / `$$` math delimiters (H073).
 
-        Currency mentions like `$5` or a lone `$` among punctuation are ignored;
-        only leftover `$` that looks like an opened TeX/math span is flagged.
+        Currency mentions like `$5`, a lone `$` among punctuation, and mid-word
+        `$` in titles like `Ca$h` are ignored; only leftover `$` that looks like
+        an opened TeX/math span (word-boundary `$` followed by a letter, backslash,
+        or `{`) is flagged. Escaped `\$` is also ignored.
 
         """
         in_display = False
         display_start_line = 0
-        math_open_pattern = re.compile(r"\$(?=[A-Za-z\\{])")
+        # Word-boundary `$` only: avoid false positives on titles like `Ca$h`.
+        math_open_pattern = re.compile(r"(?<!\\)(?<!\w)\$(?=[A-Za-z\\{])")
         for index, (line, in_code) in enumerate(code_block_info):
             actual_line_num = (yaml_end_line - 1) + index + 1
             if in_code:
