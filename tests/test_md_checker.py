@@ -3278,6 +3278,23 @@ def test_md_checker() -> None:
         errors = checker.check(emph_inline_ok, select={"H089"})
         assert not errors
 
+        # Bold sentence (ends with punctuation) is emphasis, not a fake heading
+        emph_sentence_ok = temp_path / "emph_sentence_ok.md"
+        emph_sentence_ok.write_text(
+            "---\nlang: ru\n---\n\n# T\n\n"
+            "**Поэтому люди и боятся летать, так как рассматривают не вероятность "
+            "погибнуть, а условную вероятность погибнуть при условии, что произошла "
+            "авиакатастрофа.**\n",  # ignore: HP001
+            encoding="utf-8",
+        )
+        errors = checker.check(emph_sentence_ok, select={"H089"})
+        assert not errors, errors
+
+        emph_label_ok = temp_path / "emph_label_ok.md"
+        emph_label_ok.write_text("---\nlang: en\n---\n\n# T\n\n**Note:**\n", encoding="utf-8")
+        errors = checker.check(emph_label_ok, select={"H089"})
+        assert not errors, errors
+
         # =====================================================================
         # H090: Blockquote quirks
         # =====================================================================

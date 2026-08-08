@@ -165,7 +165,8 @@ class MdChecker:
     - **H087** - Inconsistent list indentation (top level must be column 0; nested
       levels must be deeper than the parent with a consistent indent per level).
     - **H088** - Wrong number of spaces after a list marker (exactly one required).
-    - **H089** - Emphasis used as a heading (lone `**Title**` / `__Title__` paragraph).
+    - **H089** - Emphasis used as a heading (lone `**Title**` / `__Title__` paragraph
+      without trailing sentence punctuation; bold sentences like `**….**` are allowed).
     - **H090** - Blockquote quirks: multiple spaces after `>`, trailing spaces on
       quote lines, or a blank line splitting a blockquote without `>`.
     - **H091** - Mixed horizontal-rule styles in one file (`---` / `***` / `___`).
@@ -356,8 +357,10 @@ class MdChecker:
     _ORDERED_LIST_NO_SPACE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(\s*)(\d+[.)])(\S)")
     _BULLET_LIST_NO_SPACE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(\s*)([-*+])(?![*\-_])(\S)")
 
-    # Emphasis-only paragraph used as a heading (H089); trailing `:` label style allowed
+    # Emphasis-only paragraph used as a heading (H089); MD036-style: skip when the
+    # inner text ends with sentence/label punctuation (normal or full-width).
     _EMPHASIS_AS_HEADING_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(\*\*|__)(.+)\1\s*$")
+    _EMPHASIS_AS_HEADING_PUNCTUATION: ClassVar[str] = ".,;:!?…。，；：！？"  # noqa: RUF001
 
     # Blockquote line (H090)
     _BLOCKQUOTE_LINE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^(\s*)>(.*)$")
@@ -1774,7 +1777,13 @@ class MdChecker:
             offset += len(segment)
 
     def _check_emphasis_as_heading(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check for a lone emphasis paragraph used as a heading (H089)."""
+        """Check for a lone emphasis paragraph used as a heading (H089).
+
+        Matches MD036: a single-line paragraph that is entirely strong emphasis and
+        does not end with sentence/label punctuation is treated as a fake heading.
+        Emphasized sentences (`**….**`) and label lines (`**Note:**`) are allowed.
+
+        """
         stripped = line.strip()
         if not stripped:
             return
@@ -1782,9 +1791,10 @@ class MdChecker:
         if not match:
             return
         inner = match.group(2).strip()
-        # Skip bold label lines like `**Note:**`, definition-style markers, and
-        # bold lines that wrap inline code (e.g. **`tool.exe` is missing.**).
-        if not inner or "*" in inner or "_" in inner or inner.endswith(":") or "`" in inner:
+        # Skip bold lines that wrap nested emphasis/code (e.g. **`tool.exe` is missing.**).
+        if not inner or "*" in inner or "_" in inner or "`" in inner:
+            return
+        if inner[-1] in self._EMPHASIS_AS_HEADING_PUNCTUATION:
             return
         yield self._format_error("H089", self.RULES["H089"], filename, line_num=line_num, col=1)
 
