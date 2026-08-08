@@ -2949,6 +2949,20 @@ def test_md_checker() -> None:
         errors = checker.check(hidden_comment_ok, select={"H069"})
         assert not errors
 
+        # GFM footnotes must not be treated as unused/undefined reference links
+        footnotes_ok = temp_path / "footnotes_ok.md"
+        footnotes_ok.write_text(
+            "---\nlang: en\n---\n\n"
+            "GitHub may render footnotes[^1]. See the docs[^docs].\n\n"
+            "[^1]: https://github.blog/changelog/2021-09-30-footnotes-now-supported-in-markdown-fields/\n\n"
+            "[^docs]: https://docs.github.com/en/get-started/writing-on-github/"
+            "getting-started-with-writing-and-formatting-on-github/"
+            "basic-writing-and-formatting-syntax#footnotes\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(footnotes_ok, select={"H069"})
+        assert not errors, errors
+
         # =====================================================================
         # H071: Mixed bullet markers in one list
         # =====================================================================

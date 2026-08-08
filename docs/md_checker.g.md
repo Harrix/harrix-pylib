@@ -127,7 +127,7 @@ Rules:
 - **H068** - Figure caption after an image does not match YAML `lang` template
   (`_Figure N: …_` for `en`; localized Russian figure template for `ru`).
 - **H069** - Undefined or unused reference-style link (`[text][ref]` / `[ref]: url`;
-  hidden `[//]: #` comments are ignored).
+  hidden `[//]: #` comments and GFM footnotes `[^id]` / `[^id]:` are ignored).
 - **H071** - Mixed bullet markers (`-` / `*` / `+`) inside one contiguous list.
 - **H072** - Setext heading used (prefer ATX `#` headings).
 - **H073** - Unbalanced math delimiters (`$…$` / `$$…$$`); currency `$` amounts and
@@ -236,7 +236,8 @@ class MdChecker:
     # Any italic-only caption line (H068 malformed / wrong-lang detection)
     _ITALIC_CAPTION_LINE_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^_.+_$")
 
-    # Reference-style link definition / use (H069); `[//]:` hidden comments excluded in logic
+    # Reference-style link definition / use (H069); `[//]:` hidden comments and
+    # GFM footnotes (`[^id]` / `[^id]:`) are excluded in `_check_reference_style_links`
     _REF_LINK_DEFINITION_PATTERN: ClassVar[re.Pattern[str]] = re.compile(
         r"""^\s{0,3}\[([^\]]+)\]:\s+(\S+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*$"""
     )
@@ -2981,7 +2982,12 @@ class MdChecker:
     def _check_reference_style_links(
         self, filename: Path, code_block_info: list, yaml_end_line: int
     ) -> Generator[str, None, None]:
-        """Check undefined and unused reference-style links (H069)."""
+        """Check undefined and unused reference-style links (H069).
+
+        GFM footnote markers (`[^id]` / `[^id]: …`) are not reference-style links and
+        are ignored. Hidden comment definitions (`[//]: # …`) are also ignored.
+
+        """
         definitions: dict[str, int] = {}
         uses: dict[str, int] = {}
         for index, (line, in_code) in enumerate(code_block_info):
@@ -2991,7 +2997,7 @@ class MdChecker:
             def_match = self._REF_LINK_DEFINITION_PATTERN.match(line)
             if def_match:
                 label = def_match.group(1).strip()
-                if label != "//":
+                if label != "//" and not label.startswith("^"):
                     definitions.setdefault(label.casefold(), actual_line_num)
                 continue
             clean_line = "".join(
@@ -3001,11 +3007,11 @@ class MdChecker:
             )
             for match in self._REF_LINK_EXPLICIT_USE_PATTERN.finditer(clean_line):
                 label = match.group(2).strip()
-                if label:
+                if label and not label.startswith("^"):
                     uses.setdefault(label.casefold(), actual_line_num)
             for match in self._REF_LINK_COLLAPSED_USE_PATTERN.finditer(clean_line):
                 label = match.group(1).strip()
-                if label:
+                if label and not label.startswith("^"):
                     uses.setdefault(label.casefold(), actual_line_num)
 
         for label, line_num in uses.items():
