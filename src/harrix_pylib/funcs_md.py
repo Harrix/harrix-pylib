@@ -38,10 +38,16 @@ _YAML_KEYS_EXCLUDED_FROM_G_MD = frozenset(
         "permalink",
         "permalink-source",
         "sort-section",
+        "sort-list-by-date",
         "icon",
         _RAW_MARKDOWN_YAML_KEY,
     }
 )
+_LIST_DATE_FIELD_RE = re.compile(
+    r"^- \*\*(Date watching|Date reading|Date):\*\*\s*(.+?)\s*$",
+    re.MULTILINE,
+)
+_ATX_HEADING_RE = re.compile(r"^(#{1,6})\s+")
 
 
 class _IndentDumper(yaml.Dumper):
@@ -637,7 +643,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
       into the combined YAML.
     - Per-note UI metadata such as `icon` is not merged into the combined YAML
       (along with `date`, `update`, `permalink`, `related-id`, `sort-section`,
-      and `raw-markdown`).
+      `sort-list-by-date`, and `raw-markdown`).
     - Heading levels in the content will be increased by one level.
     - Local links and image paths will be adjusted to maintain proper references.
     - The combined file will be named `_foldername.g.md`.
@@ -3361,6 +3367,88 @@ def resolve_md_path(path: Path | str) -> Path:
     return path
 
 
+def sort_list_by_date(filename: Path | str, *, is_sort_from_yaml: bool = False) -> str:
+    """Sort list-entry sections in a Markdown file by watching/reading/event date.
+
+    Sections at `##` (and nested `###`) are ordered from newest to oldest using
+    `- **Date watching:**`, `- **Date reading:**`, or `- **Date:**` fields
+    (`YYYY-MM-DD` or year-only). When `is_sort_from_yaml=True`, sorting runs only
+    if YAML contains `sort-list-by-date: true`.
+
+    Args:
+
+    - `filename` (`Path | str`): Markdown file path.
+    - `is_sort_from_yaml` (`bool`): Require `sort-list-by-date: true` in YAML.
+      Defaults to `False` (always sort).
+
+    Returns:
+
+    - `str`: Status message (`✅ File … applied.` or `File is not changed.`).
+
+    """
+    filename = Path(filename)
+    with filename.open(encoding="utf-8") as f:
+        document = f.read()
+
+    document_new = sort_list_by_date_content(document, is_sort_from_yaml=is_sort_from_yaml)
+
+    if document != document_new:
+        with filename.open("w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ File {filename} applied."
+    return "File is not changed."
+
+
+def sort_list_by_date_content(markdown_text: str, *, is_sort_from_yaml: bool = False) -> str:
+    """Sort list-entry `##`/`###` sections by date fields, newest first.
+
+    Recognized bullet labels: `Date watching`, `Date reading`, `Date`.
+    Date values may be `YYYY-MM-DD` or a year (`YYYY`). Year-only headings such as
+    `## 2025` are also used as sort keys when no date field is present.
+
+    Args:
+
+    - `markdown_text` (`str`): Full Markdown document.
+    - `is_sort_from_yaml` (`bool`): Require `sort-list-by-date: true` in YAML.
+      Defaults to `False`.
+
+    Returns:
+
+    - `str`: Document with sections reordered (or unchanged).
+
+    """
+    if is_raw_markdown_enabled(markdown_text):
+        return markdown_text
+
+    if is_sort_from_yaml:
+        yaml_md, _ = split_yaml_content(markdown_text)
+        if not yaml_md:
+            return markdown_text
+        try:
+            data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+            if not _is_yaml_flag_true(data_yaml.get("sort-list-by-date") if data_yaml else None):
+                return markdown_text
+        except yaml.YAMLError:
+            return markdown_text
+
+    yaml_md, content_md = split_yaml_content(markdown_text)
+    main_section, sections = _split_exact_level_sections(content_md, level=2, preserve_toc_details=True)
+    if not sections:
+        return markdown_text
+
+    sections = [_sort_nested_list_sections_by_date(section, level=2) for section in sections]
+    sections = _sort_section_list_by_date(sections, level=2)
+
+    section_parts = [section.strip("\n") for section in sections]
+    joined_sections = "\n\n".join(section_parts)
+    main = main_section.rstrip("\n")
+    body = f"{main}\n\n{joined_sections}" if joined_sections else f"{main}\n"
+    result = yaml_md.strip() + "\n\n" + body
+    if not result.endswith("\n"):
+        result += "\n"
+    return result
+
+
 def sort_sections(filename: Path | str, *, is_sort_section_from_yaml: bool = False) -> str:
     """Sort the sections of a Markdown file by their headings, maintaining YAML front matter
     and code blocks in their original order.
@@ -3812,6 +3900,12 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     return _split_front_matter(markdown_text)
 
 
+def _atx_heading_level(line: str) -> int | None:
+    """Return ATX heading level (1-6) or `None` if the line is not a heading."""
+    match = _ATX_HEADING_RE.match(line)
+    return len(match.group(1)) if match else None
+
+
 def _dump_yaml_indented(data: dict[str, Any], *, explicit_start: bool = False) -> str:
     r"""Dump a YAML mapping with indented sequences (e.g. `tags:\n  - a`)."""
     return yaml.dump(
@@ -3822,6 +3916,31 @@ def _dump_yaml_indented(data: dict[str, Any], *, explicit_start: bool = False) -
         explicit_start=explicit_start,
         default_flow_style=False,
     )
+
+
+def _extract_list_entry_date(section_text: str, *, level: int) -> datetime | None:
+    """Return sort date for a section from date fields, heading year, or children."""
+    preamble, children = _split_exact_level_sections(
+        section_text,
+        level=level + 1,
+        preserve_toc_details=False,
+    )
+    field_match = _LIST_DATE_FIELD_RE.search(preamble)
+    if field_match:
+        parsed = _parse_list_date_value(field_match.group(2))
+        if parsed is not None:
+            return parsed
+
+    first_line = section_text.split("\n", 1)[0].strip()
+    heading = _ATX_HEADING_RE.sub("", first_line).strip()
+    heading_date = _parse_list_date_value(heading)
+    if heading_date is not None:
+        return heading_date
+
+    child_dates = [
+        child_date for child in children if (child_date := _extract_list_entry_date(child, level=level + 1)) is not None
+    ]
+    return max(child_dates) if child_dates else None
 
 
 def _following_content_keeps_image_in_list(following_lines: list[str], list_item_start_re: re.Pattern[str]) -> bool:
@@ -3852,6 +3971,11 @@ def _is_toc_details_open(lines: list[str], index: int) -> bool:
     return "<summary>" in summary_line and (
         "📖 Contents" in summary_line or "📖 Содержание" in summary_line  # ignore: HP001
     )
+
+
+def _is_yaml_flag_true(value: Any) -> bool:
+    """Return whether a YAML front-matter flag is enabled."""
+    return value is True or value in {1, "true"}
 
 
 def _list_continuation_indent_for_image(
@@ -3899,6 +4023,128 @@ def _max_backtick_run(text: str) -> int:
         else:
             current = 0
     return max_run
+
+
+def _parse_list_date_value(value: str) -> datetime | None:
+    """Parse `YYYY-MM-DD`, `YYYY-MM-DD HH:MM`, or year-only date strings."""
+    text = value.strip()
+    if not text:
+        return None
+    for pattern in ("%Y-%m-%d %H:%M", "%Y-%m-%d", "%Y"):
+        try:
+            if pattern == "%Y":
+                if not re.fullmatch(r"\d{4}", text):
+                    continue
+                return datetime(int(text), 1, 1, tzinfo=UTC)
+            return datetime.strptime(text, pattern).replace(tzinfo=UTC)
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def _sort_nested_list_sections_by_date(section_text: str, *, level: int) -> str:
+    """Sort deeper heading siblings inside `section_text` by list date."""
+    preamble, children = _split_exact_level_sections(
+        section_text,
+        level=level + 1,
+        preserve_toc_details=False,
+    )
+    if not children:
+        return section_text
+
+    children = [_sort_nested_list_sections_by_date(child, level=level + 1) for child in children]
+    children = _sort_section_list_by_date(children, level=level + 1)
+    joined = "\n\n".join(child.strip("\n") for child in children)
+    head = preamble.rstrip("\n")
+    return f"{head}\n\n{joined}\n" if joined else f"{head}\n"
+
+
+def _sort_section_list_by_date(sections: list[str], *, level: int) -> list[str]:
+    """Sort sections newest-first; undated sections keep relative order at the end."""
+    dated: list[tuple[datetime, int, str]] = []
+    undated: list[tuple[int, str]] = []
+    for index, section in enumerate(sections):
+        sort_date = _extract_list_entry_date(section, level=level)
+        if sort_date is None:
+            undated.append((index, section))
+        else:
+            dated.append((sort_date, index, section))
+
+    dated.sort(key=lambda item: (item[0], -item[1]), reverse=True)
+    return [section for _, _, section in dated] + [section for _, section in undated]
+
+
+def _split_exact_level_sections(
+    content_md: str,
+    *,
+    level: int,
+    preserve_toc_details: bool,
+) -> tuple[str, list[str]]:
+    """Split Markdown into preamble and sections at an exact ATX heading level."""
+    is_main_section = True
+    sections: list[str] = []
+    section_buffer = ""
+    skip_block = False
+    lines = content_md.split("\n")
+    line_iter = iter(enumerate(identify_code_blocks(lines), start=0))
+
+    while True:
+        try:
+            _, (line, in_code_block) = next(line_iter)
+        except StopIteration:
+            break
+
+        if preserve_toc_details and not in_code_block:
+            if "<details>" in line.strip():
+                look_ahead = [line]
+                for _ in range(2):
+                    try:
+                        _, (line2, _) = next(line_iter)
+                        look_ahead.append(line2)
+                        if "</summary>" in line2:
+                            break
+                    except StopIteration:
+                        break
+
+                block_text = "\n".join(look_ahead)
+                ru_summary = "<summary>📖 Содержание ⬇️</summary>"  # ignore: HP001
+                en_summary = "<summary>📖 Contents ⬇️</summary>"
+                if ru_summary in block_text or en_summary in block_text:
+                    skip_block = True
+
+                for skip_line in look_ahead:
+                    section_buffer += skip_line + "\n"
+                continue
+
+            if "</details>" in line.strip():
+                skip_block = False
+                section_buffer += line + "\n"
+                continue
+
+        if skip_block:
+            section_buffer += line + "\n"
+            continue
+
+        if in_code_block:
+            section_buffer += line + "\n"
+            continue
+
+        heading_level = _atx_heading_level(line)
+        if heading_level == level:
+            if is_main_section:
+                main_section = section_buffer
+                is_main_section = False
+            else:
+                sections.append(section_buffer)
+            section_buffer = line + "\n"
+        else:
+            section_buffer += line + "\n"
+
+    if not is_main_section:
+        sections.append(section_buffer)
+        return main_section, sections
+
+    return section_buffer, []
 
 
 def _strip_yaml_keys_for_g_md(

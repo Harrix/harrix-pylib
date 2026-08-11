@@ -644,7 +644,7 @@ def test_combine_markdown_files_strips_icon_from_yaml() -> None:
 
 def test_raw_markdown_skips_beautify_content_transforms() -> None:
     source = (
-        "---\nlang: en\nraw-markdown: true\nsort-section: true\n---\n\n"
+        "---\nlang: en\nraw-markdown: true\nsort-section: true\nsort-list-by-date: true\n---\n\n"
         "# Title\n\n"
         "## Zebra\n\nz\n\n"
         "## Apple\n\na\n\n"
@@ -653,6 +653,7 @@ def test_raw_markdown_skips_beautify_content_transforms() -> None:
     )
     assert h.md.is_raw_markdown_enabled(source)
     assert h.md.sort_sections_content(source, is_sort_section_from_yaml=True) == source
+    assert h.md.sort_list_by_date_content(source, is_sort_from_yaml=True) == source
     assert h.md.generate_toc_with_links_content(source) == source
     assert h.md.generate_image_captions_content(source) == source
     assert h.md.format_yaml_content(source) == source
@@ -2125,6 +2126,77 @@ def test_sort_sections_content_keeps_blank_line_between_reordered_sections() -> 
     result = h.md.sort_sections_content(source)
     assert "## 2026\n\nNewer year ending.\n\n## 2015\n" in result
     assert "Newer year ending.\n## 2015" not in result
+
+
+def test_sort_list_by_date_content_orders_by_watching_date() -> None:
+    source = (
+        "---\nlang: ru\nsort-list-by-date: true\n---\n\n"
+        "# 2026\n\n"
+        "<details>\n<summary>📖 Содержание ⬇️</summary>\n\n## Содержание\n\n- [A](#a)\n\n</details>\n\n"
+        "## Dragon: 9\n\n"
+        "- **Original or English title:** House of the Dragon\n"
+        "- **Date watching:** 2026-06-25\n"
+        "- **Review:** First\n\n"
+        "## Office S3: 10\n\n"
+        "- **Original or English title:** The Office\n"
+        "- **Date watching:** 2026-07-30\n"
+        "- **Review:** Third\n\n"
+        "## Office S1: 10\n\n"
+        "- **Original or English title:** The Office\n"
+        "- **Date watching:** 2026-07-20\n"
+        "- **Review:** Second\n"
+    )
+    result = h.md.sort_list_by_date_content(source, is_sort_from_yaml=True)
+    office_s3 = result.index("## Office S3: 10")
+    office_s1 = result.index("## Office S1: 10")
+    dragon = result.index("## Dragon: 9")
+    assert office_s3 < office_s1 < dragon
+    assert "<details>" in result
+    assert "sort-list-by-date: true" in result
+
+
+def test_sort_list_by_date_content_respects_yaml_flag() -> None:
+    source = (
+        "---\nlang: ru\n---\n\n# 2026\n\n"
+        "## Older\n\n- **Date watching:** 2026-01-01\n\n"
+        "## Newer\n\n- **Date watching:** 2026-12-01\n"
+    )
+    assert h.md.sort_list_by_date_content(source, is_sort_from_yaml=True) == source
+
+    with_flag = source.replace("---\nlang: ru\n---", "---\nlang: ru\nsort-list-by-date: true\n---")
+    result = h.md.sort_list_by_date_content(with_flag, is_sort_from_yaml=True)
+    assert result.index("## Newer") < result.index("## Older")
+
+
+def test_sort_list_by_date_content_sorts_nested_event_entries() -> None:
+    source = (
+        "---\nsort-list-by-date: true\n---\n\n# Events\n\n"
+        "## 2025\n\n"
+        "### First show: 8\n\n- **Date:** 2025-03-08\n\n"
+        "### Second show: 10\n\n- **Date:** 2025-08-30\n\n"
+        "## 2026\n\n"
+        "### New show: 10\n\n- **Date:** 2026-02-17\n"
+    )
+    result = h.md.sort_list_by_date_content(source, is_sort_from_yaml=True)
+    assert result.index("## 2026") < result.index("## 2025")
+    block_2025 = result[result.index("## 2025") :]
+    assert block_2025.index("### Second show: 10") < block_2025.index("### First show: 8")
+
+
+def test_combine_markdown_files_strips_sort_list_by_date_from_yaml() -> None:
+    with TemporaryDirectory() as temp_dir:
+        folder_path = Path(temp_dir)
+        (folder_path / "note.md").write_text(
+            "---\nlang: en\nsort-list-by-date: true\ntags:\n  - movies\n---\n\n# Note\n\nText.\n",
+            encoding="utf-8",
+        )
+
+        result = h.md.combine_markdown_files(folder_path)
+        assert "✅ File" in result
+
+        content = (folder_path / f"_{folder_path.name}.g.md").read_text(encoding="utf-8")
+        assert "sort-list-by-date" not in content
+        assert "tags:" in content
 
 
 def test_sort_sections() -> None:

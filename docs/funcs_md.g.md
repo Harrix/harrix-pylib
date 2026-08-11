@@ -61,6 +61,8 @@ lang: en
 - [🔧 Function `replace_section`](#-function-replace_section)
 - [🔧 Function `replace_section_content`](#-function-replace_section_content)
 - [🔧 Function `resolve_md_path`](#-function-resolve_md_path)
+- [🔧 Function `sort_list_by_date`](#-function-sort_list_by_date)
+- [🔧 Function `sort_list_by_date_content`](#-function-sort_list_by_date_content)
 - [🔧 Function `sort_sections`](#-function-sort_sections)
 - [🔧 Function `sort_sections_content`](#-function-sort_sections_content)
 - [🔧 Function `split_toc_content`](#-function-split_toc_content)
@@ -776,7 +778,7 @@ Note:
   into the combined YAML.
 - Per-note UI metadata such as `icon` is not merged into the combined YAML
   (along with `date`, [`update`](progress.g.md#%EF%B8%8F-method-update), `permalink`, `related-id`, `sort-section`,
-  and `raw-markdown`).
+  `sort-list-by-date`, and `raw-markdown`).
 - Heading levels in the content will be increased by one level.
 - Local links and image paths will be adjusted to maintain proper references.
 - The combined file will be named `_foldername.g.md`.
@@ -3920,6 +3922,110 @@ def resolve_md_path(path: Path | str) -> Path:
         if named.is_file():
             return named
     return path
+```
+
+</details>
+
+## 🔧 Function `sort_list_by_date`
+
+```python
+def sort_list_by_date(filename: Path | str, *, is_sort_from_yaml: bool = False) -> str
+```
+
+Sort list-entry sections in a Markdown file by watching/reading/event date.
+
+Sections at `##` (and nested `###`) are ordered from newest to oldest using
+`- **Date watching:**`, `- **Date reading:**`, or `- **Date:**` fields
+(`YYYY-MM-DD` or year-only). When `is_sort_from_yaml=True`, sorting runs only
+if YAML contains `sort-list-by-date: true`.
+
+Args:
+
+- `filename` (`Path | str`): Markdown file path.
+- `is_sort_from_yaml` (`bool`): Require `sort-list-by-date: true` in YAML.
+  Defaults to `False` (always sort).
+
+Returns:
+
+- `str`: Status message (`✅ File … applied.` or `File is not changed.`).
+
+<details>
+<summary>Code:</summary>
+
+```python
+def sort_list_by_date(filename: Path | str, *, is_sort_from_yaml: bool = False) -> str:
+    filename = Path(filename)
+    with filename.open(encoding="utf-8") as f:
+        document = f.read()
+
+    document_new = sort_list_by_date_content(document, is_sort_from_yaml=is_sort_from_yaml)
+
+    if document != document_new:
+        with filename.open("w", encoding="utf-8") as file:
+            file.write(document_new)
+        return f"✅ File {filename} applied."
+    return "File is not changed."
+```
+
+</details>
+
+## 🔧 Function `sort_list_by_date_content`
+
+```python
+def sort_list_by_date_content(markdown_text: str, *, is_sort_from_yaml: bool = False) -> str
+```
+
+Sort list-entry `##`/`###` sections by date fields, newest first.
+
+Recognized bullet labels: `Date watching`, `Date reading`, `Date`.
+Date values may be `YYYY-MM-DD` or a year (`YYYY`). Year-only headings such as
+`## 2025` are also used as sort keys when no date field is present.
+
+Args:
+
+- `markdown_text` (`str`): Full Markdown document.
+- `is_sort_from_yaml` (`bool`): Require `sort-list-by-date: true` in YAML.
+  Defaults to `False`.
+
+Returns:
+
+- `str`: Document with sections reordered (or unchanged).
+
+<details>
+<summary>Code:</summary>
+
+```python
+def sort_list_by_date_content(markdown_text: str, *, is_sort_from_yaml: bool = False) -> str:
+    if is_raw_markdown_enabled(markdown_text):
+        return markdown_text
+
+    if is_sort_from_yaml:
+        yaml_md, _ = split_yaml_content(markdown_text)
+        if not yaml_md:
+            return markdown_text
+        try:
+            data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+            if not _is_yaml_flag_true(data_yaml.get("sort-list-by-date") if data_yaml else None):
+                return markdown_text
+        except yaml.YAMLError:
+            return markdown_text
+
+    yaml_md, content_md = split_yaml_content(markdown_text)
+    main_section, sections = _split_exact_level_sections(content_md, level=2, preserve_toc_details=True)
+    if not sections:
+        return markdown_text
+
+    sections = [_sort_nested_list_sections_by_date(section, level=2) for section in sections]
+    sections = _sort_section_list_by_date(sections, level=2)
+
+    section_parts = [section.strip("\n") for section in sections]
+    joined_sections = "\n\n".join(section_parts)
+    main = main_section.rstrip("\n")
+    body = f"{main}\n\n{joined_sections}" if joined_sections else f"{main}\n"
+    result = yaml_md.strip() + "\n\n" + body
+    if not result.endswith("\n"):
+        result += "\n"
+    return result
 ```
 
 </details>
