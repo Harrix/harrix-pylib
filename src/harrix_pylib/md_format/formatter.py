@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from harrix_pylib import funcs_file
 from harrix_pylib.md_format.autolink_format import _extract_angle_autolinks, _restore_angle_autolinks
 from harrix_pylib.md_format.bullet_list_format import _extract_bullet_list_marker_groups
 from harrix_pylib.md_format.code_guard import _extract_code_blocks, _restore_code_blocks
@@ -163,7 +164,6 @@ class MdFormatter:
         - `str`: Newline-separated status messages.
 
         """
-        from harrix_pylib import funcs_file  # noqa: PLC0415
         from harrix_pylib.md_assets import organize_note_folder_assets  # noqa: PLC0415
 
         root = Path(folder).resolve()

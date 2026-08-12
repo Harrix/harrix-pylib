@@ -335,12 +335,6 @@ def rewrite_note_asset_links(markdown_text: str, path_map: dict[str, str]) -> st
     if not path_map:
         return markdown_text
 
-    from harrix_pylib.funcs_md import (  # noqa: PLC0415
-        identify_code_blocks,
-        identify_code_blocks_line,
-        split_yaml_content,
-    )
-
     normalized_map = {_normalize_rel(old): _normalize_rel(new) for old, new in path_map.items()}
     basename_map: dict[str, str] = {}
     for old, new in normalized_map.items():

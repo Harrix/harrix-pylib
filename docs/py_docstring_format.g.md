@@ -156,8 +156,6 @@ class PyDocstringFormatter:
         - `str`: Newline-separated status messages.
 
         """
-        from harrix_pylib import funcs_file  # noqa: PLC0415
-
         return funcs_file.apply_func(folder, ".py", self.format_file)
 
     @staticmethod
@@ -402,8 +400,6 @@ Returns:
 
 ```python
 def format_folder(self, folder: Path | str) -> str:
-        from harrix_pylib import funcs_file  # noqa: PLC0415
-
         return funcs_file.apply_func(folder, ".py", self.format_file)
 ```
 

@@ -2428,8 +2428,6 @@ class MdChecker:
         Nested directories other than `img/` / `files/` are ignored.
 
         """
-        from harrix_pylib.md_assets import iter_misplaced_note_assets  # noqa: PLC0415
-
         for source, destination in iter_misplaced_note_assets(filename.parent):
             try:
                 dest_rel = destination.relative_to(filename.parent).as_posix()

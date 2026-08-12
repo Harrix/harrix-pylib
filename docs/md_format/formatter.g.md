@@ -159,7 +159,6 @@ class MdFormatter:
         - `str`: Newline-separated status messages.
 
         """
-        from harrix_pylib import funcs_file  # noqa: PLC0415
         from harrix_pylib.md_assets import organize_note_folder_assets  # noqa: PLC0415
 
         root = Path(folder).resolve()
@@ -413,7 +412,6 @@ Returns:
 
 ```python
 def format_folder(self, folder: Path | str) -> str:
-        from harrix_pylib import funcs_file  # noqa: PLC0415
         from harrix_pylib.md_assets import organize_note_folder_assets  # noqa: PLC0415
 
         root = Path(folder).resolve()

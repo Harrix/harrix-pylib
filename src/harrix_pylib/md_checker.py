@@ -11,7 +11,12 @@ import yaml
 
 import harrix_pylib as h
 from harrix_pylib.abbreviation_data import load_abbreviation_data, mask_abbreviations
-from harrix_pylib.md_assets import is_featured_image_name, is_media_file, is_note_asset_folder
+from harrix_pylib.md_assets import (
+    is_featured_image_name,
+    is_media_file,
+    is_note_asset_folder,
+    iter_misplaced_note_assets,
+)
 from harrix_pylib.md_decimal_separators import iter_decimal_separator_issues
 from harrix_pylib.md_format.hard_break_format import (
     _line_has_single_backslash_hard_break,
@@ -2436,8 +2441,6 @@ class MdChecker:
         Nested directories other than `img/` / `files/` are ignored.
 
         """
-        from harrix_pylib.md_assets import iter_misplaced_note_assets  # noqa: PLC0415
-
         for source, destination in iter_misplaced_note_assets(filename.parent):
             try:
                 dest_rel = destination.relative_to(filename.parent).as_posix()

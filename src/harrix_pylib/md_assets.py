@@ -7,6 +7,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
+from harrix_pylib.funcs_md import (
+    identify_code_blocks,
+    identify_code_blocks_line,
+    split_yaml_content,
+)
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
@@ -300,12 +306,6 @@ def rewrite_note_asset_links(markdown_text: str, path_map: dict[str, str]) -> st
     """
     if not path_map:
         return markdown_text
-
-    from harrix_pylib.funcs_md import (  # noqa: PLC0415
-        identify_code_blocks,
-        identify_code_blocks_line,
-        split_yaml_content,
-    )
 
     normalized_map = {_normalize_rel(old): _normalize_rel(new) for old, new in path_map.items()}
     basename_map: dict[str, str] = {}

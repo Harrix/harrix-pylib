@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 import libcst as cst
 
+from harrix_pylib import funcs_file
 from harrix_pylib.md_format import MdFormatter
 from harrix_pylib.md_format.code_fence import _identify_code_blocks, _identify_code_blocks_line
 from harrix_pylib.md_format.prose_fixes import _apply_checker_prose_fixes
@@ -151,8 +152,6 @@ class PyDocstringFormatter:
         - `str`: Newline-separated status messages.
 
         """
-        from harrix_pylib import funcs_file  # noqa: PLC0415
-
         return funcs_file.apply_func(folder, ".py", self.format_file)
 
     @staticmethod
