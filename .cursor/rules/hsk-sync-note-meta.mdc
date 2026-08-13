@@ -1,0 +1,44 @@
+---
+description: Keep @hsk-sync:note-meta title/date resolvers aligned across pylib, pyssg, VS Code, and Android
+globs: src/harrix_pylib/note_meta.py,tests/test_note_meta.py
+alwaysApply: false
+---
+
+# @hsk-sync:note-meta
+
+Token `@hsk-sync:note-meta` marks shared **note title / note date** resolution used when the UI or site does not use the raw file name alone.
+
+If priority, parsing rules, or date formats change in any implementation, update the others and consider how lists, tabs, generated HTML titles/dates, and Vector Icons catalog titles will look.
+
+## Sibling implementations
+
+| Block | Path |
+|-------|------|
+| Python (this repo, source of truth) | `src/harrix_pylib/note_meta.py` |
+| Python (pyssg re-export) | `D:\GitHub\harrix-pyssg\src\harrix_pyssg\note_meta.py` |
+| VS Code (JS) | `D:\GitHub\harrix-swiss-knife\vscode\harrix-notes-explorer-hsk\note-meta.js` |
+| Android (Kotlin) | `D:\GitHub\harrix-notes-android` — `NoteMetaResolver.kt`, `NoteTitleExtractor.kt` |
+
+## Shared contract
+
+### Title (`resolve_note_title` / `resolveTitle`)
+
+1. YAML frontmatter `title:` (quoted/unquoted scalar).
+2. Else first Markdown `#` heading (skip fenced code and HTML comment lines).
+3. Else `title_from_id(file_stem)`: part after first `__`, `-`/`_` → spaces, `str.title()`.
+4. Else `Untitled`.
+
+### Date (`resolve_note_date` / `resolveDate`)
+
+1. First date fragment in the file name / stem: `YYYY-MM-DD`, `YYYY.MM.DD`, `YYYYMMDD`, or `DD.MM.YYYY`.
+2. Else YAML frontmatter `date:`.
+3. Else file creation time (birthtime/ctime when available).
+4. Else file modification time (mtime).
+
+Return both the calendar date and a source tag (`filename` / `yaml` / `file_ctime` / `file_mtime`) so UIs can format date-only vs date-time.
+
+## Change checklist
+
+- Keep regexes / priority identical across Python, JS, and Kotlin.
+- Update unit tests in `tests/test_note_meta.py` when behavior changes.
+- After pylib changes, run linked `hsk py ruff-sort-docs` + `hsk py check` on swiss-knife, pylib, and pyssg.

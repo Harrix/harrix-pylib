@@ -30,6 +30,7 @@ lang: en
   - [📄 File `md_assets.py`](#-file-md_assetspy)
   - [📄 File `md_checker.py`](#-file-md_checkerpy)
   - [📄 File `md_decimal_separators.py`](#-file-md_decimal_separatorspy)
+  - [📄 File `note_meta.py`](#-file-note_metapy)
   - [📄 File `progress.py`](#-file-progresspy)
   - [📄 File `py_checker.py`](#-file-py_checkerpy)
   - [📄 File `py_docstring_format.py`](#-file-py_docstring_formatpy)
@@ -294,6 +295,23 @@ Doc: [md_decimal_separators.g.md](https://github.com/Harrix/harrix-pylib/blob/ma
 | 🔧 [`classify_decimal_separator_issue`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_decimal_separators.g.md#-function-classify_decimal_separator_issue) | Return autofix kind for a compact numeric token, or `None` if allowed. |
 | 🔧 [`fix_decimal_separators`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_decimal_separators.g.md#-function-fix_decimal_separators) | Rewrite comma decimals to points in `segment` for `lang` (`en` / `ru`). |
 | 🔧 [`iter_decimal_separator_issues`](https://github.com/Harrix/harrix-pylib/blob/main/docs/md_decimal_separators.g.md#-function-iter_decimal_separator_issues) | Yield `(start, end, token, kind)` for wrong decimal separators in `segment`. |
+
+### 📄 File `note_meta.py`
+
+Doc: [note_meta.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/note_meta.g.md)
+
+| Function/Class | Description |
+|----------------|-------------|
+| 🏛️ Class [`ResolvedNoteDate`](https://github.com/Harrix/harrix-pylib/blob/main/docs/note_meta.g.md#%EF%B8%8F-class-resolvednotedate) | Resolved calendar date for a note and where it came from. |
+| 🔧 [`extract_title_from_markdown`](https://github.com/Harrix/harrix-pylib/blob/main/docs/note_meta.g.md#-function-extract_title_from_markdown) | Return YAML `title` or first H1 from Markdown (empty when neither exists). |
+| 🔧 [`note_stem_from_name`](https://github.com/Harrix/harrix-pylib/blob/main/docs/note_meta.g.md#-function-note_stem_from_name) | Return file stem for `.md` / `.g.md` names. |
+| 🔧 [`parse_date_from_file_name`](https://github.com/Harrix/harrix-pylib/blob/main/docs/note_meta.g.md#-function-parse_date_from_file_name) | Extract the first calendar date fragment from a file name / stem. |
+| 🔧 [`parse_date_from_yaml`](https://github.com/Harrix/harrix-pylib/blob/main/docs/note_meta.g.md#-function-parse_date_from_yaml) | Parse YAML frontmatter `date:` when present. |
+| 🔧 [`parse_date_value`](https://github.com/Harrix/harrix-pylib/blob/main/docs/note_meta.g.md#-function-parse_date_value) | Parse a YAML/scalar date value into a `date`. |
+| 🔧 [`resolve_note_date`](https://github.com/Harrix/harrix-pylib/blob/main/docs/note_meta.g.md#-function-resolve_note_date) | Resolve note date: file name → YAML `date` → ctime → mtime. |
+| 🔧 [`resolve_note_date_for_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/note_meta.g.md#-function-resolve_note_date_for_path) | Resolve note date for a filesystem path (reads the file when `md_text` is omitted). |
+| 🔧 [`resolve_note_title`](https://github.com/Harrix/harrix-pylib/blob/main/docs/note_meta.g.md#-function-resolve_note_title) | Resolve display title: YAML `title` → H1 → `title_from_id(file_stem)`. |
+| 🔧 [`title_from_id`](https://github.com/Harrix/harrix-pylib/blob/main/docs/note_meta.g.md#-function-title_from_id) | Humanize a note or icon-family stem into a display title. |
 
 ### 📄 File `progress.py`
 
