@@ -642,6 +642,26 @@ def test_combine_markdown_files_strips_icon_from_yaml() -> None:
         assert "## Note" in content
 
 
+def test_combine_markdown_files_strips_paper_and_type_from_yaml() -> None:
+    with TemporaryDirectory() as temp_dir:
+        folder_path = Path(temp_dir)
+        (folder_path / "note.md").write_text(
+            "---\nlang: en\npaper: true\ntype: article\ntags:\n  - books\n---\n\n# Note\n\nText.\n",
+            encoding="utf-8",
+        )
+
+        result = h.md.combine_markdown_files(folder_path)
+        assert "✅ File" in result
+
+        content = (folder_path / f"_{folder_path.name}.g.md").read_text(encoding="utf-8")
+        assert "paper:" not in content
+        assert "type:" not in content
+        assert "lang: en" in content
+        assert "tags:" in content
+        assert "books" in content
+        assert "## Note" in content
+
+
 def test_raw_markdown_skips_beautify_content_transforms() -> None:
     source = (
         "---\nlang: en\nraw-markdown: true\nsort-section: true\nsort-list-by-date: true\n---\n\n"

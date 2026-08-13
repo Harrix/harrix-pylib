@@ -778,7 +778,7 @@ Note:
   into the combined YAML.
 - Per-note UI metadata such as `icon` is not merged into the combined YAML
   (along with `date`, [`update`](progress.g.md#%EF%B8%8F-method-update), `permalink`, `related-id`, `sort-section`,
-  `sort-list-by-date`, and `raw-markdown`).
+  `sort-list-by-date`, `paper`, `type`, and `raw-markdown`).
 - Heading levels in the content will be increased by one level.
 - Local links and image paths will be adjusted to maintain proper references.
 - The combined file will be named `_foldername.g.md`.

@@ -40,6 +40,8 @@ _YAML_KEYS_EXCLUDED_FROM_G_MD = frozenset(
         "sort-section",
         "sort-list-by-date",
         "icon",
+        "paper",
+        "type",
         _RAW_MARKDOWN_YAML_KEY,
     }
 )
@@ -643,7 +645,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
       into the combined YAML.
     - Per-note UI metadata such as `icon` is not merged into the combined YAML
       (along with `date`, `update`, `permalink`, `related-id`, `sort-section`,
-      `sort-list-by-date`, and `raw-markdown`).
+      `sort-list-by-date`, `paper`, `type`, and `raw-markdown`).
     - Heading levels in the content will be increased by one level.
     - Local links and image paths will be adjusted to maintain proper references.
     - The combined file will be named `_foldername.g.md`.
