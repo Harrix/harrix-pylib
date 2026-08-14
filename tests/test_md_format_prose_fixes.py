@@ -179,6 +179,16 @@ def test_formatter_preserves_gfm_table_alignment(tmp_path: Path) -> None:
     assert not _checker_errors(tmp_path, result, {"H015"}), result
 
 
+def test_formatter_preserves_space_before_image_in_list(tmp_path: Path) -> None:
+    """H015 must not treat list-marker space before `![` as space-before-punctuation."""
+    source = "- ![fiction__ufo_01](img/fiction__ufo_01.svg)\n- ![fiction__ufo_02](img/fiction__ufo_02.svg)\n"
+    assert not _checker_errors(tmp_path, source, {"H015"})
+    result = _format(source)
+    assert "- ![fiction__ufo_01](img/fiction__ufo_01.svg)" in result
+    assert "-![" not in result
+    assert not _checker_errors(tmp_path, result, {"H015"}), result
+
+
 def test_formatter_fixes_russian_lang_gated_rules(tmp_path: Path) -> None:
     source = "---\nlang: ru\n---\n\nСпасибо Вам за 50%.\n"  # ignore: HP001
     rules = {"H023", "H044"}

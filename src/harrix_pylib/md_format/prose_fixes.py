@@ -117,7 +117,7 @@ _EMPHASIS_COLON_OUTSIDE_PATTERNS = (
     re.compile(r"(?<!_)(_)(?!_)([^_\n]+)(_):"),
     re.compile(r"(~~)([^~\n]+)(~~):"),
 )
-_H015_BANG_EXCEPTIONS = (" !details", " !note", " !important", " !warning")
+_H015_BANG_EXCEPTIONS = (" ![", " !details", " !note", " !important", " !warning")
 # Text emoticons like `:)` / `;-)` / `:D` — do not strip the space before `:` / `;`.
 # Letter faces (`D`, `P`, …) must not start a longer word (`:smile:` stays punctuation).
 # GFM table alignment (`| :---: |`) — `:` followed by `-` is not punctuation.

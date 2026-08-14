@@ -3303,17 +3303,23 @@ class MdChecker:
                 error_msg = f'{self.RULES["H015"]}: found "{display}"'
                 yield self._format_error("H015", error_msg, filename, line_num=line_num, col=match.start() + 1)
 
-        # Special handling for " !" — skip special Markdown/directive markers
+        # Special handling for " !" — skip images (` ![`) and directive markers
         if " !" in line:
-            exceptions = [" !details", " !note", " !important", " !warning"]
-            pos_found = line.find(" !")
-            if (
-                not _inside_inline_code(pos_found)
-                and not any(line[pos_found:].startswith(exc) for exc in exceptions)
-                and not line.strip().startswith("!")
-            ):
-                error_msg = f'{self.RULES["H015"]}: found " !"'
-                yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
+            exceptions = [" ![", " !details", " !note", " !important", " !warning"]
+            pos_found = 0
+            while True:
+                pos_found = line.find(" !", pos_found)
+                if pos_found < 0:
+                    break
+                if (
+                    not _inside_inline_code(pos_found)
+                    and not any(line[pos_found:].startswith(exc) for exc in exceptions)
+                    and not line.strip().startswith("!")
+                ):
+                    error_msg = f'{self.RULES["H015"]}: found " !"'
+                    yield self._format_error("H015", error_msg, filename, line_num=line_num, col=pos_found + 1)
+                    break
+                pos_found += 2
 
     def _check_spaces_after_list_marker(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
         """Check that list markers are followed by exactly one space (H088)."""

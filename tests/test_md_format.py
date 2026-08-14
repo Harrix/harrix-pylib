@@ -842,6 +842,15 @@ def test_format_markdown_content_keeps_tight_simple_list() -> None:
     assert "- one\r\n\r\n- two" not in result
 
 
+def test_format_markdown_content_preserves_space_in_image_list_items() -> None:
+    """H015 must not strip the list-marker space before `![` image syntax."""
+    source = "- ![fiction__ufo_01](img/fiction__ufo_01.svg)\n- ![fiction__ufo_02](img/fiction__ufo_02.svg)\n"
+    result = _format_markdown(source, apply_prose_fixes=True, end_of_line="lf")
+    assert "- ![fiction__ufo_01](img/fiction__ufo_01.svg)" in result
+    assert "- ![fiction__ufo_02](img/fiction__ufo_02.svg)" in result
+    assert "-![" not in result
+
+
 def test_format_markdown_content_collapses_redundant_inline_spaces() -> None:
     source = (
         "- after opening guillemet « (direct speech, e.g. «Ваша задача);  # ignore: HP001\n"

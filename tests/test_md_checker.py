@@ -812,6 +812,23 @@ def test_md_checker() -> None:
         errors = checker.check(table_align_file, select={"H015"})
         assert not [e for e in errors if "H015" in e], "H015 must not fire for GFM table alignment"
 
+        # List item with image must not trigger H015 (space before `![` is list markup)
+        list_image_h015_file = temp_path / "list_image_h015.md"
+        list_image_h015_file.write_text(
+            "---\nlang: en\n---\n\n"
+            "- ![fiction__ufo_01](img/fiction__ufo_01.svg)\n"
+            "- ![fiction__ufo_02](img/fiction__ufo_02.svg)\n",
+            encoding="utf-8",
+        )
+        errors = checker.check(list_image_h015_file, select={"H015"})
+        assert not [e for e in errors if "H015" in e], "H015 must not fire for `- ![alt](url)` list items"
+
+        # Real space before `!` punctuation must still trigger H015
+        wrong_bang_file = temp_path / "wrong_bang.md"
+        wrong_bang_file.write_text("---\nlang: en\n---\n\nWrong !exclamation.\n", encoding="utf-8")
+        errors = checker.check(wrong_bang_file, select={"H015"})
+        assert any("H015" in e for e in errors), "H015 must still fire for prose ` !`"
+
         # =====================================================================
         # H016: Incorrect dash/hyphen usage
         # =====================================================================
