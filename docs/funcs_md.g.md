@@ -54,10 +54,12 @@ lang: en
 - [🔧 Function `iter_note_md_in_folder`](#-function-iter_note_md_in_folder)
 - [🔧 Function `named_note_md_path`](#-function-named_note_md_path)
 - [🔧 Function `note_md_path`](#-function-note_md_path)
+- [🔧 Function `parse_keywords_text`](#-function-parse_keywords_text)
 - [🔧 Function `remove_markdown_formatting_for_headings`](#-function-remove_markdown_formatting_for_headings)
 - [🔧 Function `remove_toc_content`](#-function-remove_toc_content)
 - [🔧 Function `remove_yaml_and_code_content`](#-function-remove_yaml_and_code_content)
 - [🔧 Function `remove_yaml_content`](#-function-remove_yaml_content)
+- [🔧 Function `replace_frontmatter_list`](#-function-replace_frontmatter_list)
 - [🔧 Function `replace_section`](#-function-replace_section)
 - [🔧 Function `replace_section_content`](#-function-replace_section_content)
 - [🔧 Function `resolve_md_path`](#-function-resolve_md_path)
@@ -67,6 +69,7 @@ lang: en
 - [🔧 Function `sort_sections_content`](#-function-sort_sections_content)
 - [🔧 Function `split_toc_content`](#-function-split_toc_content)
 - [🔧 Function `split_yaml_content`](#-function-split_yaml_content)
+- [🔧 Function `strip_markdown_fences`](#-function-strip_markdown_fences)
 
 </details>
 
@@ -3476,6 +3479,58 @@ def note_md_path(parent: Path | str, stem: str) -> Path:
 
 </details>
 
+## 🔧 Function `parse_keywords_text`
+
+```python
+def parse_keywords_text(text: str) -> list[str]
+```
+
+Parse keywords from a textarea or AI reply (one item per line).
+
+Skips empty lines and Markdown fences, strips list markers, and de-duplicates
+case-insensitively while keeping the first spelling.
+
+Args:
+
+- `text` (`str`): Raw keyword list.
+
+Returns:
+
+- `list[str]`: Unique keywords in input order.
+
+Example:
+
+````python
+import harrix_pylib as h
+
+assert h.md.parse_keywords_text("- robot\nRobot\n```\ngarage") == ["robot", "garage"]
+````
+
+<details>
+<summary>Code:</summary>
+
+````python
+def parse_keywords_text(text: str) -> list[str]:
+    line_prefix_re = re.compile(r"^(?:[-*+]|\d+[.)])\s+")
+    seen: set[str] = set()
+    result: list[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("```"):
+            continue
+        line = line_prefix_re.sub("", line).strip().strip("\"'")
+        if not line:
+            continue
+        key = line.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(line)
+    return result
+````
+
+</details>
+
 ## 🔧 Function `remove_markdown_formatting_for_headings`
 
 ```python
@@ -3719,6 +3774,78 @@ print(md_clean)
 ```python
 def remove_yaml_content(markdown_text: str) -> str:
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
+```
+
+</details>
+
+## 🔧 Function `replace_frontmatter_list`
+
+```python
+def replace_frontmatter_list(text: str, key: str, items: list[str]) -> str
+```
+
+Replace a YAML list key in the note frontmatter (inline or block).
+
+Preserves the rest of the frontmatter text. Adds the key when it is missing.
+
+Args:
+
+- `text` (`str`): Markdown note with YAML front matter.
+- `key` (`str`): Top-level YAML key to replace.
+- `items` (`list[str]`): New list values.
+
+Returns:
+
+- `str`: Markdown with the updated front matter.
+
+Raises:
+
+- `ValueError`: If YAML front matter is not found.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+md = "---\ntags: [old]\n---\n\n# Title\n"
+print(h.md.replace_frontmatter_list(md, "tags", ["new"]))
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def replace_frontmatter_list(text: str, key: str, items: list[str]) -> str:
+    frontmatter_re = re.compile(r"^---\s*\n(.*?)\n---\s*\n?", re.DOTALL)
+    list_item_re = re.compile(r"^\s*-\s+")
+    match = frontmatter_re.match(text)
+    if not match:
+        msg = "YAML frontmatter not found"
+        raise ValueError(msg)
+
+    frontmatter = match.group(1)
+    body = text[match.end() :]
+    lines = frontmatter.splitlines()
+    new_lines: list[str] = []
+    replaced = False
+    index = 0
+    while index < len(lines):
+        stripped = lines[index].strip()
+        if stripped.startswith(f"{key}:"):
+            index += 1
+            while index < len(lines) and list_item_re.match(lines[index]):
+                index += 1
+            new_lines.extend(_format_yaml_list(key, items))
+            replaced = True
+            continue
+        new_lines.append(lines[index])
+        index += 1
+
+    if not replaced:
+        new_lines.extend(_format_yaml_list(key, items))
+
+    frontmatter_text = "\n".join(new_lines)
+    return f"---\n{frontmatter_text}\n---\n\n{body.lstrip()}\n"
 ```
 
 </details>
@@ -4522,5 +4649,50 @@ yaml, content = h.md.split_yaml_content(md)
 def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     return _split_front_matter(markdown_text)
 ```
+
+</details>
+
+## 🔧 Function `strip_markdown_fences`
+
+```python
+def strip_markdown_fences(text: str) -> str
+```
+
+Remove Markdown code fences from model or user output.
+
+Args:
+
+- `text` (`str`): Text that may be wrapped in a fenced code block.
+
+Returns:
+
+- `str`: Inner text without surrounding fences.
+
+Example:
+
+````python
+import harrix_pylib as h
+
+assert h.md.strip_markdown_fences("```json\n{\"a\": 1}\n```") == '{\"a\": 1}'
+````
+
+<details>
+<summary>Code:</summary>
+
+````python
+def strip_markdown_fences(text: str) -> str:
+    stripped = text.strip()
+    fence_match = re.match(r"^```(?:\w+)?\s*\n?(.*?)\n?```\s*$", stripped, flags=re.DOTALL)
+    if fence_match:
+        return fence_match.group(1).strip()
+    if stripped.startswith("```"):
+        lines = stripped.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        return "\n".join(lines).strip()
+    return stripped
+````
 
 </details>

@@ -1346,3 +1346,24 @@ def test_sort_py_code() -> None:
         py_applied = temp_filename.read_text(encoding="utf8")
 
     assert py_after == py_applied
+
+
+def test_is_python_project(tmp_path: Path) -> None:
+    assert not h.py.is_python_project(tmp_path)
+    (tmp_path / "pyproject.toml").write_text("[project]\nname = 'x'\n", encoding="utf-8")
+    assert h.py.is_python_project(tmp_path)
+
+
+def test_validate_uv_project_name() -> None:
+    assert h.py.validate_uv_project_name("python-project-07") is None
+    assert h.py.validate_uv_project_name("MyLibrary") is None
+    assert h.py.validate_uv_project_name("test_name") is None
+    assert h.py.validate_uv_project_name("") == "Name must not be empty."
+    assert h.py.validate_uv_project_name("   ") == "Name must not be empty."
+    assert h.py.validate_uv_project_name("bad name") == "Name must not contain spaces."
+    assert h.py.validate_uv_project_name("проект") == (
+        "Name must contain only English letters, digits, hyphens, and underscores."
+    )
+    assert h.py.validate_uv_project_name("bad/name") == (
+        "Name must contain only English letters, digits, hyphens, and underscores."
+    )

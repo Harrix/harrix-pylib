@@ -27,9 +27,11 @@ lang: en
 - [🔧 Function `generate_md_docs`](#-function-generate_md_docs)
 - [🔧 Function `generate_md_docs_content`](#-function-generate_md_docs_content)
 - [🔧 Function `generate_md_docs_content_with_source_map`](#-function-generate_md_docs_content_with_source_map)
+- [🔧 Function `is_python_project`](#-function-is_python_project)
 - [🔧 Function `lint_and_fix_python_code`](#-function-lint_and_fix_python_code)
 - [🔧 Function `remap_markdown_docs_error`](#-function-remap_markdown_docs_error)
 - [🔧 Function `sort_py_code`](#-function-sort_py_code)
+- [🔧 Function `validate_uv_project_name`](#-function-validate_uv_project_name)
 
 </details>
 
@@ -1333,6 +1335,40 @@ def generate_md_docs_content_with_source_map(
 
 </details>
 
+## 🔧 Function `is_python_project`
+
+```python
+def is_python_project(folder_path: Path | str) -> bool
+```
+
+Return whether `folder_path` looks like a Python project (`pyproject.toml`).
+
+Args:
+
+- `folder_path` (`Path | str`): Folder to inspect.
+
+Returns:
+
+- `bool`: `True` when the folder contains `pyproject.toml`.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+assert h.py.is_python_project("C:/projects/harrix-pylib")
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def is_python_project(folder_path: Path | str) -> bool:
+    return (Path(folder_path) / "pyproject.toml").is_file()
+```
+
+</details>
+
 ## 🔧 Function `lint_and_fix_python_code`
 
 ```python
@@ -1804,6 +1840,48 @@ def sort_py_code(filename: Path | str, *, is_use_ruff_format: bool = True) -> st
     # Write the sorted code back to the file (LF endings; avoid Windows CRLF translation).
     Path(filename).write_text(new_code, encoding="utf-8", newline="\n")
     return f"✅ File {filename} sorted."
+```
+
+</details>
+
+## 🔧 Function `validate_uv_project_name`
+
+```python
+def validate_uv_project_name(name: str) -> str | None
+```
+
+Return an error message when `name` is invalid for a uv project, otherwise `None`.
+
+Args:
+
+- `name` (`str`): Project or library name to validate.
+
+Returns:
+
+- `str | None`: Error text, or `None` when the name is valid.
+
+Example:
+
+```python
+import harrix_pylib as h
+
+assert h.py.validate_uv_project_name("my-library") is None
+assert h.py.validate_uv_project_name("bad name") == "Name must not contain spaces."
+```
+
+<details>
+<summary>Code:</summary>
+
+```python
+def validate_uv_project_name(name: str) -> str | None:
+    stripped = name.strip()
+    if not stripped:
+        return "Name must not be empty."
+    if " " in name:
+        return "Name must not contain spaces."
+    if not re.fullmatch(r"^[a-zA-Z0-9][a-zA-Z0-9_-]*$", stripped):
+        return "Name must contain only English letters, digits, hyphens, and underscores."
+    return None
 ```
 
 </details>

@@ -2464,3 +2464,30 @@ def test_remove_markdown_formatting_for_headings() -> None:
     # Test separate bold and italic (not nested)
     separate_formatting = "**Bold text** and *italic text* separately"
     assert h.md.remove_markdown_formatting_for_headings(separate_formatting) == "Bold text and italic text separately"
+
+
+def test_parse_keywords_text() -> None:
+    text = "- robot\nRobot\n1. гараж\n```\ngarage\n"
+    assert h.md.parse_keywords_text(text) == ["robot", "гараж", "garage"]
+
+
+def test_replace_frontmatter_list() -> None:
+    inline = "---\ncategories: [building]\ntags: [garage]\n---\n\n# Garage\n"
+    updated = h.md.replace_frontmatter_list(inline, "tags", ["garage", "гараж"])
+    assert "tags:\n  - garage\n  - гараж\n" in updated
+    assert "# Garage" in updated
+
+    block = "---\ncategories:\n  - building\ntags:\n  - old\n---\n\n# Garage\n"
+    updated_block = h.md.replace_frontmatter_list(block, "tags", ["new"])
+    assert "tags:\n  - new\n" in updated_block
+    assert "  - old" not in updated_block
+    assert "categories:\n  - building\n" in updated_block
+
+    with pytest.raises(ValueError, match="frontmatter"):
+        h.md.replace_frontmatter_list("# No yaml\n", "tags", ["x"])
+
+
+def test_strip_markdown_fences() -> None:
+    assert h.md.strip_markdown_fences('```json\n{"a": 1}\n```') == '{"a": 1}'
+    assert h.md.strip_markdown_fences("```\nhello\n```") == "hello"
+    assert h.md.strip_markdown_fences("plain") == "plain"

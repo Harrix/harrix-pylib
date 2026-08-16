@@ -247,6 +247,12 @@ def test_clear_directory() -> None:
     shutil.rmtree(folder)
 
 
+def test_format_byte_size() -> None:
+    assert h.file.format_byte_size(500) == "500 B"
+    assert h.file.format_byte_size(2048) == "2.00 KB"
+    assert h.file.format_byte_size(2 * 1024 * 1024) == "2.00 MB"
+
+
 def test_find_max_folder_number() -> None:
     folder = h.dev.get_project_root() / "tests/data/check_featured_image/folder_correct"
     correct_max_folder_number = 2

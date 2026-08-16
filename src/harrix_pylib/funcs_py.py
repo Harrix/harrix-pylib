@@ -1095,6 +1095,29 @@ def generate_md_docs_content_with_source_map(
     return "\n".join(out_lines), line_map
 
 
+def is_python_project(folder_path: Path | str) -> bool:
+    """Return whether `folder_path` looks like a Python project (`pyproject.toml`).
+
+    Args:
+
+    - `folder_path` (`Path | str`): Folder to inspect.
+
+    Returns:
+
+    - `bool`: `True` when the folder contains `pyproject.toml`.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    assert h.py.is_python_project("C:/projects/harrix-pylib")
+    ```
+
+    """
+    return (Path(folder_path) / "pyproject.toml").is_file()
+
+
 def lint_and_fix_python_code(py_content: str) -> str:
     r"""Lints and fixes the provided Python code using the `ruff` formatter.
 
@@ -1535,6 +1558,37 @@ def sort_py_code(filename: Path | str, *, is_use_ruff_format: bool = True) -> st
     # Write the sorted code back to the file (LF endings; avoid Windows CRLF translation).
     Path(filename).write_text(new_code, encoding="utf-8", newline="\n")
     return f"✅ File {filename} sorted."
+
+
+def validate_uv_project_name(name: str) -> str | None:
+    """Return an error message when `name` is invalid for a uv project, otherwise `None`.
+
+    Args:
+
+    - `name` (`str`): Project or library name to validate.
+
+    Returns:
+
+    - `str | None`: Error text, or `None` when the name is valid.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    assert h.py.validate_uv_project_name("my-library") is None
+    assert h.py.validate_uv_project_name("bad name") == "Name must not contain spaces."
+    ```
+
+    """
+    stripped = name.strip()
+    if not stripped:
+        return "Name must not be empty."
+    if " " in name:
+        return "Name must not contain spaces."
+    if not re.fullmatch(r"^[a-zA-Z0-9][a-zA-Z0-9_-]*$", stripped):
+        return "Name must contain only English letters, digits, hyphens, and underscores."
+    return None
 
 
 def _ann_assign_name(node: ast.AnnAssign) -> str | None:

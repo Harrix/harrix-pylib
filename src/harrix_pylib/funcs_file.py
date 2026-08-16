@@ -625,6 +625,38 @@ def find_max_folder_number(base_path: Path | str, start_pattern: str) -> int:
     return max_number
 
 
+def format_byte_size(num_bytes: int) -> str:
+    """Format a byte count as a short human-readable size.
+
+    Args:
+
+    - `num_bytes` (`int`): Size in bytes. Negative values use the absolute amount.
+
+    Returns:
+
+    - `str`: Size with a `B`, `KB`, `MB`, or `GB` unit.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    assert h.file.format_byte_size(500) == "500 B"
+    assert h.file.format_byte_size(2048) == "2.00 KB"
+    ```
+
+    """
+    bytes_per_unit = 1024
+    value = float(abs(num_bytes))
+    for unit in ("B", "KB", "MB", "GB"):
+        if value < bytes_per_unit or unit == "GB":
+            if unit == "B":
+                return f"{int(value)} B"
+            return f"{value:.2f} {unit}"
+        value /= bytes_per_unit
+    return f"{value:.2f} GB"
+
+
 def list_files_simple(path: Path | str, *, is_ignore_hidden_folders: bool = False, is_only_files: bool = False) -> str:
     """Generate a simple list of all files in a directory structure.
 

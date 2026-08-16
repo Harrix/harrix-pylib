@@ -2996,6 +2996,47 @@ def note_md_path(parent: Path | str, stem: str) -> Path:
     return named
 
 
+def parse_keywords_text(text: str) -> list[str]:
+    r"""Parse keywords from a textarea or AI reply (one item per line).
+
+    Skips empty lines and Markdown fences, strips list markers, and de-duplicates
+    case-insensitively while keeping the first spelling.
+
+    Args:
+
+    - `text` (`str`): Raw keyword list.
+
+    Returns:
+
+    - `list[str]`: Unique keywords in input order.
+
+    Example:
+
+    ````python
+    import harrix_pylib as h
+
+    assert h.md.parse_keywords_text("- robot\nRobot\n```\ngarage") == ["robot", "garage"]
+    ````
+
+    """
+    line_prefix_re = re.compile(r"^(?:[-*+]|\d+[.)])\s+")
+    seen: set[str] = set()
+    result: list[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("```"):
+            continue
+        line = line_prefix_re.sub("", line).strip().strip("\"'")
+        if not line:
+            continue
+        key = line.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(line)
+    return result
+
+
 def remove_markdown_formatting_for_headings(text: str) -> str:
     """Remove Markdown formatting from text.
 
@@ -3197,6 +3238,67 @@ def remove_yaml_content(markdown_text: str) -> str:
 
     """
     return re.sub(r"^---(.|\n)*?---\n", "", markdown_text.lstrip()).lstrip()
+
+
+def replace_frontmatter_list(text: str, key: str, items: list[str]) -> str:
+    r"""Replace a YAML list key in the note frontmatter (inline or block).
+
+    Preserves the rest of the frontmatter text. Adds the key when it is missing.
+
+    Args:
+
+    - `text` (`str`): Markdown note with YAML front matter.
+    - `key` (`str`): Top-level YAML key to replace.
+    - `items` (`list[str]`): New list values.
+
+    Returns:
+
+    - `str`: Markdown with the updated front matter.
+
+    Raises:
+
+    - `ValueError`: If YAML front matter is not found.
+
+    Example:
+
+    ```python
+    import harrix_pylib as h
+
+    md = "---\ntags: [old]\n---\n\n# Title\n"
+    print(h.md.replace_frontmatter_list(md, "tags", ["new"]))
+    ```
+
+    """
+    frontmatter_re = re.compile(r"^---\s*\n(.*?)\n---\s*\n?", re.DOTALL)
+    list_item_re = re.compile(r"^\s*-\s+")
+    match = frontmatter_re.match(text)
+    if not match:
+        msg = "YAML frontmatter not found"
+        raise ValueError(msg)
+
+    frontmatter = match.group(1)
+    body = text[match.end() :]
+    lines = frontmatter.splitlines()
+    new_lines: list[str] = []
+    replaced = False
+    index = 0
+    while index < len(lines):
+        stripped = lines[index].strip()
+        if stripped.startswith(f"{key}:"):
+            index += 1
+            while index < len(lines) and list_item_re.match(lines[index]):
+                index += 1
+            new_lines.extend(_format_yaml_list(key, items))
+            replaced = True
+            continue
+        new_lines.append(lines[index])
+        index += 1
+
+    if not replaced:
+        new_lines.extend(_format_yaml_list(key, items))
+
+    frontmatter_text = "\n".join(new_lines)
+    return f"---\n{frontmatter_text}\n---\n\n{body.lstrip()}\n"
 
 
 def replace_section(filename: Path | str, replace_content: str, title_section: str = "## 📋 List of commands") -> str:
@@ -3902,6 +4004,40 @@ def split_yaml_content(markdown_text: str) -> tuple[str, str]:
     return _split_front_matter(markdown_text)
 
 
+def strip_markdown_fences(text: str) -> str:
+    r"""Remove Markdown code fences from model or user output.
+
+    Args:
+
+    - `text` (`str`): Text that may be wrapped in a fenced code block.
+
+    Returns:
+
+    - `str`: Inner text without surrounding fences.
+
+    Example:
+
+    ````python
+    import harrix_pylib as h
+
+    assert h.md.strip_markdown_fences("```json\n{\"a\": 1}\n```") == '{\"a\": 1}'
+    ````
+
+    """
+    stripped = text.strip()
+    fence_match = re.match(r"^```(?:\w+)?\s*\n?(.*?)\n?```\s*$", stripped, flags=re.DOTALL)
+    if fence_match:
+        return fence_match.group(1).strip()
+    if stripped.startswith("```"):
+        lines = stripped.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        return "\n".join(lines).strip()
+    return stripped
+
+
 def _atx_heading_level(line: str) -> int | None:
     """Return ATX heading level (1-6) or `None` if the line is not a heading."""
     match = _ATX_HEADING_RE.match(line)
@@ -3959,6 +4095,13 @@ def _following_content_keeps_image_in_list(following_lines: list[str], list_item
         return bool(list_item_start_re.match(stripped))
     # EOF, prose/heading already returned False above, or only blanks/figures remain
     return False
+
+
+def _format_yaml_list(key: str, items: list[str]) -> list[str]:
+    """Format a YAML list key as either `key: []` or a block list."""
+    if not items:
+        return [f"{key}: []"]
+    return [f"{key}:", *[f"  - {item}" for item in items]]
 
 
 def _is_toc_details_open(lines: list[str], index: int) -> bool:

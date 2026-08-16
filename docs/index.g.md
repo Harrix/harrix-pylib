@@ -26,6 +26,7 @@ lang: en
   - [📄 File `funcs_img.py`](#-file-funcs_imgpy)
   - [📄 File `funcs_md.py`](#-file-funcs_mdpy)
   - [📄 File `funcs_py.py`](#-file-funcs_pypy)
+  - [📄 File `funcs_text.py`](#-file-funcs_textpy)
   - [📄 File `img_tools.py`](#-file-img_toolspy)
   - [📄 File `md_assets.py`](#-file-md_assetspy)
   - [📄 File `md_checker.py`](#-file-md_checkerpy)
@@ -122,6 +123,7 @@ Doc: [funcs_dev.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/func
 | 🔧 [`config_update_value`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-config_update_value) | Update a single configuration value and save it to a JSON file. |
 | 🔧 [`get_preferred_end_of_line`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-get_preferred_end_of_line) | Return preferred line endings from the nearest `.gitattributes`. |
 | 🔧 [`get_project_root`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-get_project_root) | Find the root folder of the current project. |
+| 🔧 [`open_in_editor`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-open_in_editor) | Launch an editor with workspace and file as separate argv entries. |
 | 🔧 [`run_command`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-run_command) | Run a console command and return its output. |
 | 🔧 [`run_powershell_script`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-run_powershell_script) | Run a PowerShell script with the given commands. |
 | 🔧 [`run_powershell_script_as_admin`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_dev.g.md#-function-run_powershell_script_as_admin) | Execute a PowerShell script with administrator privileges and captures the output. |
@@ -142,6 +144,7 @@ Doc: [funcs_file.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/fun
 | 🔧 [`convert_filename_date`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-convert_filename_date) | Convert a DD.MM.YYYY date fragment in a filename to YYYY.MM.DD. |
 | 🔧 [`extract_zip_archive`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-extract_zip_archive) | Extract ZIP archive to the folder where the archive is located and remove the archive file. |
 | 🔧 [`find_max_folder_number`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-find_max_folder_number) | Find the highest folder number in a given folder based on a pattern. |
+| 🔧 [`format_byte_size`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-format_byte_size) | Format a byte count as a short human-readable size. |
 | 🔧 [`list_files_simple`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-list_files_simple) | Generate a simple list of all files in a directory structure. |
 | 🔧 [`open_file_or_folder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-open_file_or_folder) | Open a file or folder using the operating system's default application. |
 | 🔧 [`remove_empty_folders`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_file.g.md#-function-remove_empty_folders) | Remove all empty folders recursively while respecting ignore patterns. |
@@ -215,10 +218,12 @@ Doc: [funcs_md.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs
 | 🔧 [`iter_note_md_in_folder`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-iter_note_md_in_folder) | Iterate scannable note Markdown files in a folder. |
 | 🔧 [`named_note_md_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-named_note_md_path) | Build the canonical named-folder path for a note. |
 | 🔧 [`note_md_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-note_md_path) | Resolve the path to an existing note, preferring the named-folder layout. |
+| 🔧 [`parse_keywords_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-parse_keywords_text) | Parse keywords from a textarea or AI reply (one item per line). |
 | 🔧 [`remove_markdown_formatting_for_headings`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-remove_markdown_formatting_for_headings) | Remove Markdown formatting from text. |
 | 🔧 [`remove_toc_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-remove_toc_content) | Remove the table of contents (TOC) section from a Markdown document. |
 | 🔧 [`remove_yaml_and_code_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-remove_yaml_and_code_content) | Remove YAML front matter and code blocks, and returns the remaining content. |
 | 🔧 [`remove_yaml_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-remove_yaml_content) | Remove YAML from text of the Markdown file. |
+| 🔧 [`replace_frontmatter_list`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-replace_frontmatter_list) | Replace a YAML list key in the note frontmatter (inline or block). |
 | 🔧 [`replace_section`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-replace_section) | Replace a section in a file defined by `title_section` with the provided `replace_content`. |
 | 🔧 [`replace_section_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-replace_section_content) | Replace a section in the Markdown text defined by `title_section` with the provided `replace_content`. |
 | 🔧 [`resolve_md_path`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-resolve_md_path) | Resolve a Markdown path to an existing file, including named-folder layout. |
@@ -228,6 +233,7 @@ Doc: [funcs_md.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs
 | 🔧 [`sort_sections_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-sort_sections_content) | Sort sections by their `##` headings: top sections first, then dates in descending order, |
 | 🔧 [`split_toc_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-split_toc_content) | Separate the Table of Contents (TOC) from the rest of the Markdown content. |
 | 🔧 [`split_yaml_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-split_yaml_content) | Split a Markdown note into YAML front matter and the main content. |
+| 🔧 [`strip_markdown_fences`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_md.g.md#-function-strip_markdown_fences) | Remove Markdown code fences from model or user output. |
 
 ### 📄 File `funcs_py.py`
 
@@ -246,9 +252,24 @@ Doc: [funcs_py.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs
 | 🔧 [`generate_md_docs`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-generate_md_docs) | Generate documentation for all Python files within a given project folder. |
 | 🔧 [`generate_md_docs_content`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-generate_md_docs_content) | Generate Markdown documentation for a single Python file. |
 | 🔧 [`generate_md_docs_content_with_source_map`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-generate_md_docs_content_with_source_map) | Generate Markdown docs for a Python file and a per-line map to Python source. |
+| 🔧 [`is_python_project`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-is_python_project) | Return whether `folder_path` looks like a Python project (`pyproject.toml`). |
 | 🔧 [`lint_and_fix_python_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-lint_and_fix_python_code) | Lints and fixes the provided Python code using the `ruff` formatter. |
 | 🔧 [`remap_markdown_docs_error`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-remap_markdown_docs_error) | Rewrite a MdChecker error to the corresponding Python source location. |
 | 🔧 [`sort_py_code`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-sort_py_code) | Sorts the Python code in the given file by organizing classes, functions, and statements. |
+| 🔧 [`validate_uv_project_name`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_py.g.md#-function-validate_uv_project_name) | Return an error message when `name` is invalid for a uv project, otherwise `None`. |
+
+### 📄 File `funcs_text.py`
+
+Doc: [funcs_text.g.md](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_text.g.md)
+
+| Function/Class | Description |
+|----------------|-------------|
+| 🔧 [`autocomplete_match_tier`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_text.g.md#-function-autocomplete_match_tier) | Return best match tier for autocomplete, including EN/RU layout mistakes. |
+| 🔧 [`clean_number_text`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_text.g.md#-function-clean_number_text) | Remove spaces and replace subscript digits with ASCII digits. |
+| 🔧 [`evaluate_arithmetic_expression`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_text.g.md#-function-evaluate_arithmetic_expression) | Safely evaluate a simple arithmetic expression (`+`, `-`, `*`, `/`, parentheses). |
+| 🔧 [`swap_keyboard_layout`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_text.g.md#-function-swap_keyboard_layout) | Swap characters as if typed on the other EN/RU keyboard layout. |
+| 🔧 [`text_matches_autocomplete`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_text.g.md#-function-text_matches_autocomplete) | Return `True` if query matches text for autocomplete, including layout mistakes. |
+| 🔧 [`try_evaluate_arithmetic_expression`](https://github.com/Harrix/harrix-pylib/blob/main/docs/funcs_text.g.md#-function-try_evaluate_arithmetic_expression) | Evaluate an expression and return `(value, None)` or `(None, error_message)`. |
 
 ### 📄 File `img_tools.py`
 
