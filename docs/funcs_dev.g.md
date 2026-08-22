@@ -14,6 +14,7 @@ lang: en
 - [🔧 Function `config_load`](#-function-config_load)
 - [🔧 Function `config_save`](#-function-config_save)
 - [🔧 Function `config_update_value`](#-function-config_update_value)
+- [🔧 Function `dumps_pretty_json`](#-function-dumps_pretty_json)
 - [🔧 Function `get_preferred_end_of_line`](#-function-get_preferred_end_of_line)
 - [🔧 Function `get_project_root`](#-function-get_project_root)
 - [🔧 Function `open_in_editor`](#-function-open_in_editor)
@@ -129,8 +130,7 @@ h.dev.config_save(config, "config.json", is_temp=True)
 ```python
 def config_save(config: dict, filename: Path | str, *, is_temp: bool = False) -> None:
     config_file = _resolve_config_path(filename, is_temp=is_temp)
-    with config_file.open("w", encoding="utf-8") as file:
-        json.dump(config, file, indent=2, ensure_ascii=False)
+    config_file.write_text(dumps_pretty_json(config), encoding="utf-8")
 ```
 
 </details>
@@ -202,6 +202,40 @@ def config_update_value(key: str, value: object, filename: Path | str, *, is_tem
 
     # Save the updated config
     config_save(config, filename, is_temp=is_temp)
+```
+
+</details>
+
+## 🔧 Function `dumps_pretty_json`
+
+```python
+def dumps_pretty_json(value: object, *, indent: int = _JSON_INDENT, max_width: int = _JSON_MAX_WIDTH) -> str
+```
+
+Serialize JSON with 2-space indent and short primitive arrays on one line.
+
+Objects always use indented keys. Arrays of scalars stay on one line when
+that line (including the parent key and indent) fits in `max_width`.
+Arrays of objects or arrays, and primitive arrays that would overflow,
+stay multiline.
+
+Args:
+
+- `value` (`object`): JSON-serializable value.
+- `indent` (`int`): Spaces per nesting level. Defaults to `2`.
+- `max_width` (`int`): Preferred maximum line length. Defaults to `120`.
+
+Returns:
+
+- `str`: JSON text with a trailing newline.
+
+<details>
+<summary>Code:</summary>
+
+```python
+def dumps_pretty_json(value: object, *, indent: int = _JSON_INDENT, max_width: int = _JSON_MAX_WIDTH) -> str:
+    text = _dump_pretty_json(value, indent=indent, max_width=max_width, level=0, line_budget=max_width)
+    return f"{text}\n"
 ```
 
 </details>

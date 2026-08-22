@@ -20,6 +20,8 @@ if TYPE_CHECKING:
 
 EndOfLine = Literal["lf", "crlf"]
 DEFAULT_END_OF_LINE: EndOfLine = "crlf"
+_JSON_INDENT = 2
+_JSON_MAX_WIDTH = 120
 _MIN_GITATTRIBUTES_LINE_PARTS = 2  # pattern + at least one attribute
 
 
@@ -108,8 +110,7 @@ def config_save(config: dict, filename: Path | str, *, is_temp: bool = False) ->
 
     """
     config_file = _resolve_config_path(filename, is_temp=is_temp)
-    with config_file.open("w", encoding="utf-8") as file:
-        json.dump(config, file, indent=2, ensure_ascii=False)
+    config_file.write_text(dumps_pretty_json(config), encoding="utf-8")
 
 
 def config_update_value(key: str, value: object, filename: Path | str, *, is_temp: bool = False) -> None:
@@ -170,6 +171,29 @@ def config_update_value(key: str, value: object, filename: Path | str, *, is_tem
 
     # Save the updated config
     config_save(config, filename, is_temp=is_temp)
+
+
+def dumps_pretty_json(value: object, *, indent: int = _JSON_INDENT, max_width: int = _JSON_MAX_WIDTH) -> str:
+    """Serialize JSON with 2-space indent and short primitive arrays on one line.
+
+    Objects always use indented keys. Arrays of scalars stay on one line when
+    that line (including the parent key and indent) fits in `max_width`.
+    Arrays of objects or arrays, and primitive arrays that would overflow,
+    stay multiline.
+
+    Args:
+
+    - `value` (`object`): JSON-serializable value.
+    - `indent` (`int`): Spaces per nesting level. Defaults to `2`.
+    - `max_width` (`int`): Preferred maximum line length. Defaults to `120`.
+
+    Returns:
+
+    - `str`: JSON text with a trailing newline.
+
+    """
+    text = _dump_pretty_json(value, indent=indent, max_width=max_width, level=0, line_budget=max_width)
+    return f"{text}\n"
 
 
 def get_preferred_end_of_line(path: Path | str) -> EndOfLine:
@@ -678,6 +702,68 @@ def _config_load_raw(filename: Path | str, *, is_temp: bool = False) -> dict:
         return json.load(file)
 
 
+def _dump_pretty_json(
+    value: object,
+    *,
+    indent: int,
+    max_width: int,
+    level: int,
+    line_budget: int,
+) -> str:
+    if isinstance(value, dict):
+        return _dump_pretty_json_object(value, indent=indent, max_width=max_width, level=level)
+    if isinstance(value, list):
+        return _dump_pretty_json_array(value, indent=indent, max_width=max_width, level=level, line_budget=line_budget)
+    return json.dumps(value, ensure_ascii=False)
+
+
+def _dump_pretty_json_array(
+    items: list[Any],
+    *,
+    indent: int,
+    max_width: int,
+    level: int,
+    line_budget: int,
+) -> str:
+    if not items:
+        return "[]"
+    if all(_is_json_scalar(item) for item in items):
+        compact = json.dumps(items, ensure_ascii=False)
+        if len(compact) <= max(1, line_budget):
+            return compact
+    pad = " " * (indent * level)
+    inner_level = level + 1
+    inner = " " * (indent * inner_level)
+    child_budget = max_width - indent * inner_level
+    parts = [
+        _dump_pretty_json(item, indent=indent, max_width=max_width, level=inner_level, line_budget=child_budget)
+        for item in items
+    ]
+    return "[\n" + ",\n".join(f"{inner}{part}" for part in parts) + f"\n{pad}]"
+
+
+def _dump_pretty_json_object(obj: dict[Any, Any], *, indent: int, max_width: int, level: int) -> str:
+    if not obj:
+        return "{}"
+    pad = " " * (indent * level)
+    inner_level = level + 1
+    inner = " " * (indent * inner_level)
+    parts: list[str] = []
+    for key, child in obj.items():
+        key_text = _json_object_key(key)
+        prefix = f"{key_text}: "
+        child_budget = max_width - indent * inner_level - len(prefix)
+        dumped = _dump_pretty_json(
+            child,
+            indent=indent,
+            max_width=max_width,
+            level=inner_level,
+            line_budget=child_budget,
+        )
+        parts.append(f"{inner}{prefix}{dumped}")
+    return "{\n" + ",\n".join(parts) + f"\n{pad}}}"
+
+
 def _eol_from_gitattributes(attributes_file: Path, rel_posix: str) -> EndOfLine | None:
     """Return the last `eol=` value that matches `rel_posix`, if any."""
     found: EndOfLine | None = None
@@ -712,6 +798,16 @@ def _gitattributes_pattern_matches(rel_posix: str, pattern: str) -> bool:
     if "/" not in normalized:
         return fnmatch.fnmatch(name, normalized) or fnmatch.fnmatch(rel_posix, f"*/{normalized}")
     return fnmatch.fnmatch(rel_posix, normalized)
+
+
+def _is_json_scalar(value: object) -> bool:
+    return value is None or isinstance(value, bool | int | float | str)
+
+
+def _json_object_key(key: object) -> str:
+    if isinstance(key, str):
+        return json.dumps(key, ensure_ascii=False)
+    return json.dumps(str(key), ensure_ascii=False)
 
 
 def _resolve_config_path(filename: Path | str, *, is_temp: bool) -> Path:

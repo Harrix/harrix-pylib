@@ -14,6 +14,60 @@ import harrix_pylib as h
 powershell_path = shutil.which("powershell")
 
 
+def test_dumps_pretty_json_compacts_short_primitive_arrays() -> None:
+    """Short scalar arrays stay on one line; overflowing or object arrays wrap."""
+    data = {
+        "block_drives": ["E", "F"],
+        "hotkeys": [{"action": "OnQuickLauncher", "hotkeys": ["Ctrl+Shift+F1"]}],
+        "note_beginning_templates": [
+            "snippet:config/beginning-of-md.md",
+            "snippet:config/beginning-of-article.md",
+            "snippet:config/beginning-of-md-en.md",
+        ],
+        "npm_packages": ["npm-check-updates", "prettier"],
+        "paths_python_projects": [
+            "D:/GitHub/harrix-swiss-knife",
+            "D:/GitHub/harrix-pylib",
+            "D:/GitHub/harrix-pyssg",
+        ],
+        "paths_notes_for_summaries": [
+            "D:/Dropbox/Notes/Notes-Lists/Movies",
+            "D:/Dropbox/Notes/Notes-Lists/Books",
+            "D:/Dropbox/Notes/Notes-Lists/Books-of-nonfiction",
+        ],
+        "paths_combine_for_ai": [
+            {
+                "base_folder": "D:/GitHub/harrix-swiss-knife",
+                "files": ["D:/GitHub/harrix-swiss-knife/src/harrix_swiss_knife/**/*.py"],
+                "name": "harrix-swiss-knife",
+            },
+            {
+                "base_folder": "D:/GitHub/harrix-swiss-knife",
+                "files": [
+                    "D:/GitHub/harrix-swiss-knife/src/harrix_swiss_knife/apps/finance/recover.sql",
+                    "D:/GitHub/harrix-swiss-knife/src/harrix_swiss_knife/apps/finance/*.py",
+                ],
+                "name": "harrix-swiss-knife - finance",
+            },
+        ],
+    }
+    text = h.dev.dumps_pretty_json(data)
+    assert '"block_drives": ["E", "F"]' in text
+    assert '"hotkeys": ["Ctrl+Shift+F1"]' in text
+    assert '"npm_packages": ["npm-check-updates", "prettier"]' in text
+    assert (
+        '"paths_python_projects": ["D:/GitHub/harrix-swiss-knife", "D:/GitHub/harrix-pylib", "D:/GitHub/harrix-pyssg"]'
+        in text
+    )
+    assert '"files": ["D:/GitHub/harrix-swiss-knife/src/harrix_swiss_knife/**/*.py"]' in text
+    assert '"note_beginning_templates": [' in text
+    assert '["snippet:config/beginning-of-md.md", "snippet:config/beginning-of-article.md"' not in text
+    assert '"paths_notes_for_summaries": [' in text
+    assert '"D:/GitHub/harrix-swiss-knife/src/harrix_swiss_knife/apps/finance/recover.sql",' in text
+    assert json.loads(text) == data
+    assert text.endswith("\n")
+
+
 def test_get_project_root() -> None:
     path = h.dev.get_project_root()
     assert "harrix-pylib" in str(path)
