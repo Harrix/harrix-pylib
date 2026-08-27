@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -23,6 +25,34 @@ def test_sequence_pattern_replaces_digits() -> None:
     frame = Path("frame-000042.png")
     pattern = img_tools._sequence_pattern(frame)
     assert pattern.name == "frame-%06d.png"
+
+
+def test_hidden_subprocess_kwargs_hides_console_on_windows() -> None:
+    kwargs = img_tools._hidden_subprocess_kwargs()
+    if sys.platform != "win32":
+        assert kwargs == {}
+        return
+    assert kwargs["creationflags"] == subprocess.CREATE_NO_WINDOW
+    startupinfo = kwargs["startupinfo"]
+    assert isinstance(startupinfo, subprocess.STARTUPINFO)
+    assert startupinfo.dwFlags & subprocess.STARTF_USESHOWWINDOW
+    assert startupinfo.wShowWindow == subprocess.SW_HIDE
+
+
+def test_run_checked_passes_hidden_console_kwargs(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_run(args: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        captured.update(kwargs)
+        return subprocess.CompletedProcess(args, 0, stdout="ok", stderr="")
+
+    monkeypatch.setattr(img_tools.subprocess, "run", fake_run)
+    img_tools._run_checked(["ffmpeg"])
+    if sys.platform == "win32":
+        assert captured["creationflags"] == subprocess.CREATE_NO_WINDOW
+        assert "startupinfo" in captured
+    else:
+        assert "creationflags" not in captured
 
 
 def test_optimize_image_with_tools_rejects_unknown_extension(tmp_path: Path) -> None:

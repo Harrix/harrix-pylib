@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import re
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
+from typing import Any
 
 EXE_RASTER_EXTENSIONS = frozenset({".gif", ".mp4", ".avif"})
 _MAX_ANIMATED_FPS = 10
@@ -322,8 +324,22 @@ def _ffmpeg_output(source: Path | str, ffmpeg: Path) -> str:
         text=True,
         encoding="utf-8",
         check=False,
+        **_hidden_subprocess_kwargs(),
     )
     return "\n".join(filter(None, [(process.stdout or "").strip(), (process.stderr or "").strip()]))
+
+
+def _hidden_subprocess_kwargs() -> dict[str, Any]:
+    """Return kwargs that hide a console window on Windows."""
+    if sys.platform != "win32":
+        return {}
+    startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startupinfo.wShowWindow = subprocess.SW_HIDE
+    return {
+        "creationflags": subprocess.CREATE_NO_WINDOW,
+        "startupinfo": startupinfo,
+    }
 
 
 def _is_avif_animated_with_avifdec(source: Path | str, project_root: Path | str) -> bool:
@@ -341,6 +357,7 @@ def _is_avif_animated_with_avifdec(source: Path | str, project_root: Path | str)
             text=True,
             encoding="utf-8",
             check=False,
+            **_hidden_subprocess_kwargs(),
         )
         return process.returncode == 0 and any(temp_path.glob("*check_frame2*.png"))
 
@@ -383,6 +400,7 @@ def _run_checked(args: list[str]) -> str:
         text=True,
         encoding="utf-8",
         check=False,
+        **_hidden_subprocess_kwargs(),
     )
     if process.returncode != 0:
         details = (process.stderr or process.stdout or "").strip()
