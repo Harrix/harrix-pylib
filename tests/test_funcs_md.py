@@ -934,6 +934,19 @@ def test_format_yaml_content() -> None:
     assert md_after == h.md.format_yaml_content(md)
 
 
+def test_format_yaml_content_keeps_marp_size_aspect_ratio() -> None:
+    """YAML 1.1 must not turn Marp `size: 16:9` into the integer 969."""
+    source = "---\nmarp: true\ntheme: default\npaginate: true\nsize: 16:9\n---\n\n# Title\n"
+    result = h.md.format_yaml_content(source)
+    assert "size: 16:9" in result
+    assert "969" not in result
+    assert "marp: true" in result
+    result_43 = h.md.format_yaml_content("---\nsize: 4:3\n---\n\n# Title\n")
+    assert "size: 4:3" in result_43
+    assert "243" not in result_43
+    assert h.md.format_yaml_content(result) == result
+
+
 def test_generate_author_book() -> None:
     current_folder = h.dev.get_project_root()
     md = Path(current_folder / "tests/data/generate_author_book__before.md").read_text(encoding="utf8")

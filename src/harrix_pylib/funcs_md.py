@@ -28,6 +28,23 @@ _MAX_HEADING_LEVEL = 6
 # Minimum length for italic-only caption lines (e.g. `_text_`)
 _MIN_ITALIC_CAPTION_LEN = 2
 _RAW_MARKDOWN_YAML_KEY = "raw-markdown"
+_YAML_INT_TAG = "tag:yaml.org,2002:int"
+_YAML_FLOAT_TAG = "tag:yaml.org,2002:float"
+# YAML 1.1 int/float resolvers without sexagesimal (`16:9` must stay a string for Marp).
+_YAML_INT_NO_SEXAGESIMAL = re.compile(
+    r"""^(?:[-+]?0b[0-1_]+
+            |[-+]?0[0-7_]+
+            |[-+]?(?:0|[1-9][0-9_]*)
+            |[-+]?0x[0-9a-fA-F_]+)$""",
+    re.VERBOSE,
+)
+_YAML_FLOAT_NO_SEXAGESIMAL = re.compile(
+    r"""^(?:[-+]?(?:[0-9][0-9_]*)\.[0-9_]*(?:[eE][-+][0-9]+)?
+            |\.[0-9][0-9_]*(?:[eE][-+][0-9]+)?
+            |[-+]?\.(?:inf|Inf|INF)
+            |\.(?:nan|NaN|NAN))$""",
+    re.VERBOSE,
+)
 _H1_ATX_PATTERN = re.compile(r"^#\s+")
 # Per-file / UI-only YAML keys that must not appear in generated `*.g.md` dumps.
 _YAML_KEYS_EXCLUDED_FROM_G_MD = frozenset(
@@ -50,6 +67,10 @@ _LIST_DATE_FIELD_RE = re.compile(
     re.MULTILINE,
 )
 _ATX_HEADING_RE = re.compile(r"^(#{1,6})\s+")
+
+
+class _FrontmatterLoader(yaml.SafeLoader):
+    """SafeLoader that keeps `16:9` as a string instead of sexagesimal 969."""
 
 
 class _IndentDumper(yaml.Dumper):
@@ -552,7 +573,7 @@ def append_yaml_tag(filename: Path | str, tuple_yaml_tag: tuple[str, str]) -> st
     # Load existing YAML or create empty dict
     if yaml_md:
         yaml_content = yaml_md.replace("---\n", "").replace("\n---", "").strip()
-        data_yaml = yaml.safe_load(yaml_content) if yaml_content else {}
+        data_yaml = _load_yaml(yaml_content) if yaml_content else {}
     else:
         data_yaml = {}
 
@@ -744,7 +765,7 @@ def combine_markdown_files(folder_path: Path | str, *, is_recursive: bool = Fals
         # Check published flag
         data_yaml: dict[str, Any] = {}
         if yaml_md:
-            loaded = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+            loaded = _load_yaml(yaml_md.replace("---\n", "").replace("\n---", ""))
             if isinstance(loaded, dict):
                 data_yaml = loaded
             published = data_yaml.get("published", True)
@@ -1427,6 +1448,8 @@ def format_yaml_content(markdown_text: str) -> str:
 
     - It uses a custom YAML dumper (`IndentDumper`) to adjust indentation.
     - If the document doesn't contain YAML front matter, it remains unchanged.
+    - Marp aspect ratios such as `size: 16:9` stay strings (YAML 1.1 would otherwise
+      treat `16:9` as sexagesimal 969).
 
     Example:
 
@@ -1449,7 +1472,7 @@ def format_yaml_content(markdown_text: str) -> str:
     if not yaml_md.strip():
         return markdown_text
 
-    data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+    data_yaml = _load_yaml(yaml_md.replace("---\n", "").replace("\n---", ""))
 
     # If YAML data is None or empty, return original text
     if data_yaml is None:
@@ -1895,7 +1918,7 @@ def generate_image_captions_content(markdown_text: str) -> str:
 
     yaml_md, content_md = split_yaml_content(markdown_text)
 
-    data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+    data_yaml = _load_yaml(yaml_md.replace("---\n", "").replace("\n---", ""))
     lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
 
     # Remove captions
@@ -2079,7 +2102,7 @@ def generate_short_note_toc_with_links_content(markdown_text: str) -> str:
     # Extract YAML frontmatter if present
     yaml_md, _ = split_yaml_content(markdown_text)
 
-    data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+    data_yaml = _load_yaml(yaml_md.replace("---\n", "").replace("\n---", ""))
     lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
 
     # Extract the title from the Markdown content
@@ -2409,7 +2432,7 @@ def generate_toc_with_links_content(markdown_text: str) -> str:
         return markdown_text
 
     yaml_md, _ = split_yaml_content(markdown_text)
-    data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+    data_yaml = _load_yaml(yaml_md.replace("---\n", "").replace("\n---", ""))
     if isinstance(data_yaml, dict) and data_yaml.get("contents") is False:
         return remove_toc_content(markdown_text)
     lang = data_yaml.get("lang") if data_yaml and "lang" in data_yaml else "en"
@@ -2565,7 +2588,7 @@ def get_set_variables_from_yaml(folder_path: Path | str) -> list[str]:
             if yaml_content:
                 yaml_text = yaml_content.replace("---\n", "").replace("\n---", "").strip()
                 if yaml_text:
-                    data_yaml = yaml.safe_load(yaml_text)
+                    data_yaml = _load_yaml(yaml_text)
                     if isinstance(data_yaml, dict):
                         # Add all keys to the set
                         for key in data_yaml:
@@ -2859,7 +2882,7 @@ def is_raw_markdown_enabled(source: Path | str | dict[str, Any]) -> bool:
     if not yaml_md.strip():
         return False
     try:
-        data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+        data_yaml = _load_yaml(yaml_md.replace("---\n", "").replace("\n---", ""))
     except yaml.YAMLError:
         return False
     return isinstance(data_yaml, dict) and data_yaml.get(_RAW_MARKDOWN_YAML_KEY) is True
@@ -3529,7 +3552,7 @@ def sort_list_by_date_content(markdown_text: str, *, is_sort_from_yaml: bool = F
         if not yaml_md:
             return markdown_text
         try:
-            data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+            data_yaml = _load_yaml(yaml_md.replace("---\n", "").replace("\n---", ""))
             if not _is_yaml_flag_true(data_yaml.get("sort-list-by-date") if data_yaml else None):
                 return markdown_text
         except yaml.YAMLError:
@@ -3726,7 +3749,7 @@ def sort_sections_content(markdown_text: str, *, is_sort_section_from_yaml: bool
         yaml_md, _ = split_yaml_content(markdown_text)
         if yaml_md:
             try:
-                data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+                data_yaml = _load_yaml(yaml_md.replace("---\n", "").replace("\n---", ""))
                 sort_section = data_yaml.get("sort-section") if data_yaml else False
                 # Only proceed with sorting if sort-section is explicitly set to true
                 if not sort_section:
@@ -4157,6 +4180,15 @@ def _list_continuation_indent_for_image(
     return " " * len(match.group(0))
 
 
+def _load_yaml(text: str) -> Any:
+    """Load YAML without converting `16:9` into the integer 969."""
+    loader = _FrontmatterLoader(text)
+    try:
+        return loader.get_single_data()
+    finally:
+        loader.dispose()
+
+
 def _max_backtick_run(text: str) -> int:
     """Return the longest run of consecutive backticks in `text`."""
     max_run = 0
@@ -4304,7 +4336,7 @@ def _strip_yaml_keys_for_g_md(
     if not yaml_md.strip():
         return yaml_frontmatter
     try:
-        data_yaml = yaml.safe_load(yaml_md.replace("---\n", "").replace("\n---", ""))
+        data_yaml = _load_yaml(yaml_md.replace("---\n", "").replace("\n---", ""))
     except yaml.YAMLError:
         return yaml_frontmatter
     if not isinstance(data_yaml, dict):
@@ -4352,3 +4384,23 @@ def _wrap_content_after_first_h1(content: str) -> str:
         return heading
     fence = "`" * max(3, _max_backtick_run(body) + 1)
     return f"{heading}\n\n{fence}text\n{body}\n{fence}"
+
+
+def _yaml_resolvers_without_sexagesimal(base: Any) -> dict[Any, list[tuple[str, re.Pattern[str]]]]:
+    """Copy implicit resolvers from `base`, dropping YAML 1.1 sexagesimal numbers."""
+    mapping: dict[Any, list[tuple[str, re.Pattern[str]]]] = {}
+    for first, resolvers in base.yaml_implicit_resolvers.items():
+        updated: list[tuple[str, re.Pattern[str]]] = []
+        for tag, regexp in resolvers:
+            if tag == _YAML_INT_TAG:
+                updated.append((tag, _YAML_INT_NO_SEXAGESIMAL))
+            elif tag == _YAML_FLOAT_TAG:
+                updated.append((tag, _YAML_FLOAT_NO_SEXAGESIMAL))
+            else:
+                updated.append((tag, regexp))
+        mapping[first] = updated
+    return mapping
+
+
+_FrontmatterLoader.yaml_implicit_resolvers = _yaml_resolvers_without_sexagesimal(yaml.SafeLoader)
+_IndentDumper.yaml_implicit_resolvers = _yaml_resolvers_without_sexagesimal(yaml.Dumper)
