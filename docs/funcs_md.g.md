@@ -3798,7 +3798,8 @@ Args:
 
 Returns:
 
-- `str`: Markdown with the updated front matter.
+- `str`: Markdown with the updated front matter. The text ends with a single
+  newline.
 
 Raises:
 
@@ -3826,7 +3827,6 @@ def replace_frontmatter_list(text: str, key: str, items: list[str]) -> str:
         raise ValueError(msg)
 
     frontmatter = match.group(1)
-    body = text[match.end() :]
     lines = frontmatter.splitlines()
     new_lines: list[str] = []
     replaced = False
@@ -3847,7 +3847,8 @@ def replace_frontmatter_list(text: str, key: str, items: list[str]) -> str:
         new_lines.extend(_format_yaml_list(key, items))
 
     frontmatter_text = "\n".join(new_lines)
-    return f"---\n{frontmatter_text}\n---\n\n{body.lstrip()}\n"
+    body = text[match.end() :].lstrip("\n")
+    return f"---\n{frontmatter_text}\n---\n\n{body}".rstrip("\n") + "\n"
 ```
 
 </details>

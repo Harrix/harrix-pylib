@@ -2489,12 +2489,17 @@ def test_replace_frontmatter_list() -> None:
     updated = h.md.replace_frontmatter_list(inline, "tags", ["garage", "гараж"])
     assert "tags:\n  - garage\n  - гараж\n" in updated
     assert "# Garage" in updated
+    assert updated.endswith("\n")
+    assert not updated.endswith("\n\n")
+    assert "---\n\n# Garage\n" in updated
 
     block = "---\ncategories:\n  - building\ntags:\n  - old\n---\n\n# Garage\n"
     updated_block = h.md.replace_frontmatter_list(block, "tags", ["new"])
     assert "tags:\n  - new\n" in updated_block
     assert "  - old" not in updated_block
     assert "categories:\n  - building\n" in updated_block
+    assert updated_block.endswith("\n")
+    assert not updated_block.endswith("\n\n")
 
     with pytest.raises(ValueError, match="frontmatter"):
         h.md.replace_frontmatter_list("# No yaml\n", "tags", ["x"])
