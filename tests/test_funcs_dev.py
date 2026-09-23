@@ -219,6 +219,25 @@ def test_config_update_value_preserves_snippet_references() -> None:
         resolved = h.dev.config_load(str(config_path))
         assert resolved["path_github"] == "C:/GitHub/Updated"
         assert resolved["template"] == "INLINE_ME"
+
+        nested_path = Path(h.dev.get_project_root() / "tests/data/config-nested-snippet.json")
+        try:
+            h.dev.config_save(
+                {
+                    "ai": {
+                        "api_keys": {"bothub.ru": "snippet:tests/data/snippet-body.txt"},
+                        "prompts": ["snippet:tests/data/snippet-body.txt"],
+                    }
+                },
+                str(nested_path),
+            )
+            nested = h.dev.config_load(str(nested_path))
+            assert nested["ai"]["api_keys"]["bothub.ru"] == "INLINE_ME"
+            assert nested["ai"]["prompts"] == ["INLINE_ME"]
+            raw_nested = nested_path.read_text(encoding="utf-8")
+            assert "snippet:tests/data/snippet-body.txt" in raw_nested
+        finally:
+            nested_path.unlink(missing_ok=True)
     finally:
         config_path.unlink(missing_ok=True)
         snippet_path.unlink(missing_ok=True)

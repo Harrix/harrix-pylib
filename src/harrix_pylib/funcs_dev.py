@@ -34,7 +34,8 @@ def config_load(filename: Path | str, *, is_temp: bool = False, resolve_snippets
     - `is_temp` (`bool`): If `True`, load the temporary config file (`config-temp.json`)
       instead of the main config file. Defaults to `False`.
     - `resolve_snippets` (`bool`): If `True`, replace `snippet:path` string values with
-      file contents. Defaults to `True`. Use `False` when you need the on-disk JSON as stored.
+      file contents, including values nested in objects and arrays. Defaults to `True`.
+      Use `False` when you need the on-disk JSON as stored.
 
     Returns:
 
@@ -819,19 +820,21 @@ def _resolve_config_path(filename: Path | str, *, is_temp: bool) -> Path:
 
 
 def _resolve_config_snippets(config: dict) -> dict:
-    def process_snippet(value: object) -> object:
-        if isinstance(value, str) and value.startswith("snippet:"):
-            snippet_path = Path(get_project_root()) / value.split("snippet:", 1)[1].strip()
-            if not snippet_path.exists():
-                return ""
-            with snippet_path.open("r", encoding="utf-8") as snippet_file:
-                return snippet_file.read()
-        return value
+    resolved = _resolve_snippet_value(config)
+    if isinstance(resolved, dict):
+        return resolved
+    return config
 
-    resolved = dict(config)
-    for key, value in resolved.items():
-        if isinstance(value, dict):
-            resolved[key] = {k: process_snippet(v) for k, v in value.items()}
-        else:
-            resolved[key] = process_snippet(value)
-    return resolved
+
+def _resolve_snippet_value(value: object) -> object:
+    """Replace `snippet:` strings inside nested objects and arrays."""
+    if isinstance(value, str) and value.startswith("snippet:"):
+        snippet_path = Path(get_project_root()) / value.split("snippet:", 1)[1].strip()
+        if not snippet_path.exists():
+            return ""
+        return snippet_path.read_text(encoding="utf-8")
+    if isinstance(value, dict):
+        return {key: _resolve_snippet_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_resolve_snippet_value(item) for item in value]
+    return value

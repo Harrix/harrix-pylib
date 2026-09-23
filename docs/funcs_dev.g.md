@@ -39,7 +39,8 @@ Args:
 - `is_temp` (`bool`): If `True`, load the temporary config file (`config-temp.json`)
   instead of the main config file. Defaults to `False`.
 - `resolve_snippets` (`bool`): If `True`, replace `snippet:path` string values with
-  file contents. Defaults to `True`. Use `False` when you need the on-disk JSON as stored.
+  file contents, including values nested in objects and arrays. Defaults to `True`.
+  Use `False` when you need the on-disk JSON as stored.
 
 Returns:
 

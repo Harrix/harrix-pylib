@@ -83,7 +83,8 @@ class MdChecker:
     - **H028** - Incorrect `?.`/`!.` / `?...`/`!...` / `?…`/`!…` (use `?..` / `!..`).
     - **H029** - Space required after colon in inline emphasis.
     - **H030** - Colon outside inline emphasis (should be inside when line continues after colon).
-    - **H031** - Invalid or placeholder image alt text (empty, editor placeholder, or lowercase start).
+    - **H031** - Invalid or placeholder image alt text (empty, editor placeholder, or lowercase start;
+      alt text that matches the image filename stem is allowed).
     - **H032** - Two consecutive dots (typo for period or incomplete ellipsis; `../` paths are allowed).
     - **H033** - Unclosed fenced code block.
     - **H034** - Code fence without language identifier.
@@ -559,7 +560,7 @@ class MdChecker:
     # Location and rule code inside a formatted error, used to apply line-level ignores
     _ERROR_LOCATION_PATTERN: ClassVar[re.Pattern] = re.compile(r":(\d+)(?::\d+)?: ([A-Z]+\d+)\b")
 
-    _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\([^)]*\)")
+    _IMAGE_ALT_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"!\[([^\]]*)\]\(([^)]*)\)")
     # Exclude `?..` / `!..` (required by H028) and `...` / `../`.
     _TWO_DOTS_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"(?<![.?!])\.\.(?![\./])")
     _MATH_DELIMITER_PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^\s*\$\$\s*$")
@@ -2152,7 +2153,11 @@ class MdChecker:
             offset += len(segment)
 
     def _check_image_alt_text(self, filename: Path, line: str, line_num: int) -> Generator[str, None, None]:
-        """Check image alt text for empty, placeholder, or lowercase-start issues (H031)."""
+        """Check image alt text for empty, placeholder, or lowercase-start issues (H031).
+
+        Alt text equal to the image filename stem is allowed.
+
+        """
         offset = 0
         for segment, in_code in h.md.identify_code_blocks_line(line):
             if not in_code:
@@ -2161,7 +2166,7 @@ class MdChecker:
                     if any(sub in image_markdown for sub in self._IMAGE_H014_SKIP_SUBSTRINGS):
                         continue
                     alt_text = match.group(1)
-                    issue = self._image_alt_text_issue(alt_text)
+                    issue = self._image_alt_text_issue(alt_text, match.group(2))
                     if issue is None:
                         continue
                     col = offset + match.start(1) + 1
@@ -4160,16 +4165,51 @@ class MdChecker:
     # Helper Methods
     # =========================================================================
 
-    def _image_alt_text_issue(self, alt: str) -> str | None:
-        """Return H031 issue description for invalid alt text, or `None` if alt text is acceptable."""
+    def _image_alt_text_issue(self, alt: str, destination: str = "") -> str | None:
+        """Return H031 issue description for invalid alt text, or `None` if alt text is acceptable.
+
+        Alt text that equals the image filename stem is an identifier, not a caption,
+        so a lowercase start is allowed. Placeholders stay invalid even when the
+        filename stem is `alt`.
+
+        """
         stripped = alt.strip()
         if not stripped:
             return "empty alt text"
         if stripped.casefold() in self._IMAGE_ALT_PLACEHOLDERS:
             return f'placeholder alt text "{stripped}"'
+        if stripped == self._image_destination_stem(destination):
+            return None
         if stripped[0].isalpha() and stripped[0].islower():
             return f'alt text starts with "{stripped[0]}"'
         return None
+
+    @staticmethod
+    def _image_destination_stem(destination: str) -> str:
+        """Return the filename stem from a Markdown image destination.
+
+        Drops an optional title (`url "title"`), query, fragment, and extension.
+
+        """
+        text = destination.strip()
+        if not text:
+            return ""
+        if text.startswith("<"):
+            end = text.find(">")
+            text = text[1:end] if end > 0 else text[1:]
+        else:
+            for marker in (' "', " '"):
+                quoted = text.find(marker)
+                if quoted != -1:
+                    text = text[:quoted]
+                    break
+        text = text.split("?", 1)[0].split("#", 1)[0].strip()
+        name = text.replace("\\", "/").rstrip("/")
+        if "/" in name:
+            name = name.rsplit("/", 1)[-1]
+        if "." in name:
+            name = name.rsplit(".", 1)[0]
+        return unquote(name)
 
     def _image_line_content_start(self, line: str) -> int:
         """Return index where an image unit may begin after indent and list marker."""

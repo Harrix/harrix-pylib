@@ -1529,6 +1529,7 @@ def test_md_checker() -> None:
             "![ALT TEXT](img/image.png)\n",
             "![Alt Text](img/image.png)\n",
             "![lowercase caption](img/image.png)\n",
+            "![alt](img/alt.png)\n",
         ]
         for index, body in enumerate(invalid_alt_cases):
             invalid_alt_file = temp_path / f"invalid_alt_{index}.md"
@@ -1541,6 +1542,8 @@ def test_md_checker() -> None:
             "![GitHub repo](img/image.png)\n",
             "![Alt text 2](img/image2.png)\n",
             "![Uppercase caption](img/image.png)\n",
+            "- ![holidays__santa-claus_01](img/holidays__santa-claus_01.svg)\n",
+            '![holidays__santa-claus_01](img/holidays__santa-claus_01.svg "Santa")\n',
         ]
         for index, body in enumerate(valid_alt_cases):
             valid_alt_file = temp_path / f"valid_alt_{index}.md"
