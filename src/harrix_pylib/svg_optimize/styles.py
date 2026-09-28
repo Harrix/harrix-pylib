@@ -13,10 +13,12 @@ if TYPE_CHECKING:
 
 SVG_NS = "http://www.w3.org/2000/svg"
 
+# Matches ".st4{...}" and grouped ".st4,.st5{...}" / ".st4, .st5 { ... }".
 RULE_RE = re.compile(
-    r"\.([a-zA-Z_][\w-]*)\s*\{([^}]*)\}",
+    r"((?:\s*\.[a-zA-Z_][\w-]*\s*,)*\s*\.[a-zA-Z_][\w-]*)\s*\{([^}]*)\}",
     re.DOTALL,
 )
+CLASS_NAME_RE = re.compile(r"\.([a-zA-Z_][\w-]*)")
 DECL_RE = re.compile(r"([\w-]+)\s*:\s*([^;]+);?")
 
 
@@ -36,11 +38,14 @@ class _StyleSheet:
             self.style_elements.append(style_elem)
             css_text = "".join(style_elem.itertext())
             for match in RULE_RE.finditer(css_text):
-                class_name = match.group(1)
-                for decl_match in DECL_RE.finditer(match.group(2)):
-                    prop = decl_match.group(1).strip()
-                    value = decl_match.group(2).strip()
-                    self.rules[class_name][prop] = value
+                declarations = {
+                    decl_match.group(1).strip(): decl_match.group(2).strip()
+                    for decl_match in DECL_RE.finditer(match.group(2))
+                }
+                if not declarations:
+                    continue
+                for class_name in CLASS_NAME_RE.findall(match.group(1)):
+                    self.rules[class_name].update(declarations)
 
     def compute_style(self, elem: etree._Element) -> dict[str, str]:
         """Compute effective style for an element from class and inline style."""
