@@ -5,6 +5,7 @@ from pathlib import Path
 from lxml import etree
 
 import harrix_pylib as h
+from harrix_pylib.svg_optimize.paths import _is_valid_command_list, _optimize_path_data, _parse_path_data
 from harrix_pylib.svg_optimize.styles import _StyleSheet
 
 
@@ -54,6 +55,29 @@ def test_stylesheet_parses_grouped_class_selectors() -> None:
     sheet.collect(etree.fromstring(spaced.encode("utf-8")))
     assert sheet.rules["st1"] == {"opacity": ".15", "fill": "#444"}
     assert sheet.rules["st2"] == {"opacity": ".15", "fill": "#444"}
+
+
+def test_optimize_path_preserves_compact_arc_flags() -> None:
+    """Lucide/SVGO pack arc flags as ``00-.314`` / ``002.3``; do not drop them."""
+    broom_head = (
+        "M14.734 13.841a2 2 0 00-.314-2.42L12.58 9.58a2 2 0 00-2.421-.314"
+        "l-7.657 4.461A1 1 0 002.3 15.3l6.403 6.403a1 1 0 001.571-.204z"
+    )
+    commands = _parse_path_data(broom_head)
+    assert _is_valid_command_list(commands)
+    arcs = [args for cmd, args in commands if cmd in {"A", "a"}]
+    assert arcs == [
+        [2.0, 2.0, 0.0, 0.0, 0.0, -0.314, -2.42],
+        [2.0, 2.0, 0.0, 0.0, 0.0, -2.421, -0.314],
+        [1.0, 1.0, 0.0, 0.0, 0.0, 2.3, 15.3],
+        [1.0, 1.0, 0.0, 0.0, 0.0, 1.571, -0.204],
+    ]
+    once = _optimize_path_data(broom_head)
+    twice = _optimize_path_data(once)
+    assert once == twice
+    assert _is_valid_command_list(_parse_path_data(once))
+    assert "0 0 0" in once
+    assert "2.3 15.3" in once
 
 
 def test_optimize_svg_keeps_grouped_shadow_class() -> None:

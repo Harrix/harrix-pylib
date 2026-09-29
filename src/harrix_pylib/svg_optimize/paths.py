@@ -174,6 +174,27 @@ def _optimize_paths(root: etree._Element) -> bool:
     return changed
 
 
+def _parse_arc_args(tokens: list[str], index: int) -> tuple[list[float], int]:
+    """Parse seven elliptical-arc args, splitting packed 0/1 flags like ``00-.314``."""
+    args: list[float] = []
+    for _ in range(3):
+        if index >= len(tokens) or tokens[index].isalpha():
+            return args, index
+        args.append(float(tokens[index]))
+        index += 1
+    for _ in range(2):
+        flag, index = _take_arc_flag(tokens, index)
+        if flag is None:
+            return args, index
+        args.append(flag)
+    for _ in range(2):
+        if index >= len(tokens) or tokens[index].isalpha():
+            return args, index
+        args.append(float(tokens[index]))
+        index += 1
+    return args, index
+
+
 def _parse_path_data(path_data: str) -> list[tuple[str, list[float]]]:
     """Parse SVG path data into command tuples."""
     tokens = re.findall(
@@ -192,11 +213,14 @@ def _parse_path_data(path_data: str) -> list[tuple[str, list[float]]]:
                 commands.append((command, []))
             continue
 
-        arg_count = COMMAND_ARGS[command]
-        args: list[float] = []
-        while len(args) < arg_count and index < len(tokens) and not tokens[index].isalpha():
-            args.append(float(tokens[index]))
-            index += 1
+        if command in {"A", "a"}:
+            args, index = _parse_arc_args(tokens, index)
+        else:
+            arg_count = COMMAND_ARGS[command]
+            args = []
+            while len(args) < arg_count and index < len(tokens) and not tokens[index].isalpha():
+                args.append(float(tokens[index]))
+                index += 1
         if not args:
             break
         commands.append((command, args))
@@ -219,6 +243,20 @@ def _resolve_point(cmd: str, args: list[float], pos: list[float]) -> list[float]
     if cmd.islower():
         return [pos[0] + args[0], pos[1] + args[1]]
     return [args[0], args[1]]
+
+
+def _take_arc_flag(tokens: list[str], index: int) -> tuple[float | None, int]:
+    """Read one large-arc/sweep flag (0 or 1), including from packed tokens."""
+    if index >= len(tokens) or tokens[index].isalpha():
+        return None, index
+    token = tokens[index]
+    if token in {"0", "1"}:
+        return float(token), index + 1
+    if token.startswith(("0", "1")) and len(token) > 1:
+        flag = float(token[0])
+        tokens[index] = token[1:]
+        return flag, index
+    return float(token), index + 1
 
 
 def _trim_number(value: float) -> float:
